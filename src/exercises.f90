@@ -131,43 +131,33 @@ integer function chapter_2_example_2p2p4() result(nfail)
 
 	! The acceptable tolerance depends on xi, x, and the fn being interpolated
 
-	! TODO: cotand (and cotan) is a GNU extension.  Write a cotd_fn() wrapper
-	! based on intrinsic tand()
-
 	! The expected value for polynomial interpolation, 22.6352, is quite far
-	! from the actual cot value because cot has a singularity at x == 0.
+	! from the actual cotangent value because cot has a singularity at x == 0.
 	! Rational interpolation works better near singularities
 
-	!fx = neville_interpolater(xi, log_fn, x)
-	fx = neville_interpolater_vals(xi, cotand(xi), x)
-	!call test(fx, cotand(x), tol, nfail, "neville_interpolater()")
+	fx = neville_interpolater(xi, cotd_fn, x)
 	call test(fx, 22.6352d0, tol, nfail, "neville_interpolater()")
 	print *, "fx   = ", fx, " (Neville polynomial)"
-	print *, "f(x) = ", cotand(x)
+	print *, "f(x) = ", cotd_fn(x)
 	print *, ""
 
-	!fx = neville_rational_interpolater(xi, log_fn, x)
-	fx = neville_rational_interpolater_vals(xi, cotand(xi), x)
-	call test(fx, cotand(x), tol, nfail, "neville_rational_interpolater()")
-	!call test(fx, 22.6352d0, tol, nfail, "neville_rational_interpolater()")
+	fx = neville_rational_interpolater(xi, cotd_fn, x)
+	call test(fx, cotd_fn(x), tol, nfail, "neville_rational_interpolater()")
 	print *, "fx   = ", fx, " (Neville rational)"
-	print *, "f(x) = ", cotand(x)
+	print *, "f(x) = ", cotd_fn(x)
 	print *, ""
 
-	xi = [1, 2, 3, 4, 5, 6, 7, 8] * 1.d-2
-	x = 1.5d-2
+	xi = [1, 2, 3, 4, 5, 6, 7, 8] * 1.d-3
+	x = 0.5d0 * sum(xi([1, 2]))
 
-	!fx = neville_interpolater(xi, log_fn, x)
-	fx = neville_interpolater_vals(xi, log(xi), x)
+	fx = neville_interpolater(xi, log_fn, x)
 	call test(fx, log(x), 100 * tol, nfail, "neville_interpolater()")  ! big tol
 	print *, "fx   = ", fx, " (Neville polynomial)"
 	print *, "f(x) = ", log(x)
 	print *, ""
 
-	!fx = neville_rational_interpolater(xi, log_fn, x)
-	fx = neville_rational_interpolater_vals(xi, log(xi), x)
+	fx = neville_rational_interpolater(xi, log_fn, x)
 	call test(fx, log(x), tol, nfail, "neville_rational_interpolater()")
-	!call test(fx, 22.6352d0, tol, nfail, "neville_rational_interpolater()")
 	print *, "fx   = ", fx, " (Neville rational)"
 	print *, "f(x) = ", log(x)
 	print *, ""

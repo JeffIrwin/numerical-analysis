@@ -220,6 +220,32 @@ function newton_interpolater_vals(xi, fi, xs) result(fxs)
 end function newton_interpolater_vals
 
 !===============================================================================
+double precision function neville_rational_interpolater(xi, f, x) result(fx)
+
+	double precision, intent(in) :: xi(:)
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: x
+
+	!********
+
+	double precision, allocatable :: fi(:)
+
+	integer :: i, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
+
+	! Function values `fi` at those support points
+	allocate(fi(n1))
+	do i = 1, n1
+		fi(i) = f(xi(i))
+	end do
+
+	fx = neville_rational_interpolater_vals(xi, fi, x)
+
+end function neville_rational_interpolater
+
+!===============================================================================
 double precision function neville_rational_interpolater_vals(xi, fi, x) result(fx)
 
 	! Lagrange and Neville are both O(n1**2) time, while Neville has half the
@@ -268,6 +294,9 @@ end function neville_rational_interpolater_vals
 
 !===============================================================================
 
+! TODO: maybe these example fns (used as callbacks) should be moved to another
+! file
+
 double precision function log_fn(x) result(log_x)
 
 	! The built-in Fortran fn `log` cannot be passed directly as a function
@@ -291,6 +320,13 @@ double precision function exp_fn(x) result(exp_x)
 	double precision, intent(in) :: x
 	exp_x = exp(x)
 end function exp_fn
+
+!********
+
+double precision function cotd_fn(x)
+	double precision, intent(in) :: x
+	cotd_fn = 1 / tand(x)
+end function cotd_fn
 
 !===============================================================================
 
