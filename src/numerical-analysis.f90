@@ -230,6 +230,7 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 
 	!********
 
+	double precision :: tk2
 	double precision, allocatable :: t(:), t0(:)
 
 	integer :: i, k, n1
@@ -241,35 +242,26 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 
 	! Neville's algorithm with rational polynomials, eq 2.2.3.8, page 72
 
-	! TODO: there's probably a way to do this without using O(n1**2) space
-
-	!allocate(t(n1, n1))
-	allocate(t(n1+1), t0(n1+1))
-	!allocate(tt(n1, n1+1))  ! 2nd dim gets an extra index
-	t0  = 0.d0
-	!t = fi
-	!t0 = fi
+	allocate(t(n1), t0(n1))
+	t0 = 0.d0
 	do i = 1, n1
-		t(2) = fi(i)
+		t(1) = fi(i)
 
-		!print *, "t0 = "
-		!print "(es24.14)", t0
-		!print *, "t = "
-		!print "(es24.14)", t
-
+		tk2 = 0.d0
 		do k = 2, i
+			if (k > 2) tk2 = t0(k-2)
+
 			! "Note that this recursion formula differs from the corresponding
 			! polynomial formula (2.1.2.5) only by the expression in brackets*"
-			t(k+1) = t(k) + (t(k) - t0(k)) &
+			t(k) = t(k-1) + (t(k-1) - t0(k-1)) &
 				/ ((x - xi(i-k+1)) / (x - xi(i)) * &
 				( &
-					1.d0 - (t(k) - t0(k)) / (t(k) - t0(k-1)) &  ! "expression in brackets"
+					1.d0 - (t(k-1) - t0(k-1)) / (t(k-1) - tk2) &  ! "expression in brackets"
 				) - 1.d0)
 		end do
-		!print "(a,6f11.7)", "t = ", t
-		t0  = t
+		t0 = t
 	end do
-	fx = t(n1+1)
+	fx = t(n1)
 
 end function neville_rational_interpolater_vals
 
