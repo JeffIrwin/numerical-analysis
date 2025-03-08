@@ -1,4 +1,4 @@
-name = "ribbit"
+name = "numerical_analysis"
 license = "BSD 3-Clause"
 author = "Jeff Irwin"
 
@@ -19,7 +19,7 @@ auto-examples    = true
 library = false
 
 #[[executable]]
-#name = "ribbit"
+#name = "numerical_analysis"
 #source-dir = "src"
 #main = "main.f90"
 
