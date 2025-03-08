@@ -1,0 +1,30 @@
+name = "ribbit"
+license = "BSD 3-Clause"
+author = "Jeff Irwin"
+
+#maintainer = "jane.doe@example.com"
+#copyright = "Copyright 2021, Jane Doe"
+
+description = "exercises from 'introduction to numerical analysis' by stoer and bulirsch"
+categories = [""]
+homepage = "https://github.com/JeffIrwin/numerical-analysis"
+
+[build]
+auto-executables = true
+auto-tests       = true
+auto-examples    = true
+#module-naming    = true
+
+[install]
+library = false
+
+#[[executable]]
+#name = "ribbit"
+#source-dir = "src"
+#main = "main.f90"
+
+[[test]]
+name = "test"
+source-dir = "src"
+main = "test.f90"
+
