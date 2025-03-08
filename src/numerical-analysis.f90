@@ -150,6 +150,47 @@ double precision function neville_interpolater_vals(xi, fi, x) result(fx)
 end function neville_interpolater_vals
 
 !===============================================================================
+double precision function newton_interpolater_vals(xi, fi, x) result(fx)
+
+	! Newton's interpolation formula:  divided differences
+
+	! TODO: either make x an array or break this fn into init and eval stages.
+	! The whole point of Newton's algorithm is that it's more efficient than
+	! Lagrange and Neville for many interpolation points, but only if you don't
+	! repeat the O(n1**2) part for every point
+
+	double precision, intent(in) :: xi(:), fi(:)
+	double precision, intent(in) :: x
+
+	!********
+
+	double precision, allocatable :: a(:), t(:)
+
+	integer :: i, j, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
+
+	! Find the polynomial coefficients a(:), O(n1**2).  Page 46
+	allocate(a(n1))
+	allocate(t(n1))
+	do i = 1, n1
+		t(i) = fi(i)
+		do j = i-1, 1, -1
+			t(j) = (t(j+1) - t(j)) / (xi(i) - xi(j))
+		end do
+		a(i) = t(1)
+	end do
+
+	! Interpolate at f(x) at `x`, O(n1)
+	fx = a(n1)
+	do i = n1-1, 1, -1
+		fx = fx * (x - xi(i)) + a(i)
+	end do
+
+end function newton_interpolater_vals
+
+!===============================================================================
 
 double precision function log_fn(x) result(log_x)
 

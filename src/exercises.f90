@@ -27,24 +27,29 @@ integer function chapter_2_exercise_2() result(io)
 
 	x = 11.1d0
 
+	! TODO: assert expected val of results and set io
+
 	fx = lagrange_interpolater(xi, log_fn, x)
-	print *, "fx   = ", fx
+	print *, "fx   = ", fx, " (Lagrange)"
 	print *, "f(x) = ", log_fn(x)
 	print *, ""
 
-	fx = lagrange_interpolater(xi, exp_fn, x)  ! not from the text book, but let's see what happens
-	print *, "fx   = ", fx
-	print *, "f(x) = ", exp_fn(x)
-	print *, ""
+	!fx = lagrange_interpolater(xi, exp_fn, x)  ! not from the text book, but let's see what happens
+	!print *, "fx   = ", fx
+	!print *, "f(x) = ", exp_fn(x)
+	!print *, ""
 
 	fx = neville_interpolater(xi, log_fn, x)
 	!fx = neville_interpolater_vals(xi, log(xi), x)
-	print *, "fx   = ", fx
+	print *, "fx   = ", fx, " (Neville)"
 	print *, "f(x) = ", log_fn(x)
 	print *, ""
 
-	! TODO: other exercises for Neville's algorithm, Newton's interpolation
-	! formula, etc.
+	!fx = newton_interpolater(xi, log_fn, x)
+	fx = newton_interpolater_vals(xi, log(xi), x)
+	print *, "fx   = ", fx, " (Newton)"
+	print *, "f(x) = ", log_fn(x)
+	print *, ""
 
 	io = 0
 
