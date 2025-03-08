@@ -107,5 +107,56 @@ end function chapter_2_exercise_2
 
 !===============================================================================
 
+integer function chapter_2_example_2p2p4() result(nfail)
+
+	! Compare rational and polynomial interpolation, from the example in section
+	! 2.2.4 on page 73
+	!
+	! For the function f(x) = cot(x) th evalues at [1: 5] degrees have been
+	! tabulated.  Determine an approximate value for cot(2.5 degrees) using both
+	! polynomial and rational interpolation
+
+	double precision :: x, fx
+	double precision, parameter :: tol = 1.d-3
+	double precision, allocatable :: xi(:)
+
+	write(*,*) CYAN // "Starting chapter_2_example_2p2p4()" // COLOR_RESET
+
+	nfail = 0
+
+	! Support points `xi`
+	xi = [1, 2, 3, 4, 5]
+
+	x = 2.5d0
+
+	! The acceptable tolerance depends on xi, x, and the fn being interpolated
+
+	! TODO: cotand (and cotan) is a GNU extension.  Write a cotd_fn() wrapper
+	! based on intrinsic tand()
+
+	! The expected value for polynomial interpolation, 22.6352, is quite far
+	! from the actual cot value because cot has a singularity at x == 0.
+	! Rational interpolation works better near singularities
+
+	!fx = neville_interpolater(xi, log_fn, x)
+	fx = neville_interpolater_vals(xi, cotand(xi), x)
+	!call test(fx, cotand(x), tol, nfail, "neville_interpolater()")
+	call test(fx, 22.6352d0, tol, nfail, "neville_interpolater()")
+	print *, "fx   = ", fx, " (Neville polynomial)"
+	print *, "f(x) = ", cotand(x)
+	print *, ""
+
+	!fx = neville_rational_interpolater(xi, log_fn, x)
+	fx = neville_rational_interpolater_vals(xi, cotand(xi), x)
+	call test(fx, cotand(x), tol, nfail, "neville_rational_interpolater()")
+	!call test(fx, 22.6352d0, tol, nfail, "neville_rational_interpolater()")
+	print *, "fx   = ", fx, " (Neville rational)"
+	print *, "f(x) = ", cotand(x)
+	print *, ""
+
+end function chapter_2_example_2p2p4
+
+!===============================================================================
+
 end module exercises_m
 

@@ -220,6 +220,77 @@ function newton_interpolater_vals(xi, fi, xs) result(fxs)
 end function newton_interpolater_vals
 
 !===============================================================================
+double precision function neville_rational_interpolater_vals(xi, fi, x) result(fx)
+
+	! Lagrange and Neville are both O(n1**2) time, while Neville has half the
+	! constant factor at the cost of an extra O(n1) space for t(:)
+
+	double precision, intent(in) :: xi(:), fi(:)
+	double precision, intent(in) :: x
+
+	!********
+
+	double precision, allocatable :: t(:), t0(:), tt(:,:)
+
+	integer :: i, j, k, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
+
+	! Interpolate at f(x) at `x`
+
+	! Neville's algorithm with rational polynomials, eq 2.2.3.8, page 72
+
+	! TODO: there's probably a way to do this without using O(n1**2) space
+
+	!allocate(t(n1, n1))
+	allocate(t(n1), t0(n1))
+	allocate(tt(n1, n1+1))  ! 2nd dim gets an extra index
+	t0 = 0.d0
+	tt = 0.d0
+	do i = 1, n1
+		!t(i) = fi(i)
+		tt(i,2) = fi(i)
+
+		do k = 2, i
+			!t(j) = t(j+1) + (t(j+1) - t(j)) / ((x - xi(i-j-1)) / (x - xi(i)) - 1.d0)
+
+			!! Polynomial formula, directly from the equation with O(n1**2)
+			!! space but without the extra index
+			!tt(i,k) = tt(i,k-1) + (tt(i,k-1) - tt(i-1,k-1)) &
+			!	/ ((x - xi(i-k+1)) / (x - xi(i)) - 1.d0)
+
+			! "Note that this recursion formula differs from the corresponding
+			! polynomial formula (2.1.2.5) only by the expression in brackets*"
+			tt(i,k+1) = tt(i,k) + (tt(i,k) - tt(i-1,k)) &
+				/ ((x - xi(i-k+1)) / (x - xi(i)) &
+				* (1.d0 - (tt(i,k) - tt(i-1,k)) / (tt(i,k) - tt(i-1,k-1))) &  ! "expression in brackets"
+				- 1.d0)
+
+		end do
+		!do j = i-1, 1, -1
+		!	!t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j))
+		!	t(j) = t(j+1) + (t(j+1) - t(j)) / ((x - xi(i-j-1)) / (x - xi(i)) - 1.d0)
+		!end do
+
+		t0 = t
+	end do
+	!fx = t(1)
+	fx = tt(n1,n1+1)
+
+	!! Neville's algorithm, eq 2.1.2.5, page 42
+	!allocate(t(n1))
+	!do i = 1, n1
+	!	t(i) = fi(i)
+	!	do j = i-1, 1, -1
+	!		t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j))
+	!	end do
+	!end do
+	!fx = t(1)
+
+end function neville_rational_interpolater_vals
+
+!===============================================================================
 
 double precision function log_fn(x) result(log_x)
 
