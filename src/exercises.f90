@@ -2,6 +2,8 @@
 module exercises_m
 
 	use numerical_analysis_m
+	use utils_m
+
 	implicit none
 
 contains
@@ -18,7 +20,7 @@ integer function chapter_2_exercise_2() result(io)
 	double precision :: x, fx
 	double precision, allocatable :: xi(:)
 
-	print *, "starting chapter_2_exercise_2()"
+	write(*,*) CYAN // "Starting chapter_2_exercise_2()" // COLOR_RESET
 
 	! Support points `xi`
 	xi = [10.d0, 11.d0, 12.d0]
