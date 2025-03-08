@@ -230,7 +230,7 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 
 	!********
 
-	double precision, allocatable :: t(:), t0(:), tt(:,:)
+	double precision, allocatable :: t(:), t0(:), t00(:), tt(:,:), tk2
 
 	integer :: i, j, k, n1
 
@@ -244,13 +244,23 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 	! TODO: there's probably a way to do this without using O(n1**2) space
 
 	!allocate(t(n1, n1))
-	allocate(t(n1), t0(n1))
+	allocate(t(n1), t0(n1), t00(n1))
 	allocate(tt(n1, n1+1))  ! 2nd dim gets an extra index
-	t0 = 0.d0
-	tt = 0.d0
+	t0  = 0.d0
+	t00 = 0.d0
+	tt  = 0.d0
+	t = fi
+	t0 = fi
+	t00 = fi
 	do i = 1, n1
 		!t(i) = fi(i)
+
 		tt(i,2) = fi(i)
+
+		!print *, "t0 = "
+		!print "(es24.14)", t0
+		!print *, "t = "
+		!print "(es24.14)", t
 
 		do k = 2, i
 			!t(j) = t(j+1) + (t(j+1) - t(j)) / ((x - xi(i-j-1)) / (x - xi(i)) - 1.d0)
@@ -266,27 +276,56 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 				/ ((x - xi(i-k+1)) / (x - xi(i)) &
 				* (1.d0 - (tt(i,k) - tt(i-1,k)) / (tt(i,k) - tt(i-1,k-1))) &  ! "expression in brackets"
 				- 1.d0)
-
 		end do
-		!do j = i-1, 1, -1
-		!	!t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j))
-		!	t(j) = t(j+1) + (t(j+1) - t(j)) / ((x - xi(i-j-1)) / (x - xi(i)) - 1.d0)
+		print *, "tt = "
+		print "(6f11.7)", transpose(tt)
+
+		!do k = 2, i
+		!!do k = 1, i-1
+
+		!	tk2 = 0.d0
+		!	if (k > 2) tk2 = t0(k-2)
+
+		!	!t(k) = t(k-1) + (t(k-1) - t0(k-1)) &
+		!	!	/ &
+		!	!	( &
+		!	!		(x - xi(i-k+1)) / (x - xi(i)) &
+		!	!		!* (1.d0 - (t(k-1) - t0(k-1)) / (t(k-1) - t00(k-1))) - 1.d0 &
+		!	!		* (1.d0 - (t(k-1) - t0(k-1)) / (t(k-1) - tk2)) - 1.d0 &
+		!	!	)
+
+		!	t(i) = t0(i) + (t0(i) - t0(i-1)) &
+		!		/ &
+		!		( &
+		!			(x - xi(i-k+1)) / (x - xi(i)) &
+		!			* (1.d0 - (t0(i) - t0(i-1)) / (t0(i) - tk2)) - 1.d0 &
+		!			!* (1.d0 - (t0(i) - t0(i-1)) / (t0(i) - t00(i-1))) - 1.d0 &
+		!		)
+
+		!	!t(k) = t(k-1) + 
+
 		!end do
 
-		t0 = t
-	end do
-	!fx = t(1)
-	fx = tt(n1,n1+1)
+		!do j = i-1, 1, -1
+		!	k = i - j
+		!	t(j) = t(j+1) + (t(j+1) - ()) / (() * () - 1.d0)
+		!	!!t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j))
+		!	!t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j)) &
+		!	!	!* 1.d0
+		!	!	!* (1.d0 - (t(j+1) - t(j)) / (t(j+1) - t0(j)))
+		!	!	/ ((t(j+1) - t(j)) / (t(j+1) - t0(j)) - 1.d0)
+		!	!	!* (1.d0 - (t(j+1) - t(j)) / (t(j+1) - t0(j+1)))
+		!	!	!* ((t(j+1) - t(j)) / (t(j+1) - t0(j)))
+		!	!	!* (1.d0 - (t(i) - t(i-1)) / (t(i) - t0(i-1)))
+		!	!	!/ ((t(i) - t(i-1)) / (t(i) - t0(i-1)))
+		!	!t(j) = t(j+1) + (t(j+1) - t(j)) / ((x - xi(i-j-1)) / (x - xi(i)) - 1.d0)
+		!end do
 
-	!! Neville's algorithm, eq 2.1.2.5, page 42
-	!allocate(t(n1))
-	!do i = 1, n1
-	!	t(i) = fi(i)
-	!	do j = i-1, 1, -1
-	!		t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j))
-	!	end do
-	!end do
-	!fx = t(1)
+		t00 = t0
+		t0  = t
+	end do
+	fx = t(1)
+	fx = tt(n1,n1+1)
 
 end function neville_rational_interpolater_vals
 
