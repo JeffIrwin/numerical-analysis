@@ -7,29 +7,29 @@ module test_m
 
 end module test_m
 
-program test
+program main
 
 	use test_m
 
 	implicit none
 
-	integer :: io
+	integer :: nfail
 
 	write(*,*) MAGENTA // "Starting numerical-analysis test" // COLOR_RESET
 
 	!print *, "PI = ", PI
 
-	io = 0
-	io = io + chapter_2_exercise_2()
+	nfail = 0
+	nfail = nfail + chapter_2_exercise_2()
 
-	if (io == 0) then
+	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET
 	else
-		write(*,*) RED // "Error!" // COLOR_RESET
+		write(*,*) ERROR // to_str(nfail) // " test(s) failed!" // COLOR_RESET
 	end if
 
 	write(*,*) MAGENTA // "Ending numerical-analysis test" // COLOR_RESET
-	call exit(io)
+	call exit(nfail)
 
-end program test
+end program main
 
