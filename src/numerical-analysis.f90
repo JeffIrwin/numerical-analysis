@@ -30,10 +30,9 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 
 	!********
 
-	double precision :: prod
 	double precision, allocatable :: fi(:)
 
-	integer :: i, k, n1
+	integer :: i, n1
 
 	! Degree of polynomial + 1
 	n1 = size(xi, 1)
@@ -43,9 +42,33 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 	do i = 1, n1
 		fi(i) = f(xi(i))
 	end do
+	!print *, "xi = ", xi
+	!print *, "fi = ", fi
 
-	print *, "xi = ", xi
-	print *, "fi = ", fi
+	fx = lagrange_interpolater_vals(xi, fi, x)
+
+end function lagrange_interpolater
+
+!===============================================================================
+double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
+
+	! Given support points `xi` and function values `fi` at those points,
+	! interpolate f at `x` using Lagrange interpolation
+	!
+	! This version takes the function's values instead of the function itself,
+	! which may be useful if you only have the values from a black box
+
+	double precision, intent(in) :: xi(:), fi(:)
+	double precision, intent(in) :: x
+
+	!********
+
+	double precision :: prod
+
+	integer :: i, k, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
 
 	! Interpolate at f(x) at `x`
 
@@ -60,11 +83,7 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 		fx = fx + fi(i) * prod
 	end do
 
-	print *, "fx     = ", fx
-	print *, "actual = ", f(x)
-	print *, ""
-
-end function lagrange_interpolater
+end function lagrange_interpolater_vals
 
 !===============================================================================
 
@@ -103,14 +122,25 @@ integer function chapter_2_exercise_2() result(io)
 
 	! TODO: move exercises out of main module
 
-	double precision :: x, fx, prod
-	double precision, allocatable :: xi(:), fi(:)
+	double precision :: x, fx
+	double precision, allocatable :: xi(:)
+
+	print *, "starting chapter_2_exercise_2()"
 
 	! Support points `xi`
 	xi = [10.d0, 11.d0, 12.d0]
 
-	fx = lagrange_interpolater(xi, log_fn, 11.1d0)
-	fx = lagrange_interpolater(xi, exp_fn, 11.1d0)  ! not from the text book, but let's see what happens
+	x = 11.1d0
+
+	fx = lagrange_interpolater(xi, log_fn, x)
+	print *, "fx   = ", fx
+	print *, "f(x) = ", log_fn(x)
+	print *, ""
+
+	fx = lagrange_interpolater(xi, exp_fn, x)  ! not from the text book, but let's see what happens
+	print *, "fx   = ", fx
+	print *, "f(x) = ", exp_fn(x)
+	print *, ""
 
 	! TODO: other exercises for Neville's algorithm, Newton's interpolation
 	! formula, etc.
