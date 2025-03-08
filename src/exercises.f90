@@ -18,7 +18,7 @@ integer function chapter_2_exercise_2() result(io)
 	!        the interpolating polynomial
 
 	double precision :: x, fx
-	double precision, allocatable :: xi(:)
+	double precision, allocatable :: xi(:), xs(:), fxs(:)
 
 	write(*,*) CYAN // "Starting chapter_2_exercise_2()" // COLOR_RESET
 
@@ -45,10 +45,11 @@ integer function chapter_2_exercise_2() result(io)
 	print *, "f(x) = ", log_fn(x)
 	print *, ""
 
-	!fx = newton_interpolater(xi, log_fn, x)
-	fx = newton_interpolater_vals(xi, log(xi), x)
-	print *, "fx   = ", fx, " (Newton)"
-	print *, "f(x) = ", log_fn(x)
+	xs = [11.1d0, 11.2d0]
+	!fx = newton_interpolater(xi, log_fn, xs)
+	fxs = newton_interpolater_vals(xi, log(xi), xs)
+	print *, "fxs   = ", fxs, " (Newton)"
+	print *, "f(xs) = ", log(xs)
 	print *, ""
 
 	io = 0

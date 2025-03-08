@@ -150,17 +150,22 @@ double precision function neville_interpolater_vals(xi, fi, x) result(fx)
 end function neville_interpolater_vals
 
 !===============================================================================
-double precision function newton_interpolater_vals(xi, fi, x) result(fx)
+function newton_interpolater_vals(xi, fi, xs) result(fx)
 
 	! Newton's interpolation formula:  divided differences
-
-	! TODO: either make x an array or break this fn into init and eval stages.
-	! The whole point of Newton's algorithm is that it's more efficient than
-	! Lagrange and Neville for many interpolation points, but only if you don't
-	! repeat the O(n1**2) part for every point
+	!
+	! Unlike Lagrange and Neville, this takes an array of points xs(:) to be
+	! interpolated
+	!
+	! Alternatively, this could be split into init and eval stages. The whole
+	! point of Newton's algorithm is that it's more efficient than Lagrange and
+	! Neville for many interpolation points, but only if you don't repeat the
+	! O(n1**2) part for every point
 
 	double precision, intent(in) :: xi(:), fi(:)
-	double precision, intent(in) :: x
+	double precision, intent(in) :: xs(:)
+
+	double precision, allocatable :: fx(:)
 
 	!********
 
@@ -182,11 +187,13 @@ double precision function newton_interpolater_vals(xi, fi, x) result(fx)
 		a(i) = t(1)
 	end do
 
-	! Interpolate at f(x) at `x`, O(n1)
+	! Interpolate f, O(n1)
+	allocate(fx( size(xs, 1) ))
 	fx = a(n1)
 	do i = n1-1, 1, -1
-		fx = fx * (x - xi(i)) + a(i)
+		fx = fx * (xs - xi(i)) + a(i)
 	end do
+	!print *, "fx = ", fx
 
 end function newton_interpolater_vals
 
