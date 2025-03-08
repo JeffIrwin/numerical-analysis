@@ -6,6 +6,7 @@ module numerical_analysis_m
 	double precision, parameter :: PI = 4 * atan(1.d0)
 
 	abstract interface
+		! This is a function interface for passing callbacks
 		function fn_f64_to_f64(x) result(fx)
 			double precision, intent(in) :: x
 			double precision :: fx
@@ -14,58 +15,7 @@ module numerical_analysis_m
 
 contains
 
-integer function chapter_2_exercise_2_wet() result(io)
-
-	! 2. Interpolate the function ln x by a quadratic polynomial at x = 10, 11,
-	!    12.
-	!    (a) Estimate the error commited for x = 11.1 when approximating ln x by
-	!        the interpolating polynomial
-
-	double precision :: x, fx, prod
-	double precision, allocatable :: xi(:), fi(:)
-
-	integer :: i, k, n, n1
-
-	! Support points `xi`
-	xi = [10.d0, 11.d0, 12.d0]
-
-	! Degree of polynomial + 1 `n1` and the actual degree `n`
-	n1 = size(xi, 1)
-	n = n1 - 1
-
-	! Function values `fi` at those support points
-	!
-	! TODO: refactor this to take a general fn pointer/callback
-	allocate(fi(n1))
-	do i = 1, n1
-		fi(i) = log(xi(i))
-	end do
-
-	print *, "xi = ", xi
-	print *, "fi = ", fi
-
-	! Interpolate at f(x) at `x`
-	x = 11.1d0
-
-	! Lagrange interpolation
-	fx = 0.d0
-	do i = 1, n1
-		prod = 1.d0
-		do k = 1, n1
-			if (i == k) cycle
-			prod = prod * (x - xi(k)) / (xi(i) - xi(k))
-		end do
-		fx = fx + fi(i) * prod
-	end do
-
-	print *, "fx = ", fx
-
-	io = 0
-
-end function chapter_2_exercise_2_wet
-
 !===============================================================================
-!double precision function lagrange_interpolater(xi, fi, f, x) result(fx)
 double precision function lagrange_interpolater(xi, f, x) result(fx)
 
 	! Given support points `xi` and function `f`, interpolate f at `x` using
@@ -91,7 +41,6 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 	! Function values `fi` at those support points
 	allocate(fi(n1))
 	do i = 1, n1
-		!fi(i) = log(xi(i))
 		fi(i) = f(xi(i))
 	end do
 
@@ -152,16 +101,19 @@ integer function chapter_2_exercise_2() result(io)
 	!    (a) Estimate the error commited for x = 11.1 when approximating ln x by
 	!        the interpolating polynomial
 
+	! TODO: move exercises out of main module
+
 	double precision :: x, fx, prod
 	double precision, allocatable :: xi(:), fi(:)
 
 	! Support points `xi`
 	xi = [10.d0, 11.d0, 12.d0]
 
-	!fx = lagrange_interpolater(xi, log, x)
 	fx = lagrange_interpolater(xi, log_fn, 11.1d0)
+	fx = lagrange_interpolater(xi, exp_fn, 11.1d0)  ! not from the text book, but let's see what happens
 
-	fx = lagrange_interpolater(xi, exp_fn, 11.1d0)
+	! TODO: other exercises for Neville's algorithm, Newton's interpolation
+	! formula, etc.
 
 	io = 0
 
