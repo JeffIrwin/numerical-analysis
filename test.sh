@@ -11,7 +11,7 @@ flags+=" -fbounds-check "
 flags+=" -Wall -Wextra "
 flags+=" -Werror "
 flags+=" -Wno-tabs "
-flags+=" -Wno-unused-variable "
+#flags+=" -Wno-unused-variable "
 #flags+=" -Wno-maybe-uninitialized "
 #flags+=" -Wno-uninitialized "
 
