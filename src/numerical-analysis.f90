@@ -52,12 +52,6 @@ end function lagrange_interpolater
 !===============================================================================
 double precision function neville_interpolater(xi, f, x) result(fx)
 
-	! Given support points `xi` and function `f`, interpolate f at `x` using
-	! Lagrange interpolation
-	!
-	! "Lagrange's formula is, in general, not as suitable for actual
-	! calculations as some other methods to be described below ... ."
-
 	double precision, intent(in) :: xi(:)
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: x
@@ -150,7 +144,35 @@ double precision function neville_interpolater_vals(xi, fi, x) result(fx)
 end function neville_interpolater_vals
 
 !===============================================================================
-function newton_interpolater_vals(xi, fi, xs) result(fx)
+function newton_interpolater(xi, f, xs) result(fxs)
+
+	double precision, intent(in) :: xi(:)
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xs(:)
+
+	double precision, allocatable :: fxs(:)
+
+	!********
+
+	double precision, allocatable :: fi(:)
+
+	integer :: i, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
+
+	! Function values `fi` at those support points
+	allocate(fi(n1))
+	do i = 1, n1
+		fi(i) = f(xi(i))
+	end do
+
+	fxs = newton_interpolater_vals(xi, fi, xs)
+
+end function newton_interpolater
+
+!===============================================================================
+function newton_interpolater_vals(xi, fi, xs) result(fxs)
 
 	! Newton's interpolation formula:  divided differences
 	!
@@ -165,7 +187,7 @@ function newton_interpolater_vals(xi, fi, xs) result(fx)
 	double precision, intent(in) :: xi(:), fi(:)
 	double precision, intent(in) :: xs(:)
 
-	double precision, allocatable :: fx(:)
+	double precision, allocatable :: fxs(:)
 
 	!********
 
@@ -188,12 +210,12 @@ function newton_interpolater_vals(xi, fi, xs) result(fx)
 	end do
 
 	! Interpolate f, O(n1)
-	allocate(fx( size(xs, 1) ))
-	fx = a(n1)
+	allocate(fxs( size(xs, 1) ))
+	fxs = a(n1)
 	do i = n1-1, 1, -1
-		fx = fx * (xs - xi(i)) + a(i)
+		fxs = fxs * (xs - xi(i)) + a(i)
 	end do
-	!print *, "fx = ", fx
+	!print *, "fxs = ", fxs
 
 end function newton_interpolater_vals
 

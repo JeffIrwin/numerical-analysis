@@ -46,8 +46,9 @@ integer function chapter_2_exercise_2() result(io)
 	print *, ""
 
 	xs = [11.1d0, 11.2d0]
-	!fx = newton_interpolater(xi, log_fn, xs)
-	fxs = newton_interpolater_vals(xi, log(xi), xs)
+	!xs = [11.1d0, 11.2d0, 11.3d0, 11.4d0]
+	fxs = newton_interpolater(xi, log_fn, xs)
+	!fxs = newton_interpolater_vals(xi, log(xi), xs)
 	print *, "fxs   = ", fxs, " (Newton)"
 	print *, "f(xs) = ", log(xs)
 	print *, ""

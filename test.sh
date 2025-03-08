@@ -2,5 +2,12 @@
 
 set -exu
 
-fpm test --flag "-Wall -Wextra -Werror -Wno-tabs -Wno-maybe-uninitialized -Wno-uninitialized"
+flags=""
+flags+=" -Wall -Wextra "
+flags+=" -Werror "
+flags+=" -Wno-tabs "
+flags+=" -Wno-maybe-uninitialized "
+flags+=" -Wno-uninitialized "
+
+fpm test --flag "$flags"
 
