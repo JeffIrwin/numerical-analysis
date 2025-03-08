@@ -50,6 +50,38 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 end function lagrange_interpolater
 
 !===============================================================================
+double precision function neville_interpolater(xi, f, x) result(fx)
+
+	! Given support points `xi` and function `f`, interpolate f at `x` using
+	! Lagrange interpolation
+	!
+	! "Lagrange's formula is, in general, not as suitable for actual
+	! calculations as some other methods to be described below ... ."
+
+	double precision, intent(in) :: xi(:)
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: x
+
+	!********
+
+	double precision, allocatable :: fi(:)
+
+	integer :: i, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
+
+	! Function values `fi` at those support points
+	allocate(fi(n1))
+	do i = 1, n1
+		fi(i) = f(xi(i))
+	end do
+
+	fx = neville_interpolater_vals(xi, fi, x)
+
+end function neville_interpolater
+
+!===============================================================================
 double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
 
 	! Given support points `xi` and function values `fi` at those points,
@@ -72,7 +104,7 @@ double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
 
 	! Interpolate at f(x) at `x`
 
-	! Lagrange interpolation
+	! Lagrange interpolation, eq 2.1.1.4, page 39
 	fx = 0.d0
 	do i = 1, n1
 		prod = 1.d0
@@ -84,6 +116,38 @@ double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
 	end do
 
 end function lagrange_interpolater_vals
+
+!===============================================================================
+double precision function neville_interpolater_vals(xi, fi, x) result(fx)
+
+	! Lagrange and Neville are both O(n1**2) time, while Neville has half the
+	! constant factor at the cost of an extra O(n1) space for t(:)
+
+	double precision, intent(in) :: xi(:), fi(:)
+	double precision, intent(in) :: x
+
+	!********
+
+	double precision, allocatable :: t(:)
+
+	integer :: i, j, n1
+
+	! Degree of polynomial + 1
+	n1 = size(xi, 1)
+
+	! Interpolate at f(x) at `x`
+
+	! Neville's algorithm, eq 2.1.2.5, page 42
+	allocate(t(n1))
+	do i = 1, n1
+		t(i) = fi(i)
+		do j = i-1, 1, -1
+			t(j) = t(j+1) + (t(j+1) - t(j)) * (x - xi(i)) / (xi(i) - xi(j))
+		end do
+	end do
+	fx = t(1)
+
+end function neville_interpolater_vals
 
 !===============================================================================
 

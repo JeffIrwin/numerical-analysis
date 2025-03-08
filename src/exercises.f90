@@ -37,6 +37,12 @@ integer function chapter_2_exercise_2() result(io)
 	print *, "f(x) = ", exp_fn(x)
 	print *, ""
 
+	fx = neville_interpolater(xi, log_fn, x)
+	!fx = neville_interpolater_vals(xi, log(xi), x)
+	print *, "fx   = ", fx
+	print *, "f(x) = ", log_fn(x)
+	print *, ""
+
 	! TODO: other exercises for Neville's algorithm, Newton's interpolation
 	! formula, etc.
 
