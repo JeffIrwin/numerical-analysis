@@ -258,6 +258,7 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 				( &
 					1.d0 - (t(k-1) - t0(k-1)) / (t(k-1) - tk2) &  ! "expression in brackets"
 				) - 1.d0)
+
 		end do
 		t0 = t
 	end do

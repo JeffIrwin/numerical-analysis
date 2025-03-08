@@ -117,7 +117,7 @@ integer function chapter_2_example_2p2p4() result(nfail)
 	! polynomial and rational interpolation
 
 	double precision :: x, fx
-	double precision, parameter :: tol = 1.d-3
+	double precision, parameter :: tol = 1.d-4
 	double precision, allocatable :: xi(:)
 
 	write(*,*) CYAN // "Starting chapter_2_example_2p2p4()" // COLOR_RESET
@@ -152,6 +152,24 @@ integer function chapter_2_example_2p2p4() result(nfail)
 	!call test(fx, 22.6352d0, tol, nfail, "neville_rational_interpolater()")
 	print *, "fx   = ", fx, " (Neville rational)"
 	print *, "f(x) = ", cotand(x)
+	print *, ""
+
+	xi = [1, 2, 3, 4, 5, 6, 7, 8] * 1.d-2
+	x = 1.5d-2
+
+	!fx = neville_interpolater(xi, log_fn, x)
+	fx = neville_interpolater_vals(xi, log(xi), x)
+	call test(fx, log(x), 100 * tol, nfail, "neville_interpolater()")  ! big tol
+	print *, "fx   = ", fx, " (Neville polynomial)"
+	print *, "f(x) = ", log(x)
+	print *, ""
+
+	!fx = neville_rational_interpolater(xi, log_fn, x)
+	fx = neville_rational_interpolater_vals(xi, log(xi), x)
+	call test(fx, log(x), tol, nfail, "neville_rational_interpolater()")
+	!call test(fx, 22.6352d0, tol, nfail, "neville_rational_interpolater()")
+	print *, "fx   = ", fx, " (Neville rational)"
+	print *, "f(x) = ", log(x)
 	print *, ""
 
 end function chapter_2_example_2p2p4
