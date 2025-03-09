@@ -1,6 +1,7 @@
 
 module exercises_m
 
+	use functions_m
 	use numerical_analysis_m
 	use utils_m
 
@@ -252,41 +253,6 @@ end function chapter_2_fft_1
 
 !===============================================================================
 
-function select_max_n(v, n) result(iv)
-	! Select the `n` largest values from `v` and return their indices `iv`
-	!
-	! Use a shortened bubble-sort based method O(n * nv).  Better selection
-	! algorithms exist
-
-	! TODO: move to utils
-
-	double precision, intent(in) :: v(:)
-	integer, intent(in) :: n
-
-	integer, allocatable :: iv(:)
-
-	!********
-
-	integer :: i, j, nv
-
-	nv = size(v)
-	iv = [(i, i = 1, nv)]
-
-	do i = 1, n
-	do j = nv-1, i, -1
-		if (v(iv(j)) < v(iv(j+1))) then
-			iv([j, j+1]) = iv([j+1, j])
-		end if
-	end do
-	end do
-
-	! Trim
-	iv = iv(1: n)
-
-end function select_max_n
-
-!===============================================================================
-
 integer function chapter_2_fft_2() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_2_fft_2"
@@ -354,6 +320,7 @@ integer function chapter_2_fft_2() result(nfail)
 	x = x + 1.5 * (2 * (r - 0.5d0))
 	!x = x + 0.5 * (2 * (r - 0.5d0))
 
+	! Write to file for plotting, e.g. with gnuplot
 	fout = label // "_tx.out"
 	open(newunit = fid, file = fout)
 	write(fid, "(a)") "# t, x"
@@ -389,10 +356,10 @@ integer function chapter_2_fft_2() result(nfail)
 
 	!print *, "iy_max = ", iy_max
 	print *, "most prominent amplitudes = "
-	print "(es18.6)", ymag(iy_max)
+	print "(es18.6)", [(ymag(iy_max(i)), i = 1, size(iy_max))]
 
 	print *, "most prominent frequencies = "
-	print "(es18.6)", freqs(iy_max)
+	print "(es18.6)", [(freqs(iy_max(i)), i = 1, size(iy_max))]
 	!print *, "df = ", df
 	!print *, ""
 

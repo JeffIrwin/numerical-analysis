@@ -38,6 +38,39 @@ contains
 
 !===============================================================================
 
+function select_max_n(v, n) result(iv)
+	! Select the `n` largest values from `v` and return their indices `iv`
+	!
+	! Use a shortened bubble-sort based method O(n * nv).  Better selection
+	! algorithms exist
+
+	double precision, intent(in) :: v(:)
+	integer, intent(in) :: n
+
+	integer, allocatable :: iv(:)
+
+	!********
+
+	integer :: i, j, nv
+
+	nv = size(v)
+	iv = [(i, i = 1, nv)]
+
+	do i = 1, n
+	do j = nv-1, i, -1
+		if (v(iv(j)) < v(iv(j+1))) then
+			iv([j, j+1]) = iv([j+1, j])
+		end if
+	end do
+	end do
+
+	! Trim
+	iv = iv(1: n)
+
+end function select_max_n
+
+!===============================================================================
+
 function to_str_i32(val) result(str)
 	integer(kind = 4), intent(in) :: val
 	character(len = :), allocatable :: str
