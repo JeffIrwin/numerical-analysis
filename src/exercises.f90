@@ -169,18 +169,23 @@ end function chapter_2_example_2p2p4
 integer function chapter_2_fft() result(nfail)
 
 	double precision, parameter :: tol = 1.d-14
-	double precision :: ts, freq, amp1, amp4, amp7
+	double precision :: ts, freq, amp1, amp4, amp7, norm_diff
 	double precision, allocatable :: t(:)
 
-	double complex, allocatable :: x(:), xx(:)
+	double complex, allocatable :: x(:), x0(:), xx(:), xx_oneside(:)
 
-	integer :: i, sr, n_oneside
+#if defined(__INTEL_COMPILER)
+	double precision, external :: nrm2, dznrm2
+#endif
+
+	integer :: i, sr, n, n_oneside
 
 	write(*,*) CYAN // "Starting chapter_2_fft()" // COLOR_RESET
 
 	nfail = 0
 
 	sr = 256  ! sampling rate
+	n = sr    ! TODO: this needs be be disentangled for better testing
 
 	ts = 1.0d0 / sr  ! sampling interval
 	!t = np.arange(0,1,ts)
@@ -188,32 +193,72 @@ integer function chapter_2_fft() result(nfail)
 	!print *, "t = ", t
 
 	freq = 1.d0 ; amp1 = 3.d0
-	x = amp1 * sin(2 * PI * freq *t)
+	x = amp1 * sin(2 * PI * freq * t)
 	!print *, "x = ", x
 
 	freq = 4.d0 ; amp4 = 1.d0
-	x = x + amp4 * sin(2 * PI * freq *t)
+	x = x + amp4 * sin(2 * PI * freq * t)
 
 	freq = 7.d0 ; amp7 = 0.5d0
-	x = x + amp7 * sin(2 * PI * freq *t)
+	x = x + amp7 * sin(2 * PI * freq * t)
+
+	! Backup original signal to compare with round trip fft() then ifft()
+	x0 = x
+
+	! Fortran has no complex edit descriptor, so print as pairs of reals
+	print *, "x = "
+	print "(2es18.6)", x(1: 10)
 	!print *, "x = ", x
+	!print "(a,20es18.6)", "x = ", x(1: 10)
+	print *, ""
 
 	xx = fft(x)
 	!print *, "abs(xx) = ", abs(xx(1: 10))
 
 	! Normalize the amplitude and truncate to one side
 	n_oneside = size(x) / 2
-	xx = xx(1: n_oneside) / n_oneside
-	!print *, "abs(xx) = ", abs(xx)
-	print *, "abs(xx) = ", abs(xx(1: 10))
+	xx_oneside = xx(1: n_oneside) / n_oneside
+	!print *, "abs(xx_oneside) = ", abs(xx_oneside)
+	!print *, "abs(xx_oneside) = ", abs(xx_oneside(1: 10))
+	print *, "abs(xx_oneside) = "
+	print "(es18.6)", abs(xx_oneside(1: 10))
 
-	! TODO: generalize.  These indices of xx assume that the sample period is 1
-	call test(abs(xx(1+1)), amp1, tol, nfail, "fft()")
-	call test(abs(xx(4+1)), amp4, tol, nfail, "fft()")
-	call test(abs(xx(7+1)), amp7, tol, nfail, "fft()")
+	! TODO: generalize.  These indices of xx_oneside assume that the sample period is 1
+	call test(abs(xx_oneside(1+1)), amp1, tol, nfail, "fft()")
+	call test(abs(xx_oneside(4+1)), amp4, tol, nfail, "fft()")
+	call test(abs(xx_oneside(7+1)), amp7, tol, nfail, "fft()")
 
-	print *, "sum abs = ", sum(abs(xx))
-	call test(sum(abs(xx)), amp1+amp4+amp7, tol, nfail, "fft()")
+	print *, "sum abs = ", sum(abs(xx_oneside))
+	call test(sum(abs(xx_oneside)), amp1+amp4+amp7, tol, nfail, "fft()")
+	print *, ""
+
+	x = ifft(xx) / sr
+	!x = fft(xx) / sr
+
+	print *, "x (round trip) = "
+	print "(2es18.6)", x(1: 10)
+	!print *, "x = ", x
+	!print "(a,20es18.6)", "x = ", x(1: 10)
+	print *, ""
+
+	! Get the norm of the difference between the original signal x0 and the
+	! round-trip fft() + ifft() signal x
+
+	!print *, "norm diff = ", norm2(x - x0)
+	!print *, "norm diff = ", nrm2(x - x0)
+	!print *, "norm diff = ", nrm2(n, x - x0, 1)  ! undefined
+
+#if defined(__INTEL_COMPILER)
+	print *, "norm diff = ", dznrm2(n, x - x0, 1), " (mkl)"
+#endif
+	norm_diff = real(sqrt(dot_product(x - x0, x - x0)))
+	print *, "norm_diff = ", norm_diff
+	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft()")
+
+	!! dot_product() already performs a conjg.  D'oh!
+	!print *, "norm diff = ", abs(sqrt(dot_product(conjg(x - x0), x - x0)))
+	!print *, "norm diff = ", sqrt(dot_product(conjg(x - x0), x - x0))
+	!print *, "norm diff = ", sqrt(dot_product(x - x0, conjg(x - x0)))
 
 	!# calculate the frequency
 	!N = len(xx)

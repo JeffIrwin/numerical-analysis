@@ -322,18 +322,54 @@ recursive function fft(x) result(xx)
 
 	xx_even = fft(x(1: n: 2))
 	xx_odd  = fft(x(2: n: 2))
-	!print *, "size even = ", size(xx_even)
-	!print *, "size odd  = ", size(xx_odd )
-
-	w = exp( -2 * IMAG * PI * [(i, i = 0, n-1)] / n)
+	w = exp(-2 * IMAG * PI * [(i, i = 0, n-1)] / n)
 
 	xx = &
-	[ &
+	[    &
 		xx_even + w(1    : n/2) * xx_odd, &
 		xx_even + w(n/2+1: n  ) * xx_odd  &
 	]
 
 end function fft
+
+!===============================================================================
+
+recursive function ifft(x) result(xx)
+
+	! Inverse fast Fourier transform
+
+	! TODO: add a wrapper that pads the input to a size of a power of 2
+
+	! TODO: try an iterative implementation instead of recursive
+
+	double complex, intent(in) :: x(:)
+	double complex, allocatable :: xx(:)
+
+	!********
+
+	double complex, allocatable :: xx_even(:), xx_odd(:), w(:)
+
+	integer :: i, n
+
+	n = size(x)
+	!print *, "n = ", n
+
+	if (n == 1) then
+		xx = x
+		return
+	end if
+
+	xx_even = ifft(x(1: n: 2))
+	xx_odd  = ifft(x(2: n: 2))
+	w = exp(2 * IMAG * PI * [(i, i = 0, n-1)] / n)
+
+	xx = &
+	[    &
+		xx_even + w(1    : n/2) * xx_odd, &
+		xx_even + w(n/2+1: n  ) * xx_odd  &
+	]
+
+end function ifft
 
 !===============================================================================
 
