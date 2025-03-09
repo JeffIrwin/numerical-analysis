@@ -166,7 +166,7 @@ end function chapter_2_example_2p2p4
 
 !===============================================================================
 
-integer function chapter_2_fft() result(nfail)
+integer function chapter_2_fft_1() result(nfail)
 
 	double precision, parameter :: tol = 1.d-14
 	double precision :: ts, freq, amp1, amp4, amp7, norm_diff
@@ -176,7 +176,7 @@ integer function chapter_2_fft() result(nfail)
 
 	integer :: i, sr, n
 
-	write(*,*) CYAN // "Starting chapter_2_fft()" // COLOR_RESET
+	write(*,*) CYAN // "Starting chapter_2_fft_1()" // COLOR_RESET
 
 	nfail = 0
 
@@ -245,15 +245,117 @@ integer function chapter_2_fft() result(nfail)
 	! Get the norm of the difference between the original signal x and the
 	! round-trip fft() + ifft() signal xr
 
-	!print *, "norm diff = ", norm2(xr - x)
-	!print *, "norm diff = ", nrm2(xr - x)
-	!print *, "norm diff = ", nrm2(n, xr - x, 1)  ! undefined
+	!print *, "norm_diff = ", norm2(xr - x)
+	!print *, "norm_diff = ", nrm2(xr - x)
+	!print *, "norm_diff = ", nrm2(n, xr - x, 1)  ! undefined
 
 	norm_diff = norm2c(xr - x)
-	print *, "norm diff = ", norm_diff
+	print *, "norm_diff = ", norm_diff
 	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft() round trip")
 
-end function chapter_2_fft
+end function chapter_2_fft_1
+
+!===============================================================================
+
+integer function chapter_2_fft_2() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_2_fft_2"
+	character(len = :), allocatable :: fout
+
+	!double precision, parameter :: tol = 1.d-14
+	double precision :: fs, dt, norm_diff
+	double precision, allocatable :: t(:), r(:), freqs(:), ymag(:)
+
+	double complex, allocatable :: x(:), y(:), xr(:)
+
+	integer :: i, l, ny, fid
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	! Reference for this fft example:
+	!
+	!     https://www.mathworks.com/help/matlab/ref/fft.html
+
+	!Fs = 1000;            % Sampling frequency                    
+	!T = 1/Fs;             % Sampling period       
+	!L = 1500;             % Length of signal
+	!t = (0:L-1)*T;        % Time vector
+	fs = 1000
+	dt = 1.d0 / fs
+
+	!l = 2048
+	!l = 1500
+	!!l = 256
+	!l = 1024 * 16
+	l = 15000
+
+	t = [(i, i = 0, l-1)] * dt
+	!print *, "t = ", t(1: 5), " ... ", t(l-5: l)
+
+	allocate(r(l))
+	call random_number(r)
+	!x = x + 2*randn(size(t))
+
+	!! Create a signal
+	!x = 0.8 + 0.7*sin(2*PI*50*t) + sin(2*PI*120*t)
+	x = 0.8 + 0.7*sin(2*PI*3*t) + sin(2*PI*5*t)
+	!x = x + 0.8 + 0.7*sin(2*PI*50*t) + sin(2*PI*120*t)
+
+	!! Add some random noise
+	!x = x + 0.5 * (2 * (r - 0.5d0))
+	x = x + 0.01 * (2 * (r - 0.5d0))
+
+	fout = label // "_tx.out"
+	open(newunit = fid, file = fout)
+	write(fid, "(a)") "# t, x"
+	do i = 1, l
+		write(fid, "(3es18.6)") t(i), x(i)
+	end do
+	close(fid)
+
+	y = fft(x)
+	ny = size(y)
+
+	!plot(Fs/L*(0:L-1),abs(Y),"LineWidth",3)
+	!title("Complex Magnitude of fft Spectrum")
+	!xlabel("f (Hz)")
+	!ylabel("|fft(X)|")
+
+	!freqs = fs / l * [(i, i = 0, l-1)]
+	freqs = fs / ny * [(i, i = 0, ny-1)]
+
+	! Normalize amplitudes to account for zero-padding
+	ymag = abs(y) * size(y) / size(x)
+
+	fout = label // "_fy.out"
+	open(newunit = fid, file = fout)
+	write(fid, "(a)") "# f, abs(y)"
+	!do i = 1, ny
+	do i = 1, min(200, ny)
+		write(fid, "(2es18.6)") freqs(i), ymag(i)
+	end do
+	close(fid)
+
+	! TODO: find 3 largest frequencies from ymag.  They should match the input
+	! signal (including the dc offset)
+
+	xr = ifft(y)
+	fout = label // "_txr.out"
+	open(newunit = fid, file = fout)
+	write(fid, "(a)") "# t, xr"
+	do i = 1, size(xr)
+		write(fid, "(3es18.6)") dt * (i-1), xr(i)
+	end do
+	close(fid)
+
+	! Truncate xr to undo the initial padding and verify round-trip correctness
+	norm_diff = norm2c(x - xr(1: l))
+	print *, "norm_diff = ", norm_diff
+	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft() 2 round trip")
+
+end function chapter_2_fft_2
 
 !===============================================================================
 

@@ -363,9 +363,17 @@ function fft_core(x, invert) result(xx)
 	do while (2 ** n < n2)
 		n = n + 1
 	end do
-	!print *, "n, n2 = ", n, n2
 
-	xx = x
+	! Pad with zeros
+
+	n2 = 2 ** n
+	!print *, "n, n2 = ", n, n2
+	allocate(xx(n2))
+	xx = 0.d0
+
+	!xx = x
+	xx(1: size(x)) = x
+
 	if (invert) then
 		! De-normalize
 		xx = xx * n2
@@ -401,6 +409,7 @@ function fft_core(x, invert) result(xx)
 
 	! Normalize amplitudes
 	xx = xx / n2
+	!xx = xx / size(x)
 
 end function fft_core
 

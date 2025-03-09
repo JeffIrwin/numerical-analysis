@@ -22,7 +22,8 @@ program main
 	nfail = 0
 	nfail = nfail + chapter_2_exercise_2()
 	nfail = nfail + chapter_2_example_2p2p4()
-	nfail = nfail + chapter_2_fft()
+	nfail = nfail + chapter_2_fft_1()
+	nfail = nfail + chapter_2_fft_2()
 
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET
