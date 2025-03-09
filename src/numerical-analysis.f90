@@ -365,10 +365,11 @@ function fft_core(x, invert) result(xx)
 	end do
 	!print *, "n, n2 = ", n, n2
 
-	! TODO: I think division should happen at the end, not here.  Test harness
-	! will need to change.  Might also be condition depending on inverse or not
 	xx = x
-	!xx = x / n2
+	if (invert) then
+		! De-normalize
+		xx = xx * n2
+	end if
 
 	! Permute array by bit reversal of indices
 	do j = 0, n2 - 1
@@ -383,9 +384,9 @@ function fft_core(x, invert) result(xx)
 	do m = 1, n
 		do j = 0, 2 ** (m-1) - 1
 
-			! The only difference between fft and ifft is the sign of this
+			! The main difference between fft and ifft is the sign of this
 			! exponent
-			e = exp((sign_ * IMAG * PI * j) / (2.d0 ** m))
+			e = exp(sign_ * IMAG * PI * j / 2 ** m)
 
 			do r = 1, n2, 2 ** m
 				u = xx(r + j)
@@ -397,6 +398,9 @@ function fft_core(x, invert) result(xx)
 			end do
 		end do
 	end do
+
+	! Normalize amplitudes
+	xx = xx / n2
 
 end function fft_core
 

@@ -172,106 +172,86 @@ integer function chapter_2_fft() result(nfail)
 	double precision :: ts, freq, amp1, amp4, amp7, norm_diff
 	double precision, allocatable :: t(:)
 
-	double complex, allocatable :: x(:), x0(:), xx(:), xx_oneside(:)
+	double complex, allocatable :: x(:), xr(:), xx(:)
 
-	integer :: i, sr, n, n_oneside
+	integer :: i, sr, n
 
 	write(*,*) CYAN // "Starting chapter_2_fft()" // COLOR_RESET
 
 	nfail = 0
 
+	! Reference for this fft example:
+	!
+	!     https://pythonnumericalmethods.studentorg.berkeley.edu/notebooks/chapter24.03-Fast-Fourier-Transform.html
+	!
+	! The idea is to start with a signal composed of a few simple sine waves.
+	! Then the expected fft of that signal is just a few spikes in the frequency
+	! domain with zeroes (or near machine zero) for the other frequency
+	! components
+
 	sr = 256  ! sampling rate
 	n = sr    ! TODO: this needs be be disentangled for better testing
 
 	ts = 1.0d0 / sr  ! sampling interval
-	!t = np.arange(0,1,ts)
 	t = [(i, i = 0, sr-1)] * ts
 	!print *, "t = ", t
 
 	freq = 1.d0 ; amp1 = 3.d0
 	x = amp1 * sin(2 * PI * freq * t)
+	!x = x + amp1 * cos(2 * PI * freq * t)
 	!print *, "x = ", x
 
 	freq = 4.d0 ; amp4 = 1.d0
 	x = x + amp4 * sin(2 * PI * freq * t)
+	!x = x + amp4 * cos(2 * PI * freq * t)
 
 	freq = 7.d0 ; amp7 = 0.5d0
 	x = x + amp7 * sin(2 * PI * freq * t)
-
-	! Backup original signal to compare with round trip fft() then ifft()
-	x0 = x
+	!x = x + amp7 * cos(2 * PI * freq * t)
 
 	! Fortran has no complex edit descriptor, so print as pairs of reals
 	print *, "x = "
-	!print "(2es18.6)", x(1: 10)
-	print "(2es18.6)", x
-	print *, ""
+	print "(2es18.6)", x(1: 10)
+	!print "(2es18.6)", x
 
 	xx = fft(x)
 
 	!print *, "abs(xx) = ", abs(xx(1: 10))
 	print *, "xx = "
-	print "(2es18.6)", xx
+	print "(2es18.6)", xx(1: 10)
+	!print "(2es18.6)", xx
 
-	! Normalize the amplitude and truncate to one side
-	n_oneside = size(x) / 2
-	xx_oneside = xx(1: n_oneside) / n_oneside
-	!print *, "abs(xx_oneside) = ", abs(xx_oneside)
-	!print *, "abs(xx_oneside) = ", abs(xx_oneside(1: 10))
-	print *, "abs(xx_oneside) = "
-	print "(es18.6)", abs(xx_oneside(1: 10))
+	print *, "abs(xx) = "
+	print "(es18.6)", abs(xx(1: 10))
 
-	! TODO: generalize.  These indices of xx_oneside assume that the sample period is 1
-	call test(abs(xx_oneside(1+1)), amp1, tol, nfail, "fft()")
-	call test(abs(xx_oneside(4+1)), amp4, tol, nfail, "fft()")
-	call test(abs(xx_oneside(7+1)), amp7, tol, nfail, "fft()")
+	! TODO: generalize.  These indices of xx assume that the sample period is 1
+	call test(abs(2 * xx(1+1)), amp1, tol, nfail, "fft() amp1")
+	call test(abs(2 * xx(4+1)), amp4, tol, nfail, "fft() amp4")
+	call test(abs(2 * xx(7+1)), amp7, tol, nfail, "fft() amp7")
 
-	print *, "sum abs = ", sum(abs(xx_oneside))
-	call test(sum(abs(xx_oneside)), amp1+amp4+amp7, tol, nfail, "fft()")
+	print *, "sum abs = ", sum(abs(xx))
+	call test(sum(abs(xx)), amp1+amp4+amp7, tol, nfail, "fft() sum")
 	print *, ""
 
-	!return  ! TODO
+	xr = ifft(xx)
+	!xr = ifft(xx) / sr
 
-	x = ifft(xx) / sr
-	!x = fft(xx) / sr
-
-	print *, "x (round trip) = "
-	print "(2es18.6)", x(1: 10)
-	!print *, "x = ", x
-	!print "(a,20es18.6)", "x = ", x(1: 10)
+	print *, "xr = "
+	print "(2es18.6)", xr(1: 10)
+	!print *, "xr = ", xr
+	!print "(a,20es18.6)", "xr = ", xr(1: 10)
 	print *, ""
 
-	! Get the norm of the difference between the original signal x0 and the
-	! round-trip fft() + ifft() signal x
+	! Get the norm of the difference between the original signal x and the
+	! round-trip fft() + ifft() signal xr
 
-	!print *, "norm diff = ", norm2(x - x0)
-	!print *, "norm diff = ", nrm2(x - x0)
-	!print *, "norm diff = ", nrm2(n, x - x0, 1)  ! undefined
+	!print *, "norm diff = ", norm2(xr - x)
+	!print *, "norm diff = ", nrm2(xr - x)
+	!print *, "norm diff = ", nrm2(n, xr - x, 1)  ! undefined
 
-	norm_diff = norm2c(x - x0)
+	norm_diff = norm2c(xr - x)
 	print *, "norm diff = ", norm_diff
-	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft()")
-
-	!# calculate the frequency
-	!N = len(xx)
-	!n = np.arange(N)
-	!T = N/sr
-	!freq = n/T 
-	!
-	!# Get the one-sided specturm
-	!n_oneside = N//2
-	!
-	!# Get the one side frequency
-	!f_oneside = freq[:n_oneside]
-	!
-	!# normalize the amplitude
-	!xx_oneside =xx[:n_oneside]/n_oneside
-	!
-	!#print("freq = ", freq)
-	!#print("abs(xx) = ", abs(xx))
-	!
-	!#print("abs(xx_oneside) = ", abs(xx_oneside))
-	!print("abs(xx_oneside) = ", abs(xx_oneside[0:10]))
+	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft() round trip")
 
 end function chapter_2_fft
 
