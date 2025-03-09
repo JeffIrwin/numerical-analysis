@@ -294,7 +294,6 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 end function neville_rational_interpolater_vals
 
 !===============================================================================
-
 integer function bit_reverse(j, n) result(k)
 	! Reverse the lowest n bits of number j
 
@@ -311,10 +310,21 @@ integer function bit_reverse(j, n) result(k)
 end function bit_reverse
 
 !===============================================================================
+double precision function norm2c(v)
 
+	double complex, intent(in) :: v(:)
+
+	! It's weird that Fortran's intrinsic norm2() can't handle complex args.
+	! Intel MKL has dznrm2() which is equivalent
+	norm2c = real(sqrt(dot_product(v, v)))
+
+end function norm2c
+
+!===============================================================================
 recursive function fft(x) result(xx)
 
-	! Fast Fourier transform, iterative (non-recursive) implementation
+	! Fast Fourier transform, iterative (non-recursive) implementation, using
+	! the Cooley-Tukey method
 
 	! TODO: pad the input to a size of a power of 2
 
@@ -348,16 +358,13 @@ recursive function fft(x) result(xx)
 
 	do m = 1, n
 		do j = 0, 2 ** (m-1) - 1
-			!e = e_m^j
-			!w = exp(-2 * IMAG * PI * [(i, i = 0, n-1)] / n)
 			e = exp((-2.d0 * IMAG * PI * j) / (2.d0 ** m))
-			do r = 0, n2 - 1, 2 ** m  ! TODO: shift for 1-indexing
-				u = xx(r + j + 1)
-				v = xx(r + j + 2 ** (m-1) + 1) * e
-				!print *, "u, v = ", u, v
+			do r = 1, n2, 2 ** m
+				u = xx(r + j)
+				v = xx(r + j + 2 ** (m-1)) * e
 
-				xx(r + j + 1) = u + v
-				xx(r + j + 2 ** (m-1) + 1) = u - v
+				xx(r + j) = u + v
+				xx(r + j + 2 ** (m-1)) = u - v
 
 			end do
 		end do
@@ -406,93 +413,18 @@ recursive function ifft(x) result(xx)
 			! exponent
 			e = exp((2.d0 * IMAG * PI * j) / (2.d0 ** m))
 
-			do r = 0, n2 - 1, 2 ** m  ! TODO: shift for 1-indexing
-				u = xx(r + j + 1)
-				v = xx(r + j + 2 ** (m-1) + 1) * e
-				!print *, "u, v = ", u, v
+			do r = 1, n2 - 1, 2 ** m
+				u = xx(r + j)
+				v = xx(r + j + 2 ** (m-1)) * e
 
-				xx(r + j + 1) = u + v
-				xx(r + j + 2 ** (m-1) + 1) = u - v
+				xx(r + j) = u + v
+				xx(r + j + 2 ** (m-1)) = u - v
 
 			end do
 		end do
 	end do
 
 end function ifft
-
-!===============================================================================
-
-recursive function fft_rec(x) result(xx)
-
-	! Fast Fourier transform, recursive implementation
-
-	! TODO: add a wrapper that pads the input to a size of a power of 2
-
-	double complex, intent(in) :: x(:)
-	double complex, allocatable :: xx(:)
-
-	!********
-
-	double complex, allocatable :: xx_even(:), xx_odd(:), w(:)
-
-	integer :: i, n
-
-	n = size(x)
-	!print *, "n = ", n
-
-	if (n == 1) then
-		xx = x
-		return
-	end if
-
-	xx_even = fft_rec(x(1: n: 2))
-	xx_odd  = fft_rec(x(2: n: 2))
-	w = exp(-2 * IMAG * PI * [(i, i = 0, n-1)] / n)
-
-	xx = &
-	[    &
-		xx_even + w(1    : n/2) * xx_odd, &
-		xx_even + w(n/2+1: n  ) * xx_odd  &
-	]
-
-end function fft_rec
-
-!===============================================================================
-
-recursive function ifft_rec(x) result(xx)
-
-	! Inverse fast Fourier transform
-
-	! TODO: add a wrapper that pads the input to a size of a power of 2
-
-	double complex, intent(in) :: x(:)
-	double complex, allocatable :: xx(:)
-
-	!********
-
-	double complex, allocatable :: xx_even(:), xx_odd(:), w(:)
-
-	integer :: i, n
-
-	n = size(x)
-	!print *, "n = ", n
-
-	if (n == 1) then
-		xx = x
-		return
-	end if
-
-	xx_even = ifft_rec(x(1: n: 2))
-	xx_odd  = ifft_rec(x(2: n: 2))
-	w = exp(2 * IMAG * PI * [(i, i = 0, n-1)] / n)
-
-	xx = &
-	[    &
-		xx_even + w(1    : n/2) * xx_odd, &
-		xx_even + w(n/2+1: n  ) * xx_odd  &
-	]
-
-end function ifft_rec
 
 !===============================================================================
 

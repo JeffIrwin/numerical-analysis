@@ -211,7 +211,6 @@ integer function chapter_2_fft() result(nfail)
 	print "(2es18.6)", x
 	print *, ""
 
-	!xx = fft_rec(x)
 	xx = fft(x)
 
 	!print *, "abs(xx) = ", abs(xx(1: 10))
@@ -253,19 +252,8 @@ integer function chapter_2_fft() result(nfail)
 	!print *, "norm diff = ", nrm2(x - x0)
 	!print *, "norm diff = ", nrm2(n, x - x0, 1)  ! undefined
 
-	! TODO: make a fn for complex norm.  It's weird that Fortran's intrinsic
-	! norm2() can't handle complex args
-#if defined(__INTEL_COMPILER)
-	print *, "norm diff = ", dznrm2(n, x - x0, 1), " (mkl)"
-#endif
-	norm_diff = real(sqrt(dot_product(x - x0, x - x0)))
-	print *, "norm_diff = ", norm_diff
+	norm_diff = norm2c(x - x0)
 	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft()")
-
-	!! dot_product() already performs a conjg.  D'oh!
-	!print *, "norm diff = ", abs(sqrt(dot_product(conjg(x - x0), x - x0)))
-	!print *, "norm diff = ", sqrt(dot_product(conjg(x - x0), x - x0))
-	!print *, "norm diff = ", sqrt(dot_product(x - x0, conjg(x - x0)))
 
 	!# calculate the frequency
 	!N = len(xx)
