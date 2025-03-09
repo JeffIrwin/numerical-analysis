@@ -295,13 +295,81 @@ end function neville_rational_interpolater_vals
 
 !===============================================================================
 
+integer function bit_reverse(j, n) result(k)
+	! Reverse the lowest n bits of number j
+
+	integer, intent(in) :: j, n
+	!********
+	integer :: i
+
+	k = 0
+	do i = 0, n - 1
+		!if (iand(ishft(j, i), 1) == 1) k = ior(k, ishft(1, -i))
+		if (btest(j, i)) k = ibset(k, n - i - 1)
+	end do
+
+end function bit_reverse
+
+!===============================================================================
+
 recursive function fft(x) result(xx)
 
-	! Fast Fourier transform
+	! Fast Fourier transform, recursive implementation
+
+	! Page 86
+
+	double complex, intent(in) :: x(:)
+	double complex, allocatable :: xx(:)
+
+	!********
+
+	double complex :: e, u, v
+
+	integer :: m, j, r, nj, n, n2
+
+	n2 = size(x)
+	n = 0
+	do while (2 ** n < n2)
+		n = n + 1
+	end do
+	!print *, "n, n2 = ", n, n2
+
+	xx = x
+	!xx = x / n2
+
+	! Bit reversal of indices
+	do j = 0, n2 - 1
+		nj = bit_reverse(j, n)
+		!print *, "j, nj = ", j, nj
+		if (j < nj) xx([j+1, nj+1]) = xx([nj+1, j+1])
+	end do
+
+	do m = 1, n
+		do j = 0, 2 ** (m-1) - 1
+			!e = e_m^j
+			!w = exp(-2 * IMAG * PI * [(i, i = 0, n-1)] / n)
+			e = exp((-2.d0 * IMAG * PI * j) / (2.d0 ** m))
+			do r = 0, n2 - 1, 2 ** m  ! TODO: shift for 1-indexing
+				u = xx(r + j + 1)
+				v = xx(r + j + 2 ** (m-1) + 1) * e
+				!print *, "u, v = ", u, v
+
+				xx(r + j + 1) = u + v
+				xx(r + j + 2 ** (m-1) + 1) = u - v
+
+			end do
+		end do
+	end do
+
+end function fft
+
+!===============================================================================
+
+recursive function fft_rec(x) result(xx)
+
+	! Fast Fourier transform, recursive implementation
 
 	! TODO: add a wrapper that pads the input to a size of a power of 2
-
-	! TODO: try an iterative implementation instead of recursive
 
 	double complex, intent(in) :: x(:)
 	double complex, allocatable :: xx(:)
@@ -320,8 +388,8 @@ recursive function fft(x) result(xx)
 		return
 	end if
 
-	xx_even = fft(x(1: n: 2))
-	xx_odd  = fft(x(2: n: 2))
+	xx_even = fft_rec(x(1: n: 2))
+	xx_odd  = fft_rec(x(2: n: 2))
 	w = exp(-2 * IMAG * PI * [(i, i = 0, n-1)] / n)
 
 	xx = &
@@ -330,7 +398,7 @@ recursive function fft(x) result(xx)
 		xx_even + w(n/2+1: n  ) * xx_odd  &
 	]
 
-end function fft
+end function fft_rec
 
 !===============================================================================
 

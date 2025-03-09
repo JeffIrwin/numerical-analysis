@@ -207,13 +207,16 @@ integer function chapter_2_fft() result(nfail)
 
 	! Fortran has no complex edit descriptor, so print as pairs of reals
 	print *, "x = "
-	print "(2es18.6)", x(1: 10)
-	!print *, "x = ", x
-	!print "(a,20es18.6)", "x = ", x(1: 10)
+	!print "(2es18.6)", x(1: 10)
+	print "(2es18.6)", x
 	print *, ""
 
+	!xx = fft_rec(x)
 	xx = fft(x)
+
 	!print *, "abs(xx) = ", abs(xx(1: 10))
+	print *, "xx = "
+	print "(2es18.6)", xx
 
 	! Normalize the amplitude and truncate to one side
 	n_oneside = size(x) / 2
@@ -231,6 +234,8 @@ integer function chapter_2_fft() result(nfail)
 	print *, "sum abs = ", sum(abs(xx_oneside))
 	call test(sum(abs(xx_oneside)), amp1+amp4+amp7, tol, nfail, "fft()")
 	print *, ""
+
+	!return  ! TODO
 
 	x = ifft(xx) / sr
 	!x = fft(xx) / sr
