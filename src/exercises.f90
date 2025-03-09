@@ -174,10 +174,6 @@ integer function chapter_2_fft() result(nfail)
 
 	double complex, allocatable :: x(:), x0(:), xx(:), xx_oneside(:)
 
-#if defined(__INTEL_COMPILER)
-	double precision, external :: nrm2, dznrm2
-#endif
-
 	integer :: i, sr, n, n_oneside
 
 	write(*,*) CYAN // "Starting chapter_2_fft()" // COLOR_RESET
@@ -253,6 +249,7 @@ integer function chapter_2_fft() result(nfail)
 	!print *, "norm diff = ", nrm2(n, x - x0, 1)  ! undefined
 
 	norm_diff = norm2c(x - x0)
+	print *, "norm diff = ", norm_diff
 	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft()")
 
 	!# calculate the frequency

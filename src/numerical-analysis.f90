@@ -321,8 +321,25 @@ double precision function norm2c(v)
 end function norm2c
 
 !===============================================================================
-recursive function fft(x) result(xx)
+function fft(x) result(xx)
+	! Forward fast Fourier transform
+	double complex, intent(in) :: x(:)
+	double complex, allocatable :: xx(:)
+	xx = fft_core(x, invert = .false.)
+end function fft
 
+!********
+
+function ifft(x) result(xx)
+	! Inverse fast Fourier transform
+	double complex, intent(in) :: x(:)
+	double complex, allocatable :: xx(:)
+	xx = fft_core(x, invert = .true.)
+end function ifft
+
+!===============================================================================
+
+function fft_core(x, invert) result(xx)
 	! Fast Fourier transform, iterative (non-recursive) implementation, using
 	! the Cooley-Tukey method
 
@@ -331,58 +348,12 @@ recursive function fft(x) result(xx)
 	! Page 86
 
 	double complex, intent(in) :: x(:)
+	logical, intent(in) :: invert
 	double complex, allocatable :: xx(:)
 
 	!********
 
-	double complex :: e, u, v
-
-	integer :: m, j, r, nj, n, n2
-
-	n2 = size(x)
-	n = 0
-	do while (2 ** n < n2)
-		n = n + 1
-	end do
-	!print *, "n, n2 = ", n, n2
-
-	xx = x
-	!xx = x / n2
-
-	! Bit reversal of indices
-	do j = 0, n2 - 1
-		nj = bit_reverse(j, n)
-		!print *, "j, nj = ", j, nj
-		if (j < nj) xx([j+1, nj+1]) = xx([nj+1, j+1])
-	end do
-
-	do m = 1, n
-		do j = 0, 2 ** (m-1) - 1
-			e = exp((-2.d0 * IMAG * PI * j) / (2.d0 ** m))
-			do r = 1, n2, 2 ** m
-				u = xx(r + j)
-				v = xx(r + j + 2 ** (m-1)) * e
-
-				xx(r + j) = u + v
-				xx(r + j + 2 ** (m-1)) = u - v
-
-			end do
-		end do
-	end do
-
-end function fft
-
-!===============================================================================
-
-recursive function ifft(x) result(xx)
-
-	! Inverse fast Fourier transform, iterative (non-recursive) implementation
-
-	double complex, intent(in) :: x(:)
-	double complex, allocatable :: xx(:)
-
-	!********
-
+	double precision :: sign_
 	double complex :: e, u, v
 
 	integer :: m, j, r, nj, n, n2
@@ -395,25 +366,28 @@ recursive function ifft(x) result(xx)
 	!print *, "n, n2 = ", n, n2
 
 	! TODO: I think division should happen at the end, not here.  Test harness
-	! will need to change
+	! will need to change.  Might also be condition depending on inverse or not
 	xx = x
 	!xx = x / n2
 
-	! Bit reversal of indices
+	! Permute array by bit reversal of indices
 	do j = 0, n2 - 1
 		nj = bit_reverse(j, n)
 		!print *, "j, nj = ", j, nj
 		if (j < nj) xx([j+1, nj+1]) = xx([nj+1, j+1])
 	end do
 
+	sign_ = -2.d0
+	if (invert) sign_ = 2.d0
+
 	do m = 1, n
 		do j = 0, 2 ** (m-1) - 1
 
 			! The only difference between fft and ifft is the sign of this
 			! exponent
-			e = exp((2.d0 * IMAG * PI * j) / (2.d0 ** m))
+			e = exp((sign_ * IMAG * PI * j) / (2.d0 ** m))
 
-			do r = 1, n2 - 1, 2 ** m
+			do r = 1, n2, 2 ** m
 				u = xx(r + j)
 				v = xx(r + j + 2 ** (m-1)) * e
 
@@ -424,7 +398,7 @@ recursive function ifft(x) result(xx)
 		end do
 	end do
 
-end function ifft
+end function fft_core
 
 !===============================================================================
 
