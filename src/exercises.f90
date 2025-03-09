@@ -253,6 +253,8 @@ integer function chapter_2_fft() result(nfail)
 	!print *, "norm diff = ", nrm2(x - x0)
 	!print *, "norm diff = ", nrm2(n, x - x0, 1)  ! undefined
 
+	! TODO: make a fn for complex norm.  It's weird that Fortran's intrinsic
+	! norm2() can't handle complex args
 #if defined(__INTEL_COMPILER)
 	print *, "norm diff = ", dznrm2(n, x - x0, 1), " (mkl)"
 #endif

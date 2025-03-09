@@ -314,7 +314,9 @@ end function bit_reverse
 
 recursive function fft(x) result(xx)
 
-	! Fast Fourier transform, recursive implementation
+	! Fast Fourier transform, iterative (non-recursive) implementation
+
+	! TODO: pad the input to a size of a power of 2
 
 	! Page 86
 
@@ -365,6 +367,61 @@ end function fft
 
 !===============================================================================
 
+recursive function ifft(x) result(xx)
+
+	! Inverse fast Fourier transform, iterative (non-recursive) implementation
+
+	double complex, intent(in) :: x(:)
+	double complex, allocatable :: xx(:)
+
+	!********
+
+	double complex :: e, u, v
+
+	integer :: m, j, r, nj, n, n2
+
+	n2 = size(x)
+	n = 0
+	do while (2 ** n < n2)
+		n = n + 1
+	end do
+	!print *, "n, n2 = ", n, n2
+
+	! TODO: I think division should happen at the end, not here.  Test harness
+	! will need to change
+	xx = x
+	!xx = x / n2
+
+	! Bit reversal of indices
+	do j = 0, n2 - 1
+		nj = bit_reverse(j, n)
+		!print *, "j, nj = ", j, nj
+		if (j < nj) xx([j+1, nj+1]) = xx([nj+1, j+1])
+	end do
+
+	do m = 1, n
+		do j = 0, 2 ** (m-1) - 1
+
+			! The only difference between fft and ifft is the sign of this
+			! exponent
+			e = exp((2.d0 * IMAG * PI * j) / (2.d0 ** m))
+
+			do r = 0, n2 - 1, 2 ** m  ! TODO: shift for 1-indexing
+				u = xx(r + j + 1)
+				v = xx(r + j + 2 ** (m-1) + 1) * e
+				!print *, "u, v = ", u, v
+
+				xx(r + j + 1) = u + v
+				xx(r + j + 2 ** (m-1) + 1) = u - v
+
+			end do
+		end do
+	end do
+
+end function ifft
+
+!===============================================================================
+
 recursive function fft_rec(x) result(xx)
 
 	! Fast Fourier transform, recursive implementation
@@ -402,13 +459,11 @@ end function fft_rec
 
 !===============================================================================
 
-recursive function ifft(x) result(xx)
+recursive function ifft_rec(x) result(xx)
 
 	! Inverse fast Fourier transform
 
 	! TODO: add a wrapper that pads the input to a size of a power of 2
-
-	! TODO: try an iterative implementation instead of recursive
 
 	double complex, intent(in) :: x(:)
 	double complex, allocatable :: xx(:)
@@ -427,8 +482,8 @@ recursive function ifft(x) result(xx)
 		return
 	end if
 
-	xx_even = ifft(x(1: n: 2))
-	xx_odd  = ifft(x(2: n: 2))
+	xx_even = ifft_rec(x(1: n: 2))
+	xx_odd  = ifft_rec(x(2: n: 2))
 	w = exp(2 * IMAG * PI * [(i, i = 0, n-1)] / n)
 
 	xx = &
@@ -437,7 +492,7 @@ recursive function ifft(x) result(xx)
 		xx_even + w(n/2+1: n  ) * xx_odd  &
 	]
 
-end function ifft
+end function ifft_rec
 
 !===============================================================================
 
