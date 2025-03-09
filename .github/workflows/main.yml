@@ -1,0 +1,42 @@
+
+name: CI
+
+on: [push]
+
+jobs:
+
+  test-os:
+
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+
+      # Having multiple matrices (e.g. os *and* gfortran) will test every
+      # possible combination of those two matrices!
+      matrix:
+        os: [ubuntu-latest]
+        #os: [ubuntu-latest, macOS-latest]
+        #os: [ubuntu-latest, windows-latest, macOS-latest]
+
+    steps:
+
+    - uses: actions/checkout@v3
+    - uses: fortran-lang/setup-fpm@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    #- uses: rscohn2/setup-oneapi@v0
+    #  with:
+    #    list: true
+    #    components: |
+    #      ifx@2024.0.0
+    #      mkl@2024.0.0
+
+    - if: matrix.os == 'ubuntu-latest'
+      name: Test numerical-analysis
+      #env:
+      #  FPM_FC: "ifx"
+      run: |
+        ./test.sh
+        #source /opt/intel/oneapi/setvars.sh
+
