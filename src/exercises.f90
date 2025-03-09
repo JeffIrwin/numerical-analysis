@@ -59,9 +59,9 @@ integer function chapter_2_exercise_2() result(nfail)
 	!    (a) Estimate the error commited for x = 11.1 when approximating ln x by
 	!        the interpolating polynomial
 
-	double precision :: x, fx
 	double precision, parameter :: tol = 1.d-3
 	!double precision, parameter :: tol = 4.d-5
+	double precision :: x, fx
 	double precision, allocatable :: xi(:), xs(:), fxs(:)
 
 	write(*,*) CYAN // "Starting chapter_2_exercise_2()" // COLOR_RESET
@@ -116,8 +116,8 @@ integer function chapter_2_example_2p2p4() result(nfail)
 	! tabulated.  Determine an approximate value for cot(2.5 degrees) using both
 	! polynomial and rational interpolation
 
-	double precision :: x, fx
 	double precision, parameter :: tol = 1.d-4
+	double precision :: x, fx
 	double precision, allocatable :: xi(:)
 
 	write(*,*) CYAN // "Starting chapter_2_example_2p2p4()" // COLOR_RESET
@@ -163,6 +163,80 @@ integer function chapter_2_example_2p2p4() result(nfail)
 	print *, ""
 
 end function chapter_2_example_2p2p4
+
+!===============================================================================
+
+integer function chapter_2_fft() result(nfail)
+
+	double precision, parameter :: tol = 1.d-14
+	double precision :: ts, freq, amp1, amp4, amp7
+	double precision, allocatable :: t(:)
+
+	double complex, allocatable :: x(:), xx(:)
+
+	integer :: i, sr, n_oneside
+
+	write(*,*) CYAN // "Starting chapter_2_fft()" // COLOR_RESET
+
+	nfail = 0
+
+	sr = 256  ! sampling rate
+
+	ts = 1.0d0 / sr  ! sampling interval
+	!t = np.arange(0,1,ts)
+	t = [(i, i = 0, sr-1)] * ts
+	!print *, "t = ", t
+
+	freq = 1.d0 ; amp1 = 3.d0
+	x = amp1 * sin(2 * PI * freq *t)
+	!print *, "x = ", x
+
+	freq = 4.d0 ; amp4 = 1.d0
+	x = x + amp4 * sin(2 * PI * freq *t)
+
+	freq = 7.d0 ; amp7 = 0.5d0
+	x = x + amp7 * sin(2 * PI * freq *t)
+	!print *, "x = ", x
+
+	xx = fft(x)
+	!print *, "abs(xx) = ", abs(xx(1: 10))
+
+	! Normalize the amplitude and truncate to one side
+	n_oneside = size(x) / 2
+	xx = xx(1: n_oneside) / n_oneside
+	!print *, "abs(xx) = ", abs(xx)
+	print *, "abs(xx) = ", abs(xx(1: 10))
+
+	! TODO: generalize.  These indices of xx assume that the sample period is 1
+	call test(abs(xx(1+1)), amp1, tol, nfail, "fft()")
+	call test(abs(xx(4+1)), amp4, tol, nfail, "fft()")
+	call test(abs(xx(7+1)), amp7, tol, nfail, "fft()")
+
+	print *, "sum abs = ", sum(abs(xx))
+	call test(sum(abs(xx)), amp1+amp4+amp7, tol, nfail, "fft()")
+
+	!# calculate the frequency
+	!N = len(xx)
+	!n = np.arange(N)
+	!T = N/sr
+	!freq = n/T 
+	!
+	!# Get the one-sided specturm
+	!n_oneside = N//2
+	!
+	!# Get the one side frequency
+	!f_oneside = freq[:n_oneside]
+	!
+	!# normalize the amplitude
+	!xx_oneside =xx[:n_oneside]/n_oneside
+	!
+	!#print("freq = ", freq)
+	!#print("abs(xx) = ", abs(xx))
+	!
+	!#print("abs(xx_oneside) = ", abs(xx_oneside))
+	!print("abs(xx_oneside) = ", abs(xx_oneside[0:10]))
+
+end function chapter_2_fft
 
 !===============================================================================
 

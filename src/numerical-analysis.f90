@@ -4,6 +4,7 @@ module numerical_analysis_m
 	implicit none
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
+	double complex, parameter :: IMAG = (0.d0, 1.d0)  ! sqrt(-1)
 
 	abstract interface
 		! This is a function interface for passing callbacks
@@ -35,7 +36,7 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 	integer :: i, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Function values `fi` at those support points
 	allocate(fi(n1))
@@ -63,7 +64,7 @@ double precision function neville_interpolater(xi, f, x) result(fx)
 	integer :: i, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Function values `fi` at those support points
 	allocate(fi(n1))
@@ -94,7 +95,7 @@ double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
 	integer :: i, k, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Interpolate at f(x) at `x`
 
@@ -127,7 +128,7 @@ double precision function neville_interpolater_vals(xi, fi, x) result(fx)
 	integer :: i, j, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Interpolate at f(x) at `x`
 
@@ -159,7 +160,7 @@ function newton_interpolater(xi, f, xs) result(fxs)
 	integer :: i, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Function values `fi` at those support points
 	allocate(fi(n1))
@@ -196,7 +197,7 @@ function newton_interpolater_vals(xi, fi, xs) result(fxs)
 	integer :: i, j, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Find the polynomial coefficients a(:), O(n1**2).  Page 46
 	allocate(a(n1))
@@ -210,7 +211,7 @@ function newton_interpolater_vals(xi, fi, xs) result(fxs)
 	end do
 
 	! Interpolate f, O(n1)
-	allocate(fxs( size(xs, 1) ))
+	allocate(fxs( size(xs) ))
 	fxs = a(n1)
 	do i = n1-1, 1, -1
 		fxs = fxs * (xs - xi(i)) + a(i)
@@ -233,7 +234,7 @@ double precision function neville_rational_interpolater(xi, f, x) result(fx)
 	integer :: i, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Function values `fi` at those support points
 	allocate(fi(n1))
@@ -262,7 +263,7 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 	integer :: i, k, n1
 
 	! Degree of polynomial + 1
-	n1 = size(xi, 1)
+	n1 = size(xi)
 
 	! Interpolate at f(x) at `x`
 
@@ -291,6 +292,48 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 	fx = t(n1)
 
 end function neville_rational_interpolater_vals
+
+!===============================================================================
+
+recursive function fft(x) result(xx)
+
+	! Fast Fourier transform
+
+	! TODO: add a wrapper that pads the input to a size of a power of 2
+
+	! TODO: try an iterative implementation instead of recursive
+
+	double complex, intent(in) :: x(:)
+	double complex, allocatable :: xx(:)
+
+	!********
+
+	double complex, allocatable :: xx_even(:), xx_odd(:), w(:)
+
+	integer :: i, n
+
+	n = size(x)
+	!print *, "n = ", n
+
+	if (n == 1) then
+		xx = x
+		return
+	end if
+
+	xx_even = fft(x(1: n: 2))
+	xx_odd  = fft(x(2: n: 2))
+	!print *, "size even = ", size(xx_even)
+	!print *, "size odd  = ", size(xx_odd )
+
+	w = exp( -2 * IMAG * PI * [(i, i = 0, n-1)] / n)
+
+	xx = &
+	[ &
+		xx_even + w(1    : n/2) * xx_odd, &
+		xx_even + w(n/2+1: n  ) * xx_odd  &
+	]
+
+end function fft
 
 !===============================================================================
 

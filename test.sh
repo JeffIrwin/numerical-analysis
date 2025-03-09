@@ -12,8 +12,8 @@ flags+=" -Wall -Wextra "
 flags+=" -Werror "
 flags+=" -Wno-tabs "
 #flags+=" -Wno-unused-variable "
-#flags+=" -Wno-maybe-uninitialized "
-#flags+=" -Wno-uninitialized "
+flags+=" -Wno-maybe-uninitialized "
+flags+=" -Wno-uninitialized "
 
 fpm test --flag "$flags"
 
