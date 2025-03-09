@@ -190,7 +190,7 @@ integer function chapter_2_fft_1() result(nfail)
 	! components
 
 	sr = 256  ! sampling rate
-	n = sr    ! TODO: this needs be be disentangled for better testing
+	n = sr
 
 	ts = 1.0d0 / sr  ! sampling interval
 	t = [(i, i = 0, sr-1)] * ts
@@ -211,20 +211,22 @@ integer function chapter_2_fft_1() result(nfail)
 
 	! Fortran has no complex edit descriptor, so print as pairs of reals
 	print *, "x = "
-	print "(2es18.6)", x(1: 10)
+	print "(2es18.6)", x(1: 5)
 	!print "(2es18.6)", x
 
 	xx = fft(x)
 
-	!print *, "abs(xx) = ", abs(xx(1: 10))
+	!print *, "abs(xx) = ", abs(xx(1: 5))
 	print *, "xx = "
-	print "(2es18.6)", xx(1: 10)
+	print "(2es18.6)", xx(1: 5)
 	!print "(2es18.6)", xx
 
 	print *, "abs(xx) = "
-	print "(es18.6)", abs(xx(1: 10))
+	print "(es18.6)", abs(xx(1: 5))
 
-	! TODO: generalize.  These indices of xx assume that the sample period is 1
+	! These indices of xx assume that the sample period is 1.  See
+	! chapter_2_fft_2() for a better, more general example of matching fft
+	! output with meaningful frequencies
 	call test(abs(2 * xx(1+1)), amp1, tol, nfail, "fft() amp1")
 	call test(abs(2 * xx(4+1)), amp4, tol, nfail, "fft() amp4")
 	call test(abs(2 * xx(7+1)), amp7, tol, nfail, "fft() amp7")
@@ -237,23 +239,51 @@ integer function chapter_2_fft_1() result(nfail)
 	!xr = ifft(xx) / sr
 
 	print *, "xr = "
-	print "(2es18.6)", xr(1: 10)
-	!print *, "xr = ", xr
-	!print "(a,20es18.6)", "xr = ", xr(1: 10)
-	print *, ""
+	print "(2es18.6)", xr(1: 5)
 
 	! Get the norm of the difference between the original signal x and the
 	! round-trip fft() + ifft() signal xr
-
-	!print *, "norm_diff = ", norm2(xr - x)
-	!print *, "norm_diff = ", nrm2(xr - x)
-	!print *, "norm_diff = ", nrm2(n, xr - x, 1)  ! undefined
-
 	norm_diff = norm2c(xr - x)
 	print *, "norm_diff = ", norm_diff
 	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft() round trip")
+	print *, ""
 
 end function chapter_2_fft_1
+
+!===============================================================================
+
+function select_max_n(v, n) result(iv)
+	! Select the `n` largest values from `v` and return their indices `iv`
+	!
+	! Use a shortened bubble-sort based method O(n * nv).  Better selection
+	! algorithms exist
+
+	! TODO: move to utils
+
+	double precision, intent(in) :: v(:)
+	integer, intent(in) :: n
+
+	integer, allocatable :: iv(:)
+
+	!********
+
+	integer :: i, j, nv
+
+	nv = size(v)
+	iv = [(i, i = 1, nv)]
+
+	do i = 1, n
+	do j = nv-1, i, -1
+		if (v(iv(j)) < v(iv(j+1))) then
+			iv([j, j+1]) = iv([j+1, j])
+		end if
+	end do
+	end do
+
+	! Trim
+	iv = iv(1: n)
+
+end function select_max_n
 
 !===============================================================================
 
@@ -263,12 +293,13 @@ integer function chapter_2_fft_2() result(nfail)
 	character(len = :), allocatable :: fout
 
 	!double precision, parameter :: tol = 1.d-14
-	double precision :: fs, dt, norm_diff
+	double precision :: fs, dt, norm_diff, df, a1, a2, a3, a4, f1, f2, f3, f4
 	double precision, allocatable :: t(:), r(:), freqs(:), ymag(:)
 
 	double complex, allocatable :: x(:), y(:), xr(:)
 
-	integer :: i, l, ny, fid
+	integer :: i, l, ny, fid, nrng
+	integer, allocatable :: iy_max(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -282,30 +313,46 @@ integer function chapter_2_fft_2() result(nfail)
 	!T = 1/Fs;             % Sampling period       
 	!L = 1500;             % Length of signal
 	!t = (0:L-1)*T;        % Time vector
-	fs = 1000
-	dt = 1.d0 / fs
+	fs = 1000       ! sampling frequency
+	dt = 1.d0 / fs  ! sampling period
 
+	!! Number of signal sample points
 	!l = 2048
 	!l = 1500
 	!!l = 256
 	!l = 1024 * 16
 	l = 15000
 
+	! Time vector
 	t = [(i, i = 0, l-1)] * dt
 	!print *, "t = ", t(1: 5), " ... ", t(l-5: l)
 
 	allocate(r(l))
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
 	call random_number(r)
-	!x = x + 2*randn(size(t))
+
+	! Tests expect these amplitudes to be in descending order
+	a1 = 0.8  ! DC offset
+	a2 = 0.5
+	a3 = 0.35
+	a4 = 0.3
+
+	f1 = 0
+	f2 = 5
+	f3 = 3
+	f4 = 8
 
 	!! Create a signal
-	!x = 0.8 + 0.7*sin(2*PI*50*t) + sin(2*PI*120*t)
-	x = 0.8 + 0.7*sin(2*PI*3*t) + sin(2*PI*5*t)
-	!x = x + 0.8 + 0.7*sin(2*PI*50*t) + sin(2*PI*120*t)
+	!x = 0.8 + 0.7*sin(2*PI*3*t) + sin(2*PI*5*t)
+	x = a1 &
+		+ 2*a2 * sin(2*PI*f2*t) &
+		+ 2*a3 * sin(2*PI*f3*t) &
+		+ 2*a4 * sin(2*PI*f4*t)
 
 	!! Add some random noise
+	x = x + 1.5 * (2 * (r - 0.5d0))
 	!x = x + 0.5 * (2 * (r - 0.5d0))
-	x = x + 0.01 * (2 * (r - 0.5d0))
 
 	fout = label // "_tx.out"
 	open(newunit = fid, file = fout)
@@ -318,13 +365,10 @@ integer function chapter_2_fft_2() result(nfail)
 	y = fft(x)
 	ny = size(y)
 
-	!plot(Fs/L*(0:L-1),abs(Y),"LineWidth",3)
-	!title("Complex Magnitude of fft Spectrum")
-	!xlabel("f (Hz)")
-	!ylabel("|fft(X)|")
+	! Frequency resolution
+	df = fs / ny
 
-	!freqs = fs / l * [(i, i = 0, l-1)]
-	freqs = fs / ny * [(i, i = 0, ny-1)]
+	freqs = df * [(i, i = 0, ny-1)]
 
 	! Normalize amplitudes to account for zero-padding
 	ymag = abs(y) * size(y) / size(x)
@@ -338,8 +382,35 @@ integer function chapter_2_fft_2() result(nfail)
 	end do
 	close(fid)
 
-	! TODO: find 3 largest frequencies from ymag.  They should match the input
-	! signal (including the dc offset)
+	! Find largest frequencies from ymag.  They should match the input signal
+	! (including the dc offset)
+
+	iy_max = select_max_n(ymag(1: ny/2), 5)
+
+	!print *, "iy_max = ", iy_max
+	print *, "most prominent amplitudes = "
+	print "(es18.6)", ymag(iy_max)
+
+	print *, "most prominent frequencies = "
+	print "(es18.6)", freqs(iy_max)
+	!print *, "df = ", df
+	!print *, ""
+
+	! These test assertions can be very sensitive to things like the sample size
+	! `l`, due to artifacts like FFT leakage.  This doesn't mean that anything
+	! is wrong, it's just that the tests have to be written carefully, or you
+	! need to do more work to equivalence nearby frequencies which look like
+	! multiple spikes when they're really just one leaky spike
+
+	call test(ymag(iy_max(1)), a1, 0.1d0, nfail, "fft() amplitude 1")
+	call test(ymag(iy_max(2)), a2, 0.1d0, nfail, "fft() amplitude 2")
+	call test(ymag(iy_max(3)), a3, 0.1d0, nfail, "fft() amplitude 3")
+	call test(ymag(iy_max(4)), a4, 0.1d0, nfail, "fft() amplitude 4")
+
+	call test(freqs(iy_max(1)), f1, df, nfail, "fft() frequency 1")
+	call test(freqs(iy_max(2)), f2, df, nfail, "fft() frequency 2")
+	call test(freqs(iy_max(3)), f3, df, nfail, "fft() frequency 3")
+	call test(freqs(iy_max(4)), f4, df, nfail, "fft() frequency 4")
 
 	xr = ifft(y)
 	fout = label // "_txr.out"
@@ -354,6 +425,7 @@ integer function chapter_2_fft_2() result(nfail)
 	norm_diff = norm2c(x - xr(1: l))
 	print *, "norm_diff = ", norm_diff
 	call test(norm_diff, 0.d0, 1.d-12, nfail, "fft() 2 round trip")
+	print *, ""
 
 end function chapter_2_fft_2
 

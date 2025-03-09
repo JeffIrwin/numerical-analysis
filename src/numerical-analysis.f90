@@ -343,8 +343,6 @@ function fft_core(x, invert) result(xx)
 	! Fast Fourier transform, iterative (non-recursive) implementation, using
 	! the Cooley-Tukey method
 
-	! TODO: pad the input to a size of a power of 2
-
 	! Page 86
 
 	double complex, intent(in) :: x(:)
@@ -358,21 +356,16 @@ function fft_core(x, invert) result(xx)
 
 	integer :: m, j, r, nj, n, n2
 
-	n2 = size(x)
+	! Pad with zeros to size n2
 	n = 0
-	do while (2 ** n < n2)
+	do while (2 ** n < size(x))
 		n = n + 1
 	end do
-
-	! Pad with zeros
-
 	n2 = 2 ** n
-	!print *, "n, n2 = ", n, n2
 	allocate(xx(n2))
 	xx = 0.d0
-
-	!xx = x
 	xx(1: size(x)) = x
+	!print *, "n, n2 = ", n, n2
 
 	if (invert) then
 		! De-normalize
