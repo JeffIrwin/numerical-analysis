@@ -46,6 +46,6 @@ jobs:
     name: Test in docker
     runs-on: ubuntu-latest
     steps:
-    run: |
+    - run: |
       docker build . -t rocky
 
