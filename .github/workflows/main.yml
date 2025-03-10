@@ -46,6 +46,7 @@ jobs:
     name: Test in docker
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
     - name: Test in docker
       run: |
         pwd
