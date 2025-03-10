@@ -48,5 +48,6 @@ jobs:
     steps:
     - name: Test in docker
       run: |
+        ls
         docker build . -t rocky
 
