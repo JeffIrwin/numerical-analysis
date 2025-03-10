@@ -1,4 +1,6 @@
 
+![](https://github.com/JeffIrwin/numerical-analysis/workflows/CI/badge.svg)
+
 # numerical-analysis
 
 Exercises from the textbook "Introduction to numerical analysis" by Stoer and

@@ -49,8 +49,5 @@ jobs:
     - uses: actions/checkout@v3
     - name: Test in docker
       run: |
-        pwd
-        echo "jeff was here"
-        ls
         docker build . -t rocky
 
