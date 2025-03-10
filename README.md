@@ -14,6 +14,11 @@ Also see local dir "/mnt/c/Users/jirwi/cpp/math523/" with my original code from
 when I took Math 523 at Penn State in 2014
 -->
 
+## Dependencies
+- `fpm`: https://fpm.fortran-lang.org/
+- `gfortran` or another Fortran compiler
+- Check the [Dockerfile](Dockerfile) for an up to date list of dependencies
+
 ## Run the test application
 
 Run the test suite using `fpm`, the [Fortran package
