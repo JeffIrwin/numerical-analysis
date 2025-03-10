@@ -37,6 +37,15 @@ jobs:
       #env:
       #  FPM_FC: "ifx"
       run: |
+        gfortran --version
         ./test.sh
         #source /opt/intel/oneapi/setvars.sh
+
+  test-docker:
+
+    name: Test in docker
+    runs-on: ubuntu-latest
+    steps:
+    run: |
+      docker build . -t rocky
 

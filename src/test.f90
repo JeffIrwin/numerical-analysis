@@ -17,8 +17,6 @@ program main
 
 	write(*,*) MAGENTA // "Starting numerical-analysis test" // COLOR_RESET
 
-	!print *, "PI = ", PI
-
 	nfail = 0
 	nfail = nfail + chapter_2_exercise_2()
 	nfail = nfail + chapter_2_example_2p2p4()
