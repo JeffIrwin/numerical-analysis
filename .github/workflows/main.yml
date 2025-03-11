@@ -37,7 +37,7 @@ jobs:
       #env:
       #  FPM_FC: "ifx"
       run: |
-        curl -L -o ./fpm https://github.com/fortran-lang/fpm/releases/download/current/fpm-linux-x86_64
+        curl -L -o ./fpm https://github.com/fortran-lang/fpm/releases/download/current/fpm-linux-x86_64-gcc-12
         chmod +x fpm
         mv fpm /usr/local/bin
         fpm --version

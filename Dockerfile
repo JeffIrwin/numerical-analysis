@@ -12,7 +12,7 @@ ENV PATH="$PATH:/opt/rh/gcc-toolset-13/root/usr/bin/"
 
 RUN gfortran --version
 
-ADD https://github.com/fortran-lang/fpm/releases/download/current/fpm-linux-x86_64 ./fpm
+ADD https://github.com/fortran-lang/fpm/releases/download/current/fpm-linux-x86_64-gcc-12 ./fpm
 RUN chmod +x fpm
 RUN mv fpm /usr/local/bin
 RUN fpm --version
