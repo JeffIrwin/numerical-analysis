@@ -411,5 +411,171 @@ end function fft_core
 
 !===============================================================================
 
+subroutine tridiag_factor(a)
+	! This is the factorization phase of tridiag_invmul(), without pivoting
+	!
+	! If you are only solving once, the interface for tridiag_invmul() is
+	! easier.  However, separate factor and solve phases are better if you need
+	! to factor once and then solve multiple times without repeating the
+	! factorization
+	!
+	! Compare the interface of lapack routines dgetrf() (factor) and dgetrs()
+	! (solve) vs dgesv() (combined factor-solve).  For example:
+	!
+	!     https://github.com/JeffIrwin/ribbit/blob/ec868aa3db96258b95909f3101434128fc42428f/src/ribbit.f90#L1722
+
+	double precision, intent(inout) :: a(:,:)
+	!********
+	integer :: i, n
+
+	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
+
+	! TODO: check that size 1 is 3?
+
+	! This implementation is based on wikipedia's "Tridiagonal
+	! matrix algorithm" page.  Note that variable names and
+	! subscripts differ.
+
+	! l(1) = a(1,1) is 0, u(n) = a(3,n) is 0
+
+	! TODO: check a(1,1) == 0 and a(3,n) == 0?
+
+	a(3,1) = a(3,1) / a(2,1)
+	do i = 2, n - 1
+		a(2, i) = a(2, i) - a(1, i) * a(3, i-1)
+		a(3, i) = a(3, i) / a(2, i)
+	end do
+
+end subroutine tridiag_factor
+
+subroutine tridiag_solve(a, bx)
+	! This is the solving phase of tridiag_invmul()
+
+	double precision, intent(in) :: a(:,:)
+	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+
+	!********
+
+	integer :: i, n
+
+	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
+
+	! Forward sweep
+	bx(1)  = bx(1)  / a(2,1)
+	do i = 2, n - 1
+		bx(i) = (bx(i) - a(1, i) * bx(i-1)) / a(2, i)
+	end do
+	bx(n) = (bx(n) - a(1,n) * bx(n-1)) / (a(2,n) - a(1,n) * a(3,n-1))
+
+	! Back substitution
+	do i = n - 1, 1, -1
+		bx(i) = bx(i) - a(3,i) * bx(i+1)
+	end do
+
+end subroutine tridiag_solve
+
+!********
+
+subroutine tridiag_invmul(a, bx)
+	! Solve the linear algebra problem for `x`:
+	!
+	!     a * x = b
+	!
+	! Tridiagonal matrix `a` is packed into a 3xn array (TODO: or nx3?).  On
+	! input, `bx` is the RHS `b`.  On output, `bx` is the solution `x`
+	!
+	! See exercises.f90 for an example of how to pack the `a` matrix
+
+	double precision, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+
+	!********
+
+	call tridiag_factor(a)
+	call tridiag_solve(a, bx)
+
+end subroutine tridiag_invmul
+
+!subroutine tridiag_invmul(a, bx)
+!	! Solve the linear algebra problem for `x`:
+!	!
+!	!     a * x = b
+!	!
+!	! Tridiagonal matrix `a` is packed into a 3xn array.  On
+!	! input, `bx` is the RHS `b`.  On output, `bx` is the solution `x`
+!	!
+!	! See exercises.f90 for an example of how to pack the `a` matrix
+!
+!	double precision, intent(inout) :: a(:,:)
+!	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+!
+!	!********
+!
+!	integer :: n
+!	integer :: i
+!	double precision :: denom, w
+!
+!	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
+!
+!	! This implementation is based on wikipedia's "Tridiagonal
+!	! matrix algorithm" page.  Note that variable names and
+!	! subscripts differ.
+!
+!	! l(1) = a(1,1) is 0, u(n) = a(3,n) is 0
+!
+!	! TODO: since inputs are being modified, this could probably be improved a
+!	! bit according to wiki
+!
+!#if 1
+!	! Forward sweep (factoring)
+!	a(3,1) = a(3,1) / a(2,1)
+!	bx(1)  = bx(1)  / a(2,1)  ! not part of factoring, but can they be separated?
+!	do i = 2, n - 1
+!		denom = a(2, i) - a(1, i) * a(3, i-1)
+!		a(3,i) = a(3,i) / denom
+!		bx(i) = (bx(i) - a(1, i) * bx(i-1)) / denom
+!	end do
+!	bx(n) = (bx(n) - a(1,n) * bx(n-1)) / (a(2,n) - a(1,n) * a(3,n-1))
+!
+!	! Back substitution (solving)
+!	do i = n - 1, 1, -1
+!		bx(i) = bx(i) - a(3,i) * bx(i+1)
+!	end do
+!#else
+!
+!	do i = 2, n-1
+!		w = a(1, i) / a(2, i-1)
+!		a(2, i) = a(2, i) - w * a(3, i-1)
+!		bx(i) = bx(i) - w * bx(i-1)
+!	end do
+!	w = a(1, n) / a(2, n-1)
+!	a(2, n) = a(2, n) - w * a(3, i-1)
+!
+!	!bx(n) = bx(n) / a(2, n)
+!	!bx(n) = (bx(n) - a(1,n) * bx(n-1)) / (a(2,n) - a(1,n) * a(3,n-1))
+!	!bx(n) = bx(n) - w * bx(n-1)
+!	bx(n) = (bx(n) - w * bx(n-1)) - w * bx(n-1)
+!
+!	do i = n-1, 1, -1
+!		!bx(i) = (bx(i) - a(3, i) * bx(i+1)) / bx(i)
+!		bx(i) = bx(i) - a(3,i) * bx(i+1)
+!	end do
+!	!for i = 2, 3, ..., n do
+!	!	w = a(i) / b(i-1)
+!	!	b(i) = b(i) - w * c(i-1)
+!	!	d(i) = d(i) - w * d(i-1)
+!	!end
+!
+!	!x(n) = d(n) / b(n)
+!	!for i = n-1, n-2, ..., 1
+!	!	x(i) = (d(i) - c(i) * x(i+1)) / b(i)
+!	!end
+!
+!#endif
+!
+!end subroutine tridiag_invmul
+
+!===============================================================================
+
 end module numerical_analysis_m
 

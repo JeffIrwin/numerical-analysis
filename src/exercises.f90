@@ -398,5 +398,73 @@ end function chapter_2_fft_2
 
 !===============================================================================
 
+integer function chapter_2_tridiag() result(nfail)
+	! The general tridiagonal matrix algorithm is not part of chapter 2 per se,
+	! but it's a nice way to solve for moments in cubic spline problems
+
+	character(len = *), parameter :: label = "chapter_2_tridiag"
+
+	double precision, allocatable :: a(:,:), bx(:), x(:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	! Small test
+	allocate(a(3, 3))
+	a(:,1) = [0, 2, 1]
+	a(:,2) = [3, 5, 4]
+	a(:,3) = [6, 7, 0]
+
+	bx = [8, 9, 10]
+
+	call tridiag_invmul(a, bx)
+	print "(a,3es18.6)", "bx = ", bx
+	call test(norm2(bx - [65, -122, 106]), 0.d0, 1.d-11, nfail, "tridiag_invmul() 3x3")
+
+	deallocate(a)
+
+	! Slightly bigger test
+	!
+	! The lower band is a(1,:) == [3, 6, 8, ...], the main diagonal is a(2,:) ==
+	! [2, 5, 7, ...] (i.e. the middle column below), and the upper band is
+	! a(3,:) == [1, 4, 5, ...].  In a traditional layout, this is the matrix:
+	!
+	!     [2, 1, 0, 0, 0, 0]
+	!     [3, 5, 4, 0, 0, 0]
+	!     [0, 6, 7, 5, 0, 0]
+	!     [0, 0, 8, 9, 4, 0]
+	!     [0, 0, 0, 7, 9, 5]
+	!     [0, 0, 0, 0, 7, 8]
+	!
+	allocate(a(3, 6))
+	a(:,1) = [0, 2, 1]
+	a(:,2) = [3, 5, 4]
+	a(:,3) = [6, 7, 5]
+	a(:,4) = [8, 9, 4]
+	a(:,5) = [7, 9, 5]
+	a(:,6) = [7, 8, 0]
+
+	bx = [8, 9, 10, 11, 12, 13]
+
+	call tridiag_invmul(a, bx)
+	print "(a,6es18.6)", "bx = ", bx
+	x = &
+	[   &
+		 4.3366500829187418d+00, &
+		-6.7330016583748276d-01, &
+		-1.6086235489220257d-01, &
+		 3.0331674958540629d+00, &
+		-3.7529021558872304d+00, &
+		 4.9087893864013266d+00  &
+	]
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "tridiag_invmul() 6x6")
+
+	print *, ""
+
+end function chapter_2_tridiag
+
+!===============================================================================
+
 end module exercises_m
 
