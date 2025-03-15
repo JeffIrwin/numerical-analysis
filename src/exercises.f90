@@ -479,29 +479,6 @@ integer function chapter_2_banded() result(nfail)
 
 	nfail = 0
 
-	!allocate(a(3, 6))
-	!a(:,1) = [0, 2, 1]
-	!a(:,2) = [3, 5, 4]
-	!a(:,3) = [6, 7, 5]
-	!a(:,4) = [8, 9, 4]
-	!a(:,5) = [7, 9, 5]
-	!a(:,6) = [7, 8, 0]
-
-	!bx = [8, 9, 10, 11, 12, 13]
-
-	!call tridiag_invmul(a, bx)
-	!print "(a,6es18.6)", "bx = ", bx
-	!x = &
-	![   &
-	!	 4.3366500829187418d+00, &
-	!	-6.7330016583748276d-01, &
-	!	-1.6086235489220257d-01, &
-	!	 3.0331674958540629d+00, &
-	!	-3.7529021558872304d+00, &
-	!	 4.9087893864013266d+00  &
-	!]
-	!call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "tridiag_invmul() 6x6")
-
 	nl = 2  ! number of lower bands
 	nu = 2  ! number of upper bands
 	n = 11  ! size of x

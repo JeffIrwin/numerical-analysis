@@ -483,13 +483,18 @@ subroutine tridiag_invmul(a, bx)
 	!
 	!     a * x = b
 	!
-	! Tridiagonal matrix `a` is packed into a 3xn array (TODO: or nx3?).  On
-	! input, `bx` is the RHS `b`.  On output, `bx` is the solution `x`
+	! Tridiagonal matrix `a` is packed into a 3xn array.  On input, `bx` is the
+	! RHS `b`.  On output, `bx` is the solution `x`
 	!
 	! See exercises.f90 for an example of how to pack the `a` matrix
 
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+
+	! I'm not sure if it's better for performance to use the current
+	! representation of `a` or its transpose instead.  Most expressions in
+	! factor/solve work on a 3x2 or 2x1 submatrix of `a` currently, so it might
+	! be better as-is, but not much of a difference
 
 	!********
 
@@ -528,28 +533,14 @@ subroutine banded_factor(a, nl, nu, bx)
 	mm = nl + 1 + nu
 
 	! Left-shift the top nl rows by the number of zeroes
-
-	!l = nl !- 1
-	!do i = 1, nl
-	!	do j = nl - i + 2, mm
-	!		a(j-l, i) = a(j, i)
-	!	end do
-	!	l = l - 1
-	!	a(mm-l: mm, i) = 0
-	!end do
-	do i = 1, nl  ! same as loop above
+	do i = 1, nl
 		a(1: mm-nl+i-1, i) = a(1+nl-i+1: mm, i)
-		!do j = 1, mm - nl + i - 1
-		!	a(j, i) = a(j + nl - i + 1, i)
-		!!do j = nl - i + 2, mm
-		!!	a(j - nl + i - 1, i) = a(j, i)
-		!end do
 		a(mm - nl + i: mm, i) = 0
 	end do
-	d = 1
+	d = 1  ! not used for anything, but it shows even vs odd row pivot permutations
 
-	print *, "a first loop = "
-	print "(5es18.6)", a
+	!print *, "a first loop = "
+	!print "(5es18.6)", a
 
 	allocate(indx(n))
 	allocate(al(nl, n))
@@ -576,16 +567,13 @@ subroutine banded_factor(a, nl, nu, bx)
 			dum = a(1,i) / a(1,k)
 			al(i-k, k) = dum
 			a(1:mm-1, i) = a(2:mm, i) - dum * a(2:mm, k)
-			!do j = 2, mm
-			!	a(j-1, i) = a(j, i) - dum * a(j, k)
-			!end do
 			a(mm, i) = 0
 		end do
 	end do
-	print *, "a = "
-	print "(5es18.6)", a
-	print *, "al = "
-	print "(2es18.6)", al
+	!print *, "a = "
+	!print "(5es18.6)", a
+	!print *, "al = "
+	!print "(2es18.6)", al
 
 	!********
 	! Solve stage
@@ -598,23 +586,12 @@ subroutine banded_factor(a, nl, nu, bx)
 		j = indx(k)
 		if (j /= k) bx([j, k]) = bx([k, j])
 		if (l < n) l = l + 1
-
 		bx(k+1: l) = bx(k+1: l) - al(1: l-k, k) * bx(k)
-		!do j = k+1, l
-		!	bx(j) = bx(j) - al(j-k, k) * bx(k)
-		!end do
 	end do
 
 	l = 1
 	do i = n, 1, -1
-
 		dum = bx(i) - dot_product(a(2:l, i), bx(i+1: l+i-1))
-		!dum = bx(i)
-		!dum = dum - dot_product(a(2:l, i), bx(i+1: l+i-1))
-		!!do k = 2, l
-		!!	dum = dum - a(k, i) * bx(k+i-1)
-		!!end do
-
 		bx(i) = dum / a(1, i)
 		if (l < mm) l = l + 1
 	end do
@@ -630,25 +607,6 @@ end subroutine banded_factor
 !	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
 !
 !	!********
-!
-!	integer :: i, n
-!
-!	! TODO: only leaving tridiag placeholder here to skip warnings re unused
-!	! args
-!
-!	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
-!
-!	! Forward sweep
-!	bx(1)  = bx(1)  / a(2,1)
-!	do i = 2, n - 1
-!		bx(i) = (bx(i) - a(1, i) * bx(i-1)) / a(2, i)
-!	end do
-!	bx(n) = (bx(n) - a(1,n) * bx(n-1)) / (a(2,n) - a(1,n) * a(3,n-1))
-!
-!	! Back substitution
-!	do i = n - 1, 1, -1
-!		bx(i) = bx(i) - a(3,i) * bx(i+1)
-!	end do
 !
 !end subroutine banded_solve
 
