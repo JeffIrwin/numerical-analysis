@@ -526,9 +526,6 @@ integer function chapter_2_banded() result(nfail)
 	!********
 
 	! Test an asymmetric band pattern
-	!
-	! TODO: test another one with more upper bands than lower.  Could just be
-	! transpose of this
 
 	nl = 3  ! number of lower bands
 	nu = 2  ! number of upper bands
@@ -560,13 +557,69 @@ integer function chapter_2_banded() result(nfail)
 		 5.8888159125572470d-01, &
 		 2.6313184397072215d-01, &
 		-4.9631077135265822d-02, &
-		 2.3445826507362098d+00 &
+		 2.3445826507362098d+00  &
 	]
 
 	call banded_invmul(a, bx, nl, nu)
 	print "(a)", "bx2 = "
 	print "(es28.16)", bx
-	call test(norm2(bx - x), 0.d0, 1.d-6, nfail, "banded_invmul() (3+2)x11")
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "banded_invmul() (3+2)x11")
+
+	deallocate(a)
+
+	!********
+
+	! Test an asymmetric band pattern with more upper bands than lower
+	! (transpose of the last test)
+
+	nl = 2  ! number of lower bands
+	nu = 3  ! number of upper bands
+	n = 11  ! size of x
+	allocate(a(nl+nu+1, n))
+	!a(:,  1) = [0, 0, 0, 1, 2, 5]
+	!a(:,  2) = [0, 0, 1, 2, 6, 3]
+	!a(:,  3) = [0, 1, 2, 7, 3, 2]
+	!a(:,  4) = [1, 2, 8, 3, 2, 1]
+	!a(:,  5) = [1, 2, 9, 3, 2, 2]
+	!a(:,  6) = [1, 2, 8, 3, 2, 1]
+	!a(:,  7) = [1, 2, 7, 3, 2, 1]
+	!a(:,  8) = [1, 2, 6, 3, 2, 2]
+	!a(:,  9) = [1, 2, 5, 3, 2, 1]
+	!a(:, 10) = [2, 4, 3, 2, 2, 0]
+	!a(:, 11) = [3, 3, 2, 1, 0, 0]
+	a(:,  1) = [0, 0, 5, 3, 2, 1]
+	a(:,  2) = [0, 2, 6, 3, 2, 2]
+	a(:,  3) = [1, 2, 7, 3, 2, 1]
+	a(:,  4) = [1, 2, 8, 3, 2, 1]
+	a(:,  5) = [1, 2, 9, 3, 2, 2]
+	a(:,  6) = [1, 2, 8, 3, 2, 1]
+	a(:,  7) = [1, 2, 7, 3, 2, 2]
+	a(:,  8) = [1, 2, 6, 3, 2, 1]
+	a(:,  9) = [1, 2, 5, 3, 2, 0]
+	a(:, 10) = [1, 2, 4, 3, 0, 0]
+	a(:, 11) = [1, 2, 3, 0, 0, 0]
+
+	bx = [1, 2, 3, 4, 2, 3, 4, 5, 6, 7, 8]
+
+	x = &
+	[   &
+		-5.7197635714385166d-02, &
+		 1.2962566645714274d-01, &
+		 2.6474979163633455d-01, &
+		 3.6761159592782849d-01, &
+		-9.6415647039373428d-02, &
+		 3.4694267641018961d-02, &
+		 6.1984038868364255d-01, &
+		 2.6200212978601356d-01, &
+		 1.6414013139981204d-01, &
+		-7.1307113059291349d-01, &
+		 3.0873340432620049d+00  &
+	]
+
+	call banded_invmul(a, bx, nl, nu)
+	print "(a)", "bx3 = "
+	print "(es28.16)", bx
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "banded_invmul() (2+3)x11")
 
 	deallocate(a)
 
