@@ -494,7 +494,6 @@ integer function chapter_2_banded() result(nfail)
 	a(:,  9) = [2, 3, 5, 2, 1]
 	a(:, 10) = [2, 3, 4, 2, 0]
 	a(:, 11) = [2, 3, 3, 0, 0]
-	! TODO: test a less symmetric band pattern too
 
 	bx = [1, 2, 3, 4, 2, 3, 4, 5, 6, 7, 8]
 
@@ -521,6 +520,55 @@ integer function chapter_2_banded() result(nfail)
 	!	print "(2es18.6)", bx(i), x(i)
 	!end do
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "banded_invmul() (2+2)x11")
+
+	deallocate(a)
+
+	!********
+
+	! Test an asymmetric band pattern
+	!
+	! TODO: test another one with more upper bands than lower.  Could just be
+	! transpose of this
+
+	nl = 3  ! number of lower bands
+	nu = 2  ! number of upper bands
+	n = 11  ! size of x
+	allocate(a(nl+nu+1, n))
+	a(:,  1) = [0, 0, 0, 5, 2, 1]
+	a(:,  2) = [0, 0, 3, 6, 2, 1]
+	a(:,  3) = [0, 2, 3, 7, 2, 1]
+	a(:,  4) = [1, 2, 3, 8, 2, 1]
+	a(:,  5) = [2, 2, 3, 9, 2, 1]
+	a(:,  6) = [1, 2, 3, 8, 2, 1]
+	a(:,  7) = [1, 2, 3, 7, 2, 1]
+	a(:,  8) = [2, 2, 3, 6, 2, 1]
+	a(:,  9) = [1, 2, 3, 5, 2, 1]
+	a(:, 10) = [2, 2, 3, 4, 2, 0]
+	a(:, 11) = [1, 2, 3, 3, 0, 0]
+
+	bx = [1, 2, 3, 4, 2, 3, 4, 5, 6, 7, 8]
+
+	x = &
+	[   &
+		 9.2539838515047296d-02, &
+		 1.4666377015277052d-01, &
+		 2.4397326711922243d-01, &
+		 3.5445132929979012d-01, &
+		-4.1786515922543226d-02, &
+		 1.3017521726850928d-01, &
+		 2.7110014632251389d-01, &
+		 5.8888159125572470d-01, &
+		 2.6313184397072215d-01, &
+		-4.9631077135265822d-02, &
+		 2.3445826507362098d+00 &
+	]
+
+	call banded_invmul(a, bx, nl, nu)
+	print "(a)", "bx2 = "
+	print "(es28.16)", bx
+	call test(norm2(bx - x), 0.d0, 1.d-6, nfail, "banded_invmul() (3+2)x11")
+
+	deallocate(a)
 
 	print *, ""
 end function chapter_2_banded
