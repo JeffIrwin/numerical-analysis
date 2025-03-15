@@ -473,7 +473,7 @@ integer function chapter_2_banded() result(nfail)
 	character(len = *), parameter :: label = "chapter_2_banded"
 
 	double precision, allocatable :: a(:,:), bx(:), x(:)
-	integer :: i, nl, nu, n
+	integer :: nl, nu, n
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 

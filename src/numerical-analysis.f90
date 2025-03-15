@@ -513,12 +513,12 @@ subroutine banded_factor(a, nl, nu, bx)
 	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
 
 	!********
-	double precision :: tmp, d, dum
+	double precision :: d, dum
 	double precision, allocatable :: al(:,:)  ! TODO: out arg
 	integer :: i, j, k, l, n, mm
 	integer, allocatable :: indx(:)  ! TODO: out arg?
 
-	print *, "nl, nu = ", nl, nu
+	!print *, "nl, nu = ", nl, nu
 
 	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
 
