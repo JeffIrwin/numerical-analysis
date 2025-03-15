@@ -12,7 +12,7 @@ flags+=" -Wno-tabs "
 flags+=" -fbounds-check "
 flags+=" -Wall -Wextra "
 flags+=" -Werror "
-#flags+=" -Wno-unused-variable "
+flags+=" -Wno-unused-variable "
 #flags+=" -Wno-maybe-uninitialized "
 flags+=" -Wno-uninitialized "
 

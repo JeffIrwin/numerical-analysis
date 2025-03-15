@@ -466,5 +466,89 @@ end function chapter_2_tridiag
 
 !===============================================================================
 
+integer function chapter_2_banded() result(nfail)
+	! Again, not part of chapter 2, but I've gone off on a slight tangent after
+	! the tridiagonal matrix algorithm
+
+	character(len = *), parameter :: label = "chapter_2_banded"
+
+	double precision, allocatable :: a(:,:), bx(:), x(:)
+	integer :: i, nl, nu, n
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!allocate(a(3, 6))
+	!a(:,1) = [0, 2, 1]
+	!a(:,2) = [3, 5, 4]
+	!a(:,3) = [6, 7, 5]
+	!a(:,4) = [8, 9, 4]
+	!a(:,5) = [7, 9, 5]
+	!a(:,6) = [7, 8, 0]
+
+	!bx = [8, 9, 10, 11, 12, 13]
+
+	!call tridiag_invmul(a, bx)
+	!print "(a,6es18.6)", "bx = ", bx
+	!x = &
+	![   &
+	!	 4.3366500829187418d+00, &
+	!	-6.7330016583748276d-01, &
+	!	-1.6086235489220257d-01, &
+	!	 3.0331674958540629d+00, &
+	!	-3.7529021558872304d+00, &
+	!	 4.9087893864013266d+00  &
+	!]
+	!call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "tridiag_invmul() 6x6")
+
+	nl = 2  ! number of lower bands
+	nu = 2  ! number of upper bands
+	n = 11  ! size of x
+	allocate(a(nl+nu+1, n))
+	a(:,  1) = [0, 0, 5, 2, 1]
+	a(:,  2) = [0, 3, 6, 2, 1]
+	a(:,  3) = [2, 3, 7, 2, 1]
+	a(:,  4) = [2, 3, 8, 2, 1]
+	a(:,  5) = [2, 3, 9, 2, 1]
+	a(:,  6) = [2, 3, 8, 2, 1]
+	a(:,  7) = [2, 3, 7, 2, 1]
+	a(:,  8) = [2, 3, 6, 2, 1]
+	a(:,  9) = [2, 3, 5, 2, 1]
+	a(:, 10) = [2, 3, 4, 2, 0]
+	a(:, 11) = [2, 3, 3, 0, 0]
+	! TODO: test a less symmetric band pattern too
+
+	bx = [1, 2, 3, 4, 2, 3, 4, 5, 6, 7, 8]
+
+	x = &
+	[   &
+		 9.3517985708705731d-02, &
+		 1.4687004667042000d-01, &
+		 2.3866997811563129d-01, &
+		 3.6088580662010022d-01, &
+		-2.0107571478290644d-02, &
+		 1.4337866230804550d-01, &
+		 3.3421344259696145d-01, &
+		 5.2309491753638426d-01, &
+		 2.2439522278094537d-01, &
+		 1.2324239681282793d-01, &
+		 2.3938274546665417d+00  &
+	]
+
+	call banded_invmul(a, bx, nl, nu)
+	print "(a)", "bx = "
+	print "(es28.16)", bx
+	!print "(a)", "bx, x = "
+	!do i = 1, n
+	!	print "(2es18.6)", bx(i), x(i)
+	!end do
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "banded_invmul() (2+2)x11")
+
+	print *, ""
+end function chapter_2_banded
+
+!===============================================================================
+
 end module exercises_m
 

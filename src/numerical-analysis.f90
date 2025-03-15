@@ -448,6 +448,8 @@ subroutine tridiag_factor(a)
 
 end subroutine tridiag_factor
 
+!********
+
 subroutine tridiag_solve(a, bx)
 	! This is the solving phase of tridiag_invmul()
 
@@ -495,6 +497,182 @@ subroutine tridiag_invmul(a, bx)
 	call tridiag_solve(a, bx)
 
 end subroutine tridiag_invmul
+
+!===============================================================================
+
+subroutine banded_factor(a, nl, nu, bx)
+	! This is the factorization phase of banded_invmul(), without pivoting
+
+	double precision, intent(inout) :: a(:,:)
+	integer, intent(in) :: nl, nu
+	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+
+	!********
+	double precision :: tmp, d, dum
+	double precision, allocatable :: al(:,:)  ! TODO: out arg
+	integer :: i, j, k, l, n, mm
+	integer, allocatable :: indx(:)  ! TODO: out arg?
+
+	print *, "nl, nu = ", nl, nu
+
+	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
+
+	if (nl + nu + 1 /= size(a, 1)) then
+		! TODO: return code?
+		write(*,*) "Warning: bad size of matrix `a` in banded_factor()"
+	end if
+
+	! l(1) = a(1,1) is 0, u(n) = a(3,n) is 0
+
+	! TODO: check a(1,1) == 0 and a(3,n) == 0?
+	mm = nl + 1 + nu
+
+	! Left-shift the top nl rows by the number of zeroes
+
+	!l = nl !- 1
+	!do i = 1, nl
+	!	do j = nl - i + 2, mm
+	!		a(j-l, i) = a(j, i)
+	!	end do
+	!	l = l - 1
+	!	a(mm-l: mm, i) = 0
+	!end do
+	do i = 1, nl  ! same as loop above
+		a(1: mm-nl+i-1, i) = a(1+nl-i+1: mm, i)
+		!do j = 1, mm - nl + i - 1
+		!	a(j, i) = a(j + nl - i + 1, i)
+		!!do j = nl - i + 2, mm
+		!!	a(j - nl + i - 1, i) = a(j, i)
+		!end do
+		a(mm - nl + i: mm, i) = 0
+	end do
+	d = 1
+
+	print *, "a first loop = "
+	print "(5es18.6)", a
+
+	allocate(indx(n))
+	allocate(al(nl, n))
+	l = nl
+	do k = 1, n
+		dum = a(1, k)
+		i = k
+		if (l < n) l = l + 1
+
+		do j = k+1, l
+			if (abs(a(1, j)) > abs(dum)) then
+				dum = a(1, j)
+				i = j
+			end if
+		end do
+
+		indx(k) = i
+		if (i /= k) then
+			d = -d
+			a(:, [i, k]) = a(:, [k, i])
+		end if
+
+		do i = k+1, l
+			dum = a(1,i) / a(1,k)
+			al(i-k, k) = dum
+			a(1:mm-1, i) = a(2:mm, i) - dum * a(2:mm, k)
+			!do j = 2, mm
+			!	a(j-1, i) = a(j, i) - dum * a(j, k)
+			!end do
+			a(mm, i) = 0
+		end do
+	end do
+	print *, "a = "
+	print "(5es18.6)", a
+	print *, "al = "
+	print "(2es18.6)", al
+
+	!********
+	! Solve stage
+
+	! TODO: do bx solve here for now, maybe try to refactor into split
+	! factor/solve later
+
+	l = nl
+	do k = 1, n
+		j = indx(k)
+		if (j /= k) bx([j, k]) = bx([k, j])
+		if (l < n) l = l + 1
+
+		bx(k+1: l) = bx(k+1: l) - al(1: l-k, k) * bx(k)
+		!do j = k+1, l
+		!	bx(j) = bx(j) - al(j-k, k) * bx(k)
+		!end do
+	end do
+
+	l = 1
+	do i = n, 1, -1
+
+		dum = bx(i) - dot_product(a(2:l, i), bx(i+1: l+i-1))
+		!dum = bx(i)
+		!dum = dum - dot_product(a(2:l, i), bx(i+1: l+i-1))
+		!!do k = 2, l
+		!!	dum = dum - a(k, i) * bx(k+i-1)
+		!!end do
+
+		bx(i) = dum / a(1, i)
+		if (l < mm) l = l + 1
+	end do
+
+end subroutine banded_factor
+
+!********
+
+!subroutine banded_solve(a, bx)
+!	! This is the solving phase of banded_invmul()
+!
+!	double precision, intent(in) :: a(:,:)
+!	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+!
+!	!********
+!
+!	integer :: i, n
+!
+!	! TODO: only leaving tridiag placeholder here to skip warnings re unused
+!	! args
+!
+!	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
+!
+!	! Forward sweep
+!	bx(1)  = bx(1)  / a(2,1)
+!	do i = 2, n - 1
+!		bx(i) = (bx(i) - a(1, i) * bx(i-1)) / a(2, i)
+!	end do
+!	bx(n) = (bx(n) - a(1,n) * bx(n-1)) / (a(2,n) - a(1,n) * a(3,n-1))
+!
+!	! Back substitution
+!	do i = n - 1, 1, -1
+!		bx(i) = bx(i) - a(3,i) * bx(i+1)
+!	end do
+!
+!end subroutine banded_solve
+
+!********
+
+subroutine banded_invmul(a, bx, nl, nu)
+	! Solve the linear algebra problem for `x`:
+	!
+	!     a * x = b
+	!
+	! Banded matrix `a` is packed.  TODO: notes on packed representation
+	!
+	! TODO: should {a, nl, nu} be a struct?  One of the n*'s could be redundant
+
+	double precision, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+	integer, intent(in) :: nl, nu
+
+	!********
+
+	call banded_factor(a, nl, nu, bx)
+	!call banded_solve(a, bx)
+
+end subroutine banded_invmul
 
 !===============================================================================
 
