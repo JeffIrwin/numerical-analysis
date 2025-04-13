@@ -1,5 +1,5 @@
 
-module numerical_analysis_m
+module numa
 
 	implicit none
 
@@ -506,7 +506,11 @@ end subroutine tridiag_invmul
 !===============================================================================
 
 subroutine banded_factor(a, nl, nu, bx)
-	! This is the factorization phase of banded_invmul(), without pivoting
+	! This is the factorization phase of banded_invmul(), with pivoting.  It
+	! also does the solve phase for now
+	!
+	! Compare the interface of lapack routines dgbtrf() (factor) and dgbtrs()
+	! (solve) vs dgbsv() (combined factor-solve)
 
 	double precision, intent(inout) :: a(:,:)
 	integer, intent(in) :: nl, nu
@@ -634,5 +638,5 @@ end subroutine banded_invmul
 
 !===============================================================================
 
-end module numerical_analysis_m
+end module numa
 

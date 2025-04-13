@@ -14,9 +14,12 @@ auto-executables = true
 auto-tests       = true
 auto-examples    = true
 #module-naming    = true
+module-naming    = "numa"
+# Maybe I should rename the project for consistency.  "numerical_analysis" is
+# too long to be typing
 
 [install]
-library = false
+library = true
 
 #[[executable]]
 #name = "numerical_analysis"
@@ -24,6 +27,8 @@ library = false
 #main = "main.f90"
 
 [[test]]
+# TODO: refactor src dir to move test.f90 and related files into a sibling test
+# dir (like default fpm template layout, see fynth)
 name = "test"
 source-dir = "src"
 main = "test.f90"

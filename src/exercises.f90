@@ -1,9 +1,9 @@
 
-module exercises_m
+module numa__exercises
 
-	use functions_m
-	use numerical_analysis_m
-	use utils_m
+	use numa
+	use numa__functions
+	use numa__utils
 
 	implicit none
 
@@ -576,17 +576,6 @@ integer function chapter_2_banded() result(nfail)
 	nu = 3  ! number of upper bands
 	n = 11  ! size of x
 	allocate(a(nl+nu+1, n))
-	!a(:,  1) = [0, 0, 0, 1, 2, 5]
-	!a(:,  2) = [0, 0, 1, 2, 6, 3]
-	!a(:,  3) = [0, 1, 2, 7, 3, 2]
-	!a(:,  4) = [1, 2, 8, 3, 2, 1]
-	!a(:,  5) = [1, 2, 9, 3, 2, 2]
-	!a(:,  6) = [1, 2, 8, 3, 2, 1]
-	!a(:,  7) = [1, 2, 7, 3, 2, 1]
-	!a(:,  8) = [1, 2, 6, 3, 2, 2]
-	!a(:,  9) = [1, 2, 5, 3, 2, 1]
-	!a(:, 10) = [2, 4, 3, 2, 2, 0]
-	!a(:, 11) = [3, 3, 2, 1, 0, 0]
 	a(:,  1) = [0, 0, 5, 3, 2, 1]
 	a(:,  2) = [0, 2, 6, 3, 2, 2]
 	a(:,  3) = [1, 2, 7, 3, 2, 1]
@@ -628,5 +617,5 @@ end function chapter_2_banded
 
 !===============================================================================
 
-end module exercises_m
+end module numa__exercises
 

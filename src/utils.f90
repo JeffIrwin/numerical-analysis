@@ -1,5 +1,5 @@
 
-module utils_m
+module numa__utils
 
 	implicit none
 
@@ -101,5 +101,5 @@ end function to_str_f64
 
 !===============================================================================
 
-end module utils_m
+end module numa__utils
 

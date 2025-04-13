@@ -1,15 +1,15 @@
 
-module test_m
+module numa__test
 
-	use exercises_m
-	use numerical_analysis_m
-	use utils_m
+	use numa
+	use numa__exercises
+	use numa__utils
 
-end module test_m
+end module numa__test
 
 program main
 
-	use test_m
+	use numa__test
 
 	implicit none
 

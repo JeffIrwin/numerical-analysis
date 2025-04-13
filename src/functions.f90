@@ -1,5 +1,5 @@
 
-module functions_m
+module numa__functions
 
 	implicit none
 
@@ -40,5 +40,5 @@ end function cotd_fn
 
 !===============================================================================
 
-end module functions_m
+end module numa__functions
 
