@@ -20,7 +20,7 @@ module numa
 contains
 
 !===============================================================================
-double precision function lagrange_interpolater(xi, f, x) result(fx)
+double precision function lagrange_interpolator(xi, f, x) result(fx)
 
 	! Given support points `xi` and function `f`, interpolate f at `x` using
 	! Lagrange interpolation
@@ -49,12 +49,12 @@ double precision function lagrange_interpolater(xi, f, x) result(fx)
 	!print *, "xi = ", xi
 	!print *, "fi = ", fi
 
-	fx = lagrange_interpolater_vals(xi, fi, x)
+	fx = lagrange_interpolator_vals(xi, fi, x)
 
-end function lagrange_interpolater
+end function lagrange_interpolator
 
 !===============================================================================
-double precision function neville_interpolater(xi, f, x) result(fx)
+double precision function neville_interpolator(xi, f, x) result(fx)
 
 	double precision, intent(in) :: xi(:)
 	procedure(fn_f64_to_f64) :: f
@@ -75,12 +75,12 @@ double precision function neville_interpolater(xi, f, x) result(fx)
 		fi(i) = f(xi(i))
 	end do
 
-	fx = neville_interpolater_vals(xi, fi, x)
+	fx = neville_interpolator_vals(xi, fi, x)
 
-end function neville_interpolater
+end function neville_interpolator
 
 !===============================================================================
-double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
+double precision function lagrange_interpolator_vals(xi, fi, x) result(fx)
 
 	! Given support points `xi` and function values `fi` at those points,
 	! interpolate f at `x` using Lagrange interpolation
@@ -113,10 +113,10 @@ double precision function lagrange_interpolater_vals(xi, fi, x) result(fx)
 		fx = fx + fi(i) * prod
 	end do
 
-end function lagrange_interpolater_vals
+end function lagrange_interpolator_vals
 
 !===============================================================================
-double precision function neville_interpolater_vals(xi, fi, x) result(fx)
+double precision function neville_interpolator_vals(xi, fi, x) result(fx)
 
 	! Lagrange and Neville are both O(n1**2) time, while Neville has half the
 	! constant factor at the cost of an extra O(n1) space for t(:)
@@ -145,10 +145,10 @@ double precision function neville_interpolater_vals(xi, fi, x) result(fx)
 	end do
 	fx = t(1)
 
-end function neville_interpolater_vals
+end function neville_interpolator_vals
 
 !===============================================================================
-function newton_interpolater(xi, f, xs) result(fxs)
+function newton_interpolator(xi, f, xs) result(fxs)
 
 	double precision, intent(in) :: xi(:)
 	procedure(fn_f64_to_f64) :: f
@@ -171,12 +171,12 @@ function newton_interpolater(xi, f, xs) result(fxs)
 		fi(i) = f(xi(i))
 	end do
 
-	fxs = newton_interpolater_vals(xi, fi, xs)
+	fxs = newton_interpolator_vals(xi, fi, xs)
 
-end function newton_interpolater
+end function newton_interpolator
 
 !===============================================================================
-function newton_interpolater_vals(xi, fi, xs) result(fxs)
+function newton_interpolator_vals(xi, fi, xs) result(fxs)
 
 	! Newton's interpolation formula:  divided differences
 	!
@@ -221,10 +221,10 @@ function newton_interpolater_vals(xi, fi, xs) result(fxs)
 	end do
 	!print *, "fxs = ", fxs
 
-end function newton_interpolater_vals
+end function newton_interpolator_vals
 
 !===============================================================================
-double precision function neville_rational_interpolater(xi, f, x) result(fx)
+double precision function neville_rational_interpolator(xi, f, x) result(fx)
 
 	double precision, intent(in) :: xi(:)
 	procedure(fn_f64_to_f64) :: f
@@ -245,12 +245,12 @@ double precision function neville_rational_interpolater(xi, f, x) result(fx)
 		fi(i) = f(xi(i))
 	end do
 
-	fx = neville_rational_interpolater_vals(xi, fi, x)
+	fx = neville_rational_interpolator_vals(xi, fi, x)
 
-end function neville_rational_interpolater
+end function neville_rational_interpolator
 
 !===============================================================================
-double precision function neville_rational_interpolater_vals(xi, fi, x) result(fx)
+double precision function neville_rational_interpolator_vals(xi, fi, x) result(fx)
 
 	! Lagrange and Neville are both O(n1**2) time, while Neville has half the
 	! constant factor at the cost of an extra O(n1) space for t(:)
@@ -294,7 +294,7 @@ double precision function neville_rational_interpolater_vals(xi, fi, x) result(f
 	end do
 	fx = t(n1)
 
-end function neville_rational_interpolater_vals
+end function neville_rational_interpolator_vals
 
 !===============================================================================
 integer function bit_reverse(j, n) result(k)

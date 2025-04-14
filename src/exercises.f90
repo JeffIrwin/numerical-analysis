@@ -76,30 +76,30 @@ integer function chapter_2_exercise_2() result(nfail)
 
 	! The acceptable tolerance depends on xi, x, and the fn being interpolated
 
-	fx = lagrange_interpolater(xi, log_fn, x)
+	fx = lagrange_interpolator(xi, log_fn, x)
 	!nfail = nfail + assert(abs(fx - log_fn(x)) < tol)
-	call test(fx, log_fn(x), tol, nfail, "lagrange_interpolater()")
+	call test(fx, log_fn(x), tol, nfail, "lagrange_interpolator()")
 	print *, "fx   = ", fx, " (Lagrange)"
 	print *, "f(x) = ", log_fn(x)
 	print *, ""
 
-	!fx = lagrange_interpolater(xi, exp_fn, x)  ! not from the text book, but let's see what happens
+	!fx = lagrange_interpolator(xi, exp_fn, x)  ! not from the text book, but let's see what happens
 	!print *, "fx   = ", fx
 	!print *, "f(x) = ", exp_fn(x)
 	!print *, ""
 
-	fx = neville_interpolater(xi, log_fn, x)
-	!fx = neville_interpolater_vals(xi, log(xi), x)
-	call test(fx, log_fn(x), tol, nfail, "neville_interpolater()")
+	fx = neville_interpolator(xi, log_fn, x)
+	!fx = neville_interpolator_vals(xi, log(xi), x)
+	call test(fx, log_fn(x), tol, nfail, "neville_interpolator()")
 	print *, "fx   = ", fx, " (Neville)"
 	print *, "f(x) = ", log_fn(x)
 	print *, ""
 
 	xs = [11.1d0, 11.2d0]
 	!xs = [11.1d0, 11.2d0, 11.3d0, 11.4d0]
-	fxs = newton_interpolater(xi, log_fn, xs)
-	!fxs = newton_interpolater_vals(xi, log(xi), xs)
-	call tests(fxs, log(xs), tol, nfail, "newton_interpolater()")
+	fxs = newton_interpolator(xi, log_fn, xs)
+	!fxs = newton_interpolator_vals(xi, log(xi), xs)
+	call tests(fxs, log(xs), tol, nfail, "newton_interpolator()")
 	print *, "fxs   = ", fxs, " (Newton)"
 	print *, "f(xs) = ", log(xs)
 	print *, ""
@@ -136,14 +136,14 @@ integer function chapter_2_example_2p2p4() result(nfail)
 	! from the actual cotangent value because cot has a singularity at x == 0.
 	! Rational interpolation works better near singularities
 
-	fx = neville_interpolater(xi, cotd_fn, x)
-	call test(fx, 22.6352d0, tol, nfail, "neville_interpolater()")
+	fx = neville_interpolator(xi, cotd_fn, x)
+	call test(fx, 22.6352d0, tol, nfail, "neville_interpolator()")
 	print *, "fx   = ", fx, " (Neville polynomial)"
 	print *, "f(x) = ", cotd_fn(x)
 	print *, ""
 
-	fx = neville_rational_interpolater(xi, cotd_fn, x)
-	call test(fx, cotd_fn(x), tol, nfail, "neville_rational_interpolater()")
+	fx = neville_rational_interpolator(xi, cotd_fn, x)
+	call test(fx, cotd_fn(x), tol, nfail, "neville_rational_interpolator()")
 	print *, "fx   = ", fx, " (Neville rational)"
 	print *, "f(x) = ", cotd_fn(x)
 	print *, ""
@@ -151,14 +151,14 @@ integer function chapter_2_example_2p2p4() result(nfail)
 	xi = [1, 2, 3, 4, 5, 6, 7, 8] * 1.d-3
 	x = 0.5d0 * sum(xi([1, 2]))
 
-	fx = neville_interpolater(xi, log_fn, x)
-	call test(fx, log(x), 100 * tol, nfail, "neville_interpolater()")  ! big tol
+	fx = neville_interpolator(xi, log_fn, x)
+	call test(fx, log(x), 100 * tol, nfail, "neville_interpolator()")  ! big tol
 	print *, "fx   = ", fx, " (Neville polynomial)"
 	print *, "f(x) = ", log(x)
 	print *, ""
 
-	fx = neville_rational_interpolater(xi, log_fn, x)
-	call test(fx, log(x), tol, nfail, "neville_rational_interpolater()")
+	fx = neville_rational_interpolator(xi, log_fn, x)
+	call test(fx, log(x), tol, nfail, "neville_rational_interpolator()")
 	print *, "fx   = ", fx, " (Neville rational)"
 	print *, "f(x) = ", log(x)
 	print *, ""

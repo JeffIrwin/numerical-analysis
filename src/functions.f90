@@ -12,7 +12,7 @@ double precision function log_fn(x) result(log_x)
 	! The built-in Fortran fn `log` cannot be passed directly as a function
 	! callback:
 	!
-	!      145 |         fx = lagrange_interpolater(xi, log, 11.1d0)
+	!      145 |         fx = lagrange_interpolator(xi, log, 11.1d0)
 	!          |                                          1
 	!    Error: Symbol ‘log’ at (1) has no IMPLICIT type
 	!
