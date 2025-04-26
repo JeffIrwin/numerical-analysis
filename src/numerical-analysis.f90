@@ -319,7 +319,11 @@ double precision function norm2c(v)
 
 	! It's weird that Fortran's intrinsic norm2() can't handle complex args.
 	! Intel MKL has dznrm2() which is equivalent
-	norm2c = real(sqrt(dot_product(v, v)))
+	!
+	! Note that dot_product() already conjugates one of the arguments, so there
+	! is no need for additional conjugation
+
+	norm2c = dble(sqrt(dot_product(v, v)))
 
 end function norm2c
 
