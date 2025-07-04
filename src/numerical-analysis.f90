@@ -509,30 +509,34 @@ end subroutine tridiag_invmul
 
 !===============================================================================
 
-subroutine banded_factor(a, nl, nu, bx)
-	! This is the factorization phase of banded_invmul(), with pivoting.  It
-	! also does the solve phase for now
+subroutine banded_factor(a, al, indx, nl, nu)
+	! This is the factorization phase of banded_invmul(), with pivoting
 	!
 	! Compare the interface of lapack routines dgbtrf() (factor) and dgbtrs()
 	! (solve) vs dgbsv() (combined factor-solve)
 
+	use numa__utils
+
+	! Reconsider the order of arguments -- maybe in(out) first and out last.  Or
+	! perhaps it's better to leave as-is for consistency with banded_solve()
+	! args
 	double precision, intent(inout) :: a(:,:)
+	double precision, intent(out), allocatable :: al(:,:)
+	integer, intent(out), allocatable :: indx(:)
 	integer, intent(in) :: nl, nu
-	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
 
 	!********
 	double precision :: d, dum
-	double precision, allocatable :: al(:,:)  ! TODO: out arg
 	integer :: i, j, k, l, n, mm
-	integer, allocatable :: indx(:)  ! TODO: out arg?
 
 	!print *, "nl, nu = ", nl, nu
 
-	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
+	n = size(a, 2)  ! *not* same as size 1
 
 	if (nl + nu + 1 /= size(a, 1)) then
-		! TODO: return code?
-		write(*,*) "Warning: bad size of matrix `a` in banded_factor()"
+		! TODO: return code?  This should probably be a fatal error
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": bad size of matrix `a` in banded_factor()"
 	end if
 
 	! l(1) = a(1,1) is 0, u(n) = a(3,n) is 0
@@ -583,11 +587,31 @@ subroutine banded_factor(a, nl, nu, bx)
 	!print *, "al = "
 	!print "(2es18.6)", al
 
+end subroutine banded_factor
+
+!********
+
+subroutine banded_solve(a, al, indx, nl, nu, bx)
+
+	! This is the solving phase of banded_invmul()
+
+	double precision, intent(in) :: a(:,:)
+	double precision, intent(in) :: al(:,:)
+	integer, intent(in) :: indx(:)
+
+	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+
+	integer, intent(in) :: nl, nu
+
+	!********
+	double precision :: dum
+	integer :: i, j, k, l, n, mm
+
 	!********
 	! Solve stage
 
-	! TODO: do bx solve here for now, maybe try to refactor into split
-	! factor/solve later
+	n = size(a, 2)  ! *not* same as size 1
+	mm = nl + 1 + nu
 
 	l = nl
 	do k = 1, n
@@ -604,19 +628,7 @@ subroutine banded_factor(a, nl, nu, bx)
 		if (l < mm) l = l + 1
 	end do
 
-end subroutine banded_factor
-
-!********
-
-!subroutine banded_solve(a, bx)
-!	! This is the solving phase of banded_invmul()
-!
-!	double precision, intent(in) :: a(:,:)
-!	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
-!
-!	!********
-!
-!end subroutine banded_solve
+end subroutine banded_solve
 
 !********
 
@@ -635,8 +647,11 @@ subroutine banded_invmul(a, bx, nl, nu)
 
 	!********
 
-	call banded_factor(a, nl, nu, bx)
-	!call banded_solve(a, bx)
+	double precision, allocatable :: al(:,:)
+	integer, allocatable :: indx(:)
+
+	call banded_factor(a, al, indx, nl, nu)
+	call banded_solve (a, al, indx, nl, nu, bx)
 
 end subroutine banded_invmul
 
