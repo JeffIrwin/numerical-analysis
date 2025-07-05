@@ -15,6 +15,7 @@ flags+=" -Werror "
 #flags+=" -Wno-unused-variable "
 #flags+=" -Wno-maybe-uninitialized "
 flags+=" -Wno-uninitialized "
+flags+=" -Wno-do-subscript "  # warning is stupid re guard clauses
 
 fpm test --flag "$flags"
 

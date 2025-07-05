@@ -643,7 +643,11 @@ integer function chapter_2_splines() result(nfail)
 	!print *, "f(x) = ", log_fn(x)
 	!print *, ""
 
-	! Support points.  They don't need to be evenly spaced
+	! Set support points `xi`.  They don't need to be evenly spaced
+	!
+	! For the no-curve BC, carefully choose a fn to interpolate which happens to
+	! have 0 2nd derivative at end-points of interpolated interval, i.e. sin
+	! from 0 to PI
 
 	!xi = [0.d0, 1.2d0, 2.4d0, PI]
 	!xi = [0.d0, PI/3, 2*PI/3, PI]
