@@ -657,5 +657,140 @@ end subroutine banded_invmul
 
 !===============================================================================
 
+function spline_no_curve(xi, yi, x) result(fx)
+
+	! This function finds the spline with the "no curvature" boundary condition,
+	! i.e. the 2nd derivative is 0 at both endpoints, or case (a) in the text
+	!
+	! The text describes two other BCs with different conditions on the 1st or
+	! 2nd derivatives of the spline fn:
+	!   - case (b) is the periodic condition: 1st and 2nd derivatives both match
+	!     at the two endpoints
+	!   - case (c) prescribes the 1st derivative to given values
+
+	use numa__utils
+
+	double precision, intent(in)  :: xi(:)
+	double precision, intent(in)  :: yi(:)
+	double precision, intent(in)  :: x(:)
+	double precision, allocatable :: fx(:)
+	!********
+
+	double precision, allocatable :: h(:), lambda(:), mu(:), &! moments(:), &
+		d(:), a(:,:), aj, bj
+	integer :: i, j, n, fid
+
+	!n = size(xi) !+ 1
+	n = size(xi) - 1
+
+	h = xi(2:) - xi(1: size(xi) - 1)
+	!h = [xi(2:) - xi(1: size(xi) - 1), 0.d0]
+	!h(n) = h(1)
+
+	print *, "n = ", n
+	print *, "h = ", h
+
+	allocate(lambda ( n+1 ))
+	allocate(mu     ( n+1 ))
+	!allocate(moments( n+1 ))
+	allocate(d      ( n+1 ))
+
+	! TODO: explicit initialization should not be necessary
+	lambda = 0.d0
+	mu = 0.d0
+	d = 0.d0
+
+	do j = 2, n
+		lambda(j) = h(j) / (h(j-1) + h(j))
+		mu(j) = 1.d0 - lambda(j)
+		d(j) = 6.d0 / (h(j-1) + h(j)) * &
+			((yi(j+1) - yi(j)) / h(j) - (yi(j) - yi(j-1)) / h(j-1))
+	end do
+
+	lambda(1) = 0.d0
+	d(1) = 0.d0
+	mu(n+1) = 0.d0
+	d(n+1) = 0.d0
+
+	! Compose the tridiagonal system matrix `a`
+	allocate(a( 3, n+1 ))
+	a(1, 1) = 0.d0
+	a(2, 1) = 2.d0
+	a(3, 1) = lambda(1)
+	do j = 2, n
+		a(1, j) = mu(j)
+		a(2, j) = 2.d0
+		a(3, j) = lambda(j)
+	end do
+	a(1, n+1) = mu(n+1)
+	a(2, n+1) = 2.d0
+	a(3, n+1) = 0.d0
+	print *, "a = "
+	print "(3es18.6)", a
+
+	print *, "lambda = ", lambda
+	print *, "mu     = ", mu
+
+	print *, "d       = ", d
+
+	!call tridiag_solve(a, d)
+	call tridiag_invmul(a, d)
+	print *, "moments = ", d
+
+	allocate(fx( size(x) ))
+
+	if (x(1) < xi(1)) then
+		! TODO: all these warnings should probably be fatal
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": `x` underflows first spline control point"
+	end if
+	if (x(size(x)) > xi(size(xi))) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": `x` overflows last spline control point"
+	end if
+
+	! TODO: move plot export to caller
+	open(file = "plot-spline.txt", newunit = fid)
+	write(fid, *) "# x, f(x)"
+
+	! Evaluate the spline
+	j = 1
+	do i = 1, size(x)
+		if (i > 1) then
+			if (x(i) <= x(i-1)) then
+				write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+					": `x` is not sorted ascending in spline_no_curve()"
+			end if
+		end if
+
+		! Locate the spline segment
+		!do while (xi(j) > x(i))
+		!do while (xi(j) < x(i) .and. j < n)
+		do while (xi(j+1) <= x(i) .and. j < n)
+			print *, "inc j at x = ", x(i)
+			print *, ""
+			j = j + 1
+		end do
+
+		! TODO: only recalculate aj/bj when j changes
+		aj = (yi(j+1) - yi(j)) / h(j) - h(j) / 6.d0 * (d(j+1) - d(j))
+		bj = yi(j) - d(j) * (h(j) ** 2) / 6.d0
+
+		fx(i) = &
+			d(j)   * ((xi(j+1) -  x(i)) ** 3) / (6.d0 * h(j)) + &
+			d(j+1) * ((x(i)    - xi(j)) ** 3) / (6.d0 * h(j)) + &
+			aj * (x(i) - xi(j)) + bj
+
+		!write(fid, "(2es18.6)") x(i), fx(i)
+		write(fid, "(3es18.6)") x(i), fx(i), sin(x(i))
+
+	end do
+
+	close(fid)
+
+end function spline_no_curve
+
+!===============================================================================
+
 end module numa
 

@@ -24,6 +24,7 @@ program main
 	nfail = nfail + chapter_2_fft_2()
 	nfail = nfail + chapter_2_tridiag()
 	nfail = nfail + chapter_2_banded()
+	nfail = nfail + chapter_2_splines()
 
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET
