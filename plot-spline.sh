@@ -4,9 +4,11 @@ set -exu
 
 # See also gnuplot wrapper scripts from fynth/scripts/
 
+data=plot-spline-3.txt
+
 gnuplot -e 'plot
-	"plot-spline.txt" using 1:2 with lines,
-	"plot-spline.txt" using 1:3 with lines;
+	"'$data'" using 1:2 with lines,
+	"'$data'" using 1:3 with lines;
 	pause -1;
 '
 

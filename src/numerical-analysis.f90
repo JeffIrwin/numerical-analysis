@@ -678,7 +678,7 @@ function spline_no_curve(xi, yi, x) result(fx)
 
 	double precision, allocatable :: h(:), lambda(:), mu(:), &
 		d(:), a(:,:), aj, bj
-	integer :: i, j, n, fid
+	integer :: i, j, n
 
 	n = size(xi) - 1
 
@@ -741,13 +741,12 @@ function spline_no_curve(xi, yi, x) result(fx)
 			": `x` overflows last spline control point"
 	end if
 
-	! TODO: move plot export to caller
-	open(file = "plot-spline.txt", newunit = fid)
-	write(fid, *) "# x, f(x)"
-
 	! Evaluate the spline
 	j = 1
+	aj = (yi(j+1) - yi(j)) / h(j) - h(j) / 6.d0 * (d(j+1) - d(j))
+	bj = yi(j) - d(j) * (h(j) ** 2) / 6.d0
 	do i = 1, size(x)
+
 		if (i > 1) then
 			if (x(i) <= x(i-1)) then
 				write(*,*) YELLOW // "Warning" // COLOR_RESET // &
@@ -759,23 +758,16 @@ function spline_no_curve(xi, yi, x) result(fx)
 		do while (xi(j+1) <= x(i) .and. j < n)
 			!print *, "inc j at x = ", x(i)
 			j = j + 1
+			aj = (yi(j+1) - yi(j)) / h(j) - h(j) / 6.d0 * (d(j+1) - d(j))
+			bj = yi(j) - d(j) * (h(j) ** 2) / 6.d0
 		end do
-
-		! TODO: only recalculate aj/bj when j changes
-		aj = (yi(j+1) - yi(j)) / h(j) - h(j) / 6.d0 * (d(j+1) - d(j))
-		bj = yi(j) - d(j) * (h(j) ** 2) / 6.d0
 
 		fx(i) = &
 			d(j)   * ((xi(j+1) -  x(i)) ** 3) / (6.d0 * h(j)) + &
 			d(j+1) * ((x(i)    - xi(j)) ** 3) / (6.d0 * h(j)) + &
 			aj * (x(i) - xi(j)) + bj
 
-		!write(fid, "(2es18.6)") x(i), fx(i)
-		write(fid, "(3es18.6)") x(i), fx(i), sin(x(i))
-
 	end do
-
-	close(fid)
 
 end function spline_no_curve
 

@@ -624,7 +624,7 @@ integer function chapter_2_splines() result(nfail)
 	double precision :: diff
 	double precision, allocatable :: xi(:), yi(:), x(:), fx(:)
 
-	integer :: i
+	integer :: i, fid
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -652,6 +652,12 @@ integer function chapter_2_splines() result(nfail)
 	print *, "diff = ", diff
 	call test(diff, 4.1936105024329519d-002, 1.d-11, nfail, "spline_no_curve 1")
 
+	open(file = "plot-spline-1.txt", newunit = fid)
+	write(fid, *) "# x, f(x), sin(x)"
+	!write(fid, "(2es18.6)") x(i), fx(i)
+	write(fid, "(3es18.6)") [(x(i), fx(i), sin(x(i)), i = 1, size(x))]
+	close(fid)
+
 	!********
 	! Different number of support/control points
 
@@ -664,6 +670,11 @@ integer function chapter_2_splines() result(nfail)
 	print *, "diff = ", diff
 	call test(diff, 1.5928426416190206d-002, 1.d-11, nfail, "spline_no_curve 2")
 
+	open(file = "plot-spline-2.txt", newunit = fid)
+	write(fid, *) "# x, f(x), sin(x)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), sin(x(i)), i = 1, size(x))]
+	close(fid)
+
 	!********
 	! Unevenly spaced control points
 
@@ -675,6 +686,11 @@ integer function chapter_2_splines() result(nfail)
 	diff = sum(abs(fx - sin(x)))
 	print *, "diff = ", diff
 	call test(diff, 0.29268525551874491d0, 1.d-11, nfail, "spline_no_curve 3")
+
+	open(file = "plot-spline-3.txt", newunit = fid)
+	write(fid, *) "# x, f(x), sin(x)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), sin(x(i)), i = 1, size(x))]
+	close(fid)
 
 	!********
 	print *, ""
