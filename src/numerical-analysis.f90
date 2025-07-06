@@ -680,18 +680,18 @@ function spline_no_curve(xi, yi, x) result(fx)
 		d(:), a(:,:), aj, bj
 	integer :: i, j, n
 
-	n = size(xi) - 1
+	n = size(xi)
 
 	h = xi(2:) - xi(1: size(xi) - 1)
 
 	!print *, "n = ", n
 	!print *, "h = ", h
 
-	allocate(lambda ( n+1 ))
-	allocate(mu     ( n+1 ))
-	allocate(d      ( n+1 ))
+	allocate(lambda ( n ))
+	allocate(mu     ( n ))
+	allocate(d      ( n ))
 
-	do j = 2, n
+	do j = 2, n-1
 		lambda(j) = h(j) / (h(j-1) + h(j))
 		mu(j) = 1.d0 - lambda(j)
 		d(j) = 6.d0 / (h(j-1) + h(j)) * &
@@ -703,22 +703,22 @@ function spline_no_curve(xi, yi, x) result(fx)
 	! general core spline_general() routine
 	lambda(1) = 0.d0
 	d(1) = 0.d0
-	mu(n+1) = 0.d0
-	d(n+1) = 0.d0
+	mu(n) = 0.d0
+	d(n) = 0.d0
 
 	! Compose the tridiagonal system matrix `a`
-	allocate(a( 3, n+1 ))
+	allocate(a( 3, n ))
 	a(1, 1) = 0.d0
 	a(2, 1) = 2.d0
 	a(3, 1) = lambda(1)
-	do j = 2, n
+	do j = 2, n-1
 		a(1, j) = mu(j)
 		a(2, j) = 2.d0
 		a(3, j) = lambda(j)
 	end do
-	a(1, n+1) = mu(n+1)
-	a(2, n+1) = 2.d0
-	a(3, n+1) = 0.d0
+	a(1, n) = mu(n)
+	a(2, n) = 2.d0
+	a(3, n) = 0.d0
 
 	!print *, "a = "
 	!print "(3es18.6)", a
