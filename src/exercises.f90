@@ -621,7 +621,7 @@ integer function chapter_2_splines() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_2_splines"
 
-	double precision :: diff
+	double precision :: diff, dy_start, dy_end
 	double precision, allocatable :: xi(:), yi(:), x(:), fx(:)
 
 	integer :: i, fid
@@ -688,6 +688,24 @@ integer function chapter_2_splines() result(nfail)
 	call test(diff, 0.29268525551874491d0, 1.d-11, nfail, "spline_no_curve 3")
 
 	open(file = "plot-spline-3.txt", newunit = fid)
+	write(fid, *) "# x, f(x), sin(x)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), sin(x(i)), i = 1, size(x))]
+	close(fid)
+
+	!********
+	! Prescribed 1st derivatives
+	xi = [0.d0, PI/4, PI/2]
+	yi = sin(xi)
+	x = 0.5d0 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	dy_start = 1.d0
+	dy_end   = 0.d0
+	fx = spline_prescribed(xi, yi, x, dy_start, dy_end)
+
+	diff = sum(abs(fx - sin(x)))
+	print *, "diff = ", diff
+	call test(diff, 3.5556039482586774d-002, 1.d-11, nfail, "spline_prescribed 4")
+
+	open(file = "plot-spline-4.txt", newunit = fid)
 	write(fid, *) "# x, f(x), sin(x)"
 	write(fid, "(3es18.6)") [(x(i), fx(i), sin(x(i)), i = 1, size(x))]
 	close(fid)

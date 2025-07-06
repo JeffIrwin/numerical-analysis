@@ -6,6 +6,11 @@ module numa
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG = (0.d0, 1.d0)  ! sqrt(-1)
 
+	integer, parameter :: &
+		SPLINE_CASE_NO_CURVE   = 1, &
+		SPLINE_CASE_PERIODIC   = 2, &
+		SPLINE_CASE_PRESCRIBED = 3
+
 	abstract interface
 		! This is a function interface for passing callbacks
 		function fn_f64_to_f64(x) result(fx)
@@ -666,13 +671,29 @@ function spline_no_curve(xi, yi, x) result(fx)
 	double precision, intent(in)  :: x(:)
 	double precision, allocatable :: fx(:)
 
-	fx = spline_general(xi, yi, x)
+	fx = spline_general(xi, yi, x, SPLINE_CASE_NO_CURVE, 0.d0, 0.d0)
 
 end function spline_no_curve
 
+!********
+
+function spline_prescribed(xi, yi, x, dy_start, dy_end) result(fx)
+	! This function finds the spline with prescribed first derivatives at the
+	! end points, i.e. case (c) in the text
+
+	double precision, intent(in)  :: xi(:)
+	double precision, intent(in)  :: yi(:)
+	double precision, intent(in)  :: x(:)
+	double precision, intent(in)  :: dy_start, dy_end
+	double precision, allocatable :: fx(:)
+
+	fx = spline_general(xi, yi, x, SPLINE_CASE_PRESCRIBED, dy_start, dy_end)
+
+end function spline_prescribed
+
 !===============================================================================
 
-function spline_general(xi, yi, x) result(fx)
+function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 
 	! The text describes two other BCs with different conditions on the 1st or
 	! 2nd derivatives of the spline fn:
@@ -685,12 +706,23 @@ function spline_general(xi, yi, x) result(fx)
 	double precision, intent(in)  :: xi(:)
 	double precision, intent(in)  :: yi(:)
 	double precision, intent(in)  :: x(:)
+
+	double precision, intent(in)  :: dy_start, dy_end
+	integer, intent(in) :: case_
+
 	double precision, allocatable :: fx(:)
 	!********
 
 	double precision, allocatable :: h(:), lambda(:), mu(:), &
 		d(:), a(:,:), aj, bj
 	integer :: i, j, n
+
+	if (.not. any(case_ == &
+		[SPLINE_CASE_NO_CURVE, SPLINE_CASE_PERIODIC, SPLINE_CASE_PRESCRIBED])) then
+		write(*,*) RED // "Error" // COLOR_RESET // &
+			": bad spline case in spline_general()"
+		call exit(1)
+	end if
 
 	n = size(xi)
 
@@ -710,13 +742,17 @@ function spline_general(xi, yi, x) result(fx)
 			((yi(j+1) - yi(j)) / h(j) - (yi(j) - yi(j-1)) / h(j-1))
 	end do
 
-	! TODO: add cases (b) and (c).  This is almost the only part that's
-	! different.  Refactor spline_no_curve() to be a wrapper around a more
-	! general core spline_general() routine
-	lambda(1) = 0.d0
-	d(1) = 0.d0
-	mu(n) = 0.d0
-	d(n) = 0.d0
+	if (case_ == SPLINE_CASE_NO_CURVE) then
+		lambda(1) = 0.d0
+		d(1) = 0.d0
+		mu(n) = 0.d0
+		d(n) = 0.d0
+	else if (case_ == SPLINE_CASE_PRESCRIBED) then
+		lambda(1) = 1.d0
+		d(1) = 6.d0 / h(1) * ((yi(2) - yi(1)) / h(1) - dy_start)
+		mu(n) = 1.d0
+		d(n) = 6.d0 / h(n-1) * ((dy_end - (yi(n) - yi(n-1)) / h(n-1)))
+	end if
 
 	! Compose the tridiagonal system matrix `a`
 	allocate(a( 3, n ))
