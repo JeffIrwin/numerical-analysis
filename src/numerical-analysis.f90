@@ -676,29 +676,20 @@ function spline_no_curve(xi, yi, x) result(fx)
 	double precision, allocatable :: fx(:)
 	!********
 
-	double precision, allocatable :: h(:), lambda(:), mu(:), &! moments(:), &
+	double precision, allocatable :: h(:), lambda(:), mu(:), &
 		d(:), a(:,:), aj, bj
 	integer :: i, j, n, fid
 
-	!n = size(xi) !+ 1
 	n = size(xi) - 1
 
 	h = xi(2:) - xi(1: size(xi) - 1)
-	!h = [xi(2:) - xi(1: size(xi) - 1), 0.d0]
-	!h(n) = h(1)
 
-	print *, "n = ", n
-	print *, "h = ", h
+	!print *, "n = ", n
+	!print *, "h = ", h
 
 	allocate(lambda ( n+1 ))
 	allocate(mu     ( n+1 ))
-	!allocate(moments( n+1 ))
 	allocate(d      ( n+1 ))
-
-	! TODO: explicit initialization should not be necessary
-	lambda = 0.d0
-	mu = 0.d0
-	d = 0.d0
 
 	do j = 2, n
 		lambda(j) = h(j) / (h(j-1) + h(j))
@@ -707,6 +698,9 @@ function spline_no_curve(xi, yi, x) result(fx)
 			((yi(j+1) - yi(j)) / h(j) - (yi(j) - yi(j-1)) / h(j-1))
 	end do
 
+	! TODO: add cases (b) and (c).  This is almost the only part that's
+	! different.  Refactor spline_no_curve() to be a wrapper around a more
+	! general core spline_general() routine
 	lambda(1) = 0.d0
 	d(1) = 0.d0
 	mu(n+1) = 0.d0
@@ -725,17 +719,15 @@ function spline_no_curve(xi, yi, x) result(fx)
 	a(1, n+1) = mu(n+1)
 	a(2, n+1) = 2.d0
 	a(3, n+1) = 0.d0
-	print *, "a = "
-	print "(3es18.6)", a
 
-	print *, "lambda = ", lambda
-	print *, "mu     = ", mu
+	!print *, "a = "
+	!print "(3es18.6)", a
+	!print *, "lambda = ", lambda
+	!print *, "mu     = ", mu
+	!print *, "d       = ", d
 
-	print *, "d       = ", d
-
-	!call tridiag_solve(a, d)
 	call tridiag_invmul(a, d)
-	print *, "moments = ", d
+	!print *, "moments = ", d
 
 	allocate(fx( size(x) ))
 
@@ -764,11 +756,8 @@ function spline_no_curve(xi, yi, x) result(fx)
 		end if
 
 		! Locate the spline segment
-		!do while (xi(j) > x(i))
-		!do while (xi(j) < x(i) .and. j < n)
 		do while (xi(j+1) <= x(i) .and. j < n)
-			print *, "inc j at x = ", x(i)
-			print *, ""
+			!print *, "inc j at x = ", x(i)
 			j = j + 1
 		end do
 

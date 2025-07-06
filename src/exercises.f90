@@ -621,6 +621,7 @@ integer function chapter_2_splines() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_2_splines"
 
+	double precision :: diff
 	double precision, allocatable :: xi(:), yi(:), x(:), fx(:)
 
 	integer :: i
@@ -628,20 +629,6 @@ integer function chapter_2_splines() result(nfail)
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
-
-	!! Support points `xi`
-	!xi = [10.d0, 11.d0, 12.d0]
-
-	!x = 11.1d0
-
-	!! The acceptable tolerance depends on xi, x, and the fn being interpolated
-
-	!fx = lagrange_interpolator(xi, log_fn, x)
-	!!nfail = nfail + assert(abs(fx - log_fn(x)) < tol)
-	!call test(fx, log_fn(x), tol, nfail, "lagrange_interpolator()")
-	!print *, "fx   = ", fx, " (Lagrange)"
-	!print *, "f(x) = ", log_fn(x)
-	!print *, ""
 
 	! Set support points `xi`.  They don't need to be evenly spaced
 	!
@@ -654,17 +641,42 @@ integer function chapter_2_splines() result(nfail)
 	xi = [0.d0, PI/4, PI/2, 3*PI/4, PI]
 	!xi = [0.d0, PI/2, PI]
 
-	print *, "xi = ", xi
-
 	yi = sin(xi)
-	print *, "yi = ", yi
+	!print *, "xi = ", xi
+	!print *, "yi = ", yi
 
-	x = 3.1415d0 * [(i, i = 0, 200)] / 200.d0
+	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
 	fx = spline_no_curve(xi, yi, x)
 
-	print *, "diff = ", sum(abs(fx - sin(x)))
-	! TODO: test something
+	diff = sum(abs(fx - sin(x)))
+	print *, "diff = ", diff
+	call test(diff, 4.1936105024329519d-002, 1.d-11, nfail, "spline_no_curve 1")
 
+	!********
+	! Different number of support/control points
+
+	xi = [0.d0, PI/5, 2*PI/5, 3*PI/5, 4*PI/5, PI]
+	yi = sin(xi)
+	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	fx = spline_no_curve(xi, yi, x)
+
+	diff = sum(abs(fx - sin(x)))
+	print *, "diff = ", diff
+	call test(diff, 1.5928426416190206d-002, 1.d-11, nfail, "spline_no_curve 2")
+
+	!********
+	! Unevenly spaced control points
+
+	xi = [0.d0, PI/5, 2*PI/5, 4*PI/5, PI]
+	yi = sin(xi)
+	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	fx = spline_no_curve(xi, yi, x)
+
+	diff = sum(abs(fx - sin(x)))
+	print *, "diff = ", diff
+	call test(diff, 0.29268525551874491d0, 1.d-11, nfail, "spline_no_curve 3")
+
+	!********
 	print *, ""
 
 end function chapter_2_splines
