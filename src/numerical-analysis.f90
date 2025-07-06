@@ -658,10 +658,22 @@ end subroutine banded_invmul
 !===============================================================================
 
 function spline_no_curve(xi, yi, x) result(fx)
-
 	! This function finds the spline with the "no curvature" boundary condition,
 	! i.e. the 2nd derivative is 0 at both endpoints, or case (a) in the text
-	!
+
+	double precision, intent(in)  :: xi(:)
+	double precision, intent(in)  :: yi(:)
+	double precision, intent(in)  :: x(:)
+	double precision, allocatable :: fx(:)
+
+	fx = spline_general(xi, yi, x)
+
+end function spline_no_curve
+
+!===============================================================================
+
+function spline_general(xi, yi, x) result(fx)
+
 	! The text describes two other BCs with different conditions on the 1st or
 	! 2nd derivatives of the spline fn:
 	!   - case (b) is the periodic condition: 1st and 2nd derivatives both match
@@ -750,7 +762,7 @@ function spline_no_curve(xi, yi, x) result(fx)
 		if (i > 1) then
 			if (x(i) <= x(i-1)) then
 				write(*,*) YELLOW // "Warning" // COLOR_RESET // &
-					": `x` is not sorted ascending in spline_no_curve()"
+					": `x` is not sorted ascending in spline_general()"
 			end if
 		end if
 
@@ -769,7 +781,7 @@ function spline_no_curve(xi, yi, x) result(fx)
 
 	end do
 
-end function spline_no_curve
+end function spline_general
 
 !===============================================================================
 
