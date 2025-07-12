@@ -772,18 +772,7 @@ subroutine lu_solve(a, bx, pivot)
 	!print *, "bx back = ", bx
 
 	! Unpivot
-
 	bx = bx(pivot)
-
-	!i = 1
-	!tmp = bx(pivot(i))
-	!do k = 1, n-1
-	!	i = pivot(i)
-	!	bx(i) = bx(pivot(i))
-	!end do
-	!i = pivot(i)
-	!bx(i) = tmp
-
 	!print *, "bx unpivot = ", bx
 
 end subroutine lu_solve
