@@ -662,6 +662,117 @@ end subroutine banded_invmul
 
 !===============================================================================
 
+subroutine lu_invmul(a, bx)
+	! Solve the linear algebra problem for `x`:
+	!
+	!     a * x = b
+
+	double precision, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+
+	!********
+
+	integer :: i
+	integer, allocatable :: pivot(:)
+
+	! Initialize pivot to identity
+	pivot = [(i, i = 1, size(a,1))]
+
+	call lu_factor(a, pivot)
+
+	!print *, "pivot = ", pivot
+	!print *, "lu_factor(a) = "
+	!!print "(5es18.6)", a
+	!print "(5es18.6)", transpose(a)
+
+	call lu_solve(a, bx, pivot)
+
+end subroutine lu_invmul
+
+!********
+
+subroutine lu_factor(a, pivot)
+
+	double precision, intent(inout) :: a(:,:)
+	integer, intent(inout) :: pivot(:)
+
+	!********
+
+	integer :: i, j, k, n, max_index
+
+	!print *, "pivot = ", pivot
+
+	n = size(a, 1)
+
+	do i = 1, n
+		! Find max value in column i
+		max_index = i
+		do j = i+1, n
+			if (a(j,i) > a(i,i)) max_index = j
+		end do
+
+		! Swap rows
+		pivot([i, max_index]) = pivot([max_index, i])
+
+		do j = i+1, n
+			a(pivot(j), i) = a(pivot(j), i) / a(pivot(i), i)
+			do k = i+1, n
+				a(pivot(j), k) = a(pivot(j), k) - &
+					a(pivot(j), i) * a(pivot(i), k)
+			end do
+		end do
+
+	end do
+
+end subroutine lu_factor
+
+subroutine lu_solve(a, bx, pivot)
+
+	double precision, intent(in) :: a(:,:)
+	double precision, intent(inout) :: bx(:)
+	integer, intent(in) :: pivot(:)
+
+	double precision :: tmp
+	integer :: i, j, k, n
+
+	!print *, "pivot lu_solve = ", pivot
+
+	n = size(a, 1)
+	!print *, "bx init = ", bx
+
+	! Forward substitution
+	do i = 1, n
+		do j = 1, i-1
+			bx(pivot(i)) = bx(pivot(i)) - &
+				a(pivot(i), j) * bx(pivot(j))
+		end do
+	end do
+	!print *, "bx forward = ", bx
+
+	! Back substitution
+	do i = n, 1, -1
+		do j = i+1, n
+			bx(pivot(i)) = bx(pivot(i)) - &
+				a(pivot(i), j) * bx(pivot(j))
+		end do
+		bx(pivot(i)) = bx(pivot(i)) / a(pivot(i), i)
+	end do
+	!print *, "bx back = ", bx
+
+	! Unpivot
+	i = 1
+	tmp = bx(pivot(i))
+	do k = 1, n
+		i = pivot(i)
+		bx(i) = bx(pivot(i))
+	end do
+	bx(i) = tmp
+	!print *, "bx unpivot = ", bx
+
+end subroutine lu_solve
+
+!===============================================================================
+
 function spline_no_curve(xi, yi, x) result(fx)
 	! This function finds the spline with the "no curvature" boundary condition,
 	! i.e. the 2nd derivative is 0 at both endpoints, or case (a) in the text

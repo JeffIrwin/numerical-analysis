@@ -18,6 +18,7 @@ program main
 	write(*,*) MAGENTA // "Starting numerical-analysis test" // COLOR_RESET
 
 	nfail = 0
+
 	nfail = nfail + chapter_2_exercise_2()
 	nfail = nfail + chapter_2_example_2p2p4()
 	nfail = nfail + chapter_2_fft_1()
@@ -25,6 +26,8 @@ program main
 	nfail = nfail + chapter_2_tridiag()
 	nfail = nfail + chapter_2_banded()
 	nfail = nfail + chapter_2_splines()
+
+	nfail = nfail + chapter_4_lu()
 
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET

@@ -466,6 +466,44 @@ end function chapter_2_tridiag
 
 !===============================================================================
 
+integer function chapter_4_lu() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_lu"
+
+	double precision, allocatable :: a(:,:), bx(:), x(:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	allocate(a(5, 5))
+
+	a(:,1) = [-4.130000d+00, 6.000000d+00, 1.100000d+01, 1.600000d+01, 2.100000d+01]
+	a(:,2) = [ 2.000000d+00, 7.960000d+00, 1.200000d+01, 1.700000d+01, 2.200000d+01]
+	a(:,3) = [ 3.000000d+00, 8.000000d+00, 1.280000d+00, 1.800000d+01, 2.300000d+01]
+	a(:,4) = [ 4.000000d+00, 9.000000d+00, 1.400000d+01, 3.400000d+00, 2.400000d+01]
+	a(:,5) = [ 5.000000d+00, 1.000000d+01, 1.500000d+01, 2.000000d+01, 5.600000d+00]
+
+	x = [+4.0000d+00, +2.0000d+00, -1.0000d+00, +7.0000d+00, +1.8000d+01]
+
+	! Print this to check that the solution is correct in the transpose sense
+	print *, "a * x = ", matmul(a, x)
+
+	bx = [102.48d0, 274.92d0, 434.72d0, 463.8d0, 373.8d0]
+
+	print *, "a = "
+	print "(5es18.6)", a
+
+	call lu_invmul(a, bx)
+	print "(a,5es18.6)", "bx = ", bx
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
+
+	print *, ""
+
+end function chapter_4_lu
+
+!===============================================================================
+
 integer function chapter_2_banded() result(nfail)
 	! Again, not part of chapter 2, but I've gone off on a slight tangent after
 	! the tridiagonal matrix algorithm
