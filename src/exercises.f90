@@ -471,11 +471,14 @@ integer function chapter_4_lu() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision, allocatable :: a(:,:), bx(:), x(:)
+	integer :: i, n, nrng, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
+	!********
+	! Test a fixed case
 	allocate(a(5, 5))
 
 	a(:,1) = [-4.130000d+00, 6.000000d+00, 1.100000d+01, 1.600000d+01, 2.100000d+01]
@@ -483,6 +486,8 @@ integer function chapter_4_lu() result(nfail)
 	a(:,3) = [ 3.000000d+00, 8.000000d+00, 1.280000d+00, 1.800000d+01, 2.300000d+01]
 	a(:,4) = [ 4.000000d+00, 9.000000d+00, 1.400000d+01, 3.400000d+00, 2.400000d+01]
 	a(:,5) = [ 5.000000d+00, 1.000000d+01, 1.500000d+01, 2.000000d+01, 5.600000d+00]
+
+	! TODO: fill the above matrix in with some zeros to compare tridiag/banded solvers
 
 	x = [+4.0000d+00, +2.0000d+00, -1.0000d+00, +7.0000d+00, +1.8000d+01]
 
@@ -498,6 +503,48 @@ integer function chapter_4_lu() result(nfail)
 	print "(a,5es18.6)", "bx = ", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
+	deallocate(a, x, bx)
+
+	!********
+	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
+	! creating a singular matrix
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	do n = 1, 90
+		! LU decomposition is still fast for n >> 90, but maybe not fast enough
+		! for multiple reps in a unit test
+
+		allocate(a(n, n), x(n))
+
+		if (mod(n, 10) == 0) then
+			print *, "Testing lu_invmul() with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 10
+			call random_number(a)  ! random matrix
+			call random_number(x)  ! random expected answer
+
+			bx = matmul(a, x)      ! calculate rhs
+
+			!print *, "a = "
+			!print "(6es15.5)", a
+			!print "(a,6es15.5)", "x  = ", x
+			!print "(a,6es15.5)", "b  = ", bx
+
+			call lu_invmul(a, bx)
+			!print "(a,6es15.5)", "bx = ", bx
+
+			! Rounding error grows with `n`
+			call test(norm2(bx - x), 0.d0, 1.d-9 * n, nfail, "lu_invmul() fuzz n x n")
+
+		end do
+
+		deallocate(a, x, bx)
+	end do
+
+	!********
 	print *, ""
 
 end function chapter_4_lu

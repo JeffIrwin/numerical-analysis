@@ -692,6 +692,7 @@ end subroutine lu_invmul
 !********
 
 subroutine lu_factor(a, pivot)
+	! TODO: make pivoting optional (for comparison to other solvers)
 
 	double precision, intent(inout) :: a(:,:)
 	integer, intent(inout) :: pivot(:)
@@ -708,17 +709,21 @@ subroutine lu_factor(a, pivot)
 		! Find max value in column i
 		max_index = i
 		do j = i+1, n
-			if (a(j,i) > a(i,i)) max_index = j
+			if (abs(a(j,i)) > abs(a(i,i))) max_index = j
 		end do
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
 
 		do j = i+1, n
-			a(pivot(j), i) = a(pivot(j), i) / a(pivot(i), i)
+			a    (pivot(j), i) = &
+				a(pivot(j), i) / &
+				a(pivot(i), i)
 			do k = i+1, n
-				a(pivot(j), k) = a(pivot(j), k) - &
-					a(pivot(j), i) * a(pivot(i), k)
+				a    (pivot(j), k) = &
+					a(pivot(j), k) - &
+					a(pivot(j), i) * &
+					a(pivot(i), k)
 			end do
 		end do
 
@@ -726,14 +731,15 @@ subroutine lu_factor(a, pivot)
 
 end subroutine lu_factor
 
+!********
+
 subroutine lu_solve(a, bx, pivot)
 
 	double precision, intent(in) :: a(:,:)
 	double precision, intent(inout) :: bx(:)
 	integer, intent(in) :: pivot(:)
 
-	double precision :: tmp
-	integer :: i, j, k, n
+	integer :: i, j, n
 
 	!print *, "pivot lu_solve = ", pivot
 
@@ -743,8 +749,10 @@ subroutine lu_solve(a, bx, pivot)
 	! Forward substitution
 	do i = 1, n
 		do j = 1, i-1
-			bx(pivot(i)) = bx(pivot(i)) - &
-				a(pivot(i), j) * bx(pivot(j))
+			bx    (pivot(i)) = &
+				bx(pivot(i)) - &
+				a (pivot(i), j) * &
+				bx(pivot(j))
 		end do
 	end do
 	!print *, "bx forward = ", bx
@@ -752,21 +760,30 @@ subroutine lu_solve(a, bx, pivot)
 	! Back substitution
 	do i = n, 1, -1
 		do j = i+1, n
-			bx(pivot(i)) = bx(pivot(i)) - &
-				a(pivot(i), j) * bx(pivot(j))
+			bx    (pivot(i)) = &
+				bx(pivot(i)) - &
+				a (pivot(i), j) * &
+				bx(pivot(j))
 		end do
-		bx(pivot(i)) = bx(pivot(i)) / a(pivot(i), i)
+		bx    (pivot(i)) = &
+			bx(pivot(i)) / &
+			a (pivot(i), i)
 	end do
 	!print *, "bx back = ", bx
 
 	! Unpivot
-	i = 1
-	tmp = bx(pivot(i))
-	do k = 1, n
-		i = pivot(i)
-		bx(i) = bx(pivot(i))
-	end do
-	bx(i) = tmp
+
+	bx = bx(pivot)
+
+	!i = 1
+	!tmp = bx(pivot(i))
+	!do k = 1, n-1
+	!	i = pivot(i)
+	!	bx(i) = bx(pivot(i))
+	!end do
+	!i = pivot(i)
+	!bx(i) = tmp
+
 	!print *, "bx unpivot = ", bx
 
 end subroutine lu_solve
