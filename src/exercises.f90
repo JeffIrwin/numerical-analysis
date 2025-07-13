@@ -778,7 +778,7 @@ integer function chapter_2_splines() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_2_splines"
 
-	double precision :: diff, dy_start, dy_end
+	double precision :: diff, dy_start, dy_end, phase
 	double precision, allocatable :: xi(:), yi(:), x(:), fx(:)
 
 	integer :: i, fid
@@ -870,18 +870,67 @@ integer function chapter_2_splines() result(nfail)
 	!********
 	! Periodic spline with matching derivatives
 	xi = [0.d0, PI/2, PI, 3*PI/2, 2*PI]
-	!xi = [0.d0, PI/4, PI/2, 3*PI/4, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
 	yi = cos(xi)
 	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
 	fx = spline_periodic(xi, yi, x)
 
 	diff = sum(abs(fx - cos(x)))
 	print *, "diff = ", diff
-	call test(diff, 3.55d-002, 1.17d0, nfail, "spline_periodic 5")
+	call test(diff, 1.161d0, 1d-3, nfail, "spline_periodic 5")
 
 	open(file = "plot-spline-5.txt", newunit = fid)
 	write(fid, *) "# x, f(x), cos(x)"
 	write(fid, "(3es18.6)") [(x(i), fx(i), cos(x(i)), i = 1, size(x))]
+	close(fid)
+
+	!********
+	! Periodic with more support points
+	xi = [0.d0, PI/4, PI/2, 3*PI/4, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
+	yi = cos(xi)
+	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	fx = spline_periodic(xi, yi, x)
+
+	diff = sum(abs(fx - cos(x)))
+	print *, "diff = ", diff
+	call test(diff, 4.196d-002, 1d-4, nfail, "spline_periodic 6")
+
+	open(file = "plot-spline-6.txt", newunit = fid)
+	write(fid, *) "# x, f(x), cos(x)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), cos(x(i)), i = 1, size(x))]
+	close(fid)
+
+	!********
+	! Phase-shifted cosine
+	xi = [0.d0, PI/4, PI/2, 3*PI/4, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
+	phase = -PI/3
+	yi = cos(xi + phase)
+	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	fx = spline_periodic(xi, yi, x)
+
+	diff = sum(abs(fx - cos(x + phase)))
+	print *, "diff = ", diff
+	call test(diff, 4.105d-2, 1d-4, nfail, "spline_periodic 7")
+
+	open(file = "plot-spline-7.txt", newunit = fid)
+	write(fid, *) "# x, f(x), cos(x + phase)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), cos(x(i) + phase), i = 1, size(x))]
+	close(fid)
+
+	!********
+	! Phase-shifted cosine and uneven support points
+	xi = [0.d0, PI/4, PI/2, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
+	phase = -PI/3
+	yi = cos(xi + phase)
+	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	fx = spline_periodic(xi, yi, x)
+
+	diff = sum(abs(fx - cos(x + phase)))
+	print *, "diff = ", diff
+	call test(diff, 0.1374d0, 1.d-4, nfail, "spline_periodic 8")
+
+	open(file = "plot-spline-8.txt", newunit = fid)
+	write(fid, *) "# x, f(x), cos(x + phase)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), cos(x(i) + phase), i = 1, size(x))]
 	close(fid)
 
 	!********

@@ -979,6 +979,9 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 		a(2, n-1) = 2.d0
 		a(3, n-1) = lambda(n)
 
+		!print *, "a = "
+		!print "(3es18.6)", a
+
 		call tridiag_corner_invmul(a, d)
 
 		! Untrim
@@ -1001,14 +1004,14 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 		a(2, n) = 2.d0
 		a(3, n) = 0.d0
 
-		print *, "a = "
-		print "(3es18.6)", a
-		print *, "lambda = ", lambda
-		print *, "mu     = ", mu
-		print *, "d       = ", d
+		!print *, "a = "
+		!print "(3es18.6)", a
+		!print *, "lambda = ", lambda
+		!print *, "mu     = ", mu
+		!print *, "d       = ", d
 
 		call tridiag_invmul(a, d)
-		print *, "moments = ", d
+		!print *, "moments = ", d
 
 	end if
 
