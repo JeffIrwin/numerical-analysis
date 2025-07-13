@@ -23,12 +23,16 @@ program main
 	nfail = nfail + chapter_2_example_2p2p4()
 	nfail = nfail + chapter_2_fft_1()
 	nfail = nfail + chapter_2_fft_2()
+
+	! TODO: put in chapter order.  But for development logging, it's easier to
+	! have the thing I'm working get tested last
+	nfail = nfail + chapter_4_lu()
+
 	nfail = nfail + chapter_2_tridiag()
 	nfail = nfail + chapter_2_tridiag_corner()
 	nfail = nfail + chapter_2_banded()
-	nfail = nfail + chapter_2_splines()
-
-	nfail = nfail + chapter_4_lu()
+	nfail = nfail + chapter_2_cubic_splines()
+	nfail = nfail + chapter_2_b_splines()
 
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET

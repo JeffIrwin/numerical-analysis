@@ -515,8 +515,8 @@ end subroutine tridiag_invmul
 !===============================================================================
 subroutine tridiag_corner_invmul(aa, bx)
 
-	! Solve an augmented tridiagonal system with opposite corner elements, AKA
-	! the cyclic Thomas algorithm
+	! Solve an augmented tridiagonal system with off-diagonal opposite corner
+	! elements, AKA the cyclic Thomas algorithm
 	!
 	! The cyclic code on the Tridiagonal_matrix_algorithm wikipedia page is
 	! straight up wrong.  Here are better references:
@@ -541,7 +541,7 @@ subroutine tridiag_corner_invmul(aa, bx)
 	b1 = aa(2, 1)  ! first main diag elem
 	cn = aa(3, n)  ! lower left elem
 
-	! Vectors `u` and `v` for Sherman-Morrison formula
+	! Make vectors `u` and `v` for Sherman-Morrison formula
 	!
 	! We need a scratch vector for u.  Although it is initially sparse, we solve
 	! `aa \ u` later which fills it in.  For `v` vector we only need v(1) and
@@ -1052,6 +1052,56 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 	end do
 
 end function spline_general
+
+!===============================================================================
+
+!function spline_no_curve(xi, yi, x) result(fx)
+!	xy = b_spline(xyc, t)
+function b_spline(xc, t) result(x)
+	! Interpolate an n-dimensional b-spline for control points `xc` at
+	! interpolation parameters `t` in range [0.0, 1.0]
+
+	double precision, intent(in) :: xc(:,:)
+	double precision, intent(in) :: t(:)
+	double precision, allocatable :: x(:,:)
+	!********
+
+	double precision :: t_
+	!double precision, allocatable :: v(:), v0(:)
+	double precision, allocatable :: v(:,:), v0(:,:)
+
+	integer :: i, j, it, nd, nc, nt
+
+	nd = size(xc, 1)  ! number of dimensions
+	nc = size(xc, 2)  ! number of control points
+	nt = size(t)
+
+	print *, "nd, nc, nt = ", nd, nc, nt
+	print *, "xc = "
+	print "(2es18.6)", xc
+
+	allocate(x(nd, nt))
+	!allocate(v0(nc), v(nc))  ! scratch workspace
+
+	do it = 1, nt
+		t_ = t(it)
+
+		v = xc
+		do i = nc-1, 1, -1
+			v0 = v
+			do j = 1, i
+				! lerp
+				v(:, j) = (1.d0 - t_) * v0(:, j) + t_ * v0(:, j+1)
+			end do
+		end do
+		x(:, it) = v(:, 1)
+
+	end do
+
+	!print *, "x = "
+	!print "(2es18.6)", x
+
+end function b_spline
 
 !===============================================================================
 

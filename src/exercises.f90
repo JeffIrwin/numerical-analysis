@@ -508,6 +508,10 @@ integer function chapter_4_lu() result(nfail)
 	!********
 	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
 	! creating a singular matrix
+	!
+	! TODO: add fuzz testing for some other problems, e.g. tridiagonal and
+	! banded solvers.  We will need special matmul() implementations to verify
+	! results
 
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
@@ -774,9 +778,9 @@ end function chapter_2_banded
 
 !===============================================================================
 
-integer function chapter_2_splines() result(nfail)
+integer function chapter_2_cubic_splines() result(nfail)
 
-	character(len = *), parameter :: label = "chapter_2_splines"
+	character(len = *), parameter :: label = "chapter_2_cubic_splines"
 
 	double precision :: diff, dy_start, dy_end, phase
 	double precision, allocatable :: xi(:), yi(:), x(:), fx(:)
@@ -936,7 +940,39 @@ integer function chapter_2_splines() result(nfail)
 	!********
 	print *, ""
 
-end function chapter_2_splines
+end function chapter_2_cubic_splines
+
+!===============================================================================
+
+integer function chapter_2_b_splines() result(nfail)
+	! Again, not part of chapter 2, but I've gone off on a slight tangent after
+	! the tridiagonal matrix algorithm
+
+	character(len = *), parameter :: label = "chapter_2_b_splines"
+
+	integer :: i, nc, fid
+	double precision, allocatable :: xyc(:,:), t(:), xy(:,:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	nc = 4  ! number of control points
+	allocate(xyc(2, nc))
+	xyc(1,:) = [0, 0, 1, 1]  ! x control coordinates
+	xyc(2,:) = [0, 1, 1, 0]  ! y control coordinates (xyc can be n-dimensional)
+
+	t = [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
+
+	xy = b_spline(xyc, t)
+	! TODO: test assert something
+
+	open(file = "plot-b-spline-1.txt", newunit = fid)
+	write(fid, *) "# x, y"
+	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
+	close(fid)
+
+end function chapter_2_b_splines
 
 !===============================================================================
 
