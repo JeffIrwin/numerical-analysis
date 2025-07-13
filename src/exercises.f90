@@ -566,6 +566,7 @@ integer function chapter_2_tridiag_corner() result(nfail)
 
 	double precision, allocatable :: a(:,:), bx(:), x(:), ad(:,:)
 
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 	nfail = 0
 
 	! Slightly bigger test
@@ -623,7 +624,6 @@ integer function chapter_2_tridiag_corner() result(nfail)
 	!print *, "expected = ", x
 
 	print *, ""
-	!stop ! TODO
 
 end function chapter_2_tridiag_corner
 

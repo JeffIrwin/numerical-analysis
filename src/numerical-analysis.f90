@@ -534,7 +534,8 @@ subroutine tridiag_corner_invmul(aa, bx)
 
 	integer :: i, n
 
-	! TODO: reduce usage of scratch arrays allocated here
+	! TODO: reduce usage of scratch arrays allocated here.  Probably still need
+	! at least one scratch vector for u and/or v
 
 	! Make a modified tridiagonal system with no corners and modified first and
 	! last main diagonal elements
@@ -570,6 +571,7 @@ subroutine tridiag_corner_invmul(aa, bx)
 	!print *, "q = ", q
 
 	! Solution to cylcic problem
+	! TODO: v is sparse, avoid dense dot_product
 	bx = y - (dot_product(v,y) / (1.d0 + dot_product(v,q))) * q
 	!print *, "solution = ", bx
 
@@ -755,8 +757,9 @@ end subroutine lu_invmul
 !********
 
 subroutine lu_factor(a, pivot)
-	! TODO: make pivoting optional (for comparison to other solvers)
-	logical, parameter :: DO_PIVOT = .false.
+
+	!! Make pivoting optional (for comparison to other solvers)
+	!logical, parameter :: DO_PIVOT = .false.
 
 	double precision, intent(inout) :: a(:,:)
 	integer, intent(inout) :: pivot(:)
@@ -772,11 +775,11 @@ subroutine lu_factor(a, pivot)
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
-		if (DO_PIVOT) then
+		!if (DO_PIVOT) then
 			do j = i+1, n
 				if (abs(a(j,i)) > abs(a(i,i))) max_index = j
 			end do
-		end if
+		!end if
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
