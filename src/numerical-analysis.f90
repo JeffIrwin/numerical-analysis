@@ -528,13 +528,10 @@ subroutine tridiag_corner_invmul(aa, bx)
 	double precision, intent(inout) :: bx(:)
 
 	!********
-	double precision :: a1, b1, cn
-	double precision, allocatable :: u(:), v(:)
+	double precision :: a1, b1, cn, v1, vn
+	double precision, allocatable :: u(:)
 
 	integer :: i, n
-
-	! TODO: reduce usage of scratch arrays allocated here.  Probably still need
-	! at least one scratch vector for u and/or v
 
 	! Make a modified tridiagonal system with no corners and modified first and
 	! last main diagonal elements
@@ -544,16 +541,19 @@ subroutine tridiag_corner_invmul(aa, bx)
 	b1 = aa(2, 1)  ! first main diag elem
 	cn = aa(3, n)  ! lower left elem
 
-	! Vectors for Sherman-Morrison formula
+	! Vectors `u` and `v` for Sherman-Morrison formula
+	!
+	! We need a scratch vector for u.  Although it is initially sparse, we solve
+	! `aa \ u` later which fills it in.  For `v` vector we only need v(1) and
+	! v(n)
 	u = [(0.d0, i = 1, n)]
-	v = [(0.d0, i = 1, n)]
-	u(1) = -b1  ;  u(n) = cn
-	v(1) = 1.d0 ;  v(n) = -a1 / b1
+	u(1) = -b1;  u(n) = cn
+	v1 = 1.d0 ;  vn = -a1 / b1
 
 	aa(1,1) = 0.d0
 	aa(3,n) = 0.d0
-	aa(2,1) = aa(2,1) - u(1) * v(1)
-	aa(2,n) = aa(2,n) - u(n) * v(n)
+	aa(2,1) = aa(2,1) - u(1) * v1
+	aa(2,n) = aa(2,n) - u(n) * vn
 
 	!print *, "aa = "
 	!print "(3es16.6)", aa
@@ -567,7 +567,7 @@ subroutine tridiag_corner_invmul(aa, bx)
 	!print *, "u = ", u
 
 	! Solution to cylcic problem
-	bx = bx - ((v(1)*bx(1) + v(n)*bx(n)) / (1.d0 + (v(1)*u(1) + v(n)*u(n)))) * u
+	bx = bx - ((v1*bx(1) + vn*bx(n)) / (1.d0 + (v1*u(1) + vn*u(n)))) * u
 
 	!print *, "solution = ", bx
 
