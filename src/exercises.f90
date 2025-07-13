@@ -466,17 +466,21 @@ end function chapter_2_tridiag
 
 !===============================================================================
 
+!<<<<<<< Updated upstream
 integer function chapter_4_lu() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision, allocatable :: a(:,:), bx(:), x(:)
 	integer :: i, n, nrng, irep
+!=======
+!>>>>>>> Stashed changes
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
+!<<<<<<< Updated upstream
 	!********
 	! Test a fixed case
 	allocate(a(5, 5))
@@ -513,6 +517,7 @@ integer function chapter_4_lu() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	do n = 1, 90
+
 		! LU decomposition is still fast for n >> 90, but maybe not fast enough
 		! for multiple reps in a unit test
 
@@ -548,6 +553,79 @@ integer function chapter_4_lu() result(nfail)
 	print *, ""
 
 end function chapter_4_lu
+!=======
+!>>>>>>> Stashed changes
+
+!===============================================================================
+
+integer function chapter_2_tridiag_corner() result(nfail)
+	! The general tridiagonal matrix algorithm is not part of chapter 2 per se,
+	! but it's a nice way to solve for moments in cubic spline problems
+
+	character(len = *), parameter :: label = "chapter_2_tridiag_corner"
+
+	double precision, allocatable :: a(:,:), bx(:), x(:), ad(:,:)
+
+	nfail = 0
+
+	! Slightly bigger test
+	!
+	! The lower band is a(1,:) == [3, 6, 8, ...], the main diagonal is a(2,:) ==
+	! [2, 5, 7, ...] (i.e. the middle column below), and the upper band is
+	! a(3,:) == [1, 4, 5, ...].  In a traditional layout, this is the matrix:
+	!
+	!     [ 2,  1,  0,  0,  0, 11]
+	!     [ 3,  5,  4,  0,  0,  0]
+	!     [ 0,  6,  7,  5,  0,  0]
+	!     [ 0,  0,  8,  9,  4,  0]
+	!     [ 0,  0,  0,  7,  9,  5]
+	!     [12,  0,  0,  0,  7,  8]
+	!
+
+	! Dense LU version for comparison
+	allocate(ad(6, 6))
+	ad(:,1) = [ 2,  1,  0,  0,  0, 11]
+	ad(:,2) = [ 3,  5,  4,  0,  0,  0]
+	ad(:,3) = [ 0,  6,  7,  5,  0,  0]
+	ad(:,4) = [ 0,  0,  8,  9,  4,  0]
+	ad(:,5) = [ 0,  0,  0,  7,  9,  5]
+	ad(:,6) = [12,  0,  0,  0,  7,  8]
+	ad = transpose(ad)
+	print *, "ad = "
+	print "(6es15.5)", transpose(ad)
+
+	! Tridiagonal packing
+	allocate(a(3, 6))
+	a(:,1) = [11.d0,  2.d0,  1.d0]
+	a(:,2) = [ 3.d0,  5.d0,  4.d0]
+	a(:,3) = [ 6.d0,  7.d0,  5.d0]
+	a(:,4) = [ 8.d0,  9.d0,  4.d0]
+	a(:,5) = [ 7.d0,  9.d0,  5.d0]
+	a(:,6) = [ 7.d0,  8.d0, 12.d0]
+
+	bx = [8.d0, 9.d0, 10.d0, 11.d0, 12.d0, 13.d0]
+	call lu_invmul(ad, bx)
+	print "(a,6es18.6)", "bx (dense) = ", bx
+
+	bx = [8.d0, 9.d0, 10.d0, 11.d0, 12.d0, 13.d0]
+	call tridiag_corner_invmul(a, bx)
+	print "(a,6es18.6)", "bx         = ", bx
+	x = &
+	[   &
+		-0.67986230636832845d0, &
+		 0.54056519116760138d0, &
+		 2.0841902408167448d0, &
+		-1.5665445665445641d0, &
+		 2.1063447930917798d0, &
+		 0.80174176559718680d0 &
+	]
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "tridiag_corner_invmul() 6x6")
+	!print *, "expected = ", x
+
+	print *, ""
+	!stop ! TODO
+
+end function chapter_2_tridiag_corner
 
 !===============================================================================
 
@@ -793,6 +871,24 @@ integer function chapter_2_splines() result(nfail)
 	open(file = "plot-spline-4.txt", newunit = fid)
 	write(fid, *) "# x, f(x), sin(x)"
 	write(fid, "(3es18.6)") [(x(i), fx(i), sin(x(i)), i = 1, size(x))]
+	close(fid)
+
+	!********
+	! Periodic spline with matching derivatives
+	xi = [0.d0, PI/2, PI, 3*PI/2, 2*PI]
+	!xi = [0.d0, PI/4, PI/2, 3*PI/4, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
+	yi = cos(xi)
+	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	fx = spline_periodic(xi, yi, x)
+
+	diff = sum(abs(fx - cos(x)))
+	print *, "diff = ", diff
+	!! TODO
+	!call test(diff, 3.55d-002, 1.d-11, nfail, "spline_periodic 5")
+
+	open(file = "plot-spline-5.txt", newunit = fid)
+	write(fid, *) "# x, f(x), cos(x)"
+	write(fid, "(3es18.6)") [(x(i), fx(i), cos(x(i)), i = 1, size(x))]
 	close(fid)
 
 	!********

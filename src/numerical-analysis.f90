@@ -513,6 +513,69 @@ subroutine tridiag_invmul(a, bx)
 end subroutine tridiag_invmul
 
 !===============================================================================
+subroutine tridiag_corner_invmul(aa, bx)
+
+	! Solve an augmented tridiagonal system with opposite corner elements, AKA
+	! the cyclic Thomas algorithm
+	!
+	! The cyclic code on the Tridiagonal_matrix_algorithm wikipedia page is
+	! straight up wrong.  Here are better references:
+	!
+	!   - https://www.cfd-online.com/Wiki/Tridiagonal_matrix_algorithm_-_TDMA_(Thomas_algorithm)
+	!   - https://sachinashanbhag.blogspot.com/2014/03/cyclic-tridiagonal-matrices.html
+
+	double precision, intent(inout) :: aa(:,:)
+	double precision, intent(inout) :: bx(:)
+
+	!********
+	double precision :: a1, b1, cn
+	double precision, allocatable :: u(:), v(:), y(:), q(:)
+	double precision, allocatable :: ap(:,:)
+
+	integer :: i, n
+
+	! TODO: reduce usage of scratch arrays allocated here
+
+	! Make a modified tridiagonal system with no corners and modified first and
+	! last main diagonal elements
+	n = size(aa, 2)
+	ap = aa
+
+	a1 = ap(1, 1)  ! top right elem
+	b1 = ap(2, 1)  ! first main diag elem
+	cn = ap(3, n)  ! lower left elem
+
+	! Vectors for Sherman-Morrison formula
+	u = [(0.d0, i = 1, n)]
+	v = [(0.d0, i = 1, n)]
+	u(1) = -b1  ;  u(n) = cn
+	v(1) = 1.d0 ;  v(n) = -a1 / b1
+
+	ap(1,1) = 0.d0
+	ap(3,n) = 0.d0
+	ap(2,1) = ap(2,1) - u(1) * v(1)
+	ap(2,n) = ap(2,n) - u(n) * v(n)
+
+	!print *, "ap = "
+	!print "(3es16.6)", ap
+
+	! Solve two pure tridiag problems
+	y = bx
+	q = u
+	call tridiag_factor(ap)
+	call tridiag_solve(ap, y)
+	call tridiag_solve(ap, q)
+
+	!print *, "y = ", y
+	!print *, "q = ", q
+
+	! Solution to cylcic problem
+	bx = y - (dot_product(v,y) / (1.d0 + dot_product(v,q))) * q
+	!print *, "solution = ", bx
+
+end subroutine tridiag_corner_invmul
+
+!===============================================================================
 
 subroutine banded_factor(a, al, indx, nl, nu)
 	! This is the factorization phase of banded_invmul(), with pivoting
@@ -683,7 +746,7 @@ subroutine lu_invmul(a, bx)
 	!print *, "pivot = ", pivot
 	!print *, "lu_factor(a) = "
 	!!print "(5es18.6)", a
-	!print "(5es18.6)", transpose(a)
+	!print "(6es15.5)", transpose(a)
 
 	call lu_solve(a, bx, pivot)
 
@@ -693,6 +756,7 @@ end subroutine lu_invmul
 
 subroutine lu_factor(a, pivot)
 	! TODO: make pivoting optional (for comparison to other solvers)
+	logical, parameter :: DO_PIVOT = .false.
 
 	double precision, intent(inout) :: a(:,:)
 	integer, intent(inout) :: pivot(:)
@@ -708,9 +772,11 @@ subroutine lu_factor(a, pivot)
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
-		do j = i+1, n
-			if (abs(a(j,i)) > abs(a(i,i))) max_index = j
-		end do
+		if (DO_PIVOT) then
+			do j = i+1, n
+				if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+			end do
+		end if
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
@@ -780,8 +846,11 @@ end subroutine lu_solve
 !===============================================================================
 
 function spline_no_curve(xi, yi, x) result(fx)
-	! This function finds the spline with the "no curvature" boundary condition,
-	! i.e. the 2nd derivative is 0 at both endpoints, or case (a) in the text
+	! This function finds the cubic spline with the "no curvature" boundary
+	! condition, i.e. the 2nd derivative is 0 at both endpoints, or case (a) in
+	! the text
+	!
+	! This is also known as the natural spline
 
 	double precision, intent(in)  :: xi(:)
 	double precision, intent(in)  :: yi(:)
@@ -794,9 +863,25 @@ end function spline_no_curve
 
 !********
 
+function spline_periodic(xi, yi, x) result(fx)
+	! This function finds the cubic spline with periodic boundary conditions,
+	! i.e. the 1st and 2nd derivates match at the start and end points, case (b)
+	! in the text
+
+	double precision, intent(in)  :: xi(:)
+	double precision, intent(in)  :: yi(:)
+	double precision, intent(in)  :: x(:)
+	double precision, allocatable :: fx(:)
+
+	fx = spline_general(xi, yi, x, SPLINE_CASE_PERIODIC, 0.d0, 0.d0)
+
+end function spline_periodic
+
+!********
+
 function spline_prescribed(xi, yi, x, dy_start, dy_end) result(fx)
-	! This function finds the spline with prescribed first derivatives at the
-	! end points, i.e. case (c) in the text
+	! This function finds the cubic spline with prescribed first derivatives at
+	! the end points, i.e. case (c) in the text
 
 	double precision, intent(in)  :: xi(:)
 	double precision, intent(in)  :: yi(:)
@@ -811,12 +896,6 @@ end function spline_prescribed
 !===============================================================================
 
 function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
-
-	! The text describes two other BCs with different conditions on the 1st or
-	! 2nd derivatives of the spline fn:
-	!   - case (b) is the periodic condition: 1st and 2nd derivatives both match
-	!     at the two endpoints
-	!   - case (c) prescribes the 1st derivative to given values
 
 	use numa__utils
 
@@ -864,11 +943,23 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 		d(1) = 0.d0
 		mu(n) = 0.d0
 		d(n) = 0.d0
+
+	else if (case_ == SPLINE_CASE_PERIODIC) then
+		lambda(1) = h(1) / (h(n-1) + h(1))
+		mu(1) = 1.d0 - lambda(1)
+		d(1) = 6.d0 / (h(n-1) + h(1)) * &
+			((yi(1) - yi(n)) / h(1) - (yi(n) - yi(n-1)) / h(n-1))
+
+		lambda(n) = lambda(1)
+		mu(n) = mu(1)
+		d(n) = d(1)
+
 	else if (case_ == SPLINE_CASE_PRESCRIBED) then
 		lambda(1) = 1.d0
 		d(1) = 6.d0 / h(1) * ((yi(2) - yi(1)) / h(1) - dy_start)
 		mu(n) = 1.d0
 		d(n) = 6.d0 / h(n-1) * ((dy_end - (yi(n) - yi(n-1)) / h(n-1)))
+
 	end if
 
 	! Compose the tridiagonal system matrix `a`
@@ -891,8 +982,9 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 	!print *, "mu     = ", mu
 	!print *, "d       = ", d
 
+	! TODO: periodic case is *not* tridiagonal!
 	call tridiag_invmul(a, d)
-	!print *, "moments = ", d
+	print *, "moments = ", d
 
 	allocate(fx( size(x) ))
 
