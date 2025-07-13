@@ -871,12 +871,141 @@ function spline_periodic(xi, yi, x) result(fx)
 	! i.e. the 1st and 2nd derivates match at the start and end points, case (b)
 	! in the text
 
+	use numa__utils
+
 	double precision, intent(in)  :: xi(:)
 	double precision, intent(in)  :: yi(:)
 	double precision, intent(in)  :: x(:)
 	double precision, allocatable :: fx(:)
 
-	fx = spline_general(xi, yi, x, SPLINE_CASE_PERIODIC, 0.d0, 0.d0)
+	!! TODO: DRY with other spline cases.  The matrix size is different so this
+	!! one doesn't fit as well
+	!fx = spline_general(xi, yi, x, SPLINE_CASE_PERIODIC, 0.d0, 0.d0)
+	!*****************************
+	double precision :: dy_start = 0.d0, dy_end = 0.d0
+	integer, parameter :: case_ = SPLINE_CASE_PERIODIC
+	!*****************************
+
+	double precision, allocatable :: h(:), lambda(:), mu(:), &
+		d(:), a(:,:), aj, bj
+	integer :: i, j, n
+
+	if (.not. any(case_ == &
+		[SPLINE_CASE_NO_CURVE, SPLINE_CASE_PERIODIC, SPLINE_CASE_PRESCRIBED])) then
+		write(*,*) RED // "Error" // COLOR_RESET // &
+			": bad spline case in spline_general()"
+		call exit(1)
+	end if
+
+	n = size(xi)
+
+	h = xi(2:) - xi(1: size(xi) - 1)
+
+	!print *, "n = ", n
+	!print *, "h = ", h
+
+	allocate(lambda ( n ))
+	allocate(mu     ( n ))
+	allocate(d      ( n ))
+
+	do j = 2, n-1
+		lambda(j) = h(j) / (h(j-1) + h(j))
+		mu(j) = 1.d0 - lambda(j)
+		d(j) = 6.d0 / (h(j-1) + h(j)) * &
+			((yi(j+1) - yi(j)) / h(j) - (yi(j) - yi(j-1)) / h(j-1))
+	end do
+
+	if (case_ == SPLINE_CASE_NO_CURVE) then
+		lambda(1) = 0.d0
+		d(1) = 0.d0
+		mu(n) = 0.d0
+		d(n) = 0.d0
+
+	else if (case_ == SPLINE_CASE_PERIODIC) then
+		lambda(n) = h(1) / (h(n-1) + h(1))
+		mu(n) = 1.d0 - lambda(n)
+		d(n) = 6.d0 / (h(n-1) + h(1)) * &
+			((yi(2) - yi(n)) / h(1) - (yi(n) - yi(n-1)) / h(n-1))
+
+	else if (case_ == SPLINE_CASE_PRESCRIBED) then
+		lambda(1) = 1.d0
+		d(1) = 6.d0 / h(1) * ((yi(2) - yi(1)) / h(1) - dy_start)
+		mu(n) = 1.d0
+		d(n) = 6.d0 / h(n-1) * ((dy_end - (yi(n) - yi(n-1)) / h(n-1)))
+
+	end if
+
+	! Trim
+	d = d(2:)
+
+	! Compose the tridiagonal system matrix `a`
+	allocate(a( 3, n-1 ))
+	a(1, 1) = mu(2)
+	a(2, 1) = 2.d0
+	a(3, 1) = lambda(2)
+	do j = 2, n-2
+		a(1, j) = mu(j+1)
+		a(2, j) = 2.d0
+		a(3, j) = lambda(j+1)
+	end do
+	a(1, n-1) = mu(n)
+	a(2, n-1) = 2.d0
+	a(3, n-1) = lambda(n)
+
+	print *, "a = "
+	print "(3es18.6)", a
+	print *, "lambda = ", lambda
+	print *, "mu     = ", mu
+	print *, "d       = ", d
+
+	! periodic case is *not* tridiagonal!
+	!call tridiag_invmul(a, d)
+	call tridiag_corner_invmul(a, d)
+
+	! Untrim
+	d = [d(n-1), d]
+
+	print *, "moments = ", d
+
+	allocate(fx( size(x) ))
+
+	if (x(1) < xi(1)) then
+		! TODO: all these warnings should probably be fatal
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": `x` underflows first spline control point"
+	end if
+	if (x(size(x)) > xi(size(xi))) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": `x` overflows last spline control point"
+	end if
+
+	! Evaluate the spline
+	j = 1
+	aj = (yi(j+1) - yi(j)) / h(j) - h(j) / 6.d0 * (d(j+1) - d(j))
+	bj = yi(j) - d(j) * (h(j) ** 2) / 6.d0
+	do i = 1, size(x)
+
+		if (i > 1) then
+			if (x(i) <= x(i-1)) then
+				write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+					": `x` is not sorted ascending in spline_general()"
+			end if
+		end if
+
+		! Locate the spline segment
+		do while (xi(j+1) <= x(i) .and. j < n)
+			print *, "inc j at x = ", x(i)
+			j = j + 1
+			aj = (yi(j+1) - yi(j)) / h(j) - h(j) / 6.d0 * (d(j+1) - d(j))
+			bj = yi(j) - d(j) * (h(j) ** 2) / 6.d0
+		end do
+
+		fx(i) = &
+			d(j)   * ((xi(j+1) -  x(i)) ** 3) / (6.d0 * h(j)) + &
+			d(j+1) * ((x(i)    - xi(j)) ** 3) / (6.d0 * h(j)) + &
+			aj * (x(i) - xi(j)) + bj
+
+	end do
 
 end function spline_periodic
 
@@ -979,11 +1108,11 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 	a(2, n) = 2.d0
 	a(3, n) = 0.d0
 
-	!print *, "a = "
-	!print "(3es18.6)", a
-	!print *, "lambda = ", lambda
-	!print *, "mu     = ", mu
-	!print *, "d       = ", d
+	print *, "a = "
+	print "(3es18.6)", a
+	print *, "lambda = ", lambda
+	print *, "mu     = ", mu
+	print *, "d       = ", d
 
 	! TODO: periodic case is *not* tridiagonal!
 	call tridiag_invmul(a, d)

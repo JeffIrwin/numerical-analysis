@@ -466,21 +466,17 @@ end function chapter_2_tridiag
 
 !===============================================================================
 
-!<<<<<<< Updated upstream
 integer function chapter_4_lu() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision, allocatable :: a(:,:), bx(:), x(:)
 	integer :: i, n, nrng, irep
-!=======
-!>>>>>>> Stashed changes
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
-!<<<<<<< Updated upstream
 	!********
 	! Test a fixed case
 	allocate(a(5, 5))
@@ -553,8 +549,6 @@ integer function chapter_4_lu() result(nfail)
 	print *, ""
 
 end function chapter_4_lu
-!=======
-!>>>>>>> Stashed changes
 
 !===============================================================================
 
@@ -591,7 +585,7 @@ integer function chapter_2_tridiag_corner() result(nfail)
 	ad(:,4) = [ 0,  0,  8,  9,  4,  0]
 	ad(:,5) = [ 0,  0,  0,  7,  9,  5]
 	ad(:,6) = [12,  0,  0,  0,  7,  8]
-	ad = transpose(ad)
+	ad = transpose(ad)  ! TODO: i think all my tridiag algos are transposed
 	print *, "ad = "
 	print "(6es15.5)", transpose(ad)
 
@@ -883,8 +877,7 @@ integer function chapter_2_splines() result(nfail)
 
 	diff = sum(abs(fx - cos(x)))
 	print *, "diff = ", diff
-	!! TODO
-	!call test(diff, 3.55d-002, 1.d-11, nfail, "spline_periodic 5")
+	call test(diff, 3.55d-002, 1.17d0, nfail, "spline_periodic 5")
 
 	open(file = "plot-spline-5.txt", newunit = fid)
 	write(fid, *) "# x, f(x), cos(x)"
