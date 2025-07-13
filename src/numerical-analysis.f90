@@ -529,8 +529,7 @@ subroutine tridiag_corner_invmul(aa, bx)
 
 	!********
 	double precision :: a1, b1, cn
-	double precision, allocatable :: u(:), v(:), y(:), q(:)
-	double precision, allocatable :: ap(:,:)
+	double precision, allocatable :: u(:), v(:)
 
 	integer :: i, n
 
@@ -540,11 +539,10 @@ subroutine tridiag_corner_invmul(aa, bx)
 	! Make a modified tridiagonal system with no corners and modified first and
 	! last main diagonal elements
 	n = size(aa, 2)
-	ap = aa
 
-	a1 = ap(1, 1)  ! top right elem
-	b1 = ap(2, 1)  ! first main diag elem
-	cn = ap(3, n)  ! lower left elem
+	a1 = aa(1, 1)  ! top right elem
+	b1 = aa(2, 1)  ! first main diag elem
+	cn = aa(3, n)  ! lower left elem
 
 	! Vectors for Sherman-Morrison formula
 	u = [(0.d0, i = 1, n)]
@@ -552,27 +550,25 @@ subroutine tridiag_corner_invmul(aa, bx)
 	u(1) = -b1  ;  u(n) = cn
 	v(1) = 1.d0 ;  v(n) = -a1 / b1
 
-	ap(1,1) = 0.d0
-	ap(3,n) = 0.d0
-	ap(2,1) = ap(2,1) - u(1) * v(1)
-	ap(2,n) = ap(2,n) - u(n) * v(n)
+	aa(1,1) = 0.d0
+	aa(3,n) = 0.d0
+	aa(2,1) = aa(2,1) - u(1) * v(1)
+	aa(2,n) = aa(2,n) - u(n) * v(n)
 
-	!print *, "ap = "
-	!print "(3es16.6)", ap
+	!print *, "aa = "
+	!print "(3es16.6)", aa
 
 	! Solve two pure tridiag problems
-	y = bx
-	q = u
-	call tridiag_factor(ap)
-	call tridiag_solve(ap, y)
-	call tridiag_solve(ap, q)
+	call tridiag_factor(aa)
+	call tridiag_solve(aa, bx)
+	call tridiag_solve(aa, u)
 
-	!print *, "y = ", y
-	!print *, "q = ", q
+	!print *, "bx = ", bx
+	!print *, "u = ", u
 
 	! Solution to cylcic problem
-	! TODO: v is sparse, avoid dense dot_product
-	bx = y - (dot_product(v,y) / (1.d0 + dot_product(v,q))) * q
+	bx = bx - ((v(1)*bx(1) + v(n)*bx(n)) / (1.d0 + (v(1)*u(1) + v(n)*u(n)))) * u
+
 	!print *, "solution = ", bx
 
 end subroutine tridiag_corner_invmul
