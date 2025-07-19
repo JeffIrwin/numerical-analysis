@@ -1088,6 +1088,9 @@ integer function chapter_3_newton_cotes() result(nfail)
 	character(len = *), parameter :: label = "chapter_3_newton_cotes"
 
 	double precision :: area
+	double precision, allocatable :: xi(:), yi(:)
+
+	integer :: i
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1129,6 +1132,71 @@ integer function chapter_3_newton_cotes() result(nfail)
 	area = weddle_integrator(sin_fn, 0.d0, PI, 0.1d0)
 	print *, "area = ", area
 	call test(area, 1.9999999999999998d0, 1.d-12, nfail, "weddle_integrator 6")
+
+	!********
+	! Value array integrator(s)
+
+	!print *, "value integrators:"
+
+	xi = PI * [(i, i = 0, 2)] / 2.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0943951023931953d0, 1.d-12, nfail, "simpson_integrator_vals 7")
+
+	xi = PI * [(i, i = 0, 3)] / 3.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0405242847634950d0, 1.d-12, nfail, "simpson_integrator_vals 8")
+
+	xi = PI * [(i, i = 0, 4)] / 4.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0045597549844207d0, 1.d-12, nfail, "simpson_integrator_vals 9")
+
+	xi = PI * [(i, i = 0, 5)] / 5.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0034411937297119d0, 1.d-12, nfail, "simpson_integrator_vals 10")
+
+	xi = PI * [(i, i = 0, 6)] / 6.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0008631896735367d0, 1.d-12, nfail, "simpson_integrator_vals 11")
+
+	xi = PI * [(i, i = 0, 7)] / 7.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0006963918546892d0, 1.d-12, nfail, "simpson_integrator_vals 12")
+
+	xi = PI * [(i, i = 0, 30)] / 30.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0000013379479498d0, 1.d-12, nfail, "simpson_integrator_vals 13")
+
+	xi = PI * [(i, i = 0, 31)] / 31.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0000012070944040d0, 1.d-12, nfail, "simpson_integrator_vals 14")
+
+	xi = PI * [(i, i = 0, 32)] / 32.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0000010333694127d0, 1.d-12, nfail, "simpson_integrator_vals 15")
+
+	xi = PI * [(i, i = 0, 33)] / 33.d0
+	yi = sin(xi)
+	area = simpson_integrator_vals(yi, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0000009368045015d0, 1.d-12, nfail, "simpson_integrator_vals 16")
 
 	!********
 	print *, ""

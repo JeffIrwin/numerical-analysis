@@ -1204,6 +1204,55 @@ end function cardinal_spline
 
 !===============================================================================
 
+double precision function simpson_integrator_vals(yi, xmin, xmax) result(area)
+	! Integrate an array of function values `yi` from xmin to xmax using
+	! Simpson's 1/3 and 3/8 rules, depending on whether the size of `yi` is even
+	! or odd
+
+	! You could make other value-array-based integrators for higher-order
+	! methods like Milne's or Weddle's rules, but more cases for the number of
+	! points in the last subintervals would be required
+
+	double precision, intent(in) :: yi(:)
+	double precision, intent(in) :: xmin, xmax
+
+	!********
+
+	integer :: i, n
+
+	area = 0.d0
+
+	n = size(yi)
+	if (mod(n, 2) == 1) then
+		! Pure 1/3 rule
+		do i = 1, n-1, 2
+			area = area + 1 * yi(i+0)
+			area = area + 4 * yi(i+1)
+			area = area + 1 * yi(i+2)
+		end do
+
+		area = area * (xmax - xmin) / (n - 1) / 3.d0
+
+	else
+		! Use the 1/3 rule for most points and the 3/8 rule for the last 4
+		! points
+		do i = 1, n-4, 2
+			area = area + 1 * yi(i+0)
+			area = area + 4 * yi(i+1)
+			area = area + 1 * yi(i+2)
+		end do
+		area = area * (xmax - xmin) / (n - 1) / 3.d0
+
+		area = area &
+			+ (1*yi(n-3) + 3*yi(n-2) + 3*yi(n-1) + 1*yi(n-0)) &
+			* 3 * (xmax - xmin) / (n - 1) / 8
+
+	end if
+
+end function simpson_integrator_vals
+
+!===============================================================================
+
 double precision function simpson_13_integrator(f, xmin, xmax, dx) result(area)
 	! Integrate function `f` from xmin to xmax with step size dx using Simpson's
 	! 1/3 rule
