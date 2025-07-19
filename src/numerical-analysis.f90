@@ -1144,9 +1144,9 @@ function cardinal_spline(xc, t, tension) result(x)
 	nc = size(xc, 2)  ! number of control points
 	nt = size(t)
 
-	print *, "nd, nc, nt = ", nd, nc, nt
-	print *, "xc = "
-	print "(2es18.6)", xc
+	!print *, "nd, nc, nt = ", nd, nc, nt
+	!print *, "xc = "
+	!print "(2es18.6)", xc
 
 	! Construct the full set of control points xcl from the given interpolation
 	! points xc
@@ -1154,16 +1154,12 @@ function cardinal_spline(xc, t, tension) result(x)
 	allocate(xcl(nd, ncl))
 	xcl = 0.d0  ! TODO
 
-	! First and last points are edge cases.  Maybe they should have some factor
-	! of 2 multiplying the tension, as they only subtract points with an index
-	! difference of 1, not an index difference of 2 like interior points.  But
-	! in a totally subjective sense, I think the resulting spline plots just
-	! look better as-is
+	! First and last points are edge cases
 
 	! First point
-	xcl(:,1) = xc(:,1) + tension / 3 * (xc(:,1) - xc(:,2))  ! not used
+	xcl(:,1) = xc(:,1) + 2 * tension / 3 * (xc(:,1) - xc(:,2))  ! not used
 	xcl(:,2) = xc(:,1)
-	xcl(:,3) = xc(:,1) - tension / 3 * (xc(:,1) - xc(:,2))
+	xcl(:,3) = xc(:,1) - 2 * tension / 3 * (xc(:,1) - xc(:,2))
 
 	! Interior control points
 	do j = 2, nc-1
@@ -1174,12 +1170,12 @@ function cardinal_spline(xc, t, tension) result(x)
 	end do
 
 	! Last point
-	xcl(:,ncl-2) = xc(:,nc) + tension / 3 * (xc(:,nc-1) - xc(:,nc))
+	xcl(:,ncl-2) = xc(:,nc) + 2 * tension / 3 * (xc(:,nc-1) - xc(:,nc))
 	xcl(:,ncl-1) = xc(:,nc)
-	xcl(:,ncl-0) = xc(:,nc) - tension / 3 * (xc(:,nc-1) - xc(:,nc))  ! not used
+	xcl(:,ncl-0) = xc(:,nc) - 2 * tension / 3 * (xc(:,nc-1) - xc(:,nc))  ! not used
 
-	print *, "xcl = "
-	print "(2es18.6)", xcl
+	!print *, "xcl = "
+	!print "(2es18.6)", xcl
 
 	! Using groups of 4 control points, make cubic bezier splines
 

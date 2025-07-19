@@ -1009,13 +1009,33 @@ integer function chapter_2_bezier_splines() result(nfail)
 	print *, "xy = ", xy
 
 	call test(xy(1,1), -0.125d0, 1.d-12, nfail, "cardinal_spline x1")
-	call test(xy(2,1),  0.500d0, 1.d-12, nfail, "cardinal_spline y1")
+	call test(xy(2,1),  0.625d0, 1.d-12, nfail, "cardinal_spline y1")
 
 	call test(xy(1,2),  0.500d0, 1.d-12, nfail, "cardinal_spline x2")
 	call test(xy(2,2),  1.250d0, 1.d-12, nfail, "cardinal_spline y2")
 
 	call test(xy(1,3),  1.125d0, 1.d-12, nfail, "cardinal_spline x3")
-	call test(xy(2,3),  0.500d0, 1.d-12, nfail, "cardinal_spline y3")
+	call test(xy(2,3),  0.625d0, 1.d-12, nfail, "cardinal_spline y3")
+
+	deallocate(xyc)
+
+	!********
+	! Cardinal spline with more points
+
+	nc = 7  ! number of control points
+	allocate(xyc(2, nc))
+	xyc(1,:) = [0, 0, 1, 1,  1,  2, 2]  ! x control coordinates
+	xyc(2,:) = [0, 1, 1, 0, -1, -1, 0]  ! y control coordinates (xyc can be n-dimensional)
+
+	t = (nc-1) * [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
+	xy = cardinal_spline(xyc, t, 1.d0)
+	!xy = cardinal_spline(xyc, t, 0.5d0)
+	!print *, "xy = ", xy
+
+	open(file = "plot-bezier-3.txt", newunit = fid)
+	write(fid, *) "# x, y"
+	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
+	close(fid)
 
 	deallocate(xyc)
 
