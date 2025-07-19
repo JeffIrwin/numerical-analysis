@@ -985,7 +985,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 
 	deallocate(xyc)
 	!********
-	! Cardinal spline
+	! Plot a cardinal spline
 
 	nc = 4  ! number of control points
 	allocate(xyc(2, nc))
@@ -995,12 +995,32 @@ integer function chapter_2_bezier_splines() result(nfail)
 	t = (nc-1) * [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
 
 	xy = cardinal_spline(xyc, t, 1.d0)
-	!xy = cardinal_spline(xyc, t, 2.d0)
+	!xy = cardinal_spline(xyc, t, 1.5d0)
 
 	open(file = "plot-bezier-2.txt", newunit = fid)
 	write(fid, *) "# x, y"
 	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
 	close(fid)
+
+	!********
+	! Test some values from the curve above
+	t = [0.5d0, 1.5d0, 2.5d0]
+	xy = cardinal_spline(xyc, t, 1.d0)
+	print *, "xy = ", xy
+
+	call test(xy(1,1), -0.125d0, 1.d-12, nfail, "cardinal_spline x1")
+	call test(xy(2,1),  0.500d0, 1.d-12, nfail, "cardinal_spline y1")
+
+	call test(xy(1,2),  0.500d0, 1.d-12, nfail, "cardinal_spline x2")
+	call test(xy(2,2),  1.250d0, 1.d-12, nfail, "cardinal_spline y2")
+
+	call test(xy(1,3),  1.125d0, 1.d-12, nfail, "cardinal_spline x3")
+	call test(xy(2,3),  0.500d0, 1.d-12, nfail, "cardinal_spline y3")
+
+	deallocate(xyc)
+
+	! TODO: test some assertions for cardinal_spline().  Also test
+	! cardinal_spline with more control points and various tensions
 
 	!********
 	print *, ""

@@ -1103,6 +1103,28 @@ end function bezier_curve
 
 function cardinal_spline(xc, t, tension) result(x)
 
+	! Interpolate a cubic cardinal spline through control points `xc` with
+	! interpolation parameters `t` in range [0, nc-1], where `nc` is the number
+	! of control points, with a given tension.  The tension parameter is
+	! consistent with microsoft's documentation:
+	!
+	!     https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-cardinal-splines-about
+	!
+	! That is, as tension approaches 0, you get straight lines.  Of course you
+	! can't use exactly 0, but some small number like 0.001 approximates
+	! straight lines
+	!
+	!     | Note that a tension of 0 corresponds to infinite physical tension,
+	!     | forcing the curve to take the shortest way (straight lines) between
+	!     | points. A tension of 1 corresponds to no physical tension, allowing
+	!     | the spline to take the path of least total bend. With tension values
+	!     | greater than 1, the curve behaves like a compressed spring, pushed to
+	!     | take a longer path.
+	!
+	! This seems to be the opposite of the tension mentioned on wikipedia:
+	!
+	!     https://en.wikipedia.org/wiki/Cubic_Hermite_spline
+
 	double precision, intent(in) :: xc(:,:)
 	double precision, intent(in) :: t(:)
 	double precision, intent(in) :: tension
@@ -1115,6 +1137,8 @@ function cardinal_spline(xc, t, tension) result(x)
 	double precision, allocatable :: v(:,:), v0(:,:)
 
 	integer :: i, j, it, nd, nc, nt, ncl, segment
+
+	! TODO: panic if tension <= 0
 
 	nd = size(xc, 1)  ! number of dimensions
 	nc = size(xc, 2)  ! number of control points
@@ -1130,16 +1154,20 @@ function cardinal_spline(xc, t, tension) result(x)
 	allocate(xcl(nd, ncl))
 	xcl = 0.d0  ! TODO
 
-	! First and last points are edge cases
+	! First and last points are edge cases.  Maybe they should have some factor
+	! of 2 multiplying the tension, as they only subtract points with an index
+	! difference of 1, not an index difference of 2 like interior points.  But
+	! in a totally subjective sense, I think the resulting spline plots just
+	! look better as-is
 
 	! First point
-	xcl(:,1) = xc(:,1) - tension / 3 * (xc(:,2) - xc(:,1))
+	xcl(:,1) = xc(:,1) + tension / 3 * (xc(:,1) - xc(:,2))  ! not used
 	xcl(:,2) = xc(:,1)
-	xcl(:,3) = xc(:,1) + tension / 3 * (xc(:,2) - xc(:,1))
+	xcl(:,3) = xc(:,1) - tension / 3 * (xc(:,1) - xc(:,2))
 
 	! Interior control points
 	do j = 2, nc-1
-		print *, "j = ", j
+		!print *, "j = ", j
 		xcl(:, 3*j-2) = xc(:,j) + tension / 3 * (xc(:,j-1) - xc(:,j+1))
 		xcl(:, 3*j-1) = xc(:,j)
 		xcl(:, 3*j-0) = xc(:,j) - tension / 3 * (xc(:,j-1) - xc(:,j+1))
@@ -1148,7 +1176,7 @@ function cardinal_spline(xc, t, tension) result(x)
 	! Last point
 	xcl(:,ncl-2) = xc(:,nc) + tension / 3 * (xc(:,nc-1) - xc(:,nc))
 	xcl(:,ncl-1) = xc(:,nc)
-	xcl(:,ncl-0) = xc(:,nc) - tension / 3 * (xc(:,nc-1) - xc(:,nc))
+	xcl(:,ncl-0) = xc(:,nc) - tension / 3 * (xc(:,nc-1) - xc(:,nc))  ! not used
 
 	print *, "xcl = "
 	print "(2es18.6)", xcl
@@ -1162,7 +1190,8 @@ function cardinal_spline(xc, t, tension) result(x)
 		segment = max(1, min(nc-1, floor(t_) + 1))
 		!tmod = mod(t_, 1.d0)
 		tmod = t_ - (segment-1)  ! can be 1 on final segment
-		print *, "t_, tmod, segment = ", t_, tmod, segment
+
+		!print *, "t_, tmod, segment = ", t_, tmod, segment
 
 		! De Casteljau's algorithm
 
