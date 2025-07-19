@@ -1251,17 +1251,41 @@ double precision function milne_integrator(f, xmin, xmax, dx) result(area)
 	! rule
 	!
 	! Error is O(dx**7)
+	!
+	! Note: the text describes another integrator with one more coefficient and
+	! error order O(dx**7) not implemented here
 
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax, dx
 
 	!********
 
+	! Wikipedia calls this one Boole's rule and has something entirely
+	! difference for Milne's rule :shrug:
 	integer, parameter :: coefs(*) = [7, 32, 12, 32, 7]
 
 	area = newton_cotes_integrator(f, xmin, xmax, dx, coefs)
 
 end function milne_integrator
+
+!===============================================================================
+
+double precision function weddle_integrator(f, xmin, xmax, dx) result(area)
+	! Integrate function `f` from xmin to xmax with step size dx using Milne's
+	! rule
+	!
+	! Error is O(dx**9)
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, dx
+
+	!********
+
+	integer, parameter :: coefs(*) = [41, 216, 27, 272, 27, 216, 41]
+
+	area = newton_cotes_integrator(f, xmin, xmax, dx, coefs)
+
+end function weddle_integrator
 
 !===============================================================================
 

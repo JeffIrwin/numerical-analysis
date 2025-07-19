@@ -1121,6 +1121,16 @@ integer function chapter_3_newton_cotes() result(nfail)
 	call test(area, 1.9999999999988802d0, 1.d-12, nfail, "milne_integrator 6")
 
 	!********
+
+	area = weddle_integrator(sin_fn, 0.d0, PI, PI)
+	print *, "area = ", area
+	call test(area, 2.0000178136366551d0, 1.d-12, nfail, "weddle_integrator 5")
+
+	area = weddle_integrator(sin_fn, 0.d0, PI, 0.1d0)
+	print *, "area = ", area
+	call test(area, 1.9999999999999998d0, 1.d-12, nfail, "weddle_integrator 6")
+
+	!********
 	print *, ""
 
 end function chapter_3_newton_cotes
