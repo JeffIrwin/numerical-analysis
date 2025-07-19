@@ -945,8 +945,6 @@ end function chapter_2_cubic_splines
 !===============================================================================
 
 integer function chapter_2_bezier_splines() result(nfail)
-	! Again, not part of chapter 2, but I've gone off on a slight tangent after
-	! the tridiagonal matrix algorithm
 
 	character(len = *), parameter :: label = "chapter_2_bezier_splines"
 
@@ -1078,6 +1076,31 @@ integer function chapter_2_bezier_splines() result(nfail)
 	print *, ""
 
 end function chapter_2_bezier_splines
+
+!===============================================================================
+
+integer function chapter_3_newton_cotes() result(nfail)
+
+	! The Newton-Cotes formulas are generalizations of integration rules like
+	! the trapezoid rule, and higher-order methods like Simpson's (1/3) rule,
+	! Simpson's 3/8 rule, etc.
+
+	character(len = *), parameter :: label = "chapter_3_newton_cotes"
+
+	double precision :: area
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	area = simpson_13_integrator(sin_fn, 0.d0, PI, 0.1d0)
+	print *, "area = ", area
+	call test(area, 2.0000000732694589d0, 1.d-12, nfail, "simpson_13_integrator 1")
+
+	!********
+	print *, ""
+
+end function chapter_3_newton_cotes
 
 !===============================================================================
 

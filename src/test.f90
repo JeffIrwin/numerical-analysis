@@ -19,6 +19,9 @@ program main
 
 	nfail = 0
 
+	! Chapter 1: Error Analysis (no exercises here)
+
+	! Chapter 2: Interpolation
 	nfail = nfail + chapter_2_exercise_2()
 	nfail = nfail + chapter_2_example_2p2p4()
 	nfail = nfail + chapter_2_fft_1()
@@ -33,6 +36,20 @@ program main
 	nfail = nfail + chapter_2_banded()
 	nfail = nfail + chapter_2_cubic_splines()
 	nfail = nfail + chapter_2_bezier_splines()
+
+	! Chapter 3: Topics in Integration
+	nfail = nfail + chapter_3_newton_cotes()
+
+	! Chapter 4: Systems of Linear Equations
+
+	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
+
+	! Chapter 6: Eigenvalue Problems
+
+	! Chapter 7: Ordinary Differential Equations
+
+	! Chapter 8: Iterative Methods for the Solution of Large Systems of Linear
+	! Equations
 
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET

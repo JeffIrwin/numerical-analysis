@@ -38,6 +38,13 @@ double precision function cotd_fn(x)
 	cotd_fn = 1 / tand(x)
 end function cotd_fn
 
+!********
+
+double precision function sin_fn(x)
+	double precision, intent(in) :: x
+	sin_fn = sin(x)
+end function sin_fn
+
 !===============================================================================
 
 end module numa__functions

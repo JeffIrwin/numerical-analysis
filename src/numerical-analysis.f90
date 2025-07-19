@@ -1203,6 +1203,58 @@ function cardinal_spline(xc, t, tension) result(x)
 end function cardinal_spline
 
 !===============================================================================
+double precision function simpson_13_integrator(f, xmin, xmax, dx) result(area)
+	! Integrate function `f` from xmin to xmax with step size dx using Simpson's
+	! 1/3 rule
+
+	! TODO: make simpson_13_integrator_vals() which takes array of fn values `y`
+	! instead of fn pointer `f`.  Take care if size is even/odd to fall back to
+	! simpson 3/8 rule in last subinterval
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, dx
+
+	!********
+
+	double precision :: dxl, darea, x
+
+	integer, parameter :: coefs(*) = [1, 4, 1]
+	integer :: i, j, n, ns, nc
+
+	nc = size(coefs)
+	ns = sum(coefs)
+
+	! TODO: clamp >= 1
+	n = int((xmax - xmin) / dx)
+
+	dxl = (xmax - xmin) / n
+
+	area = 0.d0
+	do i = 0, n - 1
+
+		! TODO: optimize away double-evals at subinterval bounds
+
+		print *, "i = ", i
+		darea = 0.d0
+		do j = 0, nc - 1
+			x = xmin + i * (xmax - xmin) / n + j * dxl / (nc - 1)
+			print *, "x = ", x
+			darea = darea + coefs(j+1) * f(x)
+		end do
+		print *, "darea = ", darea
+		print *, ""
+		area = area + darea
+
+	end do
+
+	!area = area * (xmax - xmin) / ns
+	!area = area * (xmax - xmin) / ns * dxl
+	area = area * dxl / ns
+	!area = area * (xmax - xmin) * dxl
+
+end function simpson_13_integrator
+
+!===============================================================================
 
 end module numa
 
