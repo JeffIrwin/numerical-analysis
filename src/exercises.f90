@@ -1037,10 +1037,42 @@ integer function chapter_2_bezier_splines() result(nfail)
 	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
 	close(fid)
 
-	deallocate(xyc)
+	!********
+	! Test some values from the curve above
 
-	! TODO: test some assertions for cardinal_spline().  Also test
-	! cardinal_spline with more control points and various tensions
+	! Tension = 1
+	t = [2.5d0]
+	xy = cardinal_spline(xyc, t, 1.d0)
+	print *, "xy = ", xy
+
+	call test(xy(1,1),  1.125d0, 1.d-12, nfail, "cardinal_spline x3 t 1")
+	call test(xy(2,1),  0.625d0, 1.d-12, nfail, "cardinal_spline y3 t 1")
+
+	! Tension = 0.001
+	t = [2.5d0]
+	xy = cardinal_spline(xyc, t, 0.001d0)
+	print *, "xy = ", xy
+
+	call test(xy(1,1),  1.000125d0, 1.d-12, nfail, "cardinal_spline x3 t 0.001")
+	call test(xy(2,1),  0.500125d0, 1.d-12, nfail, "cardinal_spline y3 t 0.001")
+
+	! Tension = 0.5
+	t = [2.5d0]
+	xy = cardinal_spline(xyc, t, 0.5d0)
+	print *, "xy = ", xy
+
+	call test(xy(1,1),  1.0625d0, 1.d-12, nfail, "cardinal_spline x3 t 0.5")
+	call test(xy(2,1),  0.5625d0, 1.d-12, nfail, "cardinal_spline y3 t 0.5")
+
+	! Tension = 1.5
+	t = [2.5d0]
+	xy = cardinal_spline(xyc, t, 1.5d0)
+	print *, "xy = ", xy
+
+	call test(xy(1,1),  1.1875d0, 1.d-12, nfail, "cardinal_spline x3 t 1.5")
+	call test(xy(2,1),  0.6875d0, 1.d-12, nfail, "cardinal_spline y3 t 1.5")
+
+	deallocate(xyc)
 
 	!********
 	print *, ""
