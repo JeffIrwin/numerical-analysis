@@ -1111,7 +1111,7 @@ function cardinal_spline(xc, t, tension) result(x)
 	!********
 
 	double precision :: t_, tmod
-	double precision, allocatable :: xcl(:,:), xc4(:,:)
+	double precision, allocatable :: xcl(:,:)
 	double precision, allocatable :: v(:,:), v0(:,:)
 
 	integer :: i, j, it, nd, nc, nt, ncl, segment
