@@ -1092,10 +1092,33 @@ integer function chapter_3_newton_cotes() result(nfail)
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
+	!********
+
+	area = simpson_13_integrator(sin_fn, 0.d0, PI, PI)
+	print *, "area = ", area
+	call test(area, 2.094395d0, 1.d-6, nfail, "simpson_13_integrator 1")
 
 	area = simpson_13_integrator(sin_fn, 0.d0, PI, 0.1d0)
 	print *, "area = ", area
-	call test(area, 2.0000000732694589d0, 1.d-12, nfail, "simpson_13_integrator 1")
+	call test(area, 2.0000000732694589d0, 1.d-12, nfail, "simpson_13_integrator 2")
+
+	area = simpson_38_integrator(sin_fn, 0.d0, PI, PI)
+	print *, "area = ", area
+	call test(area, 2.04052428d0, 1.d-6, nfail, "simpson_38_integrator 3")
+
+	area = simpson_38_integrator(sin_fn, 0.d0, PI, 0.1d0)
+	print *, "area = ", area
+	call test(area, 2.0000000325630984d0, 1.d-12, nfail, "simpson_38_integrator 4")
+
+	!********
+
+	area = milne_integrator(sin_fn, 0.d0, PI, PI)
+	print *, "area = ", area
+	call test(area, 1.99857d0, 1.d-6, nfail, "milne_integrator 5")
+
+	area = milne_integrator(sin_fn, 0.d0, PI, 0.1d0)
+	print *, "area = ", area
+	call test(area, 1.9999999999988802d0, 1.d-12, nfail, "milne_integrator 6")
 
 	!********
 	print *, ""

@@ -1203,9 +1203,12 @@ function cardinal_spline(xc, t, tension) result(x)
 end function cardinal_spline
 
 !===============================================================================
+
 double precision function simpson_13_integrator(f, xmin, xmax, dx) result(area)
 	! Integrate function `f` from xmin to xmax with step size dx using Simpson's
 	! 1/3 rule
+	!
+	! Error is O(dx**5)
 
 	! TODO: make simpson_13_integrator_vals() which takes array of fn values `y`
 	! instead of fn pointer `f`.  Take care if size is even/odd to fall back to
@@ -1216,9 +1219,64 @@ double precision function simpson_13_integrator(f, xmin, xmax, dx) result(area)
 
 	!********
 
+	integer, parameter :: coefs(*) = [1, 4, 1]
+
+	area = newton_cotes_integrator(f, xmin, xmax, dx, coefs)
+
+end function simpson_13_integrator
+
+!===============================================================================
+
+double precision function simpson_38_integrator(f, xmin, xmax, dx) result(area)
+	! Integrate function `f` from xmin to xmax with step size dx using Simpson's
+	! 3/8 rule
+	!
+	! Error is O(dx**5), same order as simpson_13_integrator()
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, dx
+
+	!********
+
+	integer, parameter :: coefs(*) = [1, 3, 3, 1]
+
+	area = newton_cotes_integrator(f, xmin, xmax, dx, coefs)
+
+end function simpson_38_integrator
+
+!===============================================================================
+
+double precision function milne_integrator(f, xmin, xmax, dx) result(area)
+	! Integrate function `f` from xmin to xmax with step size dx using Milne's
+	! rule
+	!
+	! Error is O(dx**7)
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, dx
+
+	!********
+
+	integer, parameter :: coefs(*) = [7, 32, 12, 32, 7]
+
+	area = newton_cotes_integrator(f, xmin, xmax, dx, coefs)
+
+end function milne_integrator
+
+!===============================================================================
+
+double precision function newton_cotes_integrator(f, xmin, xmax, dx, coefs) result(area)
+	! Integrate function `f` from xmin to xmax with step size dx using given
+	! Newton-Cotes coefficients `coefs`
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, dx
+	integer, intent(in) :: coefs(:)
+
+	!********
+
 	double precision :: dxl, darea, x
 
-	integer, parameter :: coefs(*) = [1, 4, 1]
 	integer :: i, j, n, ns, nc
 
 	nc = size(coefs)
@@ -1234,25 +1292,22 @@ double precision function simpson_13_integrator(f, xmin, xmax, dx) result(area)
 
 		! TODO: optimize away double-evals at subinterval bounds
 
-		print *, "i = ", i
+		!print *, "i = ", i
 		darea = 0.d0
 		do j = 0, nc - 1
 			x = xmin + i * (xmax - xmin) / n + j * dxl / (nc - 1)
-			print *, "x = ", x
+			!print *, "x = ", x
 			darea = darea + coefs(j+1) * f(x)
 		end do
-		print *, "darea = ", darea
-		print *, ""
+		!print *, "darea = ", darea
+		!print *, ""
 		area = area + darea
 
 	end do
 
-	!area = area * (xmax - xmin) / ns
-	!area = area * (xmax - xmin) / ns * dxl
 	area = area * dxl / ns
-	!area = area * (xmax - xmin) * dxl
 
-end function simpson_13_integrator
+end function newton_cotes_integrator
 
 !===============================================================================
 
