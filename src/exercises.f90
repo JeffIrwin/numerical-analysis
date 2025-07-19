@@ -957,6 +957,9 @@ integer function chapter_2_b_splines() result(nfail)
 
 	nfail = 0
 
+	!********
+	! Make a plot
+
 	nc = 4  ! number of control points
 	allocate(xyc(2, nc))
 	xyc(1,:) = [0, 0, 1, 1]  ! x control coordinates
@@ -965,12 +968,23 @@ integer function chapter_2_b_splines() result(nfail)
 	t = [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
 
 	xy = b_spline(xyc, t)
-	! TODO: test assert something
 
 	open(file = "plot-b-spline-1.txt", newunit = fid)
 	write(fid, *) "# x, y"
 	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
 	close(fid)
+
+	!********
+	! Test a value from the curve above
+	t = [0.5d0]
+	xy = b_spline(xyc, t)
+	print *, "xy = ", xy
+
+	call test(xy(1,1), 0.50d0, 1.d-12, nfail, "bezier_curve 1")
+	call test(xy(2,1), 0.75d0, 1.d-12, nfail, "bezier_curve 2")
+
+	!********
+	print *, ""
 
 end function chapter_2_b_splines
 

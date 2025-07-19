@@ -1055,9 +1055,9 @@ end function spline_general
 
 !===============================================================================
 
-!function spline_no_curve(xi, yi, x) result(fx)
-!	xy = b_spline(xyc, t)
 function b_spline(xc, t) result(x)
+	! TODO: this is actually a degree nc-1 bezier curve, not a b-spline
+
 	! Interpolate an n-dimensional b-spline for control points `xc` at
 	! interpolation parameters `t` in range [0.0, 1.0]
 
@@ -1067,7 +1067,6 @@ function b_spline(xc, t) result(x)
 	!********
 
 	double precision :: t_
-	!double precision, allocatable :: v(:), v0(:)
 	double precision, allocatable :: v(:,:), v0(:,:)
 
 	integer :: i, j, it, nd, nc, nt
@@ -1081,11 +1080,10 @@ function b_spline(xc, t) result(x)
 	print "(2es18.6)", xc
 
 	allocate(x(nd, nt))
-	!allocate(v0(nc), v(nc))  ! scratch workspace
-
 	do it = 1, nt
 		t_ = t(it)
 
+		! De Casteljau's algorithm
 		v = xc
 		do i = nc-1, 1, -1
 			v0 = v
