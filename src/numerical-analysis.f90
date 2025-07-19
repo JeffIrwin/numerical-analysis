@@ -1112,7 +1112,7 @@ function cardinal_spline(xc, t, tension) result(x)
 	!
 	! That is, as tension approaches 0, you get straight lines.  Of course you
 	! can't use exactly 0, but some small number like 0.001 approximates
-	! straight lines
+	! straight lines.  A tension of 1 is the Catmull-Rom spline
 	!
 	!     | Note that a tension of 0 corresponds to infinite physical tension,
 	!     | forcing the curve to take the shortest way (straight lines) between
@@ -1253,15 +1253,15 @@ end function simpson_integrator_vals
 
 !===============================================================================
 
+! TODO: make trapezoid rule integrators, both fn and val versions
+
+!===============================================================================
+
 double precision function simpson_13_integrator(f, xmin, xmax, dx) result(area)
 	! Integrate function `f` from xmin to xmax with step size dx using Simpson's
 	! 1/3 rule
 	!
 	! Error is O(dx**5)
-
-	! TODO: make simpson_13_integrator_vals() which takes array of fn values `y`
-	! instead of fn pointer `f`.  Take care if size is even/odd to fall back to
-	! simpson 3/8 rule in last subinterval
 
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax, dx
@@ -1320,7 +1320,7 @@ end function milne_integrator
 !===============================================================================
 
 double precision function weddle_integrator(f, xmin, xmax, dx) result(area)
-	! Integrate function `f` from xmin to xmax with step size dx using Milne's
+	! Integrate function `f` from xmin to xmax with step size dx using Weddle's
 	! rule
 	!
 	! Error is O(dx**9)
@@ -1348,12 +1348,11 @@ double precision function newton_cotes_integrator(f, xmin, xmax, dx, coefs) resu
 
 	!********
 
-	double precision :: dxl, darea, x
+	double precision :: dxl, darea, x, f0
 
-	integer :: i, j, n, ns, nc
+	integer :: i, j, j0, n, nc
 
 	nc = size(coefs)
-	ns = sum(coefs)
 
 	! TODO: clamp >= 1
 	n = int((xmax - xmin) / dx)
@@ -1361,24 +1360,28 @@ double precision function newton_cotes_integrator(f, xmin, xmax, dx, coefs) resu
 	dxl = (xmax - xmin) / n
 
 	area = 0.d0
+	j0 = 0
 	do i = 0, n - 1
-
-		! TODO: optimize away double-evals at subinterval bounds
 
 		!print *, "i = ", i
 		darea = 0.d0
-		do j = 0, nc - 1
+		if (j0 > 0) darea = coefs(nc) * f0
+		do j = j0, nc - 1
 			x = xmin + i * (xmax - xmin) / n + j * dxl / (nc - 1)
 			!print *, "x = ", x
-			darea = darea + coefs(j+1) * f(x)
+			f0 = f(x)
+			darea = darea + coefs(j+1) * f0
 		end do
 		!print *, "darea = ", darea
 		!print *, ""
 		area = area + darea
 
+		! Start point of next subinterval is the end point of this one
+		j0 = 1
+
 	end do
 
-	area = area * dxl / ns
+	area = area * dxl / sum(coefs)
 
 end function newton_cotes_integrator
 
