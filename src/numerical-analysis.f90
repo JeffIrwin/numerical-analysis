@@ -1152,7 +1152,6 @@ function cardinal_spline(xc, t, tension) result(x)
 	! points xc
 	ncl = 3 * nc
 	allocate(xcl(nd, ncl))
-	xcl = 0.d0  ! TODO
 
 	! First and last points are edge cases
 
@@ -1184,24 +1183,17 @@ function cardinal_spline(xc, t, tension) result(x)
 		t_ = t(it)
 
 		segment = max(1, min(nc-1, floor(t_) + 1))
-		!tmod = mod(t_, 1.d0)
 		tmod = t_ - (segment-1)  ! can be 1 on final segment
 
 		!print *, "t_, tmod, segment = ", t_, tmod, segment
 
 		! De Casteljau's algorithm
-
-		!v = xc
-		!v = xc(:, segment * 3 - 1: segment * 3 + 2)
 		v = xcl(:, segment * 3 - 1: segment * 3 + 2)
-
 		do i = 3, 1, -1
-		!do i = nc-1, 1, -1
 			v0 = v
 			do j = 1, i
 				! lerp
 				v(:, j) = (1.d0 - tmod) * v0(:, j) + tmod * v0(:, j+1)
-				!v(:, j) = (1.d0 - t_) * v0(:, j) + t_ * v0(:, j+1)
 			end do
 		end do
 		x(:, it) = v(:, 1)

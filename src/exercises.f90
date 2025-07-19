@@ -978,7 +978,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	! Test a value from the curve above
 	t = [0.5d0]
 	xy = bezier_curve(xyc, t)
-	print *, "xy = ", xy
+	!print *, "xy = ", xy
 
 	call test(xy(1,1), 0.50d0, 1.d-12, nfail, "bezier_curve 1")
 	call test(xy(2,1), 0.75d0, 1.d-12, nfail, "bezier_curve 2")
@@ -1006,7 +1006,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	! Test some values from the curve above
 	t = [0.5d0, 1.5d0, 2.5d0]
 	xy = cardinal_spline(xyc, t, 1.d0)
-	print *, "xy = ", xy
+	!print *, "xy = ", xy
 
 	call test(xy(1,1), -0.125d0, 1.d-12, nfail, "cardinal_spline x1")
 	call test(xy(2,1),  0.625d0, 1.d-12, nfail, "cardinal_spline y1")
@@ -1043,7 +1043,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	! Tension = 1
 	t = [2.5d0]
 	xy = cardinal_spline(xyc, t, 1.d0)
-	print *, "xy = ", xy
+	!print *, "xy = ", xy
 
 	call test(xy(1,1),  1.125d0, 1.d-12, nfail, "cardinal_spline x3 t 1")
 	call test(xy(2,1),  0.625d0, 1.d-12, nfail, "cardinal_spline y3 t 1")
@@ -1051,7 +1051,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	! Tension = 0.001
 	t = [2.5d0]
 	xy = cardinal_spline(xyc, t, 0.001d0)
-	print *, "xy = ", xy
+	!print *, "xy = ", xy
 
 	call test(xy(1,1),  1.000125d0, 1.d-12, nfail, "cardinal_spline x3 t 0.001")
 	call test(xy(2,1),  0.500125d0, 1.d-12, nfail, "cardinal_spline y3 t 0.001")
@@ -1059,7 +1059,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	! Tension = 0.5
 	t = [2.5d0]
 	xy = cardinal_spline(xyc, t, 0.5d0)
-	print *, "xy = ", xy
+	!print *, "xy = ", xy
 
 	call test(xy(1,1),  1.0625d0, 1.d-12, nfail, "cardinal_spline x3 t 0.5")
 	call test(xy(2,1),  0.5625d0, 1.d-12, nfail, "cardinal_spline y3 t 0.5")
@@ -1067,7 +1067,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	! Tension = 1.5
 	t = [2.5d0]
 	xy = cardinal_spline(xyc, t, 1.5d0)
-	print *, "xy = ", xy
+	!print *, "xy = ", xy
 
 	call test(xy(1,1),  1.1875d0, 1.d-12, nfail, "cardinal_spline x3 t 1.5")
 	call test(xy(2,1),  0.6875d0, 1.d-12, nfail, "cardinal_spline y3 t 1.5")
