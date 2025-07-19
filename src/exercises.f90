@@ -944,11 +944,11 @@ end function chapter_2_cubic_splines
 
 !===============================================================================
 
-integer function chapter_2_b_splines() result(nfail)
+integer function chapter_2_bezier_splines() result(nfail)
 	! Again, not part of chapter 2, but I've gone off on a slight tangent after
 	! the tridiagonal matrix algorithm
 
-	character(len = *), parameter :: label = "chapter_2_b_splines"
+	character(len = *), parameter :: label = "chapter_2_bezier_splines"
 
 	integer :: i, nc, fid
 	double precision, allocatable :: xyc(:,:), t(:), xy(:,:)
@@ -967,9 +967,9 @@ integer function chapter_2_b_splines() result(nfail)
 
 	t = [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
 
-	xy = b_spline(xyc, t)
+	xy = bezier_curve(xyc, t)
 
-	open(file = "plot-b-spline-1.txt", newunit = fid)
+	open(file = "plot-bezier-1.txt", newunit = fid)
 	write(fid, *) "# x, y"
 	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
 	close(fid)
@@ -977,7 +977,7 @@ integer function chapter_2_b_splines() result(nfail)
 	!********
 	! Test a value from the curve above
 	t = [0.5d0]
-	xy = b_spline(xyc, t)
+	xy = bezier_curve(xyc, t)
 	print *, "xy = ", xy
 
 	call test(xy(1,1), 0.50d0, 1.d-12, nfail, "bezier_curve 1")
@@ -986,7 +986,7 @@ integer function chapter_2_b_splines() result(nfail)
 	!********
 	print *, ""
 
-end function chapter_2_b_splines
+end function chapter_2_bezier_splines
 
 !===============================================================================
 

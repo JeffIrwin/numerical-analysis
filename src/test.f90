@@ -32,7 +32,7 @@ program main
 	nfail = nfail + chapter_2_tridiag_corner()
 	nfail = nfail + chapter_2_banded()
 	nfail = nfail + chapter_2_cubic_splines()
-	nfail = nfail + chapter_2_b_splines()
+	nfail = nfail + chapter_2_bezier_splines()
 
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET

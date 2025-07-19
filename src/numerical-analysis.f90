@@ -1055,11 +1055,9 @@ end function spline_general
 
 !===============================================================================
 
-function b_spline(xc, t) result(x)
-	! TODO: this is actually a degree nc-1 bezier curve, not a b-spline
-
-	! Interpolate an n-dimensional b-spline for control points `xc` at
-	! interpolation parameters `t` in range [0.0, 1.0]
+function bezier_curve(xc, t) result(x)
+	! Interpolate an n-dimensional bezier curve of degree nc-1 for control
+	! points `xc` at interpolation parameters `t` in range [0.0, 1.0]
 
 	double precision, intent(in) :: xc(:,:)
 	double precision, intent(in) :: t(:)
@@ -1075,9 +1073,9 @@ function b_spline(xc, t) result(x)
 	nc = size(xc, 2)  ! number of control points
 	nt = size(t)
 
-	print *, "nd, nc, nt = ", nd, nc, nt
-	print *, "xc = "
-	print "(2es18.6)", xc
+	!print *, "nd, nc, nt = ", nd, nc, nt
+	!print *, "xc = "
+	!print "(2es18.6)", xc
 
 	allocate(x(nd, nt))
 	do it = 1, nt
@@ -1099,7 +1097,7 @@ function b_spline(xc, t) result(x)
 	!print *, "x = "
 	!print "(2es18.6)", x
 
-end function b_spline
+end function bezier_curve
 
 !===============================================================================
 
