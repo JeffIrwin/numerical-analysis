@@ -1101,5 +1101,91 @@ end function bezier_curve
 
 !===============================================================================
 
+function cardinal_spline(xc, t, tension) result(x)
+
+	double precision, intent(in) :: xc(:,:)
+	double precision, intent(in) :: t(:)
+	double precision, intent(in) :: tension
+
+	double precision, allocatable :: x(:,:)
+	!********
+
+	double precision :: t_, tmod
+	double precision, allocatable :: xcl(:,:), xc4(:,:)
+	double precision, allocatable :: v(:,:), v0(:,:)
+
+	integer :: i, j, it, nd, nc, nt, ncl, segment
+
+	nd = size(xc, 1)  ! number of dimensions
+	nc = size(xc, 2)  ! number of control points
+	nt = size(t)
+
+	print *, "nd, nc, nt = ", nd, nc, nt
+	print *, "xc = "
+	print "(2es18.6)", xc
+
+	! Construct the full set of control points xcl from the given interpolation
+	! points xc
+	ncl = 3 * nc
+	allocate(xcl(nd, ncl))
+	xcl = 0.d0  ! TODO
+
+	! First and last points are edge cases
+
+	! First point
+	xcl(:,1) = xc(:,1) - tension / 3 * (xc(:,2) - xc(:,1))
+	xcl(:,2) = xc(:,1)
+	xcl(:,3) = xc(:,1) + tension / 3 * (xc(:,2) - xc(:,1))
+
+	! Interior control points
+	do j = 2, nc-1
+		print *, "j = ", j
+		xcl(:, 3*j-2) = xc(:,j) + tension / 3 * (xc(:,j-1) - xc(:,j+1))
+		xcl(:, 3*j-1) = xc(:,j)
+		xcl(:, 3*j-0) = xc(:,j) - tension / 3 * (xc(:,j-1) - xc(:,j+1))
+	end do
+
+	! Last point
+	xcl(:,ncl-2) = xc(:,nc) + tension / 3 * (xc(:,nc-1) - xc(:,nc))
+	xcl(:,ncl-1) = xc(:,nc)
+	xcl(:,ncl-0) = xc(:,nc) - tension / 3 * (xc(:,nc-1) - xc(:,nc))
+
+	print *, "xcl = "
+	print "(2es18.6)", xcl
+
+	! Using groups of 4 control points, make cubic bezier splines
+
+	allocate(x(nd, nt))
+	do it = 1, nt
+		t_ = t(it)
+
+		segment = max(1, min(nc-1, floor(t_) + 1))
+		!tmod = mod(t_, 1.d0)
+		tmod = t_ - (segment-1)  ! can be 1 on final segment
+		print *, "t_, tmod, segment = ", t_, tmod, segment
+
+		! De Casteljau's algorithm
+
+		!v = xc
+		!v = xc(:, segment * 3 - 1: segment * 3 + 2)
+		v = xcl(:, segment * 3 - 1: segment * 3 + 2)
+
+		do i = 3, 1, -1
+		!do i = nc-1, 1, -1
+			v0 = v
+			do j = 1, i
+				! lerp
+				v(:, j) = (1.d0 - tmod) * v0(:, j) + tmod * v0(:, j+1)
+				!v(:, j) = (1.d0 - t_) * v0(:, j) + t_ * v0(:, j+1)
+			end do
+		end do
+		x(:, it) = v(:, 1)
+
+	end do
+
+end function cardinal_spline
+
+!===============================================================================
+
 end module numa
 
