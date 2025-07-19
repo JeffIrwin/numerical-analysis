@@ -1353,10 +1353,7 @@ double precision function newton_cotes_integrator(f, xmin, xmax, dx, coefs) resu
 	integer :: i, j, j0, n, nc
 
 	nc = size(coefs)
-
-	! TODO: clamp >= 1
-	n = int((xmax - xmin) / dx)
-
+	n = max(1, int((xmax - xmin) / dx))
 	dxl = (xmax - xmin) / n
 
 	area = 0.d0
@@ -1384,6 +1381,58 @@ double precision function newton_cotes_integrator(f, xmin, xmax, dx, coefs) resu
 	area = area * dxl / sum(coefs)
 
 end function newton_cotes_integrator
+
+!===============================================================================
+
+double precision function romberg_integrator(f, xmin, xmax, n) result(area)
+	! Integrate `f` from xmin to xmax using Romberg integration with `n` levels
+	! of extrapolation
+	!
+	! Extrapolation methods estimate the error term of lower-order methods at
+	! multiple resolutions
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	integer, intent(in) :: n
+	!********
+
+	double precision :: dx, x
+	double precision, allocatable :: t(:), r(:)
+	integer :: i, j, nt
+
+	allocate(t(n + 1))  ! triangular tableau
+	allocate(r(n + 1))  ! diagonal part of t
+
+	do i = 0, n
+		! Trapezoid rule with `nt` intervals
+		nt = 2 ** i
+		dx = (xmax - xmin) / nt
+		t(i+1) = 0.5d0 * (f(xmin) + f(xmax))
+		do j = 1, nt
+			! TODO: could cache 1/2 of f(x) values from previous `i` iteration
+			x = xmin + (xmax - xmin) * j / nt
+			t(i+1) = t(i+1) + f(x)
+		end do
+		t(i+1) = t(i+1) * dx
+		print *, "nt, ti = ", nt, t(i+1)
+	end do
+
+	print *, "t = ", t
+
+	r(1) = t(1)
+	do j = 1, n
+		do i = 0, n - j
+			t(i+1) = t(i+2) + (t(i+2) - t(i+1)) / (4 ** j - 1)
+		end do
+		r(j+1) = t(1)
+	end do
+
+	print *, "r = "
+	print "(es22.12)", r
+
+	area = r(n+1)
+
+end function romberg_integrator
 
 !===============================================================================
 

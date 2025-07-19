@@ -1205,5 +1205,27 @@ end function chapter_3_newton_cotes
 
 !===============================================================================
 
+integer function chapter_3_romberg() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_3_romberg"
+
+	double precision :: area
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+	!********
+
+	area = romberg_integrator(sin_fn, 0.d0, PI, 4)
+	print *, "area = ", area
+	call test(area, 1.9999999945872906d0, 1.d-12, nfail, "romberg_integrator 1")
+
+	!********
+	print *, ""
+
+end function chapter_3_romberg
+
+!===============================================================================
+
 end module numa__exercises
 
