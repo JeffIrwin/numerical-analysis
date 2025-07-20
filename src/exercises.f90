@@ -1321,6 +1321,10 @@ integer function chapter_3_gauss() result(nfail)
 	print *, "area = ", area
 	call test(area, 2.0000000000017906d0, 1.d-12, nfail, "gauss7_single 5")
 
+	area = kronrod15_single(sin_fn, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 1.9999999999999942d0, 1.d-12, nfail, "kronrod15_single 6")
+
 	!********
 	print *, ""
 

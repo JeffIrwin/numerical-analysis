@@ -1571,7 +1571,7 @@ end function gauss4_single
 !===============================================================================
 
 double precision function gauss5_single(f, xmin, xmax) result(area)
-	! Integrate `f` from xmin to xmax using 4-point Gaussian integration with
+	! Integrate `f` from xmin to xmax using 5-point Gaussian integration with
 	! only a single interval
 
 	procedure(fn_f64_to_f64) :: f
@@ -1597,7 +1597,7 @@ end function gauss5_single
 !===============================================================================
 
 double precision function gauss7_single(f, xmin, xmax) result(area)
-	! Integrate `f` from xmin to xmax using 4-point Gaussian integration with
+	! Integrate `f` from xmin to xmax using 7-point Gaussian integration with
 	! only a single interval
 
 	procedure(fn_f64_to_f64) :: f
@@ -1621,6 +1621,58 @@ double precision function gauss7_single(f, xmin, xmax) result(area)
 	)
 
 end function gauss7_single
+
+!===============================================================================
+
+double precision function kronrod15_single(f, xmin, xmax) result(area)
+	! Integrate `f` from xmin to xmax using 15-point Kronrod integration with
+	! only a single interval
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	!********
+
+	double precision, parameter :: x(*) = [ &
+		 0.991455371120813d0, &
+		-0.991455371120813d0, &
+		 0.949107912342759d0, &
+		-0.949107912342759d0, &
+		 0.864864423359769d0, &
+		-0.864864423359769d0, &
+		 0.741531185599394d0, &
+		-0.741531185599394d0, &
+		 0.586087235467691d0, &
+		-0.586087235467691d0, &
+		 0.405845151377397d0, &
+		-0.405845151377397d0, &
+		 0.207784955007898d0, &
+		-0.207784955007898d0, &
+		 0.000000000000000d0  &
+	]
+	double precision, parameter :: w(*) = [ &
+		0.022935322010529d0, &
+		0.022935322010529d0, &
+		0.063092092629979d0, &
+		0.063092092629979d0, &
+		0.104790010322250d0, &
+		0.104790010322250d0, &
+		0.140653259715525d0, &
+		0.140653259715525d0, &
+		0.169004726639267d0, &
+		0.169004726639267d0, &
+		0.190350578064785d0, &
+		0.190350578064785d0, &
+		0.204432940075298d0, &
+		0.204432940075298d0, &
+		0.209482141084728d0  &
+	]
+
+	area = gauss_general_single(f, xmin, xmax, &
+		w, &
+		x  &
+	)
+
+end function kronrod15_single
 
 !===============================================================================
 
