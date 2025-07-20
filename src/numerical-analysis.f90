@@ -1384,82 +1384,57 @@ end function newton_cotes_integrator
 
 !===============================================================================
 
-double precision function romberg_integrator(f, xmin, xmax, m) result(area)
-	! Integrate `f` from xmin to xmax using Romberg integration with `m` levels
+double precision function romberg_integrator(f, xmin, xmax, n) result(area)
+	! Integrate `f` from xmin to xmax using Romberg integration with `n` levels
 	! of extrapolation
 	!
 	! Extrapolation methods estimate the error term of lower-order methods at
 	! multiple resolutions
+	!
+	! The authors note that it would make more sense to implement this with a
+	! tolerance arg instead of `n` arg (and I note, maybe a worst case max `n`
+	! arg)
 
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
-	integer, intent(in) :: m
+	integer, intent(in) :: n
 	!********
 
-	double precision :: h, s
+	double precision :: dx, s
 	double precision, allocatable :: t(:)
-	integer :: i, k, q, n
+	integer :: i, k, q, nt
 
-	allocate(t(m + 1))  ! triangular tableau
+	allocate(t(n + 1))  ! triangular tableau
 
-	h = xmax - xmin
-	n = 1
-	t(1) = 0.5d0 * h * (f(xmin) + f(xmax))
+	dx = xmax - xmin
+	nt = 1  ! number of intervals at level k
+	t(1) = 0.5d0 * dx * (f(xmin) + f(xmax))
 
-	do k = 1, m
+	do k = 1, n
+
 		s = 0.d0
-		h = 0.5d0 * h
-		n = 2 * n
-		q = 1.d0
-		do i = 1, n-1, 2
-			s = s + f(xmin + i * h)
+		dx = 0.5d0 * dx
+		nt = 2 * nt
+		q = 1
+		do i = 1, nt-1, 2
+			s = s + f(xmin + i * dx)
 		end do
-		t(k+1) = 0.5d0 * t(k) + s * h
+		t(k+1) = 0.5d0 * t(k) + s * dx
 		!print *, "tk = ", t(k+1)
 
 		do i = k-1, 0, -1
+			! TODO: q will overflow for n >= 16.  Might actually be better as a
+			! double (or at least i64)
 			q = q * 4
 			t(i+1) = t(i+2) + (t(i+2) - t(i+1)) / (q - 1)
 			!print *, "ti = ", t(i+1)
 		end do
+		!print *, t(1)  ! this is the best estimate so far after k levels
 	end do
-	!area = t(m+1)
 	area = t(1)
 
-	print *, "t = "
-	print "(es22.12)", t
-
-	!allocate(t(n + 1))  ! triangular tableau
-	!allocate(r(n + 1))  ! diagonal part of t
-
-	!do i = 0, n
-	!	! Trapezoid rule with `nt` intervals
-	!	nt = 2 ** i
-	!	dx = (xmax - xmin) / nt
-	!	t(i+1) = 0.5d0 * (f(xmin) + f(xmax))
-	!	do j = 1, nt
-	!		! TODO: could cache 1/2 of f(x) values from previous `i` iteration
-	!		x = xmin + (xmax - xmin) * j / nt
-	!		t(i+1) = t(i+1) + f(x)
-	!	end do
-	!	t(i+1) = t(i+1) * dx
-	!	print *, "nt, ti = ", nt, t(i+1)
-	!end do
-
-	!print *, "t = ", t
-
-	!r(1) = t(1)
-	!do j = 1, n
-	!	do i = 0, n - j
-	!		t(i+1) = t(i+2) + (t(i+2) - t(i+1)) / (4 ** j - 1)
-	!	end do
-	!	r(j+1) = t(1)
-	!end do
-
-	!print *, "r = "
-	!print "(es22.12)", r
-
-	!area = r(n+1)
+	!print *, "t = "
+	!print "(es22.12)", t
 
 end function romberg_integrator
 
