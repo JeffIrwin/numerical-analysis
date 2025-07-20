@@ -1223,9 +1223,9 @@ integer function chapter_3_romberg() result(nfail)
 	nfail = 0
 	!********
 
-	area = romberg_integrator(sin_fn, 0.d0, PI, 4)
+	area = romberg_integrator_fixed(sin_fn, 0.d0, PI, 4)
 	print *, "area = ", area
-	call test(area, 1.9999999945872906d0, 1.d-12, nfail, "romberg_integrator 1")
+	call test(area, 1.9999999945872906d0, 1.d-12, nfail, "romberg_integrator_fixed 1")
 
 	!********
 	print *, "integrating sin(x)/x:"
@@ -1233,7 +1233,7 @@ integer function chapter_3_romberg() result(nfail)
 	n = 6
 	allocate(areas(n))
 	do i = 1, n
-		areas(i) = romberg_integrator(sinx_x, 0.d0, 1.d0, i)
+		areas(i) = romberg_integrator_fixed(sinx_x, 0.d0, 1.d0, i)
 	end do
 	print *, "areas = "
 	print "(es24.14)", areas
@@ -1247,7 +1247,36 @@ integer function chapter_3_romberg() result(nfail)
 		9.46083070367183d-01  &
 	]
 
-	call tests(areas, expect, 1.d-12, nfail, "romberg_integrator 2")
+	call tests(areas, expect, 1.d-12, nfail, "romberg_integrator_fixed 2")
+
+	!********
+
+	area = romberg_integrator(sin_fn, 0.d0, PI, 1.d-3)
+	print *, "area = ", area
+	call test(area, 1.9999999945872902d0, 1.d-12, nfail, "romberg_integrator 3")
+
+	area = romberg_integrator(sin_fn, 0.d0, PI, 1.d-6)
+	print *, "area = ", area
+	call test(area, 2.0000000000013212d0, 1.d-12, nfail, "romberg_integrator 4")
+
+	area = romberg_integrator(sin_fn, 0.d0, PI, 1.d-9)
+	print *, "area = ", area
+	call test(area, 1.9999999999999991d0, 1.d-12, nfail, "romberg_integrator 5")
+
+	area = romberg_integrator(sinx_x, 0.d0, 1.d0, 1.d-9)
+	print *, "area = ", area
+	call test(area, 9.46083070367183d-01, 1.d-12, nfail, "romberg_integrator 5.1")
+
+	!********
+	! These tests will throw convergence warnings
+
+	area = romberg_integrator(sin_fn, 0.d0, PI, 0.d0)
+	print *, "area = ", area
+	call test(area, 2.d0, 1.d-14, nfail, "romberg_integrator 6")
+
+	area = romberg_integrator(sin_fn, 0.d0, PI, tol = 0.d0, nmax = 4)
+	print *, "area = ", area
+	call test(area, 1.9999999945872902d0, 1.d-14, nfail, "romberg_integrator 7")
 
 	!********
 	print *, ""

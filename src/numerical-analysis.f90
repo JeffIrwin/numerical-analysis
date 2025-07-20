@@ -1384,16 +1384,12 @@ end function newton_cotes_integrator
 
 !===============================================================================
 
-double precision function romberg_integrator(f, xmin, xmax, n) result(area)
+double precision function romberg_integrator_fixed(f, xmin, xmax, n) result(area)
 	! Integrate `f` from xmin to xmax using Romberg integration with `n` levels
 	! of extrapolation
 	!
 	! Extrapolation methods estimate the error term of lower-order methods at
 	! multiple resolutions
-	!
-	! The authors note that it would make more sense to implement this with a
-	! tolerance arg instead of `n` arg (and I note, maybe a worst case max `n`
-	! arg)
 
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
@@ -1430,6 +1426,73 @@ double precision function romberg_integrator(f, xmin, xmax, n) result(area)
 		!print *, "t(1) = ", t(1)  ! this is the best estimate so far after k levels
 	end do
 	area = t(1)
+
+	!print *, "t = "
+	!print "(es22.12)", t
+
+end function romberg_integrator_fixed
+
+!===============================================================================
+
+double precision function romberg_integrator(f, xmin, xmax, tol, nmax) result(area)
+	! Integrate `f` from xmin to xmax using Romberg integration with tolerance
+	! `tol`
+
+	use numa__utils
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	double precision, intent(in) :: tol
+	integer, optional, intent(in) :: nmax
+	!********
+
+	double precision :: dx, s, q, area0
+	double precision, allocatable :: t(:)
+	integer :: i, k, nt, n
+	logical :: converged
+
+	n = 10
+	if (present(nmax)) n = nmax
+
+	allocate(t(n + 1))  ! triangular tableau
+
+	dx = xmax - xmin
+	nt = 1  ! number of intervals at level k
+	t(1) = 0.5d0 * dx * (f(xmin) + f(xmax))
+	!area = 0.d0
+
+	converged = .false.
+	do k = 1, n
+		area0 = t(1)
+
+		s = 0.d0
+		dx = 0.5d0 * dx
+		nt = 2 * nt
+		q = 1
+		do i = 1, nt-1, 2
+			s = s + f(xmin + i * dx)
+		end do
+		t(k+1) = 0.5d0 * t(k) + s * dx
+		!print *, "tk = ", t(k+1)
+
+		do i = k-1, 0, -1
+			q = q * 4
+			t(i+1) = t(i+2) + (t(i+2) - t(i+1)) / (q - 1)
+			!print *, "ti = ", t(i+1)
+		end do
+		!print *, "t(1) = ", t(1)  ! this is the best estimate so far after k levels
+		!print *, "diff = ", t(1) - area0
+
+		converged = abs(t(1) - area0) < tol
+		if (converged) exit
+
+	end do
+	area = t(1)
+
+	if (.not. converged) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": Romberg integrator did not converge under tolerance "// &
+			to_str(tol)//" after "//to_str(n)//" iterations"
+	end if
 
 	!print *, "t = "
 	!print "(es22.12)", t
