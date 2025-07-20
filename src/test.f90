@@ -40,6 +40,7 @@ program main
 	! Chapter 3: Topics in Integration
 	nfail = nfail + chapter_3_newton_cotes()
 	nfail = nfail + chapter_3_romberg()
+	nfail = nfail + chapter_3_gauss()
 
 	! Chapter 4: Systems of Linear Equations
 

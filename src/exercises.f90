@@ -1273,6 +1273,7 @@ integer function chapter_3_romberg() result(nfail)
 
 	!********
 	! These tests will throw convergence warnings
+	print *, GREEN // "Note" // COLOR_RESET // ": the following two test warnings are expected"
 
 	area = romberg_integrator(sin_fn, 0.d0, PI, 0.d0)
 	print *, "area = ", area
@@ -1286,6 +1287,32 @@ integer function chapter_3_romberg() result(nfail)
 	print *, ""
 
 end function chapter_3_romberg
+
+!===============================================================================
+
+integer function chapter_3_gauss() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_3_gauss"
+
+	double precision :: area
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+	!********
+
+	area = gauss2_single(sin_fn, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 1.9358195746511373d0, 1.d-12, nfail, "gauss2_single 1")
+
+	area = gauss3_single(sin_fn, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 2.0013889136077436d0, 1.d-12, nfail, "gauss3_single 2")
+
+	!********
+	print *, ""
+
+end function chapter_3_gauss
 
 !===============================================================================
 

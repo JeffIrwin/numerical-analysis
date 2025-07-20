@@ -1458,7 +1458,6 @@ double precision function romberg_integrator(f, xmin, xmax, tol, nmax) result(ar
 	dx = xmax - xmin
 	nt = 1  ! number of intervals at level k
 	t(1) = 0.5d0 * dx * (f(xmin) + f(xmax))
-	!area = 0.d0
 
 	converged = .false.
 	do k = 1, n
@@ -1498,6 +1497,52 @@ double precision function romberg_integrator(f, xmin, xmax, tol, nmax) result(ar
 	!print "(es22.12)", t
 
 end function romberg_integrator
+
+!===============================================================================
+
+double precision function gauss2_single(f, xmin, xmax) result(area)
+	! Integrate `f` from xmin to xmax using 2-point Gaussian integration with
+	! only a single interval
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	!********
+
+	double precision :: half_h, mid, offset
+
+	half_h = 0.5d0 * (xmax - xmin)
+	mid = xmin + half_h
+	offset = sqrt(3.d0) / 3.d0 * half_h
+
+	area = half_h * (f(mid - offset) + f(mid + offset))
+
+end function gauss2_single
+
+!===============================================================================
+
+double precision function gauss3_single(f, xmin, xmax) result(area)
+	! Integrate `f` from xmin to xmax using 3-point Gaussian integration with
+	! only a single interval
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	!********
+
+	double precision :: half_h, mid, offset
+
+	half_h = 0.5d0 * (xmax - xmin)
+	mid = xmin + half_h
+	!offset = sqrt(3.d0) / 3.d0 * half_h
+	offset = 0.7745966692414834d0 * half_h
+
+	!area = half_h * (f(mid - offset) + f(mid + offset))
+	area = half_h * ( &
+		5.d0/9 * f(mid - offset) + &
+		8.d0/9 * f(mid) + &
+		5.d0/9 * f(mid + offset) &
+	)
+
+end function gauss3_single
 
 !===============================================================================
 
