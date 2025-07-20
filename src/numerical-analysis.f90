@@ -1508,13 +1508,15 @@ double precision function gauss2_single(f, xmin, xmax) result(area)
 	double precision, intent(in) :: xmin, xmax
 	!********
 
-	double precision :: half_h, mid, offset
+	double precision, parameter :: &
+		x1 = sqrt(3.d0) / 3.d0
+	double precision, parameter :: &
+		w1 = 1.d0
 
-	half_h = 0.5d0 * (xmax - xmin)
-	mid = xmin + half_h
-	offset = sqrt(3.d0) / 3.d0 * half_h
-
-	area = half_h * (f(mid - offset) + f(mid + offset))
+	area = gauss_general_single(f, xmin, xmax, &
+		[ w1, w1], &
+		[-x1, x1] &
+	)
 
 end function gauss2_single
 
@@ -1528,16 +1530,16 @@ double precision function gauss3_single(f, xmin, xmax) result(area)
 	double precision, intent(in) :: xmin, xmax
 	!********
 
-	double precision :: half_h, mid, offset
+	double precision, parameter :: &
+		x1 = 0.7745966692414834d0, &
+		x2 = 0.d0
+	double precision, parameter :: &
+		w1 = 5.d0 / 9, &
+		w2 = 8.d0 / 9
 
-	half_h = 0.5d0 * (xmax - xmin)
-	mid = xmin + half_h
-	offset = 0.7745966692414834d0 * half_h
-
-	area = half_h * ( &
-		5.d0/9 * f(mid - offset) + &
-		8.d0/9 * f(mid) + &
-		5.d0/9 * f(mid + offset) &
+	area = gauss_general_single(f, xmin, xmax, &
+		[ w1, w1, w2], &
+		[-x1, x1, x2] &
 	)
 
 end function gauss3_single
@@ -1552,8 +1554,6 @@ double precision function gauss4_single(f, xmin, xmax) result(area)
 	double precision, intent(in) :: xmin, xmax
 	!********
 
-	double precision :: half_h, mid
-
 	double precision, parameter :: &
 		x1 = 0.8611363115940526d0, &
 		x2 = 0.3399810435848563d0
@@ -1561,17 +1561,36 @@ double precision function gauss4_single(f, xmin, xmax) result(area)
 		w1 = 0.3478548451374538d0, &
 		w2 = 0.6521451548625461d0
 
-	half_h = 0.5d0 * (xmax - xmin)
-	mid = xmin + half_h
-
-	area = half_h * ( &
-		w1 * f(mid - x1 * half_h) + &
-		w1 * f(mid + x1 * half_h) + &
-		w2 * f(mid - x2 * half_h) + &
-		w2 * f(mid + x2 * half_h)   &
+	area = gauss_general_single(f, xmin, xmax, &
+		[ w1, w1,  w2, w2], &
+		[-x1, x1, -x2, x2] &
 	)
 
 end function gauss4_single
+
+!===============================================================================
+
+double precision function gauss_general_single(f, xmin, xmax, w, x) result(area)
+	! General Gaussian quadrature with given weights `w` and abscissas `x`
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	double precision, intent(in) :: w(:), x(:)
+	!********
+
+	double precision :: half_h, mid
+	integer :: i
+
+	half_h = 0.5d0 * (xmax - xmin)
+	mid    = 0.5d0 * (xmin + xmax)
+
+	area = 0.d0
+	do i = 1, size(w)
+		area = area + w(i) * f(mid + x(i) * half_h)
+	end do
+	area = area * half_h
+
+end function gauss_general_single
 
 !===============================================================================
 
