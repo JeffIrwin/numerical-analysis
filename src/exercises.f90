@@ -1267,6 +1267,10 @@ integer function chapter_3_romberg() result(nfail)
 	print *, "area = ", area
 	call test(area, 9.46083070367183d-01, 1.d-12, nfail, "romberg_integrator 5.1")
 
+	area = romberg_integrator(fn_example_pg171, 0.d0, PI/2, 1.d-12)
+	print *, "area = ", area
+	call test(area, 1.d0, 1.d-11, nfail, "romberg_integrator 5.2")
+
 	!********
 	! These tests will throw convergence warnings
 

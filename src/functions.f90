@@ -56,6 +56,16 @@ double precision function sinx_x(x)
 	sinx_x = sin(x) / x
 end function sinx_x
 
+!********
+
+double precision function fn_example_pg171(x)
+	! This is an example integrand from page 171
+	double precision, intent(in) :: x
+	double precision, parameter :: PI = 4 * atan(1.d0)
+	fn_example_pg171 = &
+		5.d0 / (exp(PI) - 2.d0) * exp(2*x) * cos(x)
+end function fn_example_pg171
+
 !===============================================================================
 
 end module numa__functions
