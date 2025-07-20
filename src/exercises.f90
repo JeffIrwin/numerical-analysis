@@ -1309,6 +1309,10 @@ integer function chapter_3_gauss() result(nfail)
 	print *, "area = ", area
 	call test(area, 2.0013889136077436d0, 1.d-12, nfail, "gauss3_single 2")
 
+	area = gauss4_single(sin_fn, 0.d0, PI)
+	print *, "area = ", area
+	call test(area, 1.9999842284577216d0, 1.d-12, nfail, "gauss4_single 3")
+
 	!********
 	print *, ""
 
