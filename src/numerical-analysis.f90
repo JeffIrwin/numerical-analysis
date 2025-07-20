@@ -1400,9 +1400,9 @@ double precision function romberg_integrator(f, xmin, xmax, n) result(area)
 	integer, intent(in) :: n
 	!********
 
-	double precision :: dx, s
+	double precision :: dx, s, q
 	double precision, allocatable :: t(:)
-	integer :: i, k, q, nt
+	integer :: i, k, nt
 
 	allocate(t(n + 1))  ! triangular tableau
 
@@ -1423,8 +1423,6 @@ double precision function romberg_integrator(f, xmin, xmax, n) result(area)
 		!print *, "tk = ", t(k+1)
 
 		do i = k-1, 0, -1
-			! TODO: q will overflow for n >= 16.  Might actually be better as a
-			! double (or at least i64)
 			q = q * 4
 			t(i+1) = t(i+2) + (t(i+2) - t(i+1)) / (q - 1)
 			!print *, "ti = ", t(i+1)

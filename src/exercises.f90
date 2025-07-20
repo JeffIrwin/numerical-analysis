@@ -1133,6 +1133,10 @@ integer function chapter_3_newton_cotes() result(nfail)
 	print *, "area = ", area
 	call test(area, 1.9999999999999998d0, 1.d-12, nfail, "weddle_integrator 6")
 
+	area = weddle_integrator(sinx_x, 0.d0, 1.d0, 0.1d0)
+	print *, "area = ", area
+	call test(area, 0.94608307036718320d0, 1.d-12, nfail, "weddle_integrator 6.1")
+
 	!********
 	! Value array integrator(s)
 
