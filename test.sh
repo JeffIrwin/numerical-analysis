@@ -16,6 +16,7 @@ flags+=" -Werror "
 #flags+=" -Wno-maybe-uninitialized "
 flags+=" -Wno-uninitialized "
 flags+=" -Wno-do-subscript "  # warning is stupid re guard clauses
+flags+=" -Wno-compare-reals "
 
 fpm test --flag "$flags"
 

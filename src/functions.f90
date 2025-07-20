@@ -45,6 +45,17 @@ double precision function sin_fn(x)
 	sin_fn = sin(x)
 end function sin_fn
 
+!********
+
+double precision function sinx_x(x)
+	double precision, intent(in) :: x
+	if (x == 0.d0) then
+		sinx_x = 1
+		return
+	end if
+	sinx_x = sin(x) / x
+end function sinx_x
+
 !===============================================================================
 
 end module numa__functions

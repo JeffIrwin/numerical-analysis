@@ -1210,6 +1210,9 @@ integer function chapter_3_romberg() result(nfail)
 	character(len = *), parameter :: label = "chapter_3_romberg"
 
 	double precision :: area
+	double precision, allocatable :: areas(:), expect(:)
+
+	integer :: i, n
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1219,6 +1222,28 @@ integer function chapter_3_romberg() result(nfail)
 	area = romberg_integrator(sin_fn, 0.d0, PI, 4)
 	print *, "area = ", area
 	call test(area, 1.9999999945872906d0, 1.d-12, nfail, "romberg_integrator 1")
+
+	!********
+	print *, "integrating sin(x)/x:"
+
+	n = 6
+	allocate(areas(n))
+	do i = 1, n
+		areas(i) = romberg_integrator(sinx_x, 0.d0, 1.d0, i)
+	end do
+	print *, "areas = "
+	print "(es24.14)", areas
+
+	expect = [ &
+		9.46145882273587d-01, &
+		9.46083004063674d-01, &
+		9.46083070387223d-01, &
+		9.46083070367181d-01, &
+		9.46083070367183d-01, &
+		9.46083070367183d-01  &
+	]
+
+	call tests(areas, expect, 1.d-12, nfail, "romberg_integrator 2")
 
 	!********
 	print *, ""

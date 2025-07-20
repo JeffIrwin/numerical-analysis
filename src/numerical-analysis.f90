@@ -1429,7 +1429,7 @@ double precision function romberg_integrator(f, xmin, xmax, n) result(area)
 			t(i+1) = t(i+2) + (t(i+2) - t(i+1)) / (q - 1)
 			!print *, "ti = ", t(i+1)
 		end do
-		!print *, t(1)  ! this is the best estimate so far after k levels
+		!print *, "t(1) = ", t(1)  ! this is the best estimate so far after k levels
 	end do
 	area = t(1)
 
