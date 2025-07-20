@@ -1279,7 +1279,7 @@ integer function chapter_3_romberg() result(nfail)
 	print *, "area = ", area
 	call test(area, 2.d0, 1.d-14, nfail, "romberg_integrator 6")
 
-	area = romberg_integrator(sin_fn, 0.d0, PI, tol = 0.d0, nmax = 4)
+	area = romberg_integrator(sin_fn, 0.d0, PI, tol = 0.d0, max_levels = 4)
 	print *, "area = ", area
 	call test(area, 1.9999999945872902d0, 1.d-14, nfail, "romberg_integrator 7")
 
@@ -1329,6 +1329,28 @@ integer function chapter_3_gauss() result(nfail)
 	print *, ""
 
 end function chapter_3_gauss
+
+!===============================================================================
+
+integer function chapter_3_adaptive() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_3_adaptive"
+
+	double precision :: area
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+	!********
+
+	area = simpson_adaptive_integrator(sin_fn, 0.d0, PI, 1.d-10)
+	print *, "area = ", area
+	call test(area, 1.9999999999999993d0, 1.d-12, nfail, "simpson_adaptive_integrator 1")
+
+	!********
+	print *, ""
+
+end function chapter_3_adaptive
 
 !===============================================================================
 

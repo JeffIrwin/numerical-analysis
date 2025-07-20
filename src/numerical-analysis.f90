@@ -22,6 +22,10 @@ module numa
 	! If this file gets too long, it might be good to split it up, e.g. into
 	! interpolate.f90, fft.f90, (and in the future integrate.f90), etc.
 
+	!********
+
+	private :: simpson_adapt_aux
+
 contains
 
 !===============================================================================
@@ -1434,15 +1438,18 @@ end function romberg_integrator_fixed
 
 !===============================================================================
 
-double precision function romberg_integrator(f, xmin, xmax, tol, nmax) result(area)
+double precision function romberg_integrator(f, xmin, xmax, tol, max_levels) &
+		result(area)
 	! Integrate `f` from xmin to xmax using Romberg integration with tolerance
 	! `tol`
+	!
+	! TODO: make tol optional?
 
 	use numa__utils
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	double precision, intent(in) :: tol
-	integer, optional, intent(in) :: nmax
+	integer, optional, intent(in) :: max_levels
 	!********
 
 	double precision :: dx, s, q, area0
@@ -1451,7 +1458,7 @@ double precision function romberg_integrator(f, xmin, xmax, tol, nmax) result(ar
 	logical :: converged
 
 	n = 10
-	if (present(nmax)) n = nmax
+	if (present(max_levels)) n = max_levels
 
 	allocate(t(n + 1))  ! triangular tableau
 
@@ -1713,6 +1720,91 @@ double precision function gauss_general_single(f, xmin, xmax, w, x) result(area)
 	area = area * half_h
 
 end function gauss_general_single
+
+!===============================================================================
+
+recursive double precision function simpson_adapt_aux &
+	( &
+		f, a, b, eps, whole, fa, fb, fm, rec &
+	) &
+	result(area)
+
+	! This private fn is not for end users.  See the non-recursive wrapper
+	! simpson_adaptive_integrator() below instead
+	!
+	! Source:  https://en.wikipedia.org/wiki/Adaptive_Simpson%27s_method
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: a, b, eps, whole, fa, fb, fm
+	integer, intent(in) :: rec
+	!********
+
+	double precision :: h, m, lm, rm, flm, frm, left, right, delta
+
+	m  = 0.5d0 * (a + b)
+	h  = 0.5d0 * (b - a)
+	lm = 0.5d0 * (a + m)
+	rm = 0.5d0 * (m + b)
+
+	if (eps/2 == eps .or. a == lm) then
+		! No convergence
+		!
+		! TODO: set separate bools for convergence failure due to eps underflow
+		! or max rec level hit.  Log warning in wrapper
+		area = whole
+		return
+	end if
+
+	flm = f(lm)
+	frm = f(rm)
+	left  = h/6 * (fa + 4*flm + fm)
+	right = h/6 * (fm + 4*frm + fb)
+	delta = left + right - whole
+
+	if (rec <= 0 .or. abs(delta) <= 15 * eps) then
+		area = left + right + delta / 15.d0
+		return
+	end if
+
+	area = &
+		simpson_adapt_aux(f, a, m, eps/2, left , fa, fm, flm, rec-1) + &
+		simpson_adapt_aux(f, m, b, eps/2, right, fm, fb, frm, rec-1)
+
+end function simpson_adapt_aux
+
+!===============================================================================
+
+double precision function simpson_adaptive_integrator &
+	( &
+		f, xmin, xmax, tol, max_levels &
+	) &
+	result(area)
+
+	! Integrate `f` from xmin to xmax using the adaptive Simpson method
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, tol
+	integer, optional, intent(in) :: max_levels
+	!********
+
+	double precision :: h, s, fa, fb, fm
+	integer :: n
+
+	area = 0.d0
+	h = xmax - xmin
+	if (h == 0) return
+
+	n = 10
+	if (present(max_levels)) n = max_levels
+
+	! Bootstrap the first level then call the recursive core
+	fa = f(xmin)
+	fm = f(0.5d0 * (xmin + xmax))
+	fb = f(xmax)
+	s = h / 6 * (fa * 4*fm + fb)
+	area = simpson_adapt_aux(f, xmin, xmax, tol, s, fa, fb, fm, n)
+
+end function simpson_adaptive_integrator
 
 !===============================================================================
 
