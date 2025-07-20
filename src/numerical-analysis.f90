@@ -1570,6 +1570,60 @@ end function gauss4_single
 
 !===============================================================================
 
+double precision function gauss5_single(f, xmin, xmax) result(area)
+	! Integrate `f` from xmin to xmax using 4-point Gaussian integration with
+	! only a single interval
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	!********
+
+	double precision, parameter :: &
+		x1 = 0.9061798459386640d0, &
+		x2 = 0.5384693101056831d0, &
+		x0 = 0.d0
+	double precision, parameter :: &
+		w1 = 0.2369268850561891d0, &
+		w2 = 0.4786286704993665d0, &
+		w0 = 0.5688888888888889d0
+
+	area = gauss_general_single(f, xmin, xmax, &
+		[ w1, w1, w0,  w2, w2], &
+		[-x1, x1, x0, -x2, x2] &
+	)
+
+end function gauss5_single
+
+!===============================================================================
+
+double precision function gauss7_single(f, xmin, xmax) result(area)
+	! Integrate `f` from xmin to xmax using 4-point Gaussian integration with
+	! only a single interval
+
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	!********
+
+	double precision, parameter :: &
+		x1 = 0.9491079123427585d0, &
+		x2 = 0.7415311855993945d0, &
+		x3 = 0.4058451513773972d0, &
+		x0 = 0.d0
+	double precision, parameter :: &
+		w1 = 0.1294849661688697d0, &
+		w2 = 0.2797053914892766d0, &
+		w3 = 0.3818300505051189d0, &
+		w0 = 0.4179591836734694d0
+
+	area = gauss_general_single(f, xmin, xmax, &
+		[ w1, w1,  w2, w2,  w3, w3, w0], &
+		[-x1, x1, -x2, x2, -x3, x3, x0] &
+	)
+
+end function gauss7_single
+
+!===============================================================================
+
 double precision function gauss_general_single(f, xmin, xmax, w, x) result(area)
 	! General Gaussian quadrature with given weights `w` and abscissas `x`
 
