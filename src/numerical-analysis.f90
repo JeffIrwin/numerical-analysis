@@ -1457,7 +1457,7 @@ double precision function romberg_integrator(f, xmin, xmax, tol, max_levels) &
 	integer :: i, k, nt, n
 	logical :: converged
 
-	n = 10
+	n = 16
 	if (present(max_levels)) n = max_levels
 
 	allocate(t(n + 1))  ! triangular tableau
@@ -1725,7 +1725,7 @@ end function gauss_general_single
 
 recursive double precision function simpson_adapt_aux &
 	( &
-		f, a, b, eps, whole, fa, fb, fm, rec &
+		f, a, b, eps, whole, fa, fb, fm, rec, neval &
 	) &
 	result(area)
 
@@ -1737,6 +1737,7 @@ recursive double precision function simpson_adapt_aux &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: a, b, eps, whole, fa, fb, fm
 	integer, intent(in) :: rec
+	integer, intent(inout) :: neval
 	!********
 
 	double precision :: h, m, lm, rm, flm, frm, left, right, delta
@@ -1757,6 +1758,7 @@ recursive double precision function simpson_adapt_aux &
 
 	flm = f(lm)
 	frm = f(rm)
+	neval = neval + 2
 	left  = h/6 * (fa + 4*flm + fm)
 	right = h/6 * (fm + 4*frm + fb)
 	delta = left + right - whole
@@ -1767,8 +1769,8 @@ recursive double precision function simpson_adapt_aux &
 	end if
 
 	area = &
-		simpson_adapt_aux(f, a, m, eps/2, left , fa, fm, flm, rec-1) + &
-		simpson_adapt_aux(f, m, b, eps/2, right, fm, fb, frm, rec-1)
+		simpson_adapt_aux(f, a, m, eps/2, left , fa, fm, flm, rec-1, neval) + &
+		simpson_adapt_aux(f, m, b, eps/2, right, fm, fb, frm, rec-1, neval)
 
 end function simpson_adapt_aux
 
@@ -1788,21 +1790,26 @@ double precision function simpson_adaptive_integrator &
 	!********
 
 	double precision :: h, s, fa, fb, fm
-	integer :: n
+	integer :: n, neval
 
 	area = 0.d0
 	h = xmax - xmin
 	if (h == 0) return
 
-	n = 10
+	n = 16
 	if (present(max_levels)) n = max_levels
 
 	! Bootstrap the first level then call the recursive core
 	fa = f(xmin)
 	fm = f(0.5d0 * (xmin + xmax))
 	fb = f(xmax)
+	neval = 3  ! number of fn evaluations
 	s = h / 6 * (fa * 4*fm + fb)
-	area = simpson_adapt_aux(f, xmin, xmax, tol, s, fa, fb, fm, n)
+
+	area = simpson_adapt_aux(f, xmin, xmax, tol, s, fa, fb, fm, n, neval)
+
+	!! Make an optional out arg?
+	!print *, "neval = ", neval
 
 end function simpson_adaptive_integrator
 
