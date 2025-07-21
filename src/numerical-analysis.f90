@@ -1725,7 +1725,8 @@ end function gauss_general_single
 
 recursive double precision function simpson_adapt_aux &
 	( &
-		f, a, b, eps, whole, fa, fb, fm, rec, neval &
+		f, a, b, eps, whole, fa, fb, fm, rec, &
+		neval, is_eps_underflow, is_max_level &
 	) &
 	result(area)
 
@@ -1737,7 +1738,9 @@ recursive double precision function simpson_adapt_aux &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: a, b, eps, whole, fa, fb, fm
 	integer, intent(in) :: rec
+
 	integer, intent(inout) :: neval
+	logical, intent(inout) :: is_eps_underflow, is_max_level
 	!********
 
 	double precision :: h, m, lm, rm, flm, frm, left, right, delta
@@ -1748,10 +1751,7 @@ recursive double precision function simpson_adapt_aux &
 	rm = 0.5d0 * (m + b)
 
 	if (eps/2 == eps .or. a == lm) then
-		! No convergence
-		!
-		! TODO: set separate bools for convergence failure due to eps underflow
-		! or max rec level hit.  Log warning in wrapper
+		is_eps_underflow = .true.
 		area = whole
 		return
 	end if
@@ -1763,14 +1763,17 @@ recursive double precision function simpson_adapt_aux &
 	right = h/6 * (fm + 4*frm + fb)
 	delta = left + right - whole
 
+	if (rec <= 0) is_max_level = .true.
 	if (rec <= 0 .or. abs(delta) <= 15 * eps) then
 		area = left + right + delta / 15.d0
 		return
 	end if
 
 	area = &
-		simpson_adapt_aux(f, a, m, eps/2, left , fa, fm, flm, rec-1, neval) + &
-		simpson_adapt_aux(f, m, b, eps/2, right, fm, fb, frm, rec-1, neval)
+		simpson_adapt_aux( &
+		f, a, m, eps/2, left , fa, fm, flm, rec-1, neval, is_eps_underflow, is_max_level) + &
+		simpson_adapt_aux( &
+		f, m, b, eps/2, right, fm, fb, frm, rec-1, neval, is_eps_underflow, is_max_level)
 
 end function simpson_adapt_aux
 
@@ -1784,6 +1787,7 @@ double precision function simpson_adaptive_integrator &
 
 	! Integrate `f` from xmin to xmax using the adaptive Simpson method
 
+	use numa__utils
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax, tol
 	integer, optional, intent(in) :: max_levels
@@ -1791,6 +1795,7 @@ double precision function simpson_adaptive_integrator &
 
 	double precision :: h, s, fa, fb, fm
 	integer :: n, neval
+	logical :: is_eps_underflow, is_max_level
 
 	area = 0.d0
 	h = xmax - xmin
@@ -1799,17 +1804,34 @@ double precision function simpson_adaptive_integrator &
 	n = 16
 	if (present(max_levels)) n = max_levels
 
+	! TODO: panic if tol == 0.  Recursive core will barf anyway
+
 	! Bootstrap the first level then call the recursive core
 	fa = f(xmin)
 	fm = f(0.5d0 * (xmin + xmax))
 	fb = f(xmax)
+
 	neval = 3  ! number of fn evaluations
+	is_eps_underflow = .false.
+	is_max_level     = .false.
+
 	s = h / 6 * (fa * 4*fm + fb)
 
-	area = simpson_adapt_aux(f, xmin, xmax, tol, s, fa, fb, fm, n, neval)
+	area = simpson_adapt_aux(f, xmin, xmax, tol, s, fa, fb, fm, n, &
+		neval, is_eps_underflow, is_max_level)
 
 	!! Make an optional out arg?
 	!print *, "neval = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": simpson_adaptive_integrator() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": simpson_adaptive_integrator() reached max recursion level"
+	end if
 
 end function simpson_adaptive_integrator
 
