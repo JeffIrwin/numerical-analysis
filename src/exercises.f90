@@ -1647,7 +1647,8 @@ integer function chapter_4_inv() result(nfail)
 	deallocate(a, x, bx)
 
 	!********
-	! Test whole matrix inversion
+	! Test whole matrix inversion.  This is more for convenience than serious
+	! use, as you would usually want to avoid explicit inversions
 
 	! Reset
 	a = a0
@@ -1667,12 +1668,26 @@ integer function chapter_4_inv() result(nfail)
 
 	call test(norm2(matmul(a0, ainv) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 1")
 
-	! TODO: add and test a matrix inversion routine using lu_invmul_mat().  This
-	! is more for convenience than serious use, as you would usually want to
-	! avoid explicit inversions.  Make subroutine and fn versions?  Subroutine
-	! would modify arg while fn would copy
+	!********
+	! `inv` is a fn that returns the invers of `a` without modifying it, while
+	! `invert` is a subroutine that replaces `a` with its inverse
+	!
+	! The fn and the subroutine cannot be overloaded.  In Fortrans, overloads
+	! must be either all fns or all subroutines
+
+	a = a0
+	ainv = inv(a)
+	call test(norm2(matmul(a, ainv) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 2")
+
+	a = a0
+	call invert(a)
+	call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 3")
+
+	!********
 
 	! Also test and compare Gauss-Jordan algo
+
+	! TODO: fuzz
 
 end function chapter_4_inv
 

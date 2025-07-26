@@ -2271,5 +2271,44 @@ end function eye
 
 !===============================================================================
 
+function inv(a)
+	! Return the inverse of matrix `a` without modifying `a`
+	double precision, allocatable, intent(in) :: a(:,:)
+	double precision, allocatable :: inv(:,:)
+
+	double precision, allocatable :: copy_(:,:)
+
+	copy_ = a
+	inv = eye(size(a,1))
+	call invmul(copy_, inv)
+
+end function inv
+
+!===============================================================================
+
+subroutine invert(a)
+	! Replace `a` with its inverse
+	double precision, allocatable, intent(inout) :: a(:,:)
+	double precision, allocatable :: copy_(:,:)
+
+	! One move and one copy
+	call move_alloc(a, copy_)
+	a = eye(size(copy_, 1))
+	call invmul(copy_, a)
+
+	!! Two copies
+	!copy_ = a
+	!a = eye(size(a,1))
+	!call invmul(copy_, a)
+
+	!! Also two copies
+	!copy_ = eye(size(a,1))
+	!call invmul(a, copy_)
+	!a = copy_
+
+end subroutine invert
+
+!===============================================================================
+
 end module numa
 
