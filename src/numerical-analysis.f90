@@ -2320,24 +2320,27 @@ subroutine gauss_jordan(a)
 	!********
 
 	double precision :: max_, hr
-	double precision, allocatable :: hv(:)
+	!double precision, allocatable :: hv(:)
 
 	integer, allocatable :: p(:)  ! pivot
-	integer :: i, j, k, n, r, hi
+	integer :: i, j, k, n, r, r1(1)!, hi
 
 	n = size(a, 1)
 	p = [(i, i = 1, n)]
 
 	do j = 1, n
 
-		max_ = abs(a(j,j))
-		r = j
-		do i = j+1, n
-			if (abs(a(i,j)) > max_) then
-				max_ = abs(a(i,j))
-				r = i
-			end if
-		end do
+		r1 = maxloc(abs(a(j+1: n, j))) + j
+		r = r1(1)
+		max_ = abs(a(r, j))
+		!max_ = abs(a(j,j))
+		!r = j
+		!do i = j+1, n
+		!	if (abs(a(i,j)) > max_) then
+		!		max_ = abs(a(i,j))
+		!		r = i
+		!	end if
+		!end do
 		if (max_ == 0) then
 			! TODO: panic
 			print *, "Error: singular matrix in gauss_jordan()"
@@ -2345,14 +2348,16 @@ subroutine gauss_jordan(a)
 
 		! Swap rows
 		if (r > j) then
-			do k = 1, n
-				hr = a(j,k)
-				a(j,k) = a(r,k)
-				a(r,k) = hr
-			end do
-			hi = p(j)
-			p(j) = p(r)
-			p(r) = hi
+			a([j, r], :) = a([r, j], :)
+			p([j, r]) = p([r, j])
+			!do k = 1, n
+			!	hr = a(j,k)
+			!	a(j,k) = a(r,k)
+			!	a(r,k) = hr
+			!end do
+			!hi = p(j)
+			!p(j) = p(r)
+			!p(r) = hi
 		end if
 
 		! Transform
@@ -2372,15 +2377,17 @@ subroutine gauss_jordan(a)
 	end do
 
 	! Swap columns
-	allocate(hv(n))
-	do i = 1, n
-		do k = 1, n
-			hv(p(k)) = a(i,k)
-		end do
-		do k = 1, n
-			a(i,k) = hv(k)
-		end do
-	end do
+	!a = a(p, :)
+	a(:,p) = a
+	!allocate(hv(n))
+	!do i = 1, n
+	!	do k = 1, n
+	!		hv(p(k)) = a(i,k)
+	!	end do
+	!	do k = 1, n
+	!		a(i,k) = hv(k)
+	!	end do
+	!end do
 
 	!print *, "In Gauss-Jordan:"
 	!print *, "a = "
