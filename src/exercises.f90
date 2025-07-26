@@ -23,6 +23,11 @@ end function assert
 
 !===============================================================================
 
+! TODO:  see fynth for a macro that also logs the source filename and line
+! number:
+!
+!     https://github.com/JeffIrwin/fynth/blob/9def56a846a9dd305acc788d0d3f0c7d31a943da/test/test.F90#L96
+!
 subroutine test(val, expect, tol, nfail, msg)
 	double precision, intent(in) :: val, expect, tol
 	integer, intent(inout) :: nfail
@@ -1581,6 +1586,13 @@ integer function chapter_3_adaptive() result(nfail)
 	print *, "diff = ", area - expect
 	call test(area, expect, 1.d-10, nfail, "gk15ii_adaptive_integrator 23")
 	print *, ""
+
+	!********
+
+	! This could always be expanded with more tests.  Quadpack has some
+	! interesting tests:
+	!
+	!     	https://github.com/jacobwilliams/quadpack/blob/master/test/quadpack_test_module.F90
 
 	!********
 

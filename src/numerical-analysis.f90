@@ -28,6 +28,12 @@ module numa
 
 	!********
 
+	! Tables of abscissas and weights are taken from Jacob Williams' quadpack,
+	! BSD-3 license:
+	!
+	!     https://github.com/jacobwilliams/quadpack/blob/702abfd5f0acbdb51439695334347a4b3c0dc87a/src/quadpack_generic.F90#L5209
+	!
+	! See 3p/LICENSES for details
 	integer, parameter :: NG_GK15 = 7, NK_GK15 = 15
 	double precision, parameter :: WXG_GK15(*,*) = reshape([ &
 		1.29484966168869693270611432679082018329d-1,  9.49107912342758524526189684047851262401d-1, &
@@ -1640,13 +1646,6 @@ double precision function gauss7_single(f, xmin, xmax) result(area)
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	!********
-
-	! Tables of abscissas and weights are taken from Jacob Williams' quadpack,
-	! BSD-3 license:
-	!
-	!     https://github.com/jacobwilliams/quadpack/blob/702abfd5f0acbdb51439695334347a4b3c0dc87a/src/quadpack_generic.F90#L5209
-	!
-	! See 3p/LICENSES for details
 
 	double precision, parameter :: wx(*,*) = reshape([ &
 		1.29484966168869693270611432679082018329d-1,  9.49107912342758524526189684047851262401d-1, &
