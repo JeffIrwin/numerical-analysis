@@ -47,6 +47,20 @@ end function sin_fn
 
 !********
 
+double precision function sqrt_fn(x)
+	double precision, intent(in) :: x
+	sqrt_fn = sqrt(x)
+end function sqrt_fn
+
+!********
+
+double precision function inv_sqrt_fn(x)
+	double precision, intent(in) :: x
+	inv_sqrt_fn = 1.d0 / sqrt(x)
+end function inv_sqrt_fn
+
+!********
+
 double precision function sinx_x(x)
 	double precision, intent(in) :: x
 	if (x == 0.d0) then

@@ -1295,11 +1295,23 @@ integer function chapter_3_gauss() result(nfail)
 	character(len = *), parameter :: label = "chapter_3_gauss"
 
 	double precision :: area
+	!integer :: i
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 	!********
+
+	! Single-interval Gaussian quadrature isn't very useful, but it's the basis
+	! of adaptive Gauss-Kronrod integration
+	!
+	! Alternatively you could use composite Gaussian integration, which is not
+	! implemented here.  The idea is that you statically subdivide the
+	! integration interval into a fixed number of subintervals.  The problem is
+	! how do you decide how many subintervals to divide without having an error
+	! estimate?  I've done composite Newton-Cotes integrators above, but
+	! adaptive integrators seem more interesting than static composite
+	! integrators
 
 	area = gauss2_single(sin_fn, 0.d0, PI)
 	print *, "area = ", area
@@ -1318,12 +1330,29 @@ integer function chapter_3_gauss() result(nfail)
 	call test(area, 2.0000001102844722d0, 1.d-12, nfail, "gauss5_single 4")
 
 	area = gauss7_single(sin_fn, 0.d0, PI)
-	print *, "area = ", area
+	print *, "area g7  = ", area
 	call test(area, 2.0000000000017906d0, 1.d-12, nfail, "gauss7_single 5")
 
 	area = kronrod15_single(sin_fn, 0.d0, PI)
-	print *, "area = ", area
+	print *, "area k15 = ", area
 	call test(area, 1.9999999999999942d0, 1.d-12, nfail, "kronrod15_single 6")
+
+	!do i = 400, 410, 2
+	!	area = gauss7_single(sin_fn, 0.d0, i*PI)
+	!	print *, "area g7  "//to_str(i)//" = ", area
+
+	!	area = kronrod15_single(sin_fn, 0.d0, i*PI)
+	!	print *, "area k15 "//to_str(i)//" = ", area
+	!end do
+
+	! Expect 2/3
+	area = gauss7_single(sqrt_fn, 0.d0, 1.d0)
+	print *, "area g7  sqrt = ", area
+	call test(area, 0.66691308508873925d0, 1.d-12, nfail, "gauss7_single 7")
+
+	area = kronrod15_single(sqrt_fn, 0.d0, 1.d0)
+	print *, "area k15 sqrt = ", area
+	call test(area, 0.66668012554841749d0, 1.d-12, nfail, "kronrod15_single 7")
 
 	!********
 	print *, ""
@@ -1343,12 +1372,46 @@ integer function chapter_3_adaptive() result(nfail)
 	nfail = 0
 	!********
 
+	! Simpson
 	area = simpson_adaptive_integrator(sin_fn, 0.d0, PI, 1.d-10)
 	print *, "area = ", area
 	call test(area, 1.9999999999999993d0, 1.d-12, nfail, "simpson_adaptive_integrator 1")
 
+	! Gauss-Kronrod
+	area = gk15_adaptive_integrator(sqrt_fn, 0.d0, 1.d0, 1.d-10)
+	print *, "area = ", area
+	call test(area, 2.d0/3, 1.d-12, nfail, "gk15_adaptive_integrator 1")
+
 	!********
+	! Log from 0 -- nearly impossible!
+
+	! Simpson can't actually evaluate from singularities because it tries to
+	! evaluate the end points.  Gauss-Kronrod has an advantage here because
+	! Gauss points are always interior, never on the boundary
+
+	area = simpson_adaptive_integrator(log_fn, 1.d-300, 1.d0, 1.d-10)
+	print *, "area simp = ", area
+	print *, "diff = ", area + 1.d0
 	print *, ""
+
+	area = gk15_adaptive_integrator(log_fn, 0.d0, 1.d0, 1.d-10)
+	print *, "area gk15 = ", area
+	print *, "diff = ", area + 1.d0
+	print *, ""
+	! TODO
+	!call test(area, 2.d0/3, 1.d-14, nfail, "gk15_adaptive_integrator 1")
+
+	!********
+	! 1 / sqrt(x)
+
+	area = gk15_adaptive_integrator(inv_sqrt_fn, 0.d0, 1.d0, 1.d-10)
+	print *, "area gk15 = ", area
+	print *, "diff = ", area - 2.d0
+	print *, ""
+	! TODO
+	!call test(area, 2.d0/3, 1.d-14, nfail, "gk15_adaptive_integrator 1")
+
+	!********
 
 end function chapter_3_adaptive
 
