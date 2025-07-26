@@ -1604,6 +1604,8 @@ integer function chapter_4_inv() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_inv"
 
+	double precision :: t0, t
+	double precision :: t_inv, t_invert, t_gj
 	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), ainv(:,:)
 
 	integer :: i, n, nrng, irep
@@ -1701,9 +1703,13 @@ integer function chapter_4_inv() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	! Might reduce the number of tests here after benchmarking so my whole suite
-	! doesn't take much longer than 1 s
+	! doesn't take much longer than 1 s, in debug on laptop battery
 
-	do n = 2, 100, 3
+	t_gj = 0.d0
+	t_inv = 0.d0
+	t_invert = 0.d0
+
+	do n = 2, 250, 3
 
 		allocate(a0(n, n))
 
@@ -1722,18 +1728,27 @@ integer function chapter_4_inv() result(nfail)
 			!********
 
 			a = a0
+			call cpu_time(t0)
 			call invert(a)
+			call cpu_time(t)
+			t_invert = t_invert + t - t0
 			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
 
 			!********
 
+			call cpu_time(t0)
 			a = inv(a0)
+			call cpu_time(t)
+			t_inv = t_inv + t - t0
 			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
 
 			!********
 
 			a = a0
+			call cpu_time(t0)
 			call gauss_jordan(a)
+			call cpu_time(t)
+			t_gj = t_gj + t - t0
 			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "gauss_jordan() fuzz n x n")
 
 			!********
@@ -1741,6 +1756,10 @@ integer function chapter_4_inv() result(nfail)
 
 		deallocate(a0)
 	end do
+
+	write(*,*) "Inv fn time            = ", to_str(t_inv)
+	write(*,*) "Invert subroutine time = ", to_str(t_invert)
+	write(*,*) "Gauss-Jordan time      = ", to_str(t_gj)
 
 	!********
 

@@ -31,6 +31,7 @@ module numa__utils
 	interface to_str
 		procedure :: to_str_i32
 		procedure :: to_str_i64
+		procedure :: to_str_f32
 		procedure :: to_str_f64
 	end interface to_str
 
@@ -88,6 +89,16 @@ function to_str_i64(val) result(str)
 	write(buffer, "(i0)") val
 	str = trim(buffer)
 end function to_str_i64
+
+!********
+
+function to_str_f32(val) result(str)
+	real, intent(in) :: val
+	character(len = :), allocatable :: str
+	character :: buffer*32
+	write(buffer, *) val
+	str = trim(adjustl(buffer))
+end function to_str_f32
 
 !********
 

@@ -15,6 +15,10 @@ program main
 
 	integer :: nfail
 
+	real :: t0, t
+
+	call cpu_time(t0)
+
 	write(*,*) MAGENTA // "Starting numerical-analysis test" // COLOR_RESET
 
 	nfail = 0
@@ -72,6 +76,9 @@ program main
 	end if
 
 	write(*,*) MAGENTA // "Ending numerical-analysis test" // COLOR_RESET
+	call cpu_time(t)
+	write(*,*) "CPU time = ", to_str(t - t0), " s"
+
 	call exit(nfail)
 
 end program main
