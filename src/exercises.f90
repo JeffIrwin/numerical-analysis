@@ -1415,6 +1415,7 @@ integer function chapter_3_adaptive() result(nfail)
 	! 1 / sqrt(x)
 
 	area = gk15_adaptive_integrator(inv_sqrt_fn, 0.d0, 1.d0, 1.d-10)
+	!area = gk15_adaptive_integrator(inv_sqrt_fn, 0.d0, 1.d0, 1.d-10, 96)  ! eps underflow
 	print *, "area gk15 = ", area
 	print *, "diff = ", area - 2.d0
 	print *, ""

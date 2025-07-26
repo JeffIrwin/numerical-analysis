@@ -1639,7 +1639,8 @@ end function gauss7_single
 
 recursive double precision function gk15_aux &
 	( &
-		f, xmin, xmax, tol, n, neval &
+		f, xmin, xmax, tol, whole, n, &
+		neval, is_eps_underflow, is_max_level &
 	) &
 	result(area)
 
@@ -1648,9 +1649,10 @@ recursive double precision function gk15_aux &
 
 	use numa__utils
 	procedure(fn_f64_to_f64) :: f
-	double precision, intent(in) :: xmin, xmax, tol
+	double precision, intent(in) :: xmin, xmax, tol, whole
 	integer, intent(in) :: n
 	integer, intent(inout) :: neval
+	logical, intent(inout) :: is_eps_underflow, is_max_level
 	!********
 
 	integer, parameter :: ng = 7, nk = 15
@@ -1688,6 +1690,12 @@ recursive double precision function gk15_aux &
 	dx2 = 0.5d0 * (xmax - xmin)
 	mid = 0.5d0 * (xmin + xmax)
 
+	if (tol/2 == tol .or. xmin == mid) then
+		is_eps_underflow = .true.
+		area = whole
+		return
+	end if
+
 	areag = 0.d0
 	areak = 0.d0
 	do i = 1, ng
@@ -1707,6 +1715,7 @@ recursive double precision function gk15_aux &
 	!print *, "areak = ", areak
 
 	diff = abs(areak - areag)
+	if (n <= 0 .and. diff >= tol) is_max_level = .true.
 	if (diff < tol .or. n <= 0) then
 		area = areak
 		return
@@ -1725,8 +1734,8 @@ recursive double precision function gk15_aux &
 	! under tol
 
 	area = &
-		gk15_aux(f, xmin, mid, tol/2, n-1, neval) + &
-		gk15_aux(f, mid, xmax, tol/2, n-1, neval)
+		gk15_aux(f, xmin, mid, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level) + &
+		gk15_aux(f, mid, xmax, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level)
 
 end function gk15_aux
 
@@ -1747,46 +1756,29 @@ recursive double precision function gk15_adaptive_integrator &
 	integer, optional, intent(in) :: max_levels
 	!********
 
-	integer, parameter :: ng = 7, nk = 15
-	double precision, parameter :: wxg(*,*) = reshape([ &
-		1.29484966168869693270611432679082018329d-1,  9.49107912342758524526189684047851262401d-1, &
-		1.29484966168869693270611432679082018329d-1, -9.49107912342758524526189684047851262401d-1, &
-		2.79705391489276667901467771423779582487d-1,  7.41531185599394439863864773280788407074d-1, &
-		2.79705391489276667901467771423779582487d-1, -7.41531185599394439863864773280788407074d-1, &
-		3.81830050505118944950369775488975133878d-1,  4.05845151377397166906606412076961463347d-1, &
-		3.81830050505118944950369775488975133878d-1, -4.05845151377397166906606412076961463347d-1, &
-		4.17959183673469387755102040816326530612d-1,  0.00000000000000000000000000000000000000d0   &
-	], [2, ng])
-	double precision, parameter :: wxk(*,*) = reshape([ &
-		6.30920926299785532907006631892042866651d-2,  9.49107912342758524526189684047851262401d-1, &
-		6.30920926299785532907006631892042866651d-2, -9.49107912342758524526189684047851262401d-1, &
-		1.40653259715525918745189590510237920400d-1,  7.41531185599394439863864773280788407074d-1, &
-		1.40653259715525918745189590510237920400d-1, -7.41531185599394439863864773280788407074d-1, &
-		1.90350578064785409913256402421013682826d-1,  4.05845151377397166906606412076961463347d-1, &
-		1.90350578064785409913256402421013682826d-1, -4.05845151377397166906606412076961463347d-1, &
-		2.09482141084727828012999174891714263698d-1,  0.00000000000000000000000000000000000000d0 , &
-		2.29353220105292249637320080589695919936d-2,  9.91455371120812639206854697526328516642d-1, &
-		2.29353220105292249637320080589695919936d-2, -9.91455371120812639206854697526328516642d-1, &
-		1.04790010322250183839876322541518017444d-1,  8.64864423359769072789712788640926201211d-1, &
-		1.04790010322250183839876322541518017444d-1, -8.64864423359769072789712788640926201211d-1, &
-		1.69004726639267902826583426598550284106d-1,  5.86087235467691130294144838258729598437d-1, &
-		1.69004726639267902826583426598550284106d-1, -5.86087235467691130294144838258729598437d-1, &
-		2.04432940075298892414161999234649084717d-1,  2.07784955007898467600689403773244913480d-1, &
-		2.04432940075298892414161999234649084717d-1, -2.07784955007898467600689403773244913480d-1  &
-	], [2, nk])
-
 	integer :: n, neval
+
+	logical :: is_eps_underflow, is_max_level
 
 	n = 16
 	if (present(max_levels)) n = max_levels
 
-	! TODO: probably wrap user-facing interface around an recursive "aux" core,
-	! like adaptive Simpson, so that we can log warnings once and not
-	! recursively.  Optional args are only optional in wrapper
 	neval = 0
-	area = gk15_aux(f, xmin, xmax, tol, n, neval)
+	is_eps_underflow = .false.
+	is_max_level = .false.
+	area = gk15_aux(f, xmin, xmax, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
 
-	print *, "neval gk15 = ", neval
+	!print *, "neval gk15 = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15_adaptive_integrator() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15_adaptive_integrator() reached max recursion level"
+	end if
 
 end function gk15_adaptive_integrator
 
@@ -1897,7 +1889,6 @@ recursive double precision function simpson_adapt_aux &
 	right = h/6 * (fm + 4*frm + fb)
 	delta = left + right - whole
 
-	!if (rec <= 0) is_max_level = .true.
 	if (rec <= 0 .and. abs(delta) > 15 * eps) is_max_level = .true.
 
 	if (rec <= 0 .or. abs(delta) <= 15 * eps) then
@@ -1957,7 +1948,7 @@ double precision function simpson_adaptive_integrator &
 		neval, is_eps_underflow, is_max_level)
 
 	!! Make an optional out arg?
-	print *, "neval simp = ", neval
+	!print *, "neval simp = ", neval
 
 	if (is_eps_underflow) then
 		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
