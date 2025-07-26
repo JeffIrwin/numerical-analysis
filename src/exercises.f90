@@ -1606,7 +1606,7 @@ integer function chapter_4_inv() result(nfail)
 
 	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), ainv(:,:)
 
-	integer :: i, n
+	integer :: n
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1684,8 +1684,13 @@ integer function chapter_4_inv() result(nfail)
 	call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 3")
 
 	!********
+	! Test the Gauss-Jordan method
 
-	! Also test and compare Gauss-Jordan algo
+	a = a0
+	call gauss_jordan(a)
+	call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 4")
+
+	!********
 
 	! TODO: fuzz
 

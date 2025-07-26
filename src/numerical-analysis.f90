@@ -2310,5 +2310,82 @@ end subroutine invert
 
 !===============================================================================
 
+subroutine gauss_jordan(a)
+	! Use the Gauss-Jordan method to replace matrix `a` with its inverse
+	double precision, allocatable, intent(inout) :: a(:,:)
+
+	!********
+
+	double precision :: max_, hr
+	double precision, allocatable :: hv(:)
+
+	integer, allocatable :: p(:)  ! pivot
+	integer :: i, j, k, n, r, hi
+
+	n = size(a, 1)
+	p = [(i, i = 1, n)]
+
+	do j = 1, n
+
+		max_ = abs(a(j,j))
+		r = j
+		do i = j+1, n
+			if (abs(a(i,j)) > max_) then
+				max_ = abs(a(i,j))
+				r = i
+			end if
+		end do
+		if (max_ == 0) then
+			! TODO: panic
+			print *, "Error: singular matrix in gauss_jordan()"
+		end if
+
+		! Swap rows
+		if (r > j) then
+			do k = 1, n
+				hr = a(j,k)
+				a(j,k) = a(r,k)
+				a(r,k) = hr
+			end do
+			hi = p(j)
+			p(j) = p(r)
+			p(r) = hi
+		end if
+
+		! Transform
+		hr = 1.d0 / a(j,j)
+		a(:,j) = a(:,j) * hr
+		a(j,j) = hr
+		do k = 1, n
+			if (k == j) cycle
+			do i = 1, n
+				if (i == j) cycle
+
+				a(i,k) = a(i,k) - a(i,j) * a(j,k)
+			end do
+			a(j,k) = -hr * a(j,k)
+		end do
+
+	end do
+
+	! Swap columns
+	allocate(hv(n))
+	do i = 1, n
+		do k = 1, n
+			hv(p(k)) = a(i,k)
+		end do
+		do k = 1, n
+			a(i,k) = hv(k)
+		end do
+	end do
+
+	!print *, "In Gauss-Jordan:"
+	!print *, "a = "
+	!print "(5es18.6)", a
+
+end subroutine gauss_jordan
+
+!===============================================================================
+
 end module numa
 
