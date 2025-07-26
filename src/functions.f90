@@ -75,6 +75,13 @@ end function inv_1px2
 
 !********
 
+double precision function inv_1px4(x)
+	double precision, intent(in) :: x
+	inv_1px4 = 1.d0 / (1.d0 + x ** 4)
+end function inv_1px4
+
+!********
+
 double precision function inv_1px1p5(x)
 	double precision, intent(in) :: x
 	inv_1px1p5 = 1.d0 / (1.d0 + abs(x) ** 1.5d0)
