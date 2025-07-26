@@ -1885,12 +1885,12 @@ recursive double precision function gk15i_adaptive_integrator &
 	) &
 	result(area)
 
-	! Integrate `f` from xmin to \infty using the adaptive Gauss-Kronrod method,
+	! Integrate `f` from xmin to infinity using the adaptive Gauss-Kronrod method,
 	! with 7-point Gauss and 15-point Kronrod
 	!
 	! This makes use of the following change of variables:
 	!
-	!     Integrate f(x) dx from xmin to \infty
+	!     Integrate f(x) dx from xmin to infinity
 	!     ==
 	!     Integrate 1/t**2 * f(1/t) dt from 0 to 1/xmin
 	!
@@ -1946,6 +1946,58 @@ end function gk15i_adaptive_integrator
 
 !===============================================================================
 
+recursive double precision function gk15ii_adaptive_integrator &
+	( &
+		f, tol, max_levels &
+	) &
+	result(area)
+
+	! Integrate `f` from -infinity to infinity using the adaptive Gauss-Kronrod method,
+	! with 7-point Gauss and 15-point Kronrod
+
+	use numa__utils
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: tol
+	integer, optional, intent(in) :: max_levels
+	!********
+
+	double precision, parameter :: left = -1.d0, right = 1.d0
+
+	integer :: n, neval
+
+	logical :: is_eps_underflow, is_max_level
+
+	n = 16
+	if (present(max_levels)) n = max_levels
+
+	neval = 0
+	is_eps_underflow = .false.
+	is_max_level = .false.
+
+	!print *, "starting gk15ii_adaptive_integrator()"
+	!print *, "xmin = ", xmin
+
+	area = &
+		gk15i_aux(f, 1.d0/left, 0.d0, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
+		gk15_aux (f, left, right, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
+		gk15i_aux(f, 0.d0, 1.d0/right, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
+
+	print *, "neval gk15ii = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15ii_adaptive_integrator() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15ii_adaptive_integrator() reached max recursion level"
+	end if
+
+end function gk15ii_adaptive_integrator
+
+!===============================================================================
+
 recursive double precision function gk15ni_adaptive_integrator &
 	( &
 		f, xmax, tol, max_levels &
@@ -1987,7 +2039,7 @@ recursive double precision function gk15ni_adaptive_integrator &
 	   area = gk15i_aux(f, 1.d0/xmax, 0.d0, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
 	end if
 
-	!print *, "neval gk15i = ", neval
+	!print *, "neval gk15ni = ", neval
 
 	if (is_eps_underflow) then
 		write(*,*) YELLOW // "Warning" // COLOR_RESET // &

@@ -1526,10 +1526,13 @@ integer function chapter_3_adaptive() result(nfail)
 
 	!********
 
-	! TODO: add gk15ii to integrate from -\infty to +\infty?  Actually I don't
-	! think this is possible because even after transforming, it's still
-	! infinite.  Maybe need more interval splitting logic, do one subinterval as
-	! a regular integral and the other infinite
+	area = gk15ii_adaptive_integrator(exp_nx2, 1.d-10)
+	expect = sqrt(PI)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ii_adaptive_integrator 17")
+	print *, ""
 
 	!********
 
