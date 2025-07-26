@@ -1600,5 +1600,51 @@ end function chapter_3_adaptive
 
 !===============================================================================
 
+integer function chapter_4_inv() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_inv"
+
+	double precision, allocatable :: a(:,:), bx(:,:), x(:,:)
+	integer :: n
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Test an LU solve with multiple right hand sides
+
+	n = 5
+	allocate(a(n, n))
+
+	a(:,1) = [-4.130000d+00, 6.000000d+00, 1.100000d+01, 1.600000d+01, 2.100000d+01]
+	a(:,2) = [ 2.000000d+00, 7.960000d+00, 1.200000d+01, 1.700000d+01, 2.200000d+01]
+	a(:,3) = [ 3.000000d+00, 8.000000d+00, 1.280000d+00, 1.800000d+01, 2.300000d+01]
+	a(:,4) = [ 4.000000d+00, 9.000000d+00, 1.400000d+01, 3.400000d+00, 2.400000d+01]
+	a(:,5) = [ 5.000000d+00, 1.000000d+01, 1.500000d+01, 2.000000d+01, 5.600000d+00]
+
+	allocate(x(n, 2))
+	x(:,1) = [+4.0000d+00, +2.0000d+00, -1.0000d+00,  +7.0000d+00, +1.8000d+01]
+	x(:,2) = [+1.0000d+00, +3.0000d+00, -2.0000d+00, +11.0000d+00, +1.7000d+01]
+
+	bx = matmul(a, x)
+
+	print *, "a * x = "
+	print "(5es18.6)", bx
+
+	print *, "a = "
+	print "(5es18.6)", a
+
+	call lu_invmul_mat(a, bx)
+	print *, "bx = "
+	print "(5es18.6)", bx
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul_mat() 5x5")
+
+	deallocate(a, x, bx)
+
+end function chapter_4_inv
+
+!===============================================================================
+
 end module numa__exercises
 

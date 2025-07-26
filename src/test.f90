@@ -19,41 +19,52 @@ program main
 
 	nfail = 0
 
+	!-------------------------------------------------------
 	! Chapter 1: Error Analysis (no exercises here)
 
+	!-------------------------------------------------------
 	! Chapter 2: Interpolation
 	nfail = nfail + chapter_2_exercise_2()
 	nfail = nfail + chapter_2_example_2p2p4()
 	nfail = nfail + chapter_2_fft_1()
 	nfail = nfail + chapter_2_fft_2()
 
-	! TODO: put in chapter order.  But for development logging, it's easier to
-	! have the thing I'm working get tested last
-	nfail = nfail + chapter_4_lu()
-
+	! These might belong in chapter 4, but the tridiagonal matrix algorithm is a
+	! prerequisite for cubic splines, and banded matrices are a small extension
+	! of tridiagonal matrices
 	nfail = nfail + chapter_2_tridiag()
 	nfail = nfail + chapter_2_tridiag_corner()
 	nfail = nfail + chapter_2_banded()
+
 	nfail = nfail + chapter_2_cubic_splines()
 	nfail = nfail + chapter_2_bezier_splines()
 
+	!-------------------------------------------------------
 	! Chapter 3: Topics in Integration
 	nfail = nfail + chapter_3_newton_cotes()
 	nfail = nfail + chapter_3_romberg()
 	nfail = nfail + chapter_3_gauss()
 	nfail = nfail + chapter_3_adaptive()
 
+	!-------------------------------------------------------
 	! Chapter 4: Systems of Linear Equations
+	nfail = nfail + chapter_4_lu()
+	nfail = nfail + chapter_4_inv()
 
+	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
 
+	!-------------------------------------------------------
 	! Chapter 6: Eigenvalue Problems
 
+	!-------------------------------------------------------
 	! Chapter 7: Ordinary Differential Equations
 
+	!-------------------------------------------------------
 	! Chapter 8: Iterative Methods for the Solution of Large Systems of Linear
 	! Equations
 
+	!-------------------------------------------------------
 	if (nfail == 0) then
 		write(*,*) GREEN // "Success!" // COLOR_RESET
 	else

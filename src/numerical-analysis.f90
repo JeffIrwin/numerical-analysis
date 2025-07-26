@@ -769,7 +769,7 @@ subroutine lu_invmul(a, bx)
 	!     a * x = b
 
 	double precision, intent(inout) :: a(:,:)
-	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+	double precision, intent(inout) :: bx(:)
 
 	!********
 
@@ -789,6 +789,38 @@ subroutine lu_invmul(a, bx)
 	call lu_solve(a, bx, pivot)
 
 end subroutine lu_invmul
+
+!********
+
+subroutine lu_invmul_mat(a, bx)
+	! Solve the linear algebra problem for `x`:
+	!
+	!     a * x = b
+
+	double precision, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: bx(:,:)
+
+	!********
+
+	integer :: i, nrhs
+	integer, allocatable :: pivot(:)
+
+	! Initialize pivot to identity
+	pivot = [(i, i = 1, size(a,1))]
+
+	call lu_factor(a, pivot)
+
+	!print *, "pivot = ", pivot
+	!print *, "lu_factor(a) = "
+	!!print "(5es18.6)", a
+	!print "(6es15.5)", transpose(a)
+
+	nrhs = size(bx, 2)
+	do i = 1, nrhs
+		call lu_solve(a, bx(:,i), pivot)
+	end do
+
+end subroutine lu_invmul_mat
 
 !********
 
