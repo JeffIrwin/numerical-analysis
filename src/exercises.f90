@@ -1606,7 +1606,7 @@ integer function chapter_4_inv() result(nfail)
 
 	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), ainv(:,:)
 
-	integer :: n
+	integer :: i, n, nrng, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1690,9 +1690,45 @@ integer function chapter_4_inv() result(nfail)
 	call gauss_jordan(a)
 	call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 4")
 
-	!********
+	deallocate(a0)
 
-	! TODO: fuzz
+	!********
+	! Fuzz test
+
+	! TODO: benchmark.  Maybe Gauss-Jordan should be the default for inv, I
+	! suspect it does less copying than my LU inverse implementation
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	do n = 2, 100, 3
+
+		allocate(a0(n, n))
+
+		if (mod(n, 10) == 0) then
+			print *, "Testing inv() with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 5
+			call random_number(a0)  ! random matrix
+
+			!print *, "a = "
+			!print "(6es15.5)", a
+			!print "(a,6es15.5)", "x  = ", x
+			!print "(a,6es15.5)", "b  = ", bx
+
+			!********
+
+			a = a0
+			call invert(a)
+			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
+
+			!********
+		end do
+
+		deallocate(a0)
+	end do
+
+	!********
 
 end function chapter_4_inv
 

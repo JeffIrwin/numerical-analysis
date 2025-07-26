@@ -2306,6 +2306,9 @@ subroutine invert(a)
 	!call invmul(a, copy_)
 	!a = copy_
 
+	!! Break tests
+	!a(1,1) = 1.01d0 * a(1,1)
+
 end subroutine invert
 
 !===============================================================================
