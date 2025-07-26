@@ -2249,5 +2249,27 @@ end function simpson_adaptive_integrator
 
 !===============================================================================
 
+function eye(n)
+	! n x n identity matrix
+
+	integer, intent(in) :: n
+	double precision, allocatable :: eye(:,:)
+
+	integer :: i, j
+	allocate(eye(n, n))
+	do i = 1, n
+		do j = 1, n
+			if (i == j) then
+				eye(i,j) = 1.d0
+			else
+				eye(i,j) = 0.d0
+			end if
+		end do
+	end do
+
+end function eye
+
+!===============================================================================
+
 end module numa
 

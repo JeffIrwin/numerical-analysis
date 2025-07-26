@@ -1604,8 +1604,9 @@ integer function chapter_4_inv() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_inv"
 
-	double precision, allocatable :: a(:,:), bx(:,:), x(:,:)
-	integer :: n
+	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), ainv(:,:)
+
+	integer :: i, n
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1622,6 +1623,9 @@ integer function chapter_4_inv() result(nfail)
 	a(:,3) = [ 3.000000d+00, 8.000000d+00, 1.280000d+00, 1.800000d+01, 2.300000d+01]
 	a(:,4) = [ 4.000000d+00, 9.000000d+00, 1.400000d+01, 3.400000d+00, 2.400000d+01]
 	a(:,5) = [ 5.000000d+00, 1.000000d+01, 1.500000d+01, 2.000000d+01, 5.600000d+00]
+
+	! Copy backup
+	a0 = a
 
 	allocate(x(n, 2))
 	x(:,1) = [+4.0000d+00, +2.0000d+00, -1.0000d+00,  +7.0000d+00, +1.8000d+01]
@@ -1643,6 +1647,25 @@ integer function chapter_4_inv() result(nfail)
 	deallocate(a, x, bx)
 
 	!********
+	! Test whole matrix inversion
+
+	! Reset
+	a = a0
+
+	ainv = eye(n)
+
+	!print *, "eye = "
+	!print "(5es18.6)", ainv
+
+	call invmul(a, ainv)
+
+	print *, "ainv = "
+	print "(5es18.6)", ainv
+
+	print *, "a * ainv = "
+	print "(5es18.6)", matmul(a0, ainv)
+
+	call test(norm2(matmul(a0, ainv) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 1")
 
 	! TODO: add and test a matrix inversion routine using lu_invmul_mat().  This
 	! is more for convenience than serious use, as you would usually want to
