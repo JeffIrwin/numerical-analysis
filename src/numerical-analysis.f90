@@ -1684,19 +1684,6 @@ recursive double precision function gk15_adaptive_integrator &
 
 	integer :: i, n
 
-	!areag = gauss7_single(f, xmin, xmax)
-	!areak = kronrod15_single(f, xmin, xmax)
-
-	!********
-	!half_h = 0.5d0 * (xmax - xmin)
-	!mid    = 0.5d0 * (xmin + xmax)
-	!area = 0.d0
-	!do i = 1, size(w)
-	!	area = area + w(i) * f(mid + x(i) * half_h)
-	!end do
-	!area = area * half_h
-	!********
-
 	n = 16
 	if (present(max_levels)) n = max_levels
 

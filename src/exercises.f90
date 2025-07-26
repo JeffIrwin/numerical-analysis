@@ -1380,7 +1380,7 @@ integer function chapter_3_adaptive() result(nfail)
 	! Gauss-Kronrod
 	area = gk15_adaptive_integrator(sqrt_fn, 0.d0, 1.d0, 1.d-10)
 	print *, "area = ", area
-	call test(area, 2.d0/3, 1.d-12, nfail, "gk15_adaptive_integrator 1")
+	call test(area, 2.d0/3, 1.d-12, nfail, "gk15_adaptive_integrator 2")
 
 	!********
 	! Log from 0 -- nearly impossible!
@@ -1389,17 +1389,17 @@ integer function chapter_3_adaptive() result(nfail)
 	! evaluate the end points.  Gauss-Kronrod has an advantage here because
 	! Gauss points are always interior, never on the boundary
 
-	area = simpson_adaptive_integrator(log_fn, 1.d-300, 1.d0, 1.d-10)
+	area = simpson_adaptive_integrator(log_fn, 1.d-10, 1.d0, 1.d-2, 32)
 	print *, "area simp = ", area
 	print *, "diff = ", area + 1.d0
 	print *, ""
+	call test(area, -1.0000064653249559d0, 1.d-14, nfail, "gk15_adaptive_integrator 3")
 
 	area = gk15_adaptive_integrator(log_fn, 0.d0, 1.d0, 1.d-10)
 	print *, "area gk15 = ", area
 	print *, "diff = ", area + 1.d0
 	print *, ""
-	! TODO
-	!call test(area, 2.d0/3, 1.d-14, nfail, "gk15_adaptive_integrator 1")
+	call test(area, -0.99999997417185815d0, 1.d-14, nfail, "gk15_adaptive_integrator 4")
 
 	!********
 	! 1 / sqrt(x)
@@ -1408,8 +1408,7 @@ integer function chapter_3_adaptive() result(nfail)
 	print *, "area gk15 = ", area
 	print *, "diff = ", area - 2.d0
 	print *, ""
-	! TODO
-	!call test(area, 2.d0/3, 1.d-14, nfail, "gk15_adaptive_integrator 1")
+	call test(area, 1.9998215687092518d0, 1.d-14, nfail, "gk15_adaptive_integrator 5")
 
 	!********
 
