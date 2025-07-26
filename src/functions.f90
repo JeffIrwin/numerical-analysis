@@ -79,6 +79,13 @@ end function sinx_x
 
 !********
 
+double precision function exp_nx2(x)
+	double precision, intent(in) :: x
+	exp_nx2 = exp(-x ** 2)
+end function exp_nx2
+
+!********
+
 double precision function fn_example_pg171(x)
 	! This is an example integrand from page 171
 	double precision, intent(in) :: x

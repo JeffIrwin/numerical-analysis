@@ -1365,7 +1365,7 @@ integer function chapter_3_adaptive() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_3_adaptive"
 
-	double precision :: area
+	double precision :: area, expect
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1402,14 +1402,14 @@ integer function chapter_3_adaptive() result(nfail)
 	area = simpson_adaptive_integrator(log_fn, 1.d-10, 1.d0, 1.d-2, 32)
 	print *, "area simp = ", area
 	print *, "diff = ", area + 1.d0
-	print *, ""
 	call test(area, -1.0000064653249559d0, 1.d-14, nfail, "gk15_adaptive_integrator 3")
+	print *, ""
 
 	area = gk15_adaptive_integrator(log_fn, 0.d0, 1.d0, 1.d-10)
 	print *, "area gk15 = ", area
 	print *, "diff = ", area + 1.d0
-	print *, ""
 	call test(area, -0.99999997417185815d0, 1.d-14, nfail, "gk15_adaptive_integrator 4")
+	print *, ""
 
 	!********
 	! 1 / sqrt(x)
@@ -1427,20 +1427,39 @@ integer function chapter_3_adaptive() result(nfail)
 	area = gk15i_adaptive_integrator(inv_square_fn, 1.d0, 1.d-10)
 	print *, "area gk15i = ", area
 	print *, "diff = ", area - 1.d0
-	print *, ""
 	call test(area, 1.d0, 1.d-14, nfail, "gk15i_adaptive_integrator 5")
+	print *, ""
 
 	area = gk15i_adaptive_integrator(inv_square_fn, 2.d0, 1.d-10)
 	print *, "area gk15i = ", area
 	print *, "diff = ", area - 1.d0/2
-	print *, ""
 	call test(area, 1.d0/2, 1.d-14, nfail, "gk15i_adaptive_integrator 6")
+	print *, ""
 
 	area = gk15i_adaptive_integrator(inv_square_fn, 3.d0, 1.d-10)
 	print *, "area gk15i = ", area
 	print *, "diff = ", area - 1.d0/3
-	print *, ""
 	call test(area, 1.d0/3, 1.d-14, nfail, "gk15i_adaptive_integrator 7")
+	print *, ""
+
+	!********
+
+	area = gk15i_adaptive_integrator(exp_nx2, 1.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(1.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 8")
+	print *, ""
+
+	! TODO: fix gk15i to split the interval appropriately if given a negative
+	! lower bound
+
+	! TODO: add gk15ni to integrate from -\infty to an upper limit
+
+	! TODO: add gk15ii to integrate from -\infty to +\infty?  Actually I don't
+	! think this is possible because even after transforming, it's still
+	! infinite.  Maybe need more interval splitting logic, do one subinterval as
+	! a regular integral and the other infinite
 
 	!********
 

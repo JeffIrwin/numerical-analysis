@@ -1802,6 +1802,7 @@ recursive double precision function gk15i_aux &
 	logical, intent(inout) :: is_eps_underflow, is_max_level
 	!********
 
+	! TODO: make these global since they appear here and in gk15_aux()
 	integer, parameter :: ng = 7, nk = 15
 	double precision, parameter :: wxg(*,*) = reshape([ &
 		1.29484966168869693270611432679082018329d-1,  9.49107912342758524526189684047851262401d-1, &
@@ -1904,6 +1905,8 @@ recursive double precision function gk15i_adaptive_integrator &
 	integer :: n, neval
 
 	logical :: is_eps_underflow, is_max_level
+
+	! TODO: panic if xmin == 0
 
 	n = 16
 	if (present(max_levels)) n = max_levels
