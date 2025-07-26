@@ -1378,9 +1378,19 @@ integer function chapter_3_adaptive() result(nfail)
 	call test(area, 1.9999999999999993d0, 1.d-12, nfail, "simpson_adaptive_integrator 1")
 
 	! Gauss-Kronrod
+	area = gk15_adaptive_integrator(sin_fn, 0.d0, PI, 1.d-10)
+	print *, "area = ", area
+	call test(area, 2.d0, 1.d-12, nfail, "gk15_adaptive_integrator 1")
+	print *, ""
+
+	area = simpson_adaptive_integrator(sqrt_fn, 0.d0, 1.d0, 1.d-10)
+	print *, "area = ", area
+	call test(area, 0.66666666613549719d0, 1.d-12, nfail, "simpson_adaptive_integrator 2")
+
 	area = gk15_adaptive_integrator(sqrt_fn, 0.d0, 1.d0, 1.d-10)
 	print *, "area = ", area
 	call test(area, 2.d0/3, 1.d-12, nfail, "gk15_adaptive_integrator 2")
+	print *, ""
 
 	!********
 	! Log from 0 -- nearly impossible!

@@ -1637,6 +1637,101 @@ end function gauss7_single
 
 !===============================================================================
 
+recursive double precision function gk15_aux &
+	( &
+		f, xmin, xmax, tol, n, neval &
+	) &
+	result(area)
+
+	! Integrate `f` from xmin to xmax using the adaptive Gauss-Kronrod method,
+	! with 7-point Gauss and 15-point Kronrod
+
+	use numa__utils
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, tol
+	integer, intent(in) :: n
+	integer, intent(inout) :: neval
+	!********
+
+	integer, parameter :: ng = 7, nk = 15
+	double precision, parameter :: wxg(*,*) = reshape([ &
+		1.29484966168869693270611432679082018329d-1,  9.49107912342758524526189684047851262401d-1, &
+		1.29484966168869693270611432679082018329d-1, -9.49107912342758524526189684047851262401d-1, &
+		2.79705391489276667901467771423779582487d-1,  7.41531185599394439863864773280788407074d-1, &
+		2.79705391489276667901467771423779582487d-1, -7.41531185599394439863864773280788407074d-1, &
+		3.81830050505118944950369775488975133878d-1,  4.05845151377397166906606412076961463347d-1, &
+		3.81830050505118944950369775488975133878d-1, -4.05845151377397166906606412076961463347d-1, &
+		4.17959183673469387755102040816326530612d-1,  0.00000000000000000000000000000000000000d0   &
+	], [2, ng])
+	double precision, parameter :: wxk(*,*) = reshape([ &
+		6.30920926299785532907006631892042866651d-2,  9.49107912342758524526189684047851262401d-1, &
+		6.30920926299785532907006631892042866651d-2, -9.49107912342758524526189684047851262401d-1, &
+		1.40653259715525918745189590510237920400d-1,  7.41531185599394439863864773280788407074d-1, &
+		1.40653259715525918745189590510237920400d-1, -7.41531185599394439863864773280788407074d-1, &
+		1.90350578064785409913256402421013682826d-1,  4.05845151377397166906606412076961463347d-1, &
+		1.90350578064785409913256402421013682826d-1, -4.05845151377397166906606412076961463347d-1, &
+		2.09482141084727828012999174891714263698d-1,  0.00000000000000000000000000000000000000d0 , &
+		2.29353220105292249637320080589695919936d-2,  9.91455371120812639206854697526328516642d-1, &
+		2.29353220105292249637320080589695919936d-2, -9.91455371120812639206854697526328516642d-1, &
+		1.04790010322250183839876322541518017444d-1,  8.64864423359769072789712788640926201211d-1, &
+		1.04790010322250183839876322541518017444d-1, -8.64864423359769072789712788640926201211d-1, &
+		1.69004726639267902826583426598550284106d-1,  5.86087235467691130294144838258729598437d-1, &
+		1.69004726639267902826583426598550284106d-1, -5.86087235467691130294144838258729598437d-1, &
+		2.04432940075298892414161999234649084717d-1,  2.07784955007898467600689403773244913480d-1, &
+		2.04432940075298892414161999234649084717d-1, -2.07784955007898467600689403773244913480d-1  &
+	], [2, nk])
+
+	double precision :: fx, areag, areak, mid, dx2, diff
+
+	integer :: i
+
+	dx2 = 0.5d0 * (xmax - xmin)
+	mid = 0.5d0 * (xmin + xmax)
+
+	areag = 0.d0
+	areak = 0.d0
+	do i = 1, ng
+		fx = f(mid + wxk(2, i) * dx2)
+		areag = areag + wxg(1, i) * fx
+		areak = areak + wxk(1, i) * fx
+	end do
+	do i = ng+1, nk
+		fx = f(mid + wxk(2, i) * dx2)
+		areak = areak + wxk(1, i) * fx
+	end do
+	neval = neval + nk
+	areag = areag * dx2
+	areak = areak * dx2
+
+	!print *, "areag = ", areag
+	!print *, "areak = ", areak
+
+	diff = abs(areak - areag)
+	if (diff < tol .or. n <= 0) then
+		area = areak
+		return
+	end if
+
+	! Here, quadpack does some crazy stuff with pushing interval errors onto a
+	! minheap to prioritize which subinterval to evaluate next.  Maybe there's a
+	! good reason for this that I don't understand, or maybe it's a limitation
+	! to do as best as possible with a limitted number of intervals and fn
+	! evals, statically-allocated work arrays, and an avoidance of recursion
+	! (except in quadpack's adaptive Simpson and Lobatto integrators)
+	!
+	! But this method is so simple.  I don't see the need to prioritize
+	! subdivision ordering.  If the diff/error is over tolerance, you're going
+	! to evaluate both halves eventually anyway unless you give up on staying
+	! under tol
+
+	area = &
+		gk15_aux(f, xmin, mid, tol/2, n-1, neval) + &
+		gk15_aux(f, mid, xmax, tol/2, n-1, neval)
+
+end function gk15_aux
+
+!===============================================================================
+
 recursive double precision function gk15_adaptive_integrator &
 	( &
 		f, xmin, xmax, tol, max_levels &
@@ -1680,9 +1775,7 @@ recursive double precision function gk15_adaptive_integrator &
 		2.04432940075298892414161999234649084717d-1, -2.07784955007898467600689403773244913480d-1  &
 	], [2, nk])
 
-	double precision :: fx, areag, areak, mid, dx2, diff
-
-	integer :: i, n
+	integer :: n, neval
 
 	n = 16
 	if (present(max_levels)) n = max_levels
@@ -1690,50 +1783,10 @@ recursive double precision function gk15_adaptive_integrator &
 	! TODO: probably wrap user-facing interface around an recursive "aux" core,
 	! like adaptive Simpson, so that we can log warnings once and not
 	! recursively.  Optional args are only optional in wrapper
+	neval = 0
+	area = gk15_aux(f, xmin, xmax, tol, n, neval)
 
-	! TODO: add neval counter
-
-	dx2 = 0.5d0 * (xmax - xmin)
-	mid = 0.5d0 * (xmin + xmax)
-
-	areag = 0.d0
-	areak = 0.d0
-	do i = 1, ng
-		fx = f(mid + wxk(2, i) * dx2)
-		areag = areag + wxg(1, i) * fx
-		areak = areak + wxk(1, i) * fx
-	end do
-	do i = ng+1, nk
-		fx = f(mid + wxk(2, i) * dx2)
-		areak = areak + wxk(1, i) * fx
-	end do
-	areag = areag * dx2
-	areak = areak * dx2
-
-	!print *, "areag = ", areag
-	!print *, "areak = ", areak
-
-	diff = abs(areak - areag)
-	if (diff < tol .or. n <= 0) then
-		area = areak
-		return
-	end if
-
-	! Here, quadpack does some crazy stuff with pushing interval errors onto a
-	! minheap to prioritize which subinterval to evaluate next.  Maybe there's a
-	! good reason for this that I don't understand, or maybe it's a limitation
-	! to do as best as possible with a limitted number of intervals and fn
-	! evals, statically-allocated work arrays, and an avoidance of recursion
-	! (except in quadpack's adaptive Simpson and Lobatto integrators)
-	!
-	! But this method is so simple.  I don't see the need to prioritize
-	! subdivision ordering.  If the diff/error is over tolerance, you're going
-	! to evaluate both halves eventually anyway unless you give up on staying
-	! under tol
-
-	area = &
-		gk15_adaptive_integrator(f, xmin, mid, tol/2, n-1) + &
-		gk15_adaptive_integrator(f, mid, xmax, tol/2, n-1)
+	print *, "neval gk15 = ", neval
 
 end function gk15_adaptive_integrator
 
@@ -1904,7 +1957,7 @@ double precision function simpson_adaptive_integrator &
 		neval, is_eps_underflow, is_max_level)
 
 	!! Make an optional out arg?
-	!print *, "neval = ", neval
+	print *, "neval simp = ", neval
 
 	if (is_eps_underflow) then
 		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
