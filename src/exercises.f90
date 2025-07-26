@@ -1700,6 +1700,9 @@ integer function chapter_4_inv() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
+	! Might reduce the number of tests here after benchmarking so my whole suite
+	! doesn't take much longer than 1 s
+
 	do n = 2, 100, 3
 
 		allocate(a0(n, n))
@@ -1721,6 +1724,17 @@ integer function chapter_4_inv() result(nfail)
 			a = a0
 			call invert(a)
 			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
+
+			!********
+
+			a = inv(a0)
+			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
+
+			!********
+
+			a = a0
+			call gauss_jordan(a)
+			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "gauss_jordan() fuzz n x n")
 
 			!********
 		end do
