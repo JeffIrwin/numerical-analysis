@@ -1422,7 +1422,7 @@ integer function chapter_3_adaptive() result(nfail)
 	call test(area, 1.9998215687092518d0, 1.d-14, nfail, "gk15_adaptive_integrator 5")
 
 	!********
-	! Integrate 1 / x ** 2 from a lower limit to infinity
+	! Integrate 1 / x ** 2 from a lower bound to infinity
 
 	area = gk15i_adaptive_integrator(inv_square_fn, 1.d0, 1.d-10)
 	print *, "area gk15i = ", area
@@ -1470,7 +1470,7 @@ integer function chapter_3_adaptive() result(nfail)
 	print *, "area exp_nx2 = ", area
 	print *, "expect       = ", expect
 	print *, "diff = ", area - expect
-	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 10")
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 11")
 	print *, ""
 
 	area = gk15i_adaptive_integrator(exp_nx2, 0.d0, 1.d-10)
@@ -1478,13 +1478,53 @@ integer function chapter_3_adaptive() result(nfail)
 	print *, "area exp_nx2 = ", area
 	print *, "expect       = ", expect
 	print *, "diff = ", area - expect
-	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 10")
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 12")
 	print *, ""
 
-	! TODO: fix gk15i to split the interval appropriately if given a negative
-	! lower bound
+	!********
+	! Integrate from -infinity to an upper bound
 
-	! TODO: add gk15ni to integrate from -\infty to an upper limit
+	area = gk15ni_adaptive_integrator(exp_nx2, -2.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(2.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ni_adaptive_integrator 13")
+	print *, ""
+
+	area = gk15ni_adaptive_integrator(exp_nx2, -1.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(1.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ni_adaptive_integrator 14")
+	print *, ""
+
+	area = gk15ni_adaptive_integrator(exp_nx2, 0.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ni_adaptive_integrator 15")
+	print *, ""
+
+	area = gk15ni_adaptive_integrator(exp_nx2, 1.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(-1.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ni_adaptive_integrator 16")
+	print *, ""
+
+	area = gk15ni_adaptive_integrator(exp_nx2, 2.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(-2.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ni_adaptive_integrator 17")
+	print *, ""
+
+	!********
 
 	! TODO: add gk15ii to integrate from -\infty to +\infty?  Actually I don't
 	! think this is possible because even after transforming, it's still

@@ -1902,6 +1902,8 @@ recursive double precision function gk15i_adaptive_integrator &
 	integer, optional, intent(in) :: max_levels
 	!********
 
+	double precision, parameter :: split_ = 1.d0
+
 	integer :: n, neval
 
 	logical :: is_eps_underflow, is_max_level
@@ -1921,8 +1923,8 @@ recursive double precision function gk15i_adaptive_integrator &
 		! Integrate from xmin to 1 and 1 to infinity.  The choice of where to
 		! split the interval is arbitrary, it just can't be 0
 		area = &
-			gk15_aux (f, xmin, 1.d0, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
-			gk15i_aux(f, 0.d0, 1.d0, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
+			gk15_aux (f, xmin, split_, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
+			gk15i_aux(f, 0.d0, 1.d0/split_, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
 
 	else
 		area = gk15i_aux(f, 0.d0, 1.d0/xmin, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
@@ -1941,6 +1943,63 @@ recursive double precision function gk15i_adaptive_integrator &
 	end if
 
 end function gk15i_adaptive_integrator
+
+!===============================================================================
+
+recursive double precision function gk15ni_adaptive_integrator &
+	( &
+		f, xmax, tol, max_levels &
+	) &
+	result(area)
+
+	! Integrate `f` from -infinity to xmax using the adaptive Gauss-Kronrod method,
+	! with 7-point Gauss and 15-point Kronrod
+
+	use numa__utils
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmax, tol
+	integer, optional, intent(in) :: max_levels
+	!********
+
+	double precision, parameter :: split_ = 1.d0
+
+	integer :: n, neval
+
+	logical :: is_eps_underflow, is_max_level
+
+	n = 16
+	if (present(max_levels)) n = max_levels
+
+	neval = 0
+	is_eps_underflow = .false.
+	is_max_level = .false.
+
+	!print *, "starting gk15ni_adaptive_integrator()"
+	!print *, "xmax = ", xmax
+
+	if (xmax >= 0.d0) then
+
+		area = &
+			gk15_aux (f, -split_, xmax, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
+			gk15i_aux(f, -1.d0/split_, 0.d0, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
+
+	else
+	   area = gk15i_aux(f, 1.d0/xmax, 0.d0, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
+	end if
+
+	!print *, "neval gk15i = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15ni_adaptive_integrator() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15ni_adaptive_integrator() reached max recursion level"
+	end if
+
+end function gk15ni_adaptive_integrator
 
 !===============================================================================
 
