@@ -19,6 +19,12 @@ module numa
 		end function
 	end interface
 
+	interface invmul
+		! The built-in `matmul()` works on matrices and vectors similarly
+		procedure :: lu_invmul_vec
+		procedure :: lu_invmul_mat
+	end interface
+
 	! If this file gets too long, it might be good to split it up, e.g. into
 	! interpolate.f90, fft.f90, (and in the future integrate.f90), etc.
 
@@ -763,7 +769,7 @@ end subroutine banded_invmul
 
 !===============================================================================
 
-subroutine lu_invmul(a, bx)
+subroutine lu_invmul_vec(a, bx)
 	! Solve the linear algebra problem for `x`:
 	!
 	!     a * x = b
@@ -788,7 +794,7 @@ subroutine lu_invmul(a, bx)
 
 	call lu_solve(a, bx, pivot)
 
-end subroutine lu_invmul
+end subroutine lu_invmul_vec
 
 !********
 

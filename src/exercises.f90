@@ -504,7 +504,7 @@ integer function chapter_4_lu() result(nfail)
 	print *, "a = "
 	print "(5es18.6)", a
 
-	call lu_invmul(a, bx)
+	call invmul(a, bx)
 	print "(a,5es18.6)", "bx = ", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
@@ -543,7 +543,7 @@ integer function chapter_4_lu() result(nfail)
 			!print "(a,6es15.5)", "x  = ", x
 			!print "(a,6es15.5)", "b  = ", bx
 
-			call lu_invmul(a, bx)
+			call invmul(a, bx)
 			!print "(a,6es15.5)", "bx = ", bx
 
 			! Rounding error grows with `n`
@@ -608,7 +608,7 @@ integer function chapter_2_tridiag_corner() result(nfail)
 	a(:,6) = [ 7.d0,  8.d0, 12.d0]
 
 	bx = [8.d0, 9.d0, 10.d0, 11.d0, 12.d0, 13.d0]
-	call lu_invmul(ad, bx)
+	call invmul(ad, bx)
 	print "(a,6es18.6)", "bx (dense) = ", bx
 
 	bx = [8.d0, 9.d0, 10.d0, 11.d0, 12.d0, 13.d0]
@@ -1635,12 +1635,21 @@ integer function chapter_4_inv() result(nfail)
 	print *, "a = "
 	print "(5es18.6)", a
 
-	call lu_invmul_mat(a, bx)
+	call invmul(a, bx)
 	print *, "bx = "
 	print "(5es18.6)", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul_mat() 5x5")
 
 	deallocate(a, x, bx)
+
+	!********
+
+	! TODO: add and test a matrix inversion routine using lu_invmul_mat().  This
+	! is more for convenience than serious use, as you would usually want to
+	! avoid explicit inversions.  Make subroutine and fn versions?  Subroutine
+	! would modify arg while fn would copy
+
+	! Also test and compare Gauss-Jordan algo
 
 end function chapter_4_inv
 
