@@ -1895,6 +1895,10 @@ recursive double precision function gk15i_adaptive_integrator &
 	!     Integrate 1/t**2 * f(1/t) dt from 0 to 1/xmin
 	!
 	! See page 184 of Stoer and Bulirsch
+	!
+	! These are technically "improper" integrals, although improper integrals
+	! don't necessarily have infinit bounds, they can also have finite bounds
+	! with singularities
 
 	use numa__utils
 	procedure(fn_f64_to_f64) :: f
@@ -1982,7 +1986,7 @@ recursive double precision function gk15ii_adaptive_integrator &
 		gk15_aux (f, left, right, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
 		gk15i_aux(f, 0.d0, 1.d0/right, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
 
-	print *, "neval gk15ii = ", neval
+	!print *, "neval gk15ii = ", neval
 
 	if (is_eps_underflow) then
 		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
@@ -2202,7 +2206,7 @@ double precision function simpson_adaptive_integrator &
 	n = 16
 	if (present(max_levels)) n = max_levels
 
-	! TODO: panic if tol == 0.  Same for gk15_adaptive_integrator.  Recursive core will barf anyway
+	! TODO: panic if tol == 0.  Same for gk15*_adaptive_integrator.  Recursive core will barf anyway
 
 	! Bootstrap the first level then call the recursive core
 	fa = f(xmin)

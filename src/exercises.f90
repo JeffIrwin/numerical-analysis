@@ -1534,6 +1534,38 @@ integer function chapter_3_adaptive() result(nfail)
 	call test(area, expect, 1.d-10, nfail, "gk15ii_adaptive_integrator 17")
 	print *, ""
 
+	area = gk15i_adaptive_integrator(inv_1px2, 0.d0, 1.d-10)
+	expect = 0.5d0 * PI
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 18")
+	print *, ""
+
+	area = gk15ii_adaptive_integrator(inv_1px2, 1.d-10)
+	expect = PI
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ii_adaptive_integrator 19")
+	print *, ""
+
+	area = gk15i_adaptive_integrator(inv_1px1p5, 0.d0, 1.d-10)
+	expect = 2.4182207210215423d0
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 20")
+	print *, ""
+
+	area = gk15ii_adaptive_integrator(inv_1px1p5, 1.d-10)
+	expect = 2 * 2.4182207210215423d0
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15ii_adaptive_integrator 21")
+	print *, ""
+
 	!********
 
 end function chapter_3_adaptive

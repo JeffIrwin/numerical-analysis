@@ -68,6 +68,20 @@ end function inv_square_fn
 
 !********
 
+double precision function inv_1px2(x)
+	double precision, intent(in) :: x
+	inv_1px2 = 1.d0 / (1.d0 + x ** 2)
+end function inv_1px2
+
+!********
+
+double precision function inv_1px1p5(x)
+	double precision, intent(in) :: x
+	inv_1px1p5 = 1.d0 / (1.d0 + abs(x) ** 1.5d0)
+end function inv_1px1p5
+
+!********
+
 double precision function sinx_x(x)
 	double precision, intent(in) :: x
 	if (x == 0.d0) then
