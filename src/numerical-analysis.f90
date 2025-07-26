@@ -24,7 +24,7 @@ module numa
 
 	!********
 
-	private :: simpson_adapt_aux
+	private :: simpson_adapt_aux, gk15_aux, gk15i_aux
 
 contains
 
@@ -1644,8 +1644,8 @@ recursive double precision function gk15_aux &
 	) &
 	result(area)
 
-	! Integrate `f` from xmin to xmax using the adaptive Gauss-Kronrod method,
-	! with 7-point Gauss and 15-point Kronrod
+	! Recursive core.  See gk15_adaptive_integrator() for the user-facing
+	! wrapper
 
 	use numa__utils
 	procedure(fn_f64_to_f64) :: f
@@ -1781,6 +1781,155 @@ recursive double precision function gk15_adaptive_integrator &
 	end if
 
 end function gk15_adaptive_integrator
+
+!===============================================================================
+
+recursive double precision function gk15i_aux &
+	( &
+		f, xmin, xmax, tol, whole, n, &
+		neval, is_eps_underflow, is_max_level &
+	) &
+	result(area)
+
+	! Recursive core.  See gk15i_adaptive_integrator() for the user-facing
+	! wrapper
+
+	use numa__utils
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax, tol, whole
+	integer, intent(in) :: n
+	integer, intent(inout) :: neval
+	logical, intent(inout) :: is_eps_underflow, is_max_level
+	!********
+
+	integer, parameter :: ng = 7, nk = 15
+	double precision, parameter :: wxg(*,*) = reshape([ &
+		1.29484966168869693270611432679082018329d-1,  9.49107912342758524526189684047851262401d-1, &
+		1.29484966168869693270611432679082018329d-1, -9.49107912342758524526189684047851262401d-1, &
+		2.79705391489276667901467771423779582487d-1,  7.41531185599394439863864773280788407074d-1, &
+		2.79705391489276667901467771423779582487d-1, -7.41531185599394439863864773280788407074d-1, &
+		3.81830050505118944950369775488975133878d-1,  4.05845151377397166906606412076961463347d-1, &
+		3.81830050505118944950369775488975133878d-1, -4.05845151377397166906606412076961463347d-1, &
+		4.17959183673469387755102040816326530612d-1,  0.00000000000000000000000000000000000000d0   &
+	], [2, ng])
+	double precision, parameter :: wxk(*,*) = reshape([ &
+		6.30920926299785532907006631892042866651d-2,  9.49107912342758524526189684047851262401d-1, &
+		6.30920926299785532907006631892042866651d-2, -9.49107912342758524526189684047851262401d-1, &
+		1.40653259715525918745189590510237920400d-1,  7.41531185599394439863864773280788407074d-1, &
+		1.40653259715525918745189590510237920400d-1, -7.41531185599394439863864773280788407074d-1, &
+		1.90350578064785409913256402421013682826d-1,  4.05845151377397166906606412076961463347d-1, &
+		1.90350578064785409913256402421013682826d-1, -4.05845151377397166906606412076961463347d-1, &
+		2.09482141084727828012999174891714263698d-1,  0.00000000000000000000000000000000000000d0 , &
+		2.29353220105292249637320080589695919936d-2,  9.91455371120812639206854697526328516642d-1, &
+		2.29353220105292249637320080589695919936d-2, -9.91455371120812639206854697526328516642d-1, &
+		1.04790010322250183839876322541518017444d-1,  8.64864423359769072789712788640926201211d-1, &
+		1.04790010322250183839876322541518017444d-1, -8.64864423359769072789712788640926201211d-1, &
+		1.69004726639267902826583426598550284106d-1,  5.86087235467691130294144838258729598437d-1, &
+		1.69004726639267902826583426598550284106d-1, -5.86087235467691130294144838258729598437d-1, &
+		2.04432940075298892414161999234649084717d-1,  2.07784955007898467600689403773244913480d-1, &
+		2.04432940075298892414161999234649084717d-1, -2.07784955007898467600689403773244913480d-1  &
+	], [2, nk])
+
+	double precision :: x, fx, areag, areak, mid, dx2, diff
+
+	integer :: i
+
+	dx2 = 0.5d0 * (xmax - xmin)
+	mid = 0.5d0 * (xmin + xmax)
+
+	if (tol/2 == tol .or. xmin == mid) then
+		is_eps_underflow = .true.
+		area = whole
+		return
+	end if
+
+	areag = 0.d0
+	areak = 0.d0
+	do i = 1, ng
+		x = mid + wxk(2, i) * dx2
+		fx = f(1.d0/x) / x ** 2
+		areag = areag + wxg(1, i) * fx
+		areak = areak + wxk(1, i) * fx
+	end do
+	do i = ng+1, nk
+		x = mid + wxk(2, i) * dx2
+		fx = f(1.d0/x) / x ** 2
+		areak = areak + wxk(1, i) * fx
+	end do
+	neval = neval + nk
+	areag = areag * dx2
+	areak = areak * dx2
+
+	!print *, "areag = ", areag
+	!print *, "areak = ", areak
+
+	diff = abs(areak - areag)
+	if (n <= 0 .and. diff >= tol) is_max_level = .true.
+	if (diff < tol .or. n <= 0) then
+		area = areak
+		return
+	end if
+
+	area = &
+		gk15i_aux(f, xmin, mid, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level) + &
+		gk15i_aux(f, mid, xmax, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level)
+
+end function gk15i_aux
+
+!===============================================================================
+
+recursive double precision function gk15i_adaptive_integrator &
+	( &
+		f, xmin, tol, max_levels &
+	) &
+	result(area)
+
+	! Integrate `f` from xmin to \infty using the adaptive Gauss-Kronrod method,
+	! with 7-point Gauss and 15-point Kronrod
+	!
+	! This makes use of the following change of variables:
+	!
+	!     Integrate f(x) dx from xmin to \infty
+	!     ==
+	!     Integrate 1/t**2 * f(1/t) dt from 0 to 1/xmin
+	!
+	! See page 184 of Stoer and Bulirsch
+
+	use numa__utils
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, tol
+	integer, optional, intent(in) :: max_levels
+	!********
+
+	integer :: n, neval
+
+	logical :: is_eps_underflow, is_max_level
+
+	n = 16
+	if (present(max_levels)) n = max_levels
+
+	neval = 0
+	is_eps_underflow = .false.
+	is_max_level = .false.
+
+	print *, "starting gk15i_adaptive_integrator()"
+	print *, "xmin = ", xmin
+
+	area = gk15i_aux(f, 0.d0, 1.d0/xmin, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
+
+	!print *, "neval gk15i = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15i_adaptive_integrator() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15i_adaptive_integrator() reached max recursion level"
+	end if
+
+end function gk15i_adaptive_integrator
 
 !===============================================================================
 
@@ -1931,7 +2080,7 @@ double precision function simpson_adaptive_integrator &
 	n = 16
 	if (present(max_levels)) n = max_levels
 
-	! TODO: panic if tol == 0.  Recursive core will barf anyway
+	! TODO: panic if tol == 0.  Same for gk15_adaptive_integrator.  Recursive core will barf anyway
 
 	! Bootstrap the first level then call the recursive core
 	fa = f(xmin)

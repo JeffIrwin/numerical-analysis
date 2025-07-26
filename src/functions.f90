@@ -61,6 +61,13 @@ end function inv_sqrt_fn
 
 !********
 
+double precision function inv_square_fn(x)
+	double precision, intent(in) :: x
+	inv_square_fn = 1.d0 / x ** 2
+end function inv_square_fn
+
+!********
+
 double precision function sinx_x(x)
 	double precision, intent(in) :: x
 	if (x == 0.d0) then

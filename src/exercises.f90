@@ -1422,6 +1422,27 @@ integer function chapter_3_adaptive() result(nfail)
 	call test(area, 1.9998215687092518d0, 1.d-14, nfail, "gk15_adaptive_integrator 5")
 
 	!********
+	! Integrate 1 / x ** 2 from a lower limit to infinity
+
+	area = gk15i_adaptive_integrator(inv_square_fn, 1.d0, 1.d-10)
+	print *, "area gk15i = ", area
+	print *, "diff = ", area - 1.d0
+	print *, ""
+	call test(area, 1.d0, 1.d-14, nfail, "gk15i_adaptive_integrator 5")
+
+	area = gk15i_adaptive_integrator(inv_square_fn, 2.d0, 1.d-10)
+	print *, "area gk15i = ", area
+	print *, "diff = ", area - 1.d0/2
+	print *, ""
+	call test(area, 1.d0/2, 1.d-14, nfail, "gk15i_adaptive_integrator 6")
+
+	area = gk15i_adaptive_integrator(inv_square_fn, 3.d0, 1.d-10)
+	print *, "area gk15i = ", area
+	print *, "diff = ", area - 1.d0/3
+	print *, ""
+	call test(area, 1.d0/3, 1.d-14, nfail, "gk15i_adaptive_integrator 7")
+
+	!********
 
 end function chapter_3_adaptive
 
