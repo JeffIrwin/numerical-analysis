@@ -1451,6 +1451,36 @@ integer function chapter_3_adaptive() result(nfail)
 	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 8")
 	print *, ""
 
+	area = gk15i_adaptive_integrator(exp_nx2, 2.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(2.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 9")
+	print *, ""
+
+	area = gk15i_adaptive_integrator(exp_nx2, 3.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(3.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 10")
+	print *, ""
+
+	area = gk15i_adaptive_integrator(exp_nx2, -1.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI) * erfc(-1.d0)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 10")
+	print *, ""
+
+	area = gk15i_adaptive_integrator(exp_nx2, 0.d0, 1.d-10)
+	expect = 0.5d0 * sqrt(PI)
+	print *, "area exp_nx2 = ", area
+	print *, "expect       = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i_adaptive_integrator 10")
+	print *, ""
+
 	! TODO: fix gk15i to split the interval appropriately if given a negative
 	! lower bound
 

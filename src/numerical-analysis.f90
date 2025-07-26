@@ -1906,8 +1906,6 @@ recursive double precision function gk15i_adaptive_integrator &
 
 	logical :: is_eps_underflow, is_max_level
 
-	! TODO: panic if xmin == 0
-
 	n = 16
 	if (present(max_levels)) n = max_levels
 
@@ -1915,10 +1913,20 @@ recursive double precision function gk15i_adaptive_integrator &
 	is_eps_underflow = .false.
 	is_max_level = .false.
 
-	print *, "starting gk15i_adaptive_integrator()"
-	print *, "xmin = ", xmin
+	!print *, "starting gk15i_adaptive_integrator()"
+	!print *, "xmin = ", xmin
 
-	area = gk15i_aux(f, 0.d0, 1.d0/xmin, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
+	if (xmin <= 0.d0) then
+
+		! Integrate from xmin to 1 and 1 to infinity.  The choice of where to
+		! split the interval is arbitrary, it just can't be 0
+		area = &
+			gk15_aux (f, xmin, 1.d0, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
+			gk15i_aux(f, 0.d0, 1.d0, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
+
+	else
+		area = gk15i_aux(f, 0.d0, 1.d0/xmin, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
+	end if
 
 	!print *, "neval gk15i = ", neval
 
