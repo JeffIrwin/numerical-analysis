@@ -475,6 +475,7 @@ integer function chapter_4_lu() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lu"
 
+	double precision :: t0, t, t_lu
 	double precision, allocatable :: a(:,:), bx(:), x(:)
 	integer :: i, n, nrng, irep
 
@@ -521,7 +522,8 @@ integer function chapter_4_lu() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 1, 90
+	t_lu = 0.d0
+	do n = 2, 90, 2
 
 		! LU decomposition is still fast for n >> 90, but maybe not fast enough
 		! for multiple reps in a unit test
@@ -532,7 +534,7 @@ integer function chapter_4_lu() result(nfail)
 			print *, "Testing lu_invmul() with n = " // to_str(n) // " ..."
 		end if
 
-		do irep = 1, 10
+		do irep = 1, 6
 			call random_number(a)  ! random matrix
 			call random_number(x)  ! random expected answer
 
@@ -543,7 +545,10 @@ integer function chapter_4_lu() result(nfail)
 			!print "(a,6es15.5)", "x  = ", x
 			!print "(a,6es15.5)", "b  = ", bx
 
+			call cpu_time(t0)
 			call invmul(a, bx)
+			call cpu_time(t)
+			t_lu = t_lu + t - t0
 			!print "(a,6es15.5)", "bx = ", bx
 
 			! Rounding error grows with `n`
@@ -553,6 +558,7 @@ integer function chapter_4_lu() result(nfail)
 
 		deallocate(a, x, bx)
 	end do
+	write(*,*) "LU fuzz time = ", to_str(t_lu)
 
 	!********
 	print *, ""
@@ -1594,6 +1600,8 @@ integer function chapter_3_adaptive() result(nfail)
 	!
 	!     	https://github.com/jacobwilliams/quadpack/blob/master/test/quadpack_test_module.F90
 
+	! Could also test Bessel's integrals
+
 	!********
 
 end function chapter_3_adaptive
@@ -1605,7 +1613,7 @@ integer function chapter_4_inv() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_inv"
 
 	double precision :: t0, t
-	double precision :: t_inv, t_invert, t_gj
+	double precision :: t_gj
 	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), ainv(:,:)
 
 	integer :: i, n, nrng, irep
@@ -1671,7 +1679,7 @@ integer function chapter_4_inv() result(nfail)
 	call test(norm2(matmul(a0, ainv) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 1")
 
 	!********
-	! `inv` is a fn that returns the invers of `a` without modifying it, while
+	! `inv` is a fn that returns the inverse of `a` without modifying it, while
 	! `invert` is a subroutine that replaces `a` with its inverse
 	!
 	! The fn and the subroutine cannot be overloaded.  In Fortrans, overloads
@@ -1686,7 +1694,7 @@ integer function chapter_4_inv() result(nfail)
 	call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 3")
 
 	!********
-	! Test the Gauss-Jordan method
+	! Test the Gauss-Jordan method directly
 
 	a = a0
 	call gauss_jordan(a)
@@ -1697,19 +1705,13 @@ integer function chapter_4_inv() result(nfail)
 	!********
 	! Fuzz test
 
-	! TODO: benchmark.  Maybe Gauss-Jordan should be the default for inv, I
-	! suspect it does less copying than my LU inverse implementation
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	! Might reduce the number of tests here after benchmarking so my whole suite
-	! doesn't take much longer than 1 s, in debug on laptop battery
 
 	t_gj = 0.d0
-	t_inv = 0.d0
-	t_invert = 0.d0
 
-	do n = 2, 250, 3
+	do n = 2, 90, 4
 
 		allocate(a0(n, n))
 
@@ -1717,33 +1719,11 @@ integer function chapter_4_inv() result(nfail)
 			print *, "Testing inv() with n = " // to_str(n) // " ..."
 		end if
 
-		do irep = 1, 10
+		do irep = 1, 3
 			call random_number(a0)  ! random matrix
 
-			!print *, "a = "
-			!print "(6es15.5)", a
-			!print "(a,6es15.5)", "x  = ", x
-			!print "(a,6es15.5)", "b  = ", bx
-
-			!!********
-
-			!! TODO
-			!a = a0
-			!call cpu_time(t0)
-			!call invert(a)
-			!call cpu_time(t)
-			!t_invert = t_invert + t - t0
-			!call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
-
-			!!********
-
-			!call cpu_time(t0)
-			!a = inv(a0)
-			!call cpu_time(t)
-			!t_inv = t_inv + t - t0
-			!call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "invert() fuzz n x n")
-
-			!********
+			!print *, "a0 = "
+			!print "(6es15.5)", a0
 
 			a = a0
 			call cpu_time(t0)
@@ -1752,15 +1732,12 @@ integer function chapter_4_inv() result(nfail)
 			t_gj = t_gj + t - t0
 			call test(norm2(matmul(a0, a) - eye(n)), 0.d0, 1.d-9 * n, nfail, "gauss_jordan() fuzz n x n")
 
-			!********
 		end do
 
 		deallocate(a0)
 	end do
 
-	write(*,*) "Inv fn time            = ", to_str(t_inv)
-	write(*,*) "Invert subroutine time = ", to_str(t_invert)
-	write(*,*) "Gauss-Jordan time      = ", to_str(t_gj)
+	write(*,*) "Gauss-Jordan time = ", to_str(t_gj)
 
 	!********
 

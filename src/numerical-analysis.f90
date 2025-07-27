@@ -2276,11 +2276,17 @@ function inv(a)
 	double precision, allocatable, intent(in) :: a(:,:)
 	double precision, allocatable :: inv(:,:)
 
-	double precision, allocatable :: copy_(:,:)
+	!double precision, allocatable :: copy_(:,:)
 
-	copy_ = a
-	inv = eye(size(a,1))
-	call invmul(copy_, inv)
+	!! Use LU decomposition
+	!copy_ = a
+	!inv = eye(size(a,1))
+	!call invmul(copy_, inv)
+
+	! Use Gauss-Jordan.  I suspect it does less copying than my LU inverse
+	! implementation.  It's around 40% faster, although both methods are O(n**3)
+	inv = a
+	call gauss_jordan(inv)
 
 end function inv
 
@@ -2289,25 +2295,32 @@ end function inv
 subroutine invert(a)
 	! Replace `a` with its inverse
 	double precision, allocatable, intent(inout) :: a(:,:)
-	double precision, allocatable :: copy_(:,:)
+	!double precision, allocatable :: copy_(:,:)
 
-	! One move and one copy
-	call move_alloc(a, copy_)
-	a = eye(size(copy_, 1))
-	call invmul(copy_, a)
+	!********
+	! Use Gauss-Jordan
+	call gauss_jordan(a)
 
-	!! Two copies
-	!copy_ = a
-	!a = eye(size(a,1))
+	!********
+	! Use LU
+
+	!! One move and one copy
+	!call move_alloc(a, copy_)
+	!a = eye(size(copy_, 1))
 	!call invmul(copy_, a)
 
-	!! Also two copies
-	!copy_ = eye(size(a,1))
-	!call invmul(a, copy_)
-	!a = copy_
+	!!! Two copies
+	!!copy_ = a
+	!!a = eye(size(a,1))
+	!!call invmul(copy_, a)
 
-	!! Break tests
-	!a(1,1) = 1.01d0 * a(1,1)
+	!!! Also two copies
+	!!copy_ = eye(size(a,1))
+	!!call invmul(a, copy_)
+	!!a = copy_
+
+	!!! Break tests
+	!!a(1,1) = 1.01d0 * a(1,1)
 
 end subroutine invert
 
@@ -2320,10 +2333,9 @@ subroutine gauss_jordan(a)
 	!********
 
 	double precision :: max_, hr
-	!double precision, allocatable :: hv(:)
 
 	integer, allocatable :: p(:)  ! pivot
-	integer :: i, j, k, n, r, r1(1)!, hi
+	integer :: i, j, k, n, r, r1(1)
 
 	n = size(a, 1)
 	p = [(i, i = 1, n)]
@@ -2333,31 +2345,15 @@ subroutine gauss_jordan(a)
 		r1 = maxloc(abs(a(j+1: n, j))) + j
 		r = r1(1)
 		max_ = abs(a(r, j))
-		!max_ = abs(a(j,j))
-		!r = j
-		!do i = j+1, n
-		!	if (abs(a(i,j)) > max_) then
-		!		max_ = abs(a(i,j))
-		!		r = i
-		!	end if
-		!end do
 		if (max_ == 0) then
 			! TODO: panic
 			print *, "Error: singular matrix in gauss_jordan()"
 		end if
 
-		! Swap rows
 		if (r > j) then
+			! Swap rows
 			a([j, r], :) = a([r, j], :)
 			p([j, r]) = p([r, j])
-			!do k = 1, n
-			!	hr = a(j,k)
-			!	a(j,k) = a(r,k)
-			!	a(r,k) = hr
-			!end do
-			!hi = p(j)
-			!p(j) = p(r)
-			!p(r) = hi
 		end if
 
 		! Transform
@@ -2377,17 +2373,7 @@ subroutine gauss_jordan(a)
 	end do
 
 	! Swap columns
-	!a = a(p, :)
 	a(:,p) = a
-	!allocate(hv(n))
-	!do i = 1, n
-	!	do k = 1, n
-	!		hv(p(k)) = a(i,k)
-	!	end do
-	!	do k = 1, n
-	!		a(i,k) = hv(k)
-	!	end do
-	!end do
 
 	!print *, "In Gauss-Jordan:"
 	!print *, "a = "
