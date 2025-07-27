@@ -891,14 +891,10 @@ subroutine cholesky_factor(a)
 
 	!********
 
-	double precision :: x
-	double precision, allocatable :: p(:)
+	double precision :: x, p
 	integer :: i, j, k, n
 
 	n = size(a, 1)
-
-	! TODO: does p need to be allocatable?
-	allocate(p(n))
 
 	do i = 1, n
 	do k = i, n
@@ -911,17 +907,66 @@ subroutine cholesky_factor(a)
 				! TODO: panic
 				print *, "Error: singular matrix in cholesky_factor()"
 			end if
-			p(i) = 1.d0 / sqrt(x)
+			p = 1.d0 / sqrt(x)
 		end if
-		a(k,i) = x * p(i)
+		a(k,i) = x * p
 	end do
 	end do
-
-	!do i = 1, n
-	!	a(i,i) = 1.d0 / p(i)
-	!end do
 
 end subroutine cholesky_factor
+
+!********
+
+subroutine cholesky_solve(a, bx)
+
+	double precision, intent(in) :: a(:,:)
+	double precision, intent(inout) :: bx(:)
+
+	integer :: i, j, n
+
+	n = size(a, 1)
+	!print *, "bx init = ", bx
+
+	! This is the same as lu_solve(), except:
+	! - The pivot is the identity
+	! - One of the `a` terms is transposed, because U == transpose(L)
+	! - Forward substitution has an extra division step because U has non-zero diagonals
+
+	! Forward substitution
+	do i = 1, n
+		do j = 1, i-1
+			!print *, "a = ", a(j,i)
+			!print *, "a = ", a(i,j)
+			bx    (i) = &
+				bx(i) - &
+				a (i, j) * &
+				!a (j, i) * &
+				bx(j)
+		end do
+		bx    (i) = &
+			bx(i) / &
+			a (i, i)
+	end do
+	!print *, "bx forward = ", bx
+
+	! Back substitution
+	do i = n, 1, -1
+		do j = i+1, n
+			bx    (i) = &
+				bx(i) - &
+				!a (i, j) * &
+				a (j, i) * &
+				bx(j)
+		end do
+		bx    (i) = &
+			bx(i) / &
+			a (i, i)
+	end do
+	!print *, "bx back = ", bx
+
+	! No pivoting for Cholesky
+
+end subroutine cholesky_solve
 
 !********
 

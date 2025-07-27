@@ -1699,7 +1699,7 @@ integer function chapter_4_inv() result(nfail)
 	! `inv` is a fn that returns the inverse of `a` without modifying it, while
 	! `invert` is a subroutine that replaces `a` with its inverse
 	!
-	! The fn and the subroutine cannot be overloaded.  In Fortrans, overloads
+	! The fn and the subroutine cannot be overloaded.  In Fortran, overloads
 	! must be either all fns or all subroutines
 
 	a = a0
@@ -1766,8 +1766,8 @@ integer function chapter_4_cholesky() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_cholesky"
 
-	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), &
-		ainv(:,:), tmp_mat(:,:), lmat(:,:)
+	double precision, allocatable :: a0(:,:), a(:,:), bx(:), x(:), &
+		tmp_mat(:,:), lmat(:,:)
 
 	integer :: i, j, n, nrng, irep
 
@@ -1781,32 +1781,43 @@ integer function chapter_4_cholesky() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 2, 90, 4
-	do n = 5, 5  ! TODO
+	do n = 2, 90, 4
+	!do n = 5, 5  ! TODO
 
 		!allocate(a0(n, n))
 		allocate(tmp_mat(n, n))
+		allocate(x(n))
 
 		if (mod(n, 10) == 0) then
 			print *, "Testing Cholesky with n = " // to_str(n) // " ..."
 		end if
 
-		!do irep = 1, 3
-		do irep = 1, 1  ! TODO
+		do irep = 1, 3
+		!do irep = 1, 1  ! TODO
 
 			call random_number(tmp_mat)  ! random matrix
+			call random_number(x)  ! random matrix
 
 			! Use tmp_mat to make a symmetric (and probably positive definite)
 			! matrix a0
 			a0 = matmul(transpose(tmp_mat), tmp_mat)
-			print *, "a0 = "
-			print "(5es15.5)", a0
+			!print *, "a0 = "
+			!print "(5es15.5)", a0
+
+			! Calculate RHS `bx` from random expected solution `x`
+			bx = matmul(a0, x)
 
 			a = a0
 			call cholesky_factor(a)
+			call cholesky_solve(a, bx)
 
-			print *, "cholesky a = "
-			print "(5es15.5)", a
+			! After cholesky_factor(), the upper triangular (or lower triangular
+			! in the default Fortran print ordering) part of `a` is the same as
+			! it originally was.  The diagonal and lower triangle is the
+			! Cholesky factorization
+
+			!print *, "cholesky a = "
+			!print "(5es15.5)", a
 
 			lmat = a
 			do i = 1, n
@@ -1815,17 +1826,26 @@ integer function chapter_4_cholesky() result(nfail)
 			end do
 			end do
 
-			print *, "lmat = "
-			print "(5es15.5)", lmat
+			!call cholesky_solve(lmat, bx)  ! TODO
 
-			print *, "lmat * lmat' = "
-			print "(5es15.5)", matmul(lmat, transpose(lmat))
+			!print *, "lmat = "
+			!print "(5es15.5)", lmat
+
+			!print *, "lmat * lmat' = "
+			!print "(5es15.5)", matmul(lmat, transpose(lmat))
 
 			call test(norm2(matmul(lmat, transpose(lmat)) - a0), 0.d0, 1.d-9 * n, nfail, "cholesky_factor() fuzz n x n")
 
+			!print "(a,5es15.5)", "x  = ", x
+			!print "(a,5es15.5)", "bx = ", bx
+
+			! Cholesky requires a bigger tolerance here than LU, probably
+			! because it doesn't pivot
+			call test(norm2(bx - x), 0.d0, 1.d-6 * n, nfail, "cholesky_solve() fuzz n x n")
+
 		end do
 
-		deallocate(tmp_mat)
+		deallocate(tmp_mat, x)
 	end do
 
 	!********
