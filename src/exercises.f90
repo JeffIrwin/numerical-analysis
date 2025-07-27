@@ -1594,13 +1594,22 @@ integer function chapter_3_adaptive() result(nfail)
 	print *, ""
 
 	!********
+	print *, "Bessel's integral:"
+
+	area = gk15_adaptive_integrator(bessel_3_2p5, 0.d0, PI, 1.d-10)
+	expect = bessel_jn(3, 2.5d0)
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15_adaptive_integrator 24")
+	print *, ""
+
+	!********
 
 	! This could always be expanded with more tests.  Quadpack has some
 	! interesting tests:
 	!
 	!     	https://github.com/jacobwilliams/quadpack/blob/master/test/quadpack_test_module.F90
-
-	! Could also test Bessel's integrals
 
 	!********
 

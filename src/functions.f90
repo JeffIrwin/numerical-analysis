@@ -3,6 +3,8 @@ module numa__functions
 
 	implicit none
 
+	double precision, parameter, private :: PI = 4 * atan(1.d0)
+
 contains
 
 !===============================================================================
@@ -110,10 +112,22 @@ end function exp_nx2
 double precision function fn_example_pg171(x)
 	! This is an example integrand from page 171
 	double precision, intent(in) :: x
-	double precision, parameter :: PI = 4 * atan(1.d0)
 	fn_example_pg171 = &
 		5.d0 / (exp(PI) - 2.d0) * exp(2*x) * cos(x)
 end function fn_example_pg171
+
+!********
+
+double precision function bessel_3_2p5(tau)
+	! This is the integrand for bessel_jn(3, 2.5)
+	double precision, intent(in) :: tau
+	double precision, parameter :: x = 2.5d0
+	integer, parameter :: n = 3
+
+	bessel_3_2p5 = &
+		1/PI * cos(n * tau - x * sin(tau))
+
+end function bessel_3_2p5
 
 !===============================================================================
 
