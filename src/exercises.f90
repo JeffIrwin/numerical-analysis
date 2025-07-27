@@ -558,7 +558,7 @@ integer function chapter_4_lu() result(nfail)
 
 		deallocate(a, x, bx)
 	end do
-	write(*,*) "LU fuzz time = ", to_str(t_lu)
+	write(*,*) "LU fuzz time = ", to_str(t_lu), " s"
 
 	!********
 	print *, ""
@@ -1596,6 +1596,14 @@ integer function chapter_3_adaptive() result(nfail)
 	!********
 	print *, "Bessel's integral:"
 
+	! TODO: the fn interface `fn_f64_to_f64` is somewhat limited.  If you wanted
+	! to roll your own Bessel fn calculator, you would need a different fn to
+	! integrate for every real value of x (and int n)
+	!
+	! Maybe there should be another gk15 integrator that takes a "user data"
+	! array of doubles (and ints).  This would need another fn interface, say
+	! fn_f64_to_f64_dble_data, which also takes the data
+
 	area = gk15_adaptive_integrator(bessel_3_2p5, 0.d0, PI, 1.d-10)
 	expect = bessel_jn(3, 2.5d0)
 	print *, "area   = ", area
@@ -1717,7 +1725,6 @@ integer function chapter_4_inv() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-
 	t_gj = 0.d0
 
 	do n = 2, 90, 4
@@ -1725,7 +1732,7 @@ integer function chapter_4_inv() result(nfail)
 		allocate(a0(n, n))
 
 		if (mod(n, 10) == 0) then
-			print *, "Testing inv() with n = " // to_str(n) // " ..."
+			print *, "Testing Gauss-Jordan with n = " // to_str(n) // " ..."
 		end if
 
 		do irep = 1, 3
@@ -1746,11 +1753,85 @@ integer function chapter_4_inv() result(nfail)
 		deallocate(a0)
 	end do
 
-	write(*,*) "Gauss-Jordan time = ", to_str(t_gj)
+	write(*,*) "Gauss-Jordan time = ", to_str(t_gj), " s"
 
 	!********
+	print *, ""
 
 end function chapter_4_inv
+
+!===============================================================================
+
+integer function chapter_4_cholesky() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_cholesky"
+
+	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), &
+		ainv(:,:), tmp_mat(:,:), lmat(:,:)
+
+	integer :: i, j, n, nrng, irep
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	!do n = 2, 90, 4
+	do n = 5, 5  ! TODO
+
+		!allocate(a0(n, n))
+		allocate(tmp_mat(n, n))
+
+		if (mod(n, 10) == 0) then
+			print *, "Testing Cholesky with n = " // to_str(n) // " ..."
+		end if
+
+		!do irep = 1, 3
+		do irep = 1, 1  ! TODO
+
+			call random_number(tmp_mat)  ! random matrix
+
+			! Use tmp_mat to make a symmetric (and probably positive definite)
+			! matrix a0
+			a0 = matmul(transpose(tmp_mat), tmp_mat)
+			print *, "a0 = "
+			print "(5es15.5)", a0
+
+			a = a0
+			call cholesky_factor(a)
+
+			print *, "cholesky a = "
+			print "(5es15.5)", a
+
+			lmat = a
+			do i = 1, n
+			do j = 1, i-1
+				lmat(j,i) = 0.d0
+			end do
+			end do
+
+			print *, "lmat = "
+			print "(5es15.5)", lmat
+
+			print *, "lmat * lmat' = "
+			print "(5es15.5)", matmul(lmat, transpose(lmat))
+
+			call test(norm2(matmul(lmat, transpose(lmat)) - a0), 0.d0, 1.d-9 * n, nfail, "cholesky_factor() fuzz n x n")
+
+		end do
+
+		deallocate(tmp_mat)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_4_cholesky
 
 !===============================================================================
 

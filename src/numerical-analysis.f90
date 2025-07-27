@@ -3,6 +3,13 @@ module numa
 
 	implicit none
 
+	! TODO:
+	! - There are several places where I note a routine should "panic" or issue
+	!   a "fatal" error, only logging a warning for now and continuing.  These
+	!   should actually stop (or wrap a stop), unless an optional `iostat` arg
+	!   is given to the function, in which case we can continue and let the
+	!   caller decide how to recover.  I guess this is the Fortranic way
+
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG = (0.d0, 1.d0)  ! sqrt(-1)
 
@@ -25,8 +32,8 @@ module numa
 		procedure :: lu_invmul_mat
 	end interface
 
-	! If this file gets too long, it might be good to split it up, e.g. into
-	! interpolate.f90, fft.f90, (and in the future integrate.f90), etc.
+	! If this file gets too long, it might be good to split it up roughly
+	! per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
 
 	!********
 
@@ -873,6 +880,48 @@ subroutine lu_factor(a, pivot)
 	end do
 
 end subroutine lu_factor
+
+!********
+
+subroutine cholesky_factor(a)
+	! Cholesky factorization is only possible for positive definite matrices
+	! `a`!
+
+	double precision, intent(inout) :: a(:,:)
+
+	!********
+
+	double precision :: x
+	double precision, allocatable :: p(:)
+	integer :: i, j, k, n
+
+	n = size(a, 1)
+
+	! TODO: does p need to be allocatable?
+	allocate(p(n))
+
+	do i = 1, n
+	do k = i, n
+		x = a(i,k)
+		do j = i-1, 1, -1
+			x = x - a(k,j) * a(i,j)
+		end do
+		if (i == k) then
+			if (x <= 0.d0) then
+				! TODO: panic
+				print *, "Error: singular matrix in cholesky_factor()"
+			end if
+			p(i) = 1.d0 / sqrt(x)
+		end if
+		a(k,i) = x * p(i)
+	end do
+	end do
+
+	!do i = 1, n
+	!	a(i,i) = 1.d0 / p(i)
+	!end do
+
+end subroutine cholesky_factor
 
 !********
 

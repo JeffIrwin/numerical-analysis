@@ -54,6 +54,7 @@ program main
 	! Chapter 4: Systems of Linear Equations
 	nfail = nfail + chapter_4_lu()
 	nfail = nfail + chapter_4_inv()
+	nfail = nfail + chapter_4_cholesky()
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
