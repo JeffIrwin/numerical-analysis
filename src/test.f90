@@ -65,7 +65,7 @@ program main
 	! Chapter 6: Eigenvalue Problems
 
 	! TODO: add unit tests for sorting routines
-	nfail = nfail + chapter_6_qr_basic()
+	nfail = nfail + chapter_6_basic_qr()
 	nfail = nfail + chapter_6_hessenberg()
 
 	!-------------------------------------------------------

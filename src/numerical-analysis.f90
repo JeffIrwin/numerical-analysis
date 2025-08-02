@@ -956,6 +956,8 @@ subroutine hess(a)
 
 		! TODO: avoid outer_product() at least, and maybe `x` temp array.
 		! Avoiding `v` temp array might be a little more work than worthwhile
+		!
+		! Need tests before i fuck with this
 
 		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
 		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
@@ -2723,10 +2725,74 @@ function eig_basic_qr(a, iters) result(eigvals)
 	integer, intent(in) :: iters
 	!********
 
-	double precision, allocatable :: diag_(:), r(:,:), q(:,:)
+	double precision, allocatable :: diag_(:), q(:,:)
 	integer :: i
 
 	do i = 1, iters
+		call qr_factor(a, diag_)
+
+		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
+		! but two transposes seems expensive
+		q = qr_get_q_expl(a, diag_)
+		a = matmul_upper_ge(a, q)  ! TODO: apply these opts to eig_hess_qr()
+
+	end do
+	!print *, "a = "
+	!print "(4es15.5)", a
+
+	eigvals = sorted(diag(a))
+
+end function eig_basic_qr
+
+!===============================================================================
+
+function matmul_upper_ge(upper, ge) result(res)
+	! TODO: overwrite result to upper?
+	double precision, intent(in) :: upper(:,:), ge(:,:)
+	double precision, allocatable :: res(:,:)
+	!********
+
+	integer :: i, j, k, ni, nj, nk
+
+	ni = size(upper, 1)
+	nj = size(upper, 2)
+	if (nj /= size(ge, 1)) then
+		! TODO: panic
+		print *, "Error: inner dimensions do not agree in matmul_upper_ge()"
+	end if
+	nk = size(ge, 2)
+
+	res = zeros(ni, nk)
+	do k = 1, nk
+	do j = 1, nj
+	do i = 1, j  ! this loop is half the extent of general matmul
+		res(i, k) = res(i, k) + upper(i, j) * ge(j, k)
+	end do
+	end do
+	end do
+
+end function matmul_upper_ge
+
+!===============================================================================
+
+function eig_hess_qr(a, iters) result(eigvals)
+	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
+	! QR algorithm
+
+	use numa__utils, only:  sorted
+	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable :: eigvals(:)
+	integer, intent(in) :: iters
+	!********
+
+	double precision, allocatable :: diag_(:), r(:,:), q(:,:)
+	integer :: i
+
+	call hess(a)
+
+	do i = 1, iters
+
+		! TODO: replace qr_factor() with a special-purpose hess_qr_factor()
 		call qr_factor(a, diag_)
 		r = qr_get_r_expl(a)
 
@@ -2745,7 +2811,7 @@ function eig_basic_qr(a, iters) result(eigvals)
 
 	eigvals = sorted(diag(a))
 
-end function eig_basic_qr
+end function eig_hess_qr
 
 !===============================================================================
 

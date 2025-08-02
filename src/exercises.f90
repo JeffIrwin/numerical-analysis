@@ -1913,10 +1913,11 @@ end function chapter_4_qr
 
 !===============================================================================
 
-integer function chapter_6_qr_basic() result(nfail)
+integer function chapter_6_basic_qr() result(nfail)
 
-	character(len = *), parameter :: label = "chapter_6_qr_basic"
+	character(len = *), parameter :: label = "chapter_6_basic_qr"
 
+	double precision :: diff
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
 		expect(:)
 
@@ -1967,7 +1968,9 @@ integer function chapter_6_qr_basic() result(nfail)
 
 			! There is a large tolerance here because the basic QR algorithm
 			! converges slowly
-			call test(norm2(eigvals - expect), 0.d0, 1.d-2 * n, nfail, "eig_basic_qr 1")
+			diff = norm2(eigvals - expect)
+			call test(diff, 0.d0, 1.d-2 * n, nfail, "eig_basic_qr 1")
+			print *, "diff = ", diff
 			print *, ""
 
 		end do
@@ -1978,7 +1981,7 @@ integer function chapter_6_qr_basic() result(nfail)
 	!********
 	!print *, ""
 
-end function chapter_6_qr_basic
+end function chapter_6_basic_qr
 
 !===============================================================================
 
@@ -1988,7 +1991,8 @@ integer function chapter_6_hessenberg() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_6_hessenberg"
 
-	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &!eigvals(:), &
+	double precision :: diff
+	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
 		expect(:)
 
 	integer :: i, n, nrng, irep
@@ -2031,11 +2035,13 @@ integer function chapter_6_hessenberg() result(nfail)
 			print *, "a = "
 			print "(4es18.8)", a
 
-			! For now, I manually confirmed that this matches scilab's built-in
-			! hess()
-			call hess(a)
-			print *, "hess(a) = "
-			print "(4es18.8)", a
+			eigvals = eig_hess_qr(a, iters = 5 * n)
+
+			! There is a large tolerance here because the basic QR algorithm
+			! converges slowly
+			diff = norm2(eigvals - expect)
+			call test(diff, 0.d0, 1.d-2 * n, nfail, "eig_basic_qr 1")
+			print *, "diff = ", diff
 
 			! TODO: assert test
 
