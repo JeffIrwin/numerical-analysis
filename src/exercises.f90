@@ -1871,7 +1871,7 @@ integer function chapter_4_qr() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	!do n = 2, 90, 4
-	do n = 5, 5  ! TODO
+	do n = 2, 90, 3  ! TODO
 
 		allocate(a0(n, n))
 
@@ -1879,29 +1879,28 @@ integer function chapter_4_qr() result(nfail)
 			print *, "Testing QR decomposition with n = " // to_str(n) // " ..."
 		end if
 
-		!do irep = 1, 3
-		do irep = 1, 1  ! TODO
+		do irep = 1, 3
 
 			call random_number(a0)  ! random matrix
-			print *, "a0 = "
-			print "(5es15.5)", a0
+			!print *, "a0 = "
+			!print "(5es15.5)", a0
 
 			a = a0
 			call qr_factor(a, diag_)
 
-			print *, "qr(a) = "
-			print "(5es15.5)", a
+			!print *, "qr(a) = "
+			!print "(5es15.5)", a
 
 			r = a
 			do i = 1, n
 				r(i+1:, i) = 0.d0
 			end do
-			print *, "r = "
-			print "(5es15.5)", r
+			!print *, "r = "
+			!print "(5es15.5)", r
 
 			q = qr_get_q_expl(a, diag_)
-			print *, "q = "
-			print "(5es15.5)", q
+			!print *, "q = "
+			!print "(5es15.5)", q
 
 			call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 fuzz n x n")
 			call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 q' * q, n x n")

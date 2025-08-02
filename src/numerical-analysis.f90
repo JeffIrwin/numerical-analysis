@@ -926,13 +926,11 @@ subroutine qr_factor(a, diag_)
 
 	!********
 
-	double precision :: s, normx, u1
-	double precision, allocatable :: w(:), r(:,:)
-	integer :: j, n
+	double precision :: s, normx, u1, wa
+	integer :: i, j, k, n
 
 	n = size(a, 1)
 	allocate(diag_(n))
-	r = a
 	diag_ = 0.d0
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
@@ -942,15 +940,23 @@ subroutine qr_factor(a, diag_)
 		normx = norm2(a(j:, j))
 		s = -sign(1.d0, a(j,j))
 		u1 = a(j,j) - s * normx
-		w = a(j:, j) / u1  ! TODO: avoid `w` temp array
-		w(1) = 1.d0
-		a(j+1:, j) = w(2:)
+
+		a(j+1:, j) = a(j+1:, j) / u1
+
 		a(j,j) = s * normx
 		diag_(j) = -s * u1 / normx
 
-		! TODO: avoid temp array for outer_product()
-		a(j:, j+1:) = a(j:, j+1:) - &
-			outer_product(diag_(j) * w, matmul(w, a(j:, j+1:)))
+		!a(j:, j+1:) = a(j:, j+1:) - &
+		!	outer_product(diag_(j) * w, matmul(w, a(j:, j+1:)))
+
+		do k = j+1, n
+			wa = dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k)
+
+			a(j,k) = a(j,k) - diag_(j) * wa
+			do i = j+1, n
+				a(i,k) = a(i,k) - diag_(j) * a(i,j) * wa
+			end do
+		end do
 
 	end do
 	!print *, "diag_ = "
