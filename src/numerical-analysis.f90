@@ -2530,7 +2530,7 @@ function diag_set(v) result(d)
 end function diag_set
 
 function diag_get(a) result(v)
-	! Get the diagonal from a matrix `a` as a vector `v`
+	! Get the diagonal vector `v` from a matrix `a`
 	double precision, intent(in) :: a(:,:)
 	double precision, allocatable :: v(:)
 	!********

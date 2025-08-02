@@ -1918,7 +1918,7 @@ integer function chapter_6_qr_basic() result(nfail)
 	character(len = *), parameter :: label = "chapter_6_qr_basic"
 
 	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), &
-		diag_(:), d(:,:), s(:,:), eigvals(:)
+		diag_(:), d(:,:), s(:,:), eigvals(:), expect(:)
 
 	integer :: i, n, nrng, irep
 
@@ -1949,30 +1949,20 @@ integer function chapter_6_qr_basic() result(nfail)
 
 			! Known eigenvalues.  TODO: random?
 
-			d = diag(1.d0 * [(i, i = n, 1, -1)])
-			!d = diag(1.d0 * [(i, i = 1, n)])
+			expect = [(i, i = n, 1, -1)]
+			d = diag(expect)
+			print *, "expect = ", expect
 
-			!d = zeros(n, n)
-			!do i = 1, n
-			!	d(i,i) = n - i + 1
-			!end do
-
-			print *, "d = "
-			print "(4es15.5)", d
-
-			!call random_number(a0)  ! random matrix
 			call random_number(s)  ! random matrix
-
-			!call lu_invmul(s, matmul(d, s))
-			!a0 = s
 			a0 = matmul(matmul(s, d), inv(s))
-
 			print *, "a0 = "
 			print "(4es15.5)", a0
 
 			a = a0
 
 			! Basic QR algorithm.  TODO: subroutine
+			!
+			! May need many iterations for large n
 			do i = 1, 20
 				call qr_factor(a, diag_)
 				r = qr_get_r_expl(a)
@@ -1991,25 +1981,13 @@ integer function chapter_6_qr_basic() result(nfail)
 			! before comparing to expected result, but I guess it should just
 			! work if they're both already descending
 
-			!call qr_factor(a, diag_)
-
-			!!print *, "qr(a) = "
-			!!print "(4es15.5)", a
-
-			!r = qr_get_r_expl(a)
-			!!!print *, "r = "
-			!!!print "(4es15.5)", r
-
-			!q = qr_get_q_expl(a, diag_)
-			!!print *, "q = "
-			!!print "(4es15.5)", q
-
-			!call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 fuzz n x n")
-			!call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 q' * q, n x n")
+			! There is a large tolerance here because the basic QR algorithm
+			! converges slowly
+			call test(norm2(eigvals - expect), 0.d0, 1.d-2 * n, nfail, "qr eigvals 1")
 
 		end do
 
-		deallocate(a0)
+		deallocate(s)
 	end do
 
 	!********
