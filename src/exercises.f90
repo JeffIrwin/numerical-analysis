@@ -2045,8 +2045,6 @@ integer function chapter_6_hessenberg() result(nfail)
 			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr 1")
 			print *, "diff = ", diff
 
-			! TODO: assert test
-
 		end do
 
 		deallocate(s)

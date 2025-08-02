@@ -1017,27 +1017,18 @@ end subroutine qr_factor
 !********
 
 subroutine hess_qr_step(a)
-	! TODO: describe
+	! Apply one step of A = R * Q on a Hessenberg matrix `a`
+	!
+	! Maybe this should just be inlined in eig_hess_qr()
 	double precision, intent(inout) :: a(:,:)
-	!double precision, allocatable, intent(out) :: diag_(:)
-
 	!********
 
-	!double precision :: s, normx, u1, wa
 	double precision :: h1, h2, r, givens(2,2)
 	double precision, allocatable :: c(:), s(:)
 	integer :: k, n
 
-	!print *, "********"
-	!print *, "starting hess_qr_step()"
-	!print *, "a = "
-	!print "(4es15.5)", a
-
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
-
-	!! return q as out-arg? no
-	!q = eye(n)
 
 	do k = 1, n-1
 		h1 = a(k, k)
@@ -1045,7 +1036,7 @@ subroutine hess_qr_step(a)
 
 		r = norm2([h1, h2])
 		!print *, "r = ", r
-		c(k) = h1 / r
+		c(k) =  h1 / r
 		s(k) = -h2 / r
 		givens(1,:) = [c(k), -s(k)]
 		givens(2,:) = [s(k),  c(k)]
@@ -1059,7 +1050,6 @@ subroutine hess_qr_step(a)
 		a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
 
 	end do
-
 	!print *, "r = "
 	!print "(4es15.5)", a
 
@@ -1074,7 +1064,7 @@ subroutine hess_qr_step(a)
 
 	! Apply the Givens rotations from the right
 	do k = 1, n-1
-		givens(1,:) = [ c(k), s(k)]
+		givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
 		givens(2,:) = [-s(k), c(k)]
 		a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
 	end do
@@ -2782,6 +2772,9 @@ function eig_basic_qr(a, iters) result(eigvals)
 	! eigenvalues.  Where there is a non-zero in the off-diagonal, we have a
 	! complex conjugate pair of eigenvalues, which could be computed as the same
 	! eigenvalue of its 2x2 sub-matrix block
+	!
+	! A better algorithm would also take a tolerance rather than a fixed number
+	! of iterations
 	!
 	! But it's not a good idea to waste time on such improvements for as slow an
 	! algorithm as basic QR.  Rather, wait and do the good work on something
