@@ -948,7 +948,7 @@ subroutine qr_factor(a, diag_)
 		do k = j+1, n
 			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
 			a(j,k) = a(j,k) - wa
-			a(j+1:,k) = a(j+1:,k) - a(j+1:,j) * wa
+			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
 		end do
 
 	end do
@@ -984,8 +984,9 @@ function qr_mul(qr, diag_, x) result(qx)
 	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double precision, allocatable :: qx(:,:)
 	!********
+	double precision :: wq
 	double precision, allocatable :: w(:)
-	integer :: j, n
+	integer :: i, j, k, n
 
 	!print *, "qr = "
 	!print "(5es15.5)", qr
@@ -996,9 +997,18 @@ function qr_mul(qr, diag_, x) result(qx)
 	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
 		w = [1.d0, qr(j+1:, j)]
-		! TODO: avoid temp array for outer_product()
-		qx(j:, :) = qx(j:, :) - &
-			outer_product(diag_(j) * w, matmul(w, qx(j:, :)))
+		! TODO: avoid `w` temp array
+
+		!qx(j:, :) = qx(j:, :) - &
+		!	outer_product(diag_(j) * w, matmul(w, qx(j:, :)))
+
+		do k = 1, n
+			wq = dot_product(w, qx(j:, k))
+			do i = j, n
+				qx(i, k) = qx(i, k) - diag_(j) * w(i-j+1) * wq
+			end do
+		end do
+
 	end do
 
 	!print *, "qx = "
