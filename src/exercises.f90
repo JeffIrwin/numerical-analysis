@@ -1915,6 +1915,8 @@ end function chapter_4_qr
 
 integer function chapter_6_qr_basic() result(nfail)
 
+	use numa__utils
+
 	character(len = *), parameter :: label = "chapter_6_qr_basic"
 
 	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), &
@@ -1951,6 +1953,7 @@ integer function chapter_6_qr_basic() result(nfail)
 
 			expect = [(i, i = n, 1, -1)]
 			d = diag(expect)
+			call sort_f64(expect)
 			print *, "expect = ", expect
 
 			call random_number(s)  ! random matrix
@@ -1975,11 +1978,8 @@ integer function chapter_6_qr_basic() result(nfail)
 			print *, "a = "
 			print "(4es15.5)", a
 
-			eigvals = diag(a)
+			eigvals = sorted(diag(a))
 			print *, "eigvals = ", eigvals
-			! TODO: assert test result.  In general, eigvals need to be sorted
-			! before comparing to expected result, but I guess it should just
-			! work if they're both already descending
 
 			! There is a large tolerance here because the basic QR algorithm
 			! converges slowly
