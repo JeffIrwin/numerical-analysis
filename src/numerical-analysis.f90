@@ -8,7 +8,8 @@ module numa
 	!   a "fatal" error, only logging a warning for now and continuing.  These
 	!   should actually stop (or wrap a stop), unless an optional `iostat` arg
 	!   is given to the function, in which case we can continue and let the
-	!   caller decide how to recover.  I guess this is the Fortranic way
+	!   caller decide how to recover.  I guess this is the Fortranic way.  Also
+	!   make panic use a macro to log the filename and line number
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG = (0.d0, 1.d0)  ! sqrt(-1)
@@ -995,11 +996,7 @@ subroutine qr_factor(a, diag_)
 		diag_(j) = -s * u1 / normx
 
 		do k = j+1, n
-
-			! TODO: for Hessenberg `a`, dot_product() can be applied to a
-			! smaller slice here
 			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
-
 			a(j,k) = a(j,k) - wa
 			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
 		end do
@@ -1016,6 +1013,73 @@ subroutine qr_factor(a, diag_)
 	! Results can be checked by verifying that q' * q == eye() or that a = q * r
 
 end subroutine qr_factor
+
+!********
+
+subroutine hess_qr_step(a)
+	! TODO: describe
+	double precision, intent(inout) :: a(:,:)
+	!double precision, allocatable, intent(out) :: diag_(:)
+
+	!********
+
+	!double precision :: s, normx, u1, wa
+	double precision :: h1, h2, r, givens(2,2)
+	double precision, allocatable :: c(:), s(:)
+	integer :: k, n
+
+	!print *, "********"
+	!print *, "starting hess_qr_step()"
+	!print *, "a = "
+	!print "(4es15.5)", a
+
+	n = size(a, 1)
+	allocate(c(n-1), s(n-1))
+
+	!! return q as out-arg? no
+	!q = eye(n)
+
+	do k = 1, n-1
+		h1 = a(k, k)
+		h2 = a(k+1, k)
+
+		r = norm2([h1, h2])
+		!print *, "r = ", r
+		c(k) = h1 / r
+		s(k) = -h2 / r
+		givens(1,:) = [c(k), -s(k)]
+		givens(2,:) = [s(k),  c(k)]
+
+		! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
+		!
+		! The source doesn't make it clear how to get the Givens rotations, but
+		! that part is shown on wiki:  https://en.wikipedia.org/wiki/Givens_rotation
+
+		! TODO: is there overhead here such that I should avoid matmul on slices?
+		a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
+
+	end do
+
+	!print *, "r = "
+	!print "(4es15.5)", a
+
+	!! If you stop here, `a` has been overwritten with `r` from its QR
+	!! factorization.  You could also compute Q by applying the matmuls in the
+	!! loop above to an initial identity matrix, but we don't need Q explicitly
+	!! for a Hessenberg QR step
+	!stop
+
+	! The rest of the Hessenberg QR step is not part of the QR factorization,
+	! rather, it overwrites `a` with R * Q
+
+	! Apply the Givens rotations from the right
+	do k = 1, n-1
+		givens(1,:) = [ c(k), s(k)]
+		givens(2,:) = [-s(k), c(k)]
+		a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
+	end do
+
+end subroutine hess_qr_step
 
 !********
 
@@ -2718,6 +2782,10 @@ function eig_basic_qr(a, iters) result(eigvals)
 	! eigenvalues.  Where there is a non-zero in the off-diagonal, we have a
 	! complex conjugate pair of eigenvalues, which could be computed as the same
 	! eigenvalue of its 2x2 sub-matrix block
+	!
+	! But it's not a good idea to waste time on such improvements for as slow an
+	! algorithm as basic QR.  Rather, wait and do the good work on something
+	! better like Hessenberg QR, or better yet, a shifting algorithm
 
 	use numa__utils, only:  sorted
 	double precision, intent(inout) :: a(:,:)
@@ -2747,7 +2815,6 @@ end function eig_basic_qr
 !===============================================================================
 
 function matmul_upper_ge(upper, ge) result(res)
-	! TODO: overwrite result to upper?
 	double precision, intent(in) :: upper(:,:), ge(:,:)
 	double precision, allocatable :: res(:,:)
 	!********
@@ -2756,17 +2823,22 @@ function matmul_upper_ge(upper, ge) result(res)
 
 	ni = size(upper, 1)
 	nj = size(upper, 2)
+	nk = size(ge, 2)
+
 	if (nj /= size(ge, 1)) then
 		! TODO: panic
 		print *, "Error: inner dimensions do not agree in matmul_upper_ge()"
 	end if
-	nk = size(ge, 2)
 
 	res = zeros(ni, nk)
 	do k = 1, nk
 	do j = 1, nj
 	do i = 1, j  ! this loop is half the extent of general matmul
+
+		! Is it possible to overwrite the result to upper?  I don't see how,
+		! because it appears on both the LHS and RHS of this expression
 		res(i, k) = res(i, k) + upper(i, j) * ge(j, k)
+
 	end do
 	end do
 	end do
@@ -2785,26 +2857,11 @@ function eig_hess_qr(a, iters) result(eigvals)
 	integer, intent(in) :: iters
 	!********
 
-	double precision, allocatable :: diag_(:), r(:,:), q(:,:)
 	integer :: i
 
 	call hess(a)
-
 	do i = 1, iters
-
-		! TODO: replace qr_factor() with a special-purpose hess_qr_factor()
-		call qr_factor(a, diag_)
-		r = qr_get_r_expl(a)
-
-		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
-		! but two transposes seems expensive
-		q = qr_get_q_expl(a, diag_)
-		a = matmul(r, q)
-		! TODO: naive matmul does ~2x as many operations as needed here, given
-		! that r is half zeros.  Should roll my own triangular matmul.  Then
-		! calling qr_get_r_expl() can also be eliminated as we would just
-		! implicitly ignore zeros, using `a` directly instead of `r`
-
+		call hess_qr_step(a)
 	end do
 	!print *, "a = "
 	!print "(4es15.5)", a
