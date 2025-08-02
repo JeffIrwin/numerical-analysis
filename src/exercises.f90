@@ -1856,8 +1856,7 @@ integer function chapter_4_qr() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_qr"
 
-	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), &
-		r2(:,:), diag_(:)
+	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), diag_(:)
 
 	integer :: i, n, nrng, irep
 
@@ -1900,28 +1899,12 @@ integer function chapter_4_qr() result(nfail)
 			print *, "r = "
 			print "(5es15.5)", r
 
-			! TODO: delete this test in favor of qr_get_q_expl()
-
-			q = transpose(a0)
-			r2 = transpose(r)
-			call invmul(r2, q)
-			q = transpose(q)
-
-			print *, "q = "
-			print "(5es15.5)", q
-
-			! A == Q * R
-			call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 fuzz n x n")
-
-			! Q' * Q == I
-			call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 2 q' * q, n x n")
-
 			q = qr_get_q_expl(a, diag_)
 			print *, "q = "
 			print "(5es15.5)", q
 
-			call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 3 fuzz n x n")
-			call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 4 q' * q, n x n")
+			call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 fuzz n x n")
+			call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 q' * q, n x n")
 
 		end do
 

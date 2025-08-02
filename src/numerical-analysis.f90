@@ -919,10 +919,10 @@ end subroutine cholesky_factor
 
 !********
 
-subroutine qr_factor(a, daig_)
+subroutine qr_factor(a, diag_)
 	! Replace `a` with its QR factorization using Householder transformations
 	double precision, intent(inout) :: a(:,:)
-	double precision, allocatable, intent(out) :: daig_(:)
+	double precision, allocatable, intent(out) :: diag_(:)
 
 	!********
 
@@ -931,9 +931,9 @@ subroutine qr_factor(a, daig_)
 	integer :: j, n
 
 	n = size(a, 1)
-	allocate(daig_(n))
+	allocate(diag_(n))
 	r = a
-	daig_ = 0.d0
+	diag_ = 0.d0
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
 	do j = 1, n
@@ -946,15 +946,15 @@ subroutine qr_factor(a, daig_)
 		w(1) = 1.d0
 		a(j+1:, j) = w(2:)
 		a(j,j) = s * normx
-		daig_(j) = -s * u1 / normx
+		diag_(j) = -s * u1 / normx
 
 		! TODO: avoid temp array for outer_product()
 		a(j:, j+1:) = a(j:, j+1:) - &
-			outer_product(daig_(j) * w, matmul(w, a(j:, j+1:)))
+			outer_product(diag_(j) * w, matmul(w, a(j:, j+1:)))
 
 	end do
-	!print *, "daig_ = "
-	!print "(es15.5)", daig_
+	!print *, "diag_ = "
+	!print "(es15.5)", diag_
 
 	! In the end, `R` is formed by zeroing appropriate elements of `a`
 	!
@@ -967,37 +967,45 @@ end subroutine qr_factor
 
 !********
 
-function qr_get_q_expl(qr, daig_) result(qx)
+function qr_get_q_expl(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
-	double precision, intent(in) :: qr(:,:), daig_(:)
+	double precision, intent(in) :: qr(:,:), diag_(:)
+	double precision, allocatable :: q(:,:)
+
+	q = qr_mul(qr, diag_, eye(size(qr,1)))
+
+end function qr_get_q_expl
+
+!********
+
+function qr_mul(qr, diag_, x) result(qx)
+	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
+	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double precision, allocatable :: qx(:,:)
 	!********
-	double precision, allocatable :: x(:,:), w(:)
+	double precision, allocatable :: w(:)
 	integer :: j, n
 
 	!print *, "qr = "
 	!print "(5es15.5)", qr
 
 	n = size(qr, 1)
-	x = eye(n)
 	qx = x
+
+	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
 		w = [1.d0, qr(j+1:, j)]
 		! TODO: avoid temp array for outer_product()
 		qx(j:, :) = qx(j:, :) - &
-			outer_product(daig_(j) * w, matmul(w, qx(j:, :)))
+			outer_product(diag_(j) * w, matmul(w, qx(j:, :)))
 	end do
 
 	!print *, "qx = "
 	!print "(5es15.5)", qx
 
-end function qr_get_q_expl
-
-! TODO: make a general qr_mul() fn to implicitly multiply by q (or q') without
-! getting the whole matrix explicitly.  then qr_get_q_expl() can just do
-! qr_mul(qr, eye)
+end function qr_mul
 
 !********
 
