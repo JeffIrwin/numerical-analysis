@@ -35,6 +35,9 @@ module numa__utils
 		procedure :: to_str_f64
 	end interface to_str
 
+	! TODO: rename.  Too generic
+	integer, parameter :: less = -1, equal = 0, greater = 1
+
 contains
 
 !===============================================================================
@@ -109,6 +112,164 @@ function to_str_f64(val) result(str)
 	write(buffer, *) val
 	str = trim(adjustl(buffer))
 end function to_str_f64
+
+!===============================================================================
+
+integer function compare_lex(a, b) result(compare)
+
+	! Lexicographically compare int vectors a and b.  Return less if a < b,
+	! equal if a == b, or greater if a > b.
+
+	integer, intent(in) :: a(:), b(:)
+	!integer, intent(in) :: a, b
+
+	integer :: i
+
+	if (size(a) /= size(b)) then
+		write(*,*) 'Error: incompatible sizes of args in compare_lex()'
+		stop
+	end if
+
+	do i = 1, size(a)
+		if (a(i) < b(i)) then
+			compare = less
+			return
+		else if (a(i) > b(i)) then
+			compare = greater
+			return
+		end if
+	end do
+
+	compare = equal
+
+end function compare_lex
+
+!===============================================================================
+
+logical function lt_lex(a, b) result(lt)
+
+	integer, intent(in) :: a(:), b(:)
+
+	lt = compare_lex(a, b) == less
+
+end function lt_lex
+
+!===============================================================================
+
+logical function lte_lex(a, b) result(lte)
+
+	integer, intent(in) :: a(:), b(:)
+	integer :: comp
+
+	comp = compare_lex(a, b)
+	lte = comp == less .or. comp == equal
+
+end function lte_lex
+
+!===============================================================================
+
+logical function gt_lex(a, b) result(gt)
+
+	integer, intent(in) :: a(:), b(:)
+
+	gt = compare_lex(a, b) == greater
+
+end function gt_lex
+
+!===============================================================================
+
+logical function eq_lex(a, b) result(eq)
+
+	integer, intent(in) :: a(:), b(:)
+
+	eq = compare_lex(a, b) == equal
+
+end function eq_lex
+
+!===============================================================================
+
+recursive subroutine sort(a, idx, lo_in, hi_in)
+
+	! Quicksort a rank-2 array a along its 2nd dimension and return the
+	! sort permutation idx
+	!
+	! See also:  https://github.com/JeffIrwin/aoc-2022/blob/381da3c2d468b4e2a9d4bb1068d84a9e8ae6bec6/2022/23/main.f90#L114
+
+	integer, intent(in) :: a(:,:)
+	integer, allocatable :: idx(:)
+	integer, optional :: lo_in, hi_in
+
+	integer :: lo, hi, p, i
+
+	logical :: outer
+
+	lo = 1
+	hi = size(a, 2)
+	outer = .true.
+
+	if (present(lo_in)) lo = lo_in
+	if (present(hi_in)) then
+		hi = hi_in
+		outer = .false.
+	end if
+
+	if (lo >= hi .or. lo < 1) return
+
+	if (.not. allocated(idx)) then
+		idx = [(i, i = 1, size(a, 2))]
+	end if
+
+	p = partition(a, idx, lo, hi)
+
+	call sort(a, idx, lo, p - 1)
+	call sort(a, idx, p + 1, hi)
+
+	!if (outer) then
+	!	! Check result.  TODO debug only
+	!	do i = 2, size(a, 2)
+	!		if (lt_lex(a(:,idx(i)), a(:,idx(i-1)))) then
+	!			write(*,*) 'Error in sort'
+	!			stop
+	!		end if
+	!	end do
+	!end if
+
+end subroutine sort
+
+!===============================================================================
+
+integer function partition(a, idx, lo, hi) result(ans)
+
+	integer, intent(in) :: a(:,:)
+	integer, allocatable :: idx(:), pivot(:)
+	integer :: lo, hi, i, j, mid
+
+	!pivot = a(:, idx(hi))
+
+	mid = (lo + hi) / 2
+	if (lt_lex(a(:, idx(mid)), a(:, idx(lo)))) then
+		idx([lo, mid]) = idx([mid, lo])
+	else if (lt_lex(a(:, idx(hi)), a(:, idx(lo)))) then
+		idx([lo, hi]) = idx([hi, lo])
+	else if (lt_lex(a(:, idx(mid)), a(:, idx(hi)))) then
+		idx([mid, hi]) = idx([hi, mid])
+	end if
+	pivot = a(:, idx(hi))
+
+	i = lo - 1
+	do j = lo, hi - 1
+	!do j = lo, hi
+		if (lte_lex(a(:, idx(j)), pivot)) then
+			i = i + 1
+			idx([i, j]) = idx([j, i])
+		end if
+	end do
+
+	i = i + 1
+	idx([i, hi]) = idx([hi, i])
+	ans = i
+
+end function partition
 
 !===============================================================================
 
