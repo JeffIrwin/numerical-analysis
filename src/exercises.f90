@@ -1890,10 +1890,7 @@ integer function chapter_4_qr() result(nfail)
 			!print *, "qr(a) = "
 			!print "(5es15.5)", a
 
-			r = a
-			do i = 1, n
-				r(i+1:, i) = 0.d0
-			end do
+			r = qr_get_r_expl(a)
 			!print *, "r = "
 			!print "(5es15.5)", r
 
@@ -1913,6 +1910,112 @@ integer function chapter_4_qr() result(nfail)
 	print *, ""
 
 end function chapter_4_qr
+
+!===============================================================================
+
+integer function chapter_6_qr_basic() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_6_qr_basic"
+
+	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), &
+		diag_(:), d(:,:), s(:,:), eigvals(:)
+
+	integer :: i, n, nrng, irep
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	!do n = 2, 90, 4  ! TODO: more tests but not this many
+	do n = 4, 4
+
+		!allocate(a0(n, n))
+		allocate(s (n, n))
+
+		if (mod(n, 10) == 0) then
+			print *, "Testing basic QR algorithm with n = " // to_str(n) // " ..."
+		end if
+
+		!do irep = 1, 3
+		do irep = 1, 1
+
+			! Construct a random matrix `a0` with known real eigenvalues
+
+			! Known eigenvalues.  TODO: random?
+
+			d = diag(1.d0 * [(i, i = n, 1, -1)])
+			!d = diag(1.d0 * [(i, i = 1, n)])
+
+			!d = zeros(n, n)
+			!do i = 1, n
+			!	d(i,i) = n - i + 1
+			!end do
+
+			print *, "d = "
+			print "(4es15.5)", d
+
+			!call random_number(a0)  ! random matrix
+			call random_number(s)  ! random matrix
+
+			!call lu_invmul(s, matmul(d, s))
+			!a0 = s
+			a0 = matmul(matmul(s, d), inv(s))
+
+			print *, "a0 = "
+			print "(4es15.5)", a0
+
+			a = a0
+
+			! Basic QR algorithm.  TODO: subroutine
+			do i = 1, 20
+				call qr_factor(a, diag_)
+				r = qr_get_r_expl(a)
+
+				! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
+				! but two transposes seems expensive
+				q = qr_get_q_expl(a, diag_)
+				a = matmul(r, q)
+			end do
+			print *, "a = "
+			print "(4es15.5)", a
+
+			eigvals = diag(a)
+			print *, "eigvals = ", eigvals
+			! TODO: assert test result.  In general, eigvals need to be sorted
+			! before comparing to expected result, but I guess it should just
+			! work if they're both already descending
+
+			!call qr_factor(a, diag_)
+
+			!!print *, "qr(a) = "
+			!!print "(4es15.5)", a
+
+			!r = qr_get_r_expl(a)
+			!!!print *, "r = "
+			!!!print "(4es15.5)", r
+
+			!q = qr_get_q_expl(a, diag_)
+			!!print *, "q = "
+			!!print "(4es15.5)", q
+
+			!call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 fuzz n x n")
+			!call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 q' * q, n x n")
+
+		end do
+
+		deallocate(a0)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_6_qr_basic
 
 !===============================================================================
 

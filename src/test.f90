@@ -56,12 +56,14 @@ program main
 	nfail = nfail + chapter_4_inv()
 	nfail = nfail + chapter_4_cholesky()
 	nfail = nfail + chapter_4_qr()
+	! TODO: gram schmidt
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
 
 	!-------------------------------------------------------
 	! Chapter 6: Eigenvalue Problems
+	nfail = nfail + chapter_6_qr_basic()
 
 	!-------------------------------------------------------
 	! Chapter 7: Ordinary Differential Equations

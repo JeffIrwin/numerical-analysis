@@ -32,7 +32,17 @@ module numa
 		! TODO: make a fn version.  Name?
 		procedure :: lu_invmul_vec
 		procedure :: lu_invmul_mat
-	end interface
+	end interface invmul
+
+	interface zeros
+		procedure :: zeros_vec
+		procedure :: zeros_mat
+	end interface zeros
+
+	interface diag
+		procedure :: diag_set
+		procedure :: diag_get
+	end interface diag
 
 	! If this file gets too long, it might be good to split it up roughly
 	! per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
@@ -976,6 +986,20 @@ function qr_get_q_expl(qr, diag_) result(q)
 	q = qr_mul(qr, diag_, eye(size(qr,1)))
 
 end function qr_get_q_expl
+
+function qr_get_r_expl(qr) result(r)
+	! Explicitly get R by zeroing lower triangle
+	double precision, intent(in) :: qr(:,:)
+	double precision, allocatable :: r(:,:)
+	!********
+	integer :: i
+
+	r = qr
+	do i = 1, size(qr, 1)
+		r(i+1:, i) = 0
+	end do
+
+end function qr_get_r_expl
 
 !********
 
@@ -2469,6 +2493,56 @@ function eye(n)
 	end do
 
 end function eye
+
+!********
+
+function zeros_mat(m, n) result(a)
+	! m x n matrix of 0
+	integer, intent(in) :: m, n
+	double precision, allocatable :: a(:,:)
+	allocate(a(m, n))
+	a = 0
+end function zeros_mat
+
+function zeros_vec(n) result(a)
+	! Size n vector of 0
+	integer, intent(in) :: n
+	double precision, allocatable :: a(:)
+	allocate(a(n))
+	a = 0
+end function zeros_vec
+
+!********
+
+function diag_set(v) result(d)
+	! Spread a diagonal vector `v` into a matrix
+	double precision, intent(in) :: v(:)
+	double precision, allocatable :: d(:,:)
+	!********
+	integer :: i, n
+
+	n = size(v)
+	d = zeros(n, n)
+	do i = 1, n
+		d(i,i) = v(i)
+	end do
+
+end function diag_set
+
+function diag_get(a) result(v)
+	! Get the diagonal from a matrix `a` as a vector `v`
+	double precision, intent(in) :: a(:,:)
+	double precision, allocatable :: v(:)
+	!********
+	integer :: i, n
+
+	n = min(size(a,1), size(a,2))
+	allocate(v(n))
+	do i = 1, n
+		v(i) = a(i,i)
+	end do
+
+end function diag_get
 
 !===============================================================================
 
