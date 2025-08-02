@@ -2658,5 +2658,38 @@ end subroutine gauss_jordan
 
 !===============================================================================
 
+function eig_basic_qr(a, iters) result(eigvals)
+	! Get the real eigenvalues of `a` using `iters` iterations of the basic QR
+	! algorithm.  Many iterations may be required for good convergence with
+	! large sized `a`
+	!
+	! The matrix `a` is modified in the process by QR decomposition
+	use numa__utils, only:  sorted
+	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable :: eigvals(:)
+	integer, intent(in) :: iters
+	!********
+
+	double precision, allocatable :: diag_(:), r(:,:), q(:,:)
+	integer :: i
+
+	do i = 1, iters
+		call qr_factor(a, diag_)
+		r = qr_get_r_expl(a)
+
+		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
+		! but two transposes seems expensive
+		q = qr_get_q_expl(a, diag_)
+		a = matmul(r, q)
+	end do
+	!print *, "a = "
+	!print "(4es15.5)", a
+
+	eigvals = sorted(diag(a))
+
+end function eig_basic_qr
+
+!===============================================================================
+
 end module numa
 

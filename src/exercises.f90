@@ -1919,8 +1919,8 @@ integer function chapter_6_qr_basic() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_6_qr_basic"
 
-	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), &
-		diag_(:), d(:,:), s(:,:), eigvals(:), expect(:)
+	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
+		expect(:)
 
 	integer :: i, n, nrng, irep
 
@@ -1934,56 +1934,43 @@ integer function chapter_6_qr_basic() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 2, 90, 4  ! TODO: more tests but not this many
-	do n = 4, 4
+	! There are fewer tests here and with smaller matrices compared to
+	! qr_factor() because eig_basic_qr() is an expensive iterative algorithm,
+	! involving a full QR decomposition and matmul at each iteration
+	do n = 4, 15, 3
 
-		!allocate(a0(n, n))
 		allocate(s (n, n))
 
-		if (mod(n, 10) == 0) then
-			print *, "Testing basic QR algorithm with n = " // to_str(n) // " ..."
-		end if
+		!if (mod(n, 10) == 0) then
+		!	print *, "Testing basic QR algorithm with n = " // to_str(n) // " ..."
+		!end if
 
-		!do irep = 1, 3
-		do irep = 1, 1
+		do irep = 1, 2
 
-			! Construct a random matrix `a0` with known real eigenvalues
+			! Construct a random matrix `a` with known real eigenvalues
 
-			! Known eigenvalues.  TODO: random?
+			! Known eigenvalues
+			!expect = [(i, i = n, 1, -1)]
+			expect = zeros(n)
+			call random_number(expect)
 
-			expect = [(i, i = n, 1, -1)]
 			d = diag(expect)
-			call sort_f64(expect)
-			print *, "expect = ", expect
+			call sort(expect)
+			!print *, "expect  = ", expect
+			print "(a,*(es15.5))", " expect  = ...", expect(n-3: n)
 
 			call random_number(s)  ! random matrix
-			a0 = matmul(matmul(s, d), inv(s))
-			print *, "a0 = "
-			print "(4es15.5)", a0
+			a = matmul(matmul(s, d), inv(s))
+			!print *, "a = "
+			!print "(4es15.5)", a
 
-			a = a0
-
-			! Basic QR algorithm.  TODO: subroutine
-			!
-			! May need many iterations for large n
-			do i = 1, 20
-				call qr_factor(a, diag_)
-				r = qr_get_r_expl(a)
-
-				! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
-				! but two transposes seems expensive
-				q = qr_get_q_expl(a, diag_)
-				a = matmul(r, q)
-			end do
-			print *, "a = "
-			print "(4es15.5)", a
-
-			eigvals = sorted(diag(a))
-			print *, "eigvals = ", eigvals
+			eigvals = eig_basic_qr(a, iters = 5 * n)
+			print "(a,*(es15.5))", " eigvals = ...", eigvals(n-3: n)
 
 			! There is a large tolerance here because the basic QR algorithm
 			! converges slowly
-			call test(norm2(eigvals - expect), 0.d0, 1.d-2 * n, nfail, "qr eigvals 1")
+			call test(norm2(eigvals - expect), 0.d0, 1.d-2 * n, nfail, "eig_basic_qr 1")
+			print *, ""
 
 		end do
 
@@ -1991,7 +1978,7 @@ integer function chapter_6_qr_basic() result(nfail)
 	end do
 
 	!********
-	print *, ""
+	!print *, ""
 
 end function chapter_6_qr_basic
 
