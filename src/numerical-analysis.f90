@@ -991,14 +991,14 @@ function qr_mul(qr, diag_, x) result(qx)
 	!print "(5es15.5)", qr
 
 	n = size(qr, 1)
-	qx = x
+	qx = x  ! could make a subroutine version which replaces x instead
 
 	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
 		do k = 1, n
-			wq = dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k)
-			qx(j, k) = qx(j, k) - diag_(j) * wq
-			qx(j+1:, k) = qx(j+1:, k) - diag_(j) * qr(j+1:, j) * wq
+			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
+			qx(j, k) = qx(j, k) - wq
+			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
 		end do
 	end do
 
