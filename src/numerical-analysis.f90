@@ -985,8 +985,7 @@ function qr_mul(qr, diag_, x) result(qx)
 	double precision, allocatable :: qx(:,:)
 	!********
 	double precision :: wq
-	double precision, allocatable :: w(:)
-	integer :: i, j, k, n
+	integer :: j, k, n
 
 	!print *, "qr = "
 	!print "(5es15.5)", qr
@@ -996,19 +995,11 @@ function qr_mul(qr, diag_, x) result(qx)
 
 	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
-		w = [1.d0, qr(j+1:, j)]
-		! TODO: avoid `w` temp array
-
-		!qx(j:, :) = qx(j:, :) - &
-		!	outer_product(diag_(j) * w, matmul(w, qx(j:, :)))
-
 		do k = 1, n
-			wq = dot_product(w, qx(j:, k))
-			do i = j, n
-				qx(i, k) = qx(i, k) - diag_(j) * w(i-j+1) * wq
-			end do
+			wq = dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k)
+			qx(j, k) = qx(j, k) - diag_(j) * wq
+			qx(j+1:, k) = qx(j+1:, k) - diag_(j) * qr(j+1:, j) * wq
 		end do
-
 	end do
 
 	!print *, "qx = "

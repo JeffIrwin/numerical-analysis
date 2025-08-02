@@ -1870,8 +1870,7 @@ integer function chapter_4_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 2, 90, 4
-	do n = 2, 90, 3  ! TODO
+	do n = 2, 90, 4
 
 		allocate(a0(n, n))
 
