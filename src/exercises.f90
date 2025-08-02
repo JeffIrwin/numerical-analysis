@@ -1782,9 +1782,7 @@ integer function chapter_4_cholesky() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	do n = 2, 90, 4
-	!do n = 5, 5  ! TODO
 
-		!allocate(a0(n, n))
 		allocate(tmp_mat(n, n))
 		allocate(x(n))
 
@@ -1793,7 +1791,6 @@ integer function chapter_4_cholesky() result(nfail)
 		end if
 
 		do irep = 1, 3
-		!do irep = 1, 1  ! TODO
 
 			call random_number(tmp_mat)  ! random matrix
 			call random_number(x)  ! random matrix
@@ -1826,8 +1823,6 @@ integer function chapter_4_cholesky() result(nfail)
 			end do
 			end do
 
-			!call cholesky_solve(lmat, bx)  ! TODO
-
 			!print *, "lmat = "
 			!print "(5es15.5)", lmat
 
@@ -1843,6 +1838,8 @@ integer function chapter_4_cholesky() result(nfail)
 			! because it doesn't pivot
 			call test(norm2(bx - x), 0.d0, 1.d-6 * n, nfail, "cholesky_solve() fuzz n x n")
 
+			! TODO: add cholesky_invmul(), at least for single RHS
+
 		end do
 
 		deallocate(tmp_mat, x)
@@ -1852,6 +1849,89 @@ integer function chapter_4_cholesky() result(nfail)
 	print *, ""
 
 end function chapter_4_cholesky
+
+!===============================================================================
+
+integer function chapter_4_qr() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_qr"
+
+	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), &
+		r2(:,:), diag_(:)
+
+	integer :: i, n, nrng, irep
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	!do n = 2, 90, 4
+	do n = 5, 5  ! TODO
+
+		allocate(a0(n, n))
+
+		if (mod(n, 10) == 0) then
+			print *, "Testing QR decomposition with n = " // to_str(n) // " ..."
+		end if
+
+		!do irep = 1, 3
+		do irep = 1, 1  ! TODO
+
+			call random_number(a0)  ! random matrix
+			print *, "a0 = "
+			print "(5es15.5)", a0
+
+			a = a0
+			call qr_factor(a, diag_)
+
+			print *, "qr(a) = "
+			print "(5es15.5)", a
+
+			r = a
+			do i = 1, n
+				r(i+1:, i) = 0.d0
+			end do
+			print *, "r = "
+			print "(5es15.5)", r
+
+			! TODO: delete this test in favor of qr_get_q_expl()
+
+			q = transpose(a0)
+			r2 = transpose(r)
+			call invmul(r2, q)
+			q = transpose(q)
+
+			print *, "q = "
+			print "(5es15.5)", q
+
+			! A == Q * R
+			call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 1 fuzz n x n")
+
+			! Q' * Q == I
+			call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 2 q' * q, n x n")
+
+			q = qr_get_q_expl(a, diag_)
+			print *, "q = "
+			print "(5es15.5)", q
+
+			call test(norm2(matmul(q, r) - a0), 0.d0, 1.d-12 * n, nfail, "qr_factor() 3 fuzz n x n")
+			call test(norm2(matmul(transpose(q), q) - eye(n)), 0.d0, 1.d-12 * n, nfail, "qr_factor() 4 q' * q, n x n")
+
+		end do
+
+		deallocate(a0)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_4_qr
 
 !===============================================================================
 

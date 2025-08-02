@@ -28,6 +28,8 @@ module numa
 
 	interface invmul
 		! The built-in `matmul()` works on matrices and vectors similarly
+		!
+		! TODO: make a fn version.  Name?
 		procedure :: lu_invmul_vec
 		procedure :: lu_invmul_mat
 	end interface
@@ -885,7 +887,7 @@ end subroutine lu_factor
 
 subroutine cholesky_factor(a)
 	! Cholesky factorization is only possible for positive definite matrices
-	! `a`!
+	! `a`!  There is no enforcement here
 
 	double precision, intent(inout) :: a(:,:)
 
@@ -917,6 +919,107 @@ end subroutine cholesky_factor
 
 !********
 
+subroutine qr_factor(a, daig_)
+	! Replace `a` with its QR factorization using Householder transformations
+	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable, intent(out) :: daig_(:)
+
+	!********
+
+	double precision :: s, normx, u1
+	double precision, allocatable :: w(:), r(:,:)
+	integer :: j, n
+
+	n = size(a, 1)
+	allocate(daig_(n))
+	r = a
+	daig_ = 0.d0
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	do j = 1, n
+
+		! TODO: panic if norm == 0
+		normx = norm2(a(j:, j))
+		s = -sign(1.d0, a(j,j))
+		u1 = a(j,j) - s * normx
+		w = a(j:, j) / u1  ! TODO: avoid `w` temp array
+		w(1) = 1.d0
+		a(j+1:, j) = w(2:)
+		a(j,j) = s * normx
+		daig_(j) = -s * u1 / normx
+
+		! TODO: avoid temp array for outer_product()
+		a(j:, j+1:) = a(j:, j+1:) - &
+			outer_product(daig_(j) * w, matmul(w, a(j:, j+1:)))
+
+	end do
+	!print *, "daig_ = "
+	!print "(es15.5)", daig_
+
+	! In the end, `R` is formed by zeroing appropriate elements of `a`
+	!
+	! And then `Q` can be expensively calculated as inv(r) * a (or some similar
+	! transpose), or more efficiently like in the loop below
+	!
+	! Results can be checked by verifying that q' * q == eye() or that a = q * r
+
+end subroutine qr_factor
+
+!********
+
+function qr_get_q_expl(qr, daig_) result(qx)
+	! Explicitly get the unitary Q matrix from a previously QR-decomposed
+	! matrix.  In most cases you will want to avoid using this fn and just
+	! implicitly multiply something by Q instead using qr_mul()
+	double precision, intent(in) :: qr(:,:), daig_(:)
+	double precision, allocatable :: qx(:,:)
+	!********
+	double precision, allocatable :: x(:,:), w(:)
+	integer :: j, n
+
+	!print *, "qr = "
+	!print "(5es15.5)", qr
+
+	n = size(qr, 1)
+	x = eye(n)
+	qx = x
+	do j = n, 1, -1
+		w = [1.d0, qr(j+1:, j)]
+		! TODO: avoid temp array for outer_product()
+		qx(j:, :) = qx(j:, :) - &
+			outer_product(daig_(j) * w, matmul(w, qx(j:, :)))
+	end do
+
+	!print *, "qx = "
+	!print "(5es15.5)", qx
+
+end function qr_get_q_expl
+
+! TODO: make a general qr_mul() fn to implicitly multiply by q (or q') without
+! getting the whole matrix explicitly.  then qr_get_q_expl() can just do
+! qr_mul(qr, eye)
+
+!********
+
+function outer_product(a, b) result(c)
+	double precision, intent(in) :: a(:), b(:)
+	double precision, allocatable :: c(:,:)
+
+	integer :: i, j, na, nb
+	na = size(a)
+	nb = size(b)
+
+	allocate(c(na, nb))
+	do j = 1, nb
+	do i = 1, na
+		c(i,j) = a(i) * b(j)
+	end do
+	end do
+
+end function outer_product
+
+!********
+
 subroutine cholesky_solve(a, bx)
 
 	double precision, intent(in) :: a(:,:)
@@ -935,12 +1038,9 @@ subroutine cholesky_solve(a, bx)
 	! Forward substitution
 	do i = 1, n
 		do j = 1, i-1
-			!print *, "a = ", a(j,i)
-			!print *, "a = ", a(i,j)
 			bx    (i) = &
 				bx(i) - &
 				a (i, j) * &
-				!a (j, i) * &
 				bx(j)
 		end do
 		bx    (i) = &
@@ -954,7 +1054,6 @@ subroutine cholesky_solve(a, bx)
 		do j = i+1, n
 			bx    (i) = &
 				bx(i) - &
-				!a (i, j) * &
 				a (j, i) * &
 				bx(j)
 		end do

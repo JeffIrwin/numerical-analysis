@@ -55,6 +55,7 @@ program main
 	nfail = nfail + chapter_4_lu()
 	nfail = nfail + chapter_4_inv()
 	nfail = nfail + chapter_4_cholesky()
+	nfail = nfail + chapter_4_qr()
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
