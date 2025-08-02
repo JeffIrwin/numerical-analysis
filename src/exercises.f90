@@ -1915,8 +1915,6 @@ end function chapter_4_qr
 
 integer function chapter_6_qr_basic() result(nfail)
 
-	use numa__utils
-
 	character(len = *), parameter :: label = "chapter_6_qr_basic"
 
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
@@ -1981,6 +1979,75 @@ integer function chapter_6_qr_basic() result(nfail)
 	!print *, ""
 
 end function chapter_6_qr_basic
+
+!===============================================================================
+
+integer function chapter_6_hessenberg() result(nfail)
+	! TODO: rename?  Not sure whether I just want to test Hessenberg reduction
+	! by itself, or use it within the Hessenberg QR algorithm
+
+	character(len = *), parameter :: label = "chapter_6_hessenberg"
+
+	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &!eigvals(:), &
+		expect(:)
+
+	integer :: i, n, nrng, irep
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	!do n = 4, 15, 3
+	do n = 4, 4  ! TODO
+
+		allocate(s (n, n))
+
+		!if (mod(n, 10) == 0) then
+		!	print *, "Testing Hessenberg with n = " // to_str(n) // " ..."
+		!end if
+
+		!do irep = 1, 2
+		do irep = 1, 1  ! TODO
+
+			! Construct a random matrix `a` with known real eigenvalues
+
+			! Known eigenvalues
+			expect = zeros(n)
+			call random_number(expect)
+
+			d = diag(expect)
+			call sort(expect)
+			!print *, "expect  = ", expect
+			print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
+
+			call random_number(s)  ! random matrix
+			a = matmul(matmul(s, d), inv(s))
+			print *, "a = "
+			print "(4es18.8)", a
+
+			! For now, I manually confirmed that this matches scilab's built-in
+			! hess()
+			call hess(a)
+			print *, "hess(a) = "
+			print "(4es18.8)", a
+
+			! TODO: assert test
+
+		end do
+
+		deallocate(s)
+	end do
+
+	!********
+	!print *, ""
+
+end function chapter_6_hessenberg
 
 !===============================================================================
 

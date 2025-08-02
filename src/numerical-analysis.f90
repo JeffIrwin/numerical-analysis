@@ -402,7 +402,7 @@ function fft(x) result(xx)
 	! Forward fast Fourier transform
 	double complex, intent(in) :: x(:)
 	double complex, allocatable :: xx(:)
-	xx = fft_core(x, invert = .false.)
+	xx = fft_core(x, invert_ = .false.)
 end function fft
 
 !********
@@ -411,24 +411,24 @@ function ifft(x) result(xx)
 	! Inverse fast Fourier transform
 	double complex, intent(in) :: x(:)
 	double complex, allocatable :: xx(:)
-	xx = fft_core(x, invert = .true.)
+	xx = fft_core(x, invert_ = .true.)
 end function ifft
 
 !===============================================================================
 
-function fft_core(x, invert) result(xx)
+function fft_core(x, invert_) result(xx)
 	! Fast Fourier transform, iterative (non-recursive) implementation, using
 	! the Cooley-Tukey method
 
 	! Page 86
 
 	double complex, intent(in) :: x(:)
-	logical, intent(in) :: invert
+	logical, intent(in) :: invert_
 	double complex, allocatable :: xx(:)
 
 	!********
 
-	double precision :: sign_
+	double precision :: sgn
 	double complex :: e, u, v
 
 	integer :: m, j, r, nj, n, n2
@@ -444,7 +444,7 @@ function fft_core(x, invert) result(xx)
 	xx(1: size(x)) = x
 	!print *, "n, n2 = ", n, n2
 
-	if (invert) then
+	if (invert_) then
 		! De-normalize
 		xx = xx * n2
 	end if
@@ -456,15 +456,15 @@ function fft_core(x, invert) result(xx)
 		if (j < nj) xx([j+1, nj+1]) = xx([nj+1, j+1])
 	end do
 
-	sign_ = -2.d0
-	if (invert) sign_ = 2.d0
+	sgn = -2.d0
+	if (invert_) sgn = 2.d0
 
 	do m = 1, n
 		do j = 0, 2 ** (m-1) - 1
 
 			! The main difference between fft and ifft is the sign of this
 			! exponent
-			e = exp(sign_ * IMAG * PI * j / 2 ** m)
+			e = exp(sgn * IMAG * PI * j / 2 ** m)
 
 			do r = 1, n2, 2 ** m
 				u = xx(r + j)
@@ -928,6 +928,43 @@ subroutine cholesky_factor(a)
 end subroutine cholesky_factor
 
 !********
+double precision function sign_(x)
+	double precision, intent(in) :: x
+	sign_ = sign(1.d0, x)
+end function sign_
+
+!********
+
+subroutine hess(a)
+	! Apply the Householder Hessenberg reduction to `a`
+	!
+	! Source:  https://dspace.mit.edu/bitstream/handle/1721.1/75282/18-335j-fall-2006/contents/lecture-notes/lec14.pdf
+	double precision, intent(inout) :: a(:,:)
+	!********
+
+	integer :: k, m
+	double precision, allocatable :: x(:), v(:)
+
+	m = size(a,1)
+
+	do k = 1, m-2
+
+		x = a(k+1:, k)
+		v = x
+		v(1) = v(1) + sign_(x(1)) * norm2(x)
+		v = v / norm2(v)
+
+		! TODO: avoid outer_product() at least, and maybe `x` temp array.
+		! Avoiding `v` temp array might be a little more work than worthwhile
+
+		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
+		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
+
+	end do
+
+end subroutine hess
+
+!********
 
 subroutine qr_factor(a, diag_)
 	! Replace `a` with its QR factorization using Householder transformations
@@ -949,14 +986,18 @@ subroutine qr_factor(a, diag_)
 		normx = norm2(a(j:, j))
 		! TODO: panic if normx == 0
 
-		s = -sign(1.d0, a(j,j))
+		s = -sign_(a(j,j))
 		u1 = a(j,j) - s * normx
 		a(j+1:, j) = a(j+1:, j) / u1
 		a(j,j) = s * normx
 		diag_(j) = -s * u1 / normx
 
 		do k = j+1, n
+
+			! TODO: for Hessenberg `a`, dot_product() can be applied to a
+			! smaller slice here
 			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+
 			a(j,k) = a(j,k) - wa
 			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
 		end do
@@ -2664,6 +2705,18 @@ function eig_basic_qr(a, iters) result(eigvals)
 	! large sized `a`
 	!
 	! The matrix `a` is modified in the process by QR decomposition
+	!
+	! This only supports real eigenvalues.  The same algorithm could be adapted
+	! for complex eigenvalues:
+	!
+	!     https://math.stackexchange.com/a/3072781/232771
+	!
+	! The basic idea is that `a` converges to a "quasi-triangular" real matrix
+	! in this algorithm.  Where the off-triangle approaches 0, we have real
+	! eigenvalues.  Where there is a non-zero in the off-diagonal, we have a
+	! complex conjugate pair of eigenvalues, which could be computed as the same
+	! eigenvalue of its 2x2 sub-matrix block
+
 	use numa__utils, only:  sorted
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: eigvals(:)
@@ -2681,6 +2734,11 @@ function eig_basic_qr(a, iters) result(eigvals)
 		! but two transposes seems expensive
 		q = qr_get_q_expl(a, diag_)
 		a = matmul(r, q)
+		! TODO: naive matmul does ~2x as many operations as needed here, given
+		! that r is half zeros.  Should roll my own triangular matmul.  Then
+		! calling qr_get_r_expl() can also be eliminated as we would just
+		! implicitly ignore zeros, using `a` directly instead of `r`
+
 	end do
 	!print *, "a = "
 	!print "(4es15.5)", a
