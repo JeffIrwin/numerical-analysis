@@ -927,7 +927,7 @@ subroutine qr_factor(a, diag_)
 	!********
 
 	double precision :: s, normx, u1, wa
-	integer :: i, j, k, n
+	integer :: j, k, n
 
 	n = size(a, 1)
 	allocate(diag_(n))
@@ -936,26 +936,19 @@ subroutine qr_factor(a, diag_)
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
 	do j = 1, n
 
-		! TODO: panic if norm == 0
 		normx = norm2(a(j:, j))
+		! TODO: panic if normx == 0
+
 		s = -sign(1.d0, a(j,j))
 		u1 = a(j,j) - s * normx
-
 		a(j+1:, j) = a(j+1:, j) / u1
-
 		a(j,j) = s * normx
 		diag_(j) = -s * u1 / normx
 
-		!a(j:, j+1:) = a(j:, j+1:) - &
-		!	outer_product(diag_(j) * w, matmul(w, a(j:, j+1:)))
-
 		do k = j+1, n
-			wa = dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k)
-
-			a(j,k) = a(j,k) - diag_(j) * wa
-			do i = j+1, n
-				a(i,k) = a(i,k) - diag_(j) * a(i,j) * wa
-			end do
+			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+			a(j,k) = a(j,k) - wa
+			a(j+1:,k) = a(j+1:,k) - a(j+1:,j) * wa
 		end do
 
 	end do
