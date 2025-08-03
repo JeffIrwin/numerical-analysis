@@ -2805,8 +2805,8 @@ function eig_basic_qr(a, iters) result(eigvals)
 	print *, "a = "
 	print "(4es19.9)", a
 	pq = eye(n)
-	print *, "pq = "
-	print "(4es15.5)", pq
+	!print *, "pq = "
+	!print "(4es15.5)", pq
 
 	do i = 1, iters
 		call qr_factor(a, diag_)
@@ -2827,16 +2827,11 @@ function eig_basic_qr(a, iters) result(eigvals)
 	print *, "pq = "
 	print "(4es15.5)", pq
 
-	!! Somehow I'm getting the first eigenvector this way but none of the others
-	!! :(
-	!print *, "v1 = "
-	!print "(4es15.5)", matmul(a0, pq) / pq
-	!print *, ""
-	!print "(4es15.5)", matmul(a0, pq(:,1)) / pq(:,1)
-	!print "(4es15.5)", matmul(a0, pq(:,2)) / pq(:,2)
-
 	eigvals = sorted(diag(a))
 	print *, "eigvals = ", eigvals
+
+	! TODO: remove the rest after testing if we don't return eigvecs from this
+	! routine
 
 	r = qr_get_r_expl(a)
 	print *, "r = "
@@ -2852,11 +2847,7 @@ function eig_basic_qr(a, iters) result(eigvals)
 	! Find the eigenvectors `v` of `r`
 	v = eye(n)
 	do i = 2, n
-		v(1: i-1, i) = &
-			invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
-			!invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i))
-			!invmul(eigvals(i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i))
-			!invmul(pq, r(:,1))
+		v(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
 	end do
 	print *, "v = "
 	print "(4es15.5)", v
@@ -2919,9 +2910,9 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double precision :: h1, h2, r, givens(2,2), eigval
+	double precision :: h1, h2, rad, givens(2,2), eigval
 	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
-		eigvec(:), pq(:,:)
+		eigvec(:), pq(:,:), r(:,:), v(:,:)
 	integer :: i, j, k, n
 
 	a0 = a  ! TODO: testing only? or is it actually used for eigvecs
@@ -2938,10 +2929,10 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			h1 = a(k, k)
 			h2 = a(k+1, k)
 
-			r = norm2([h1, h2])
-			!print *, "r = ", r
-			c(k) =  h1 / r
-			s(k) = -h2 / r
+			rad = norm2([h1, h2])
+			!print *, "rad = ", rad
+			c(k) =  h1 / rad
+			s(k) = -h2 / rad
 			givens(1,:) = [c(k), -s(k)]
 			givens(2,:) = [s(k),  c(k)]
 
@@ -3001,7 +2992,49 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	print *, matmul(transpose(a0), pq(:,1)) / pq(:,1)
 	print *, matmul(transpose(a0), pq(1,:)) / pq(1,:)
 
-	eigvals = sorted(diag(a))
+	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
+	! it's hard to tell which eigvec corresponds to which eigval
+	!eigvals = sorted(diag(a))
+	eigvals = diag(a)
+
+	!********
+
+	r = qr_get_r_expl(a)
+	print *, "r = "
+	print "(4es15.5)", r
+
+	! In order to get the eigenvectors of `a0`, we first have to get the
+	! eigenvectors of `r` and then transform them by `pq`
+	!
+	! Ref:  https://math.stackexchange.com/a/3947396/232771
+	!
+	! Especially the linked code:  https://gist.github.com/uranix/2b4bb821a0e3ffc4531bec547ea67727
+
+	! TODO: eliminate temp array `v` and just re-use eigvecs instead
+
+	! Find the eigenvectors `v` of `r`
+	v = eye(n)
+	do i = 2, n
+		v(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
+	end do
+	print *, "v = "
+	print "(4es15.5)", v
+
+	eigvecs = matmul(pq, v)
+	print *, "eigvecs hess qr = "
+	print "(4es15.5)", eigvecs
+
+	print *, "a0 = "
+	print "(4es15.5)", a0
+
+	print *, "a * w / w ="
+	print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
+
+	!stop
+
+	return
+	! TODO:  benchmark different eigvecs algos and probably delete this next one
+
 
 	if (.not. present(eigvecs)) return
 	allocate(eigvecs(n,n))

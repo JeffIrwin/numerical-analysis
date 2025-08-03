@@ -2007,8 +2007,8 @@ integer function chapter_6_hessenberg() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 5, 25, 5
-	do n = 4, 4 !TODO
+	do n = 5, 25, 5
+	!do n = 4, 4 !TODO
 
 		allocate(s (n, n))
 
@@ -2045,7 +2045,7 @@ integer function chapter_6_hessenberg() result(nfail)
 			print "(4es15.5)", eigvecs
 
 			! Check the eigenvalues
-			diff = norm2(eigvals - expect)
+			diff = norm2(sorted(eigvals) - expect)
 			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr val 1")
 			print *, "diff val = ", diff
 
