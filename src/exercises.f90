@@ -2191,7 +2191,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	!do n = 5, 25, 1
-	do n = 5, 10, 1  ! TODO
+	do n = 5, 11, 1  ! TODO
 	!do n = 4, 4 !TODO
 	!do n = 5, 5 !TODO
 

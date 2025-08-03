@@ -3033,10 +3033,11 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
-	double complex :: l1, l2
+	double complex :: l1, l2, l10, l20
 	double precision, allocatable :: &!c(:), s(:), &
 		pq(:,:), rr(:,:)
-	integer :: i, i1, k, n, p, q, r  ! TODO: rename p, q, r -> ip, ...
+	integer :: i, i1, ie, k, n, p, q, r  ! TODO: rename p, q, r -> ip, ...
+	logical, allocatable :: is_real(:)
 
 	!a0 = h  ! TODO: testing only? or is it actually used for eigvecs
 
@@ -3145,16 +3146,18 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!end if
 
 	end do
-	!print *, "h = "
-	!print "("//to_str(n)//"es19.9)", h
+	print *, "h = "
+	print "("//to_str(n)//"es19.9)", h
 
 	! Process 2x2 block along diagonal and get their eigenvalues.  Some
 	! may be real, some may be complex
+	allocate(is_real(n))
+	is_real = .true.
+	ie = 0
 	allocate(eigvals(n))
 	!do i = 1, n
-	do i = 1, n, 2
-		! TODO: is stepping by 2 sufficient to find all eigvals?  Do fuzz testing on
-		! fully random mats, not just mats constructed to have real eigvals
+	do i = 1, n-1
+	!do i = 1, n, 2
 
 		i1 = i + 1
 		if (i1 > n) i1 = i1 - n
@@ -3172,12 +3175,39 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		l1 = t/2 + sqrt(dcmplx(t**2/4 - det_))
 		l2 = t/2 - sqrt(dcmplx(t**2/4 - det_))
 
-		!print *, "l1 = ", l1
-		!print *, "l2 = ", l2
+		print *, "b  = ", b
+		print *, "l1 = ", l1
+		print *, "l2 = ", l2
+		print *, ""
 
-		eigvals(i ) = l1
-		eigvals(i1) = l2
+		if (abs(b) > eps) then
+			is_real(i ) = .false.
+			is_real(i1) = .false.
+			eigvals(ie+1) = l1
+			eigvals(ie+2) = l2
+			ie = ie + 2
+		end if
 
+		!!eigvals(i ) = l1
+		!!eigvals(i1) = l2
+
+		!if (i == 1 .or. abs(l1 - l20) > 1.d-10) then
+		!	eigvals(ie) = l1
+		!	ie = ie + 1
+		!end if
+		!eigvals(ie) = l2
+		!ie = ie + 1
+
+		!l10 = l1
+		!l20 = l2
+
+	end do
+
+	! Second pass: collect the real eigenvalues not saved in the first pass
+	do i = 1, n
+		if (.not. is_real(i)) cycle
+		eigvals(ie+1) = h(i,i)
+		ie = ie + 1
 	end do
 
 	!!print *, "eigvals sorted = ", sorted(eigvals)
