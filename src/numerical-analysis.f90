@@ -996,8 +996,8 @@ subroutine hess(a, u)
 		! TODO: avoid outer_product() at least, and maybe `x` temp array.
 		! Avoiding `v` temp array might be a little more work than worthwhile
 
-		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
-		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
+		a(k+1:, k:) = a(k+1:, k:) - outer_product(2.d0 * v, matmul(v, a(k+1:, k:)))
+		a(:, k+1:)  = a(:, k+1:)  - outer_product(matmul(a(:, k+1:), v), 2.d0 * v)
 
 		vv(1: size(v), k) = v
 
@@ -2883,8 +2883,6 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 		pq(:,:), r(:,:)
 	integer :: i, k, n
 
-	!a0 = a  ! TODO: testing only? or is it actually used for eigvecs
-
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
 
@@ -2947,13 +2945,14 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!eigvals = sorted(diag(a))
 	eigvals = diag(a)
 
+	if (.not. present(eigvecs)) return
 	!********
 
 	r = qr_get_r_expl(a)
 	!print *, "r = "
 	!print "(4es15.5)", r
 
-	! In order to get the eigenvectors of `a0`, we first have to get the
+	! In order to get the eigenvectors of `a`, we first have to get the
 	! eigenvectors of `r` and then transform them by `pq`
 	!
 	! Ref:  https://math.stackexchange.com/a/3947396/232771
@@ -2972,13 +2971,243 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!print *, "eigvecs hess qr = "
 	!print "(4es15.5)", eigvecs
 
-	!print *, "a0 = "
-	!print "(4es15.5)", a0
-
 	!print *, "a * w / w ="
 	!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
 
 end function eig_hess_qr
+
+!===============================================================================
+
+function house(x) result(pp)
+	! Return the Householder reflector `pp` such that pp * x == [1, 0, 0, ...]
+
+	double precision, intent(in) :: x(:)
+	double precision, allocatable :: pp(:,:)
+
+	double precision :: alpha
+	double precision, allocatable :: v(:)
+	integer :: n
+
+	n = size(x)
+	!allocate
+
+	alpha = -sign_(x(1)) * norm2(x)
+	v = x
+	v(1) = v(1) - alpha
+	v = v / norm2(v)
+
+	pp = eye(n) - 2.d0 * outer_product(v, v)
+
+	print *, "in house():"
+	print *, "x = ", x
+	print *, "pp = "
+	print "(3es15.5)", pp
+	print *, "pp * x = ", matmul(pp, x)
+
+	!stop
+
+end function house
+
+!===============================================================================
+
+function eig_francis_qr(h, eigvecs) result(eigvals)
+	! Get the real (?) eigenvalues of `h` using the Francis double step QR
+	! algorithm
+	!
+	! TODO: rename h -> a
+
+	use numa__utils, only:  sorted
+	double precision, intent(inout) :: h(:,:)
+	double precision, allocatable :: eigvals(:)
+	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
+	!********
+
+	double precision, parameter :: eps = 1.d-100  ! TODO: arg
+
+	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk
+	double precision, allocatable :: &!c(:), s(:), &
+		pq(:,:), rr(:,:)
+	integer :: i, k, n, p, q, r
+
+	!a0 = h  ! TODO: testing only? or is it actually used for eigvecs
+
+	n = size(h, 1)
+	!allocate(c(n-1), s(n-1))
+
+	! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
+	! can't initialize pq to eye here.  Instead, we need an initial
+	! transformation from the Hessenberg reduction
+	call hess(h, pq)
+	h = transpose(h)  ! why?
+
+	p = n  ! p indicates the active matrix size
+	do while (p > 2)
+		q = p - 1
+		s = h(q,q) + h(p,p)
+		t = h(q,q) * h(p,p) - h(q,p) * h(p,q)
+
+		! Compute first 3 elements of first column of M
+		x = h(1,1)**2 + h(1,2) * h(2,1) - s * h(1,1) + t
+		y = h(2,1) * (h(1,1) + h(2,2) - s)
+		z = h(2,1) * h(3,2)
+
+		do k = 0, p-3
+
+			! Determine the Householder reflector `p3`
+			p3 = house([x, y, z])
+			!p3 = transpose(p3)  ! p3 is symmetric so transpose doesn't matter
+
+			print *, "p3 = "
+			print "(3es15.5)", p3
+
+			r = max(1, k)
+			h(k+1: k+3, r:) = matmul(p3, h(k+1: k+3, r:))
+
+			r = min(k+4, p)
+			!h(:r, k+1: k+3) = matmul(h(:r, k+1: k+3), p3)
+			h(:r, k+1: k+3) = matmul(h(:r, k+1: k+3), transpose(p3))
+
+			x = h(k+2, k+1)
+			y = h(k+3, k+1)
+			if (k < p-3) then
+				z = h(k+4, k+1)
+			end if
+
+		end do
+
+		!! Determine the 2D Givens rotation `p2`
+		!p2 = house([x, y])
+		!!p2 = transpose(p2)
+
+		print *, "p2 house = "
+		print "(2es15.5)", p2
+
+	!		rad = norm2([h1, h2])
+	!		!print *, "rad = ", rad
+	!		c(k) =  h1 / rad
+	!		s(k) = -h2 / rad
+	!		givens(1,:) = [c(k), -s(k)]
+	!		givens(2,:) = [s(k),  c(k)]
+		rad = norm2([x, y])
+		ck =  x / rad
+		sk = -y / rad
+		p2(1,:) = [ck, -sk]
+		p2(2,:) = [sk,  ck]
+		!p2 = transpose(p2)
+
+		print *, "p2 givens = "
+		print "(2es15.5)", p2
+		print *, "p2 * [x,y] = ", matmul(p2, [x,y])
+		!stop
+
+		h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
+		h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+
+		! Check for convergence
+
+		!if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
+		!	h(p-1, q-1) = 0
+		!	p = p - 2
+		!	q = p - 1
+		!else if (abs(h(p,q)) < eps * (abs(h(q,q)) + abs(h(p,p)))) then
+		!	h(p,q) = 0
+		!	p = p - 1
+		!	q = p - 1  ! unnecessary?  happens at top of while loop anyway
+		!end if
+
+		if (abs(h(p,q)) < eps * (abs(h(q,q)) + abs(h(p,p)))) then
+			h(p,q) = 0.d0
+			p = p - 1
+			q = p - 1  ! unnecessary?  happens at top of while loop anyway
+		else if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
+			h(p-1, q-1) = 0.d0
+			p = p - 2
+			q = p - 1
+		end if
+
+	end do
+
+	!do i = 1, iters
+
+	!	do k = 1, n-1
+	!		h1 = h(k, k)
+	!		h2 = h(k+1, k)
+
+	!		rad = norm2([h1, h2])
+	!		!print *, "rad = ", rad
+	!		c(k) =  h1 / rad
+	!		s(k) = -h2 / rad
+	!		givens(1,:) = [c(k), -s(k)]
+	!		givens(2,:) = [s(k),  c(k)]
+
+	!		! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
+
+	!		! TODO: is there overhead here such that I should avoid matmul on slices?
+	!		h(k:k+1, k:) = matmul(givens, h(k:k+1, k:))
+
+	!	end do
+	!	!print *, "rr = "
+	!	!print "(4es15.5)", h
+
+	!	!! If you stop here, `h` has been overwritten with `rr` from its QR
+	!	!! factorization.  You could also compute Q by applying the matmuls in the
+	!	!! loop above to an initial identity matrix, but we don't need Q explicitly
+	!	!! for h Hessenberg QR step
+	!	!stop
+
+	!	! The rest of the Hessenberg QR step is not part of the QR factorization,
+	!	! rather, it overwrites `h` with R * Q
+
+	!	! Apply the Givens rotations from the right
+	!	do k = 1, n-1
+	!		givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
+	!		givens(2,:) = [-s(k), c(k)]
+	!		h(1: k+1, k: k+1) = matmul(h(1: k+1, k: k+1), givens)
+
+	!		! Update Q product.  TODO: skip if eigvecs not present
+	!		pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
+	!	end do
+	!end do
+
+	print *, "h = "
+	print "(6es15.5)", h
+
+	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
+	! it's hard to tell which eigvec corresponds to which eigval.  Is it worth
+	! sorting at all here?  For general complex eigvals, there is technically no
+	! ordering, although LAPACK and/or MATLAB probably have some convention
+
+	!eigvals = sorted(diag(h))
+	eigvals = diag(h)
+
+	print *, "eigvals sorted = ", sorted(eigvals)
+
+	!********
+	if (.not. present(eigvecs)) return
+
+	rr = qr_get_r_expl(h)
+	!print *, "rr = "
+	!print "(4es15.5)", rr
+
+	! Find the eigenvectors of `rr`
+	eigvecs = eye(n)
+	do i = 2, n
+		eigvecs(1: i-1, i) = -invmul(rr(:i-1, :i-1) - rr(i,i) * eye(i-1), rr(:i-1, i))
+	end do
+	!print *, "R eigvecs = "
+	!print "(4es15.5)", eigvecs
+
+	eigvecs = matmul(pq, eigvecs)
+	!print *, "eigvecs francis qr = "
+	!print "(4es15.5)", eigvecs
+
+	!print *, "a0 = "
+	!print "(4es15.5)", a0
+
+	!print *, "h * w / w ="
+	!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
+
+end function eig_francis_qr
 
 !===============================================================================
 
@@ -3044,7 +3273,6 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 			givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
 			givens(2,:) = [-s(k), c(k)]
 			a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
-
 		end do
 
 	end do

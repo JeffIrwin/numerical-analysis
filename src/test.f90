@@ -66,7 +66,8 @@ program main
 
 	! TODO: add unit tests for sorting routines
 	nfail = nfail + chapter_6_basic_qr()  ! TODO
-	nfail = nfail + chapter_6_hessenberg()
+	nfail = nfail + chapter_6_hessenberg_qr()
+	nfail = nfail + chapter_6_francis_qr()
 
 	!-------------------------------------------------------
 	! Chapter 7: Ordinary Differential Equations

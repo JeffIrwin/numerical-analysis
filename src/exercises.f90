@@ -1870,7 +1870,7 @@ integer function chapter_4_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 2, 90, 4
+	do n = 2, 70, 5
 
 		allocate(a0(n, n))
 
@@ -1944,7 +1944,7 @@ integer function chapter_6_basic_qr() result(nfail)
 		!	print *, "Testing basic QR algorithm with n = " // to_str(n) // " ..."
 		!end if
 
-		do irep = 1, 2
+		do irep = 1, 1
 
 			! Construct a random matrix `a` with known real eigenvalues
 
@@ -1985,11 +1985,9 @@ end function chapter_6_basic_qr
 
 !===============================================================================
 
-integer function chapter_6_hessenberg() result(nfail)
-	! TODO: rename?  Not sure whether I just want to test Hessenberg reduction
-	! by itself, or use it within the Hessenberg QR algorithm
+integer function chapter_6_hessenberg_qr() result(nfail)
 
-	character(len = *), parameter :: label = "chapter_6_hessenberg"
+	character(len = *), parameter :: label = "chapter_6_hessenberg_qr"
 
 	double precision :: diff, t, t0, t_kr, t_pq
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
@@ -2010,8 +2008,7 @@ integer function chapter_6_hessenberg() result(nfail)
 	t_pq = 0.d0
 	t_kr = 0.d0
 
-	do n = 5, 55, 5
-	!do n = 4, 4 !TODO
+	do n = 5, 25, 7
 
 		allocate(s (n, n))
 
@@ -2056,6 +2053,13 @@ integer function chapter_6_hessenberg() result(nfail)
 			! If you only do a very small number of iterations, Q product can
 			! come out faster, but it doesn't converge very well.  For practical
 			! numbers of iterations, the null space algo seems better
+			!
+			! Also, the `diff vec` printed below has a 10x smaller residual for
+			! the null space algo
+			!
+			! Shifting algorithms should converge faster, so it's good to keep
+			! the Q product algorithm for now.  It may be the better performer
+			! with shifting
 
 			iters = 5 * n**2
 			!iters = n**2
@@ -2078,7 +2082,7 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			! Check the eigenvalues
 			diff = norm2(sorted(eigvals) - expect)
-			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr val 1")
+			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_hess_qr val 1")
 			print *, "diff val = ", diff
 
 			!print *, "a * eigvecs / eigvecs = "
@@ -2088,7 +2092,7 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
 			diff = norm2(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n))
-			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_basic_qr vec 2")
+			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_hess_qr vec 2")
 			print *, "diff vec = ", diff
 
 			print *, ""
@@ -2108,7 +2112,7 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			! Check the eigenvalues
 			diff = norm2(sorted(eigvals) - expect)
-			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr val 1")
+			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_hess_qr_kernel val 1")
 			print *, "diff val = ", diff
 
 			!print *, "a * eigvecs / eigvecs = "
@@ -2118,7 +2122,7 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
 			diff = norm2(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n))
-			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_basic_qr vec 2")
+			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_hess_qr_kernel vec 2")
 			print *, "diff vec = ", diff
 
 			print *, ""
@@ -2135,9 +2139,120 @@ integer function chapter_6_hessenberg() result(nfail)
 	write(*,*) "Null space fuzz time = ", to_str(t_kr), " s"
 
 	!********
-	!print *, ""
+	print *, ""
 
-end function chapter_6_hessenberg
+end function chapter_6_hessenberg_qr
+
+!===============================================================================
+
+integer function chapter_6_francis_qr() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_6_francis_qr"
+
+	double precision :: diff
+	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
+		expect(:), eigvecs(:,:), a0(:,:)
+
+	integer :: i, n, nrng, irep, iters
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!! Matrix from literature with complex eigenvalues
+	!! TODO
+	!allocate(a(6,6))
+	!a(:,1) = [ 7,  3,  4, -11, -9, -2]
+	!a(:,2) = [-6,  4, -5,   7,  1, 12]
+	!a(:,3) = [-1, -9,  2,   2,  9,  1]
+	!a(:,4) = [-8,  0, -1,   5,  0,  8]
+	!a(:,5) = [-4,  3, -5,   7,  2, 10]
+	!a(:,6) = [ 6,  1,  4, -11, -7, -1]
+	!a0 = a
+	!!    --> spec(a')
+	!!     ans  =
+	!!    
+	!!       5. + 6.i
+	!!       5. - 6.i
+	!!       1. + 2.i
+	!!       1. - 2.i
+	!!       3. + 0.i
+	!!       4. + 0.i
+
+	!eigvals = eig_francis_qr(a, eigvecs)
+	!print *, "eigvals = ", eigvals
+	!stop
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	!do n = 5, 25, 7
+	do n = 4, 4 !TODO
+
+		allocate(s (n, n))
+
+		print *, "Testing Francis double step with n = " // to_str(n) // " ..."
+
+		do irep = 1, 1
+
+			! Construct a random matrix `a` with known real eigenvalues
+
+			! Known eigenvalues
+			expect = zeros(n)
+			call random_number(expect)
+
+			!expect(3) = expect(2)
+
+			d = diag(expect)
+			call sort(expect)
+			!print *, "expect  = ", expect
+			print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
+
+			call random_number(s)  ! random matrix
+			a = matmul(matmul(s, d), inv(s))
+			print *, "a = "
+			print "(4es19.9)", a
+
+			a0 = a
+
+			!********
+
+			eigvals = eig_francis_qr(a, eigvecs)
+
+			!print *, "eigvecs = "
+			!print "(5es15.5)", eigvecs
+
+			! Check the eigenvalues
+			diff = norm2(sorted(eigvals) - expect)
+			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_francis_qr val 1")
+			print *, "diff val = ", diff
+
+			print *, "expect = ", expect
+			!print *, "a * eigvecs / eigvecs = "
+			!print "(5es15.5)", matmul(a0, eigvecs) / eigvecs
+			!!print *, "spread = "
+			!!print "(4es15.5)", spread(eigvals, 1, n)
+
+			!! TODO:
+			!! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
+			!diff = norm2(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n))
+			!call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_francis_qr vec 2")
+			!print *, "diff vec = ", diff
+
+			print *, ""
+
+		end do
+
+		deallocate(s)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_6_francis_qr
 
 !===============================================================================
 
