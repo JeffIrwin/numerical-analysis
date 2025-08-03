@@ -404,6 +404,13 @@ double precision function norm2c(v)
 
 end function norm2c
 
+!! TODO: this is already a GNU extension.  Might need uncommented for Intel
+!double complex function dcmplx(x)
+!	! Cast x from double to double complex
+!	double precision, intent(in) :: x
+!	dcmplx = cmplx(x, kind = 8)
+!end function dcmplx
+
 !===============================================================================
 function fft(x) result(xx)
 	! Forward fast Fourier transform
@@ -2998,11 +3005,11 @@ function house(x) result(pp)
 
 	pp = eye(n) - 2.d0 * outer_product(v, v)
 
-	print *, "in house():"
-	print *, "x = ", x
-	print *, "pp = "
-	print "(3es15.5)", pp
-	print *, "pp * x = ", matmul(pp, x)
+	!print *, "in house():"
+	!print *, "x = ", x
+	!print *, "pp = "
+	!print "(3es15.5)", pp
+	!print *, "pp * x = ", matmul(pp, x)
 
 	!stop
 
@@ -3016,18 +3023,20 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!
 	! TODO: rename h -> a
 
-	use numa__utils, only:  sorted
+	use numa__utils, only:  sorted, to_str
 	double precision, intent(inout) :: h(:,:)
-	double precision, allocatable :: eigvals(:)
+	double complex, allocatable :: eigvals(:)
 	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double precision, parameter :: eps = 1.d-100  ! TODO: arg
+	double precision, parameter :: eps = 1.d-40  ! TODO: arg
 
-	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk
+	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
+		a, b, c, d, det_
+	double complex :: l1, l2
 	double precision, allocatable :: &!c(:), s(:), &
 		pq(:,:), rr(:,:)
-	integer :: i, k, n, p, q, r
+	integer :: i, i1, k, n, p, q, r  ! TODO: rename p, q, r -> ip, ...
 
 	!a0 = h  ! TODO: testing only? or is it actually used for eigvecs
 
@@ -3038,7 +3047,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	! can't initialize pq to eye here.  Instead, we need an initial
 	! transformation from the Hessenberg reduction
 	call hess(h, pq)
-	h = transpose(h)  ! why?
+	!h = transpose(h)  ! why?
+
+	!print *, "h = "
+	!print "("//to_str(n)//"es19.9)", h
 
 	p = n  ! p indicates the active matrix size
 	do while (p > 2)
@@ -3057,8 +3069,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 			p3 = house([x, y, z])
 			!p3 = transpose(p3)  ! p3 is symmetric so transpose doesn't matter
 
-			print *, "p3 = "
-			print "(3es15.5)", p3
+			!print *, "p3 = "
+			!print "(3es15.5)", p3
 
 			r = max(1, k)
 			h(k+1: k+3, r:) = matmul(p3, h(k+1: k+3, r:))
@@ -3079,8 +3091,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!p2 = house([x, y])
 		!!p2 = transpose(p2)
 
-		print *, "p2 house = "
-		print "(2es15.5)", p2
+		!print *, "p2 house = "
+		!print "(2es15.5)", p2
 
 	!		rad = norm2([h1, h2])
 	!		!print *, "rad = ", rad
@@ -3095,15 +3107,32 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		p2(2,:) = [sk,  ck]
 		!p2 = transpose(p2)
 
-		print *, "p2 givens = "
-		print "(2es15.5)", p2
-		print *, "p2 * [x,y] = ", matmul(p2, [x,y])
-		!stop
+		!print *, "p2 givens = "
+		!print "(2es15.5)", p2
+		!print *, "p2 * [x,y] = ", matmul(p2, [x,y])
+		!!stop
 
 		h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
 		h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+		!h(p,q) = 0.d0
+		!h(q,p) = 0.d0
 
 		! Check for convergence
+
+		!print *, "h(p,q)     = ", h(p,q)
+		!print *, "h(p-1,q-1) = ", h(p-1,q-1)
+
+		if (abs(h(p,q)) < eps * (abs(h(q,q)) + abs(h(p,p)))) then
+			!print *, "p -= 1"
+			h(p,q) = 0.d0
+			p = p - 1
+			q = p - 1  ! unnecessary?  happens at top of while loop anyway
+		else if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
+			!print *, "p -= 2"
+			h(p-1, q-1) = 0.d0
+			p = p - 2
+			q = p - 1
+		end if
 
 		!if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
 		!	h(p-1, q-1) = 0
@@ -3115,79 +3144,51 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!	q = p - 1  ! unnecessary?  happens at top of while loop anyway
 		!end if
 
-		if (abs(h(p,q)) < eps * (abs(h(q,q)) + abs(h(p,p)))) then
-			h(p,q) = 0.d0
-			p = p - 1
-			q = p - 1  ! unnecessary?  happens at top of while loop anyway
-		else if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
-			h(p-1, q-1) = 0.d0
-			p = p - 2
-			q = p - 1
-		end if
+	end do
+	!print *, "h = "
+	!print "("//to_str(n)//"es19.9)", h
+
+	! Process 2x2 block along diagonal and get their eigenvalues.  Some
+	! may be real, some may be complex
+	allocate(eigvals(n))
+	!do i = 1, n
+	do i = 1, n, 2
+		! TODO: is stepping by 2 sufficient to find all eigvals?  Do fuzz testing on
+		! fully random mats, not just mats constructed to have real eigvals
+
+		i1 = i + 1
+		if (i1 > n) i1 = i1 - n
+
+		! Cyclic modular 2x2 block around diagonal
+		a = h(i , i )
+		b = h(i1, i )
+		c = h(i , i1)
+		d = h(i1, i1)
+
+		t = a + d         ! trace
+		det_ = a*d - b*c  ! determinant
+
+		! Eigenvalues of 2x2 block
+		l1 = t/2 + sqrt(dcmplx(t**2/4 - det_))
+		l2 = t/2 - sqrt(dcmplx(t**2/4 - det_))
+
+		!print *, "l1 = ", l1
+		!print *, "l2 = ", l2
+
+		eigvals(i ) = l1
+		eigvals(i1) = l2
 
 	end do
 
-	!do i = 1, iters
-
-	!	do k = 1, n-1
-	!		h1 = h(k, k)
-	!		h2 = h(k+1, k)
-
-	!		rad = norm2([h1, h2])
-	!		!print *, "rad = ", rad
-	!		c(k) =  h1 / rad
-	!		s(k) = -h2 / rad
-	!		givens(1,:) = [c(k), -s(k)]
-	!		givens(2,:) = [s(k),  c(k)]
-
-	!		! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
-
-	!		! TODO: is there overhead here such that I should avoid matmul on slices?
-	!		h(k:k+1, k:) = matmul(givens, h(k:k+1, k:))
-
-	!	end do
-	!	!print *, "rr = "
-	!	!print "(4es15.5)", h
-
-	!	!! If you stop here, `h` has been overwritten with `rr` from its QR
-	!	!! factorization.  You could also compute Q by applying the matmuls in the
-	!	!! loop above to an initial identity matrix, but we don't need Q explicitly
-	!	!! for h Hessenberg QR step
-	!	!stop
-
-	!	! The rest of the Hessenberg QR step is not part of the QR factorization,
-	!	! rather, it overwrites `h` with R * Q
-
-	!	! Apply the Givens rotations from the right
-	!	do k = 1, n-1
-	!		givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
-	!		givens(2,:) = [-s(k), c(k)]
-	!		h(1: k+1, k: k+1) = matmul(h(1: k+1, k: k+1), givens)
-
-	!		! Update Q product.  TODO: skip if eigvecs not present
-	!		pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
-	!	end do
-	!end do
-
-	print *, "h = "
-	print "(6es15.5)", h
-
-	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
-	! it's hard to tell which eigvec corresponds to which eigval.  Is it worth
-	! sorting at all here?  For general complex eigvals, there is technically no
-	! ordering, although LAPACK and/or MATLAB probably have some convention
-
-	!eigvals = sorted(diag(h))
-	eigvals = diag(h)
-
-	print *, "eigvals sorted = ", sorted(eigvals)
+	!!print *, "eigvals sorted = ", sorted(eigvals)
+	!print *, "eigvals = ", eigvals
 
 	!********
 	if (.not. present(eigvecs)) return
 
 	rr = qr_get_r_expl(h)
 	!print *, "rr = "
-	!print "(4es15.5)", rr
+	!print "("//to_str(n)//"es19.9)", rr
 
 	! Find the eigenvectors of `rr`
 	eigvecs = eye(n)
@@ -3195,17 +3196,17 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		eigvecs(1: i-1, i) = -invmul(rr(:i-1, :i-1) - rr(i,i) * eye(i-1), rr(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
-	!print "(4es15.5)", eigvecs
+	!print "("//to_str(n)//"es19.9)", eigvecs
 
 	eigvecs = matmul(pq, eigvecs)
 	!print *, "eigvecs francis qr = "
-	!print "(4es15.5)", eigvecs
+	!print "("//to_str(n)//"es19.9)", eigvecs
 
 	!print *, "a0 = "
-	!print "(4es15.5)", a0
+	!print "("//to_str(n)//"es19.9)", a0
 
 	!print *, "h * w / w ="
-	!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
+	!print "("//to_str(n)//"es19.9)", matmul(a0, eigvecs) / eigvecs
 
 end function eig_francis_qr
 

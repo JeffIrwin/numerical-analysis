@@ -2150,8 +2150,9 @@ integer function chapter_6_francis_qr() result(nfail)
 	character(len = *), parameter :: label = "chapter_6_francis_qr"
 
 	double precision :: diff
-	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
+	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &
 		expect(:), eigvecs(:,:), a0(:,:)
+	double complex, allocatable :: eigvals(:)
 
 	integer :: i, n, nrng, irep, iters
 
@@ -2159,28 +2160,28 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	nfail = 0
 
-	!! Matrix from literature with complex eigenvalues
-	!! TODO
-	!allocate(a(6,6))
-	!a(:,1) = [ 7,  3,  4, -11, -9, -2]
-	!a(:,2) = [-6,  4, -5,   7,  1, 12]
-	!a(:,3) = [-1, -9,  2,   2,  9,  1]
-	!a(:,4) = [-8,  0, -1,   5,  0,  8]
-	!a(:,5) = [-4,  3, -5,   7,  2, 10]
-	!a(:,6) = [ 6,  1,  4, -11, -7, -1]
-	!a0 = a
-	!!    --> spec(a')
-	!!     ans  =
-	!!    
-	!!       5. + 6.i
-	!!       5. - 6.i
-	!!       1. + 2.i
-	!!       1. - 2.i
-	!!       3. + 0.i
-	!!       4. + 0.i
+	! Matrix from literature with complex eigenvalues
+	! TODO
+	allocate(a(6,6))
+	a(:,1) = [ 7,  3,  4, -11, -9, -2]
+	a(:,2) = [-6,  4, -5,   7,  1, 12]
+	a(:,3) = [-1, -9,  2,   2,  9,  1]
+	a(:,4) = [-8,  0, -1,   5,  0,  8]
+	a(:,5) = [-4,  3, -5,   7,  2, 10]
+	a(:,6) = [ 6,  1,  4, -11, -7, -1]
+	a0 = a
+	!    --> spec(a')
+	!     ans  =
+	!    
+	!       5. + 6.i
+	!       5. - 6.i
+	!       1. + 2.i
+	!       1. - 2.i
+	!       3. + 0.i
+	!       4. + 0.i
 
-	!eigvals = eig_francis_qr(a, eigvecs)
-	!print *, "eigvals = ", eigvals
+	eigvals = eig_francis_qr(a, eigvecs)
+	print *, "eigvals = ", eigvals
 	!stop
 
 	!********
@@ -2189,8 +2190,10 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 5, 25, 7
-	do n = 4, 4 !TODO
+	!do n = 5, 25, 1
+	do n = 5, 10, 1  ! TODO
+	!do n = 4, 4 !TODO
+	!do n = 5, 5 !TODO
 
 		allocate(s (n, n))
 
@@ -2213,8 +2216,8 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			call random_number(s)  ! random matrix
 			a = matmul(matmul(s, d), inv(s))
-			print *, "a = "
-			print "(4es19.9)", a
+			!print *, "a = "
+			!print "("//to_str(n)//"es19.9)", a
 
 			a0 = a
 
@@ -2223,18 +2226,23 @@ integer function chapter_6_francis_qr() result(nfail)
 			eigvals = eig_francis_qr(a, eigvecs)
 
 			!print *, "eigvecs = "
-			!print "(5es15.5)", eigvecs
+			!print "("//to_str(n)//"es19.9)", eigvecs
 
 			! Check the eigenvalues
-			diff = norm2(sorted(eigvals) - expect)
+
+			!diff = norm2(sorted(eigvals) - expect)  ! TODO: sort for dcmplx
+			diff = norm2(sorted(dble(eigvals)) - expect)
+
 			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_francis_qr val 1")
 			print *, "diff val = ", diff
 
 			print *, "expect = ", expect
+			print *, "actual = ", sorted(dble(eigvals))
+
 			!print *, "a * eigvecs / eigvecs = "
-			!print "(5es15.5)", matmul(a0, eigvecs) / eigvecs
+			!print "("//to_str(n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
 			!!print *, "spread = "
-			!!print "(4es15.5)", spread(eigvals, 1, n)
+			!!print "("//to_str(n)//"4es15.5)", spread(eigvals, 1, n)
 
 			!! TODO:
 			!! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
