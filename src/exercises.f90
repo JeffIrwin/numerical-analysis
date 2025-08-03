@@ -1991,11 +1991,11 @@ integer function chapter_6_hessenberg() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_6_hessenberg"
 
-	double precision :: diff
+	double precision :: diff, t, t0, t_kr, t_pq
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
 		expect(:), eigvecs(:,:), a0(:,:)
 
-	integer :: i, n, nrng, irep
+	integer :: i, n, nrng, irep, iters
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2007,7 +2007,10 @@ integer function chapter_6_hessenberg() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 5, 25, 5
+	t_pq = 0.d0
+	t_kr = 0.d0
+
+	do n = 5, 55, 5
 	!do n = 4, 4 !TODO
 
 		allocate(s (n, n))
@@ -2036,13 +2039,42 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			a0 = a
 
+			! Benchmark results:  null space (kernel) algorithm is nearly twice
+			! as fast as the Q product algorithm for iters = 5 * n**2:
+			!
+			!     Q product  fuzz time = 2.6070019999999996 s
+			!     Null space fuzz time = 1.5295850000000000 s
+			!
+			! Q product costs more per iteration, because it has to update the
+			! product.  Null space is faster per iteration, but it has a more
+			! expensive step at the end to calculate the eigenvectors.  Null
+			! space has to perform n QR decompositions to get the eigenvectors,
+			! while the Q product method only has to do one LU solve on the full
+			! n x n matrix (but many more LU solves on smaller matrices of size
+			! n-1, n-2, n-3, ...)
+			!
+			! If you only do a very small number of iterations, Q product can
+			! come out faster, but it doesn't converge very well.  For practical
+			! numbers of iterations, the null space algo seems better
+
+			iters = 5 * n**2
+			!iters = n**2
+			!iters = n
+			!iters = 10*n
+
+			!********
+			print *, "Hessenberg QR with Q product:"
+
 			! Hessenberg QR doesn't converge in any fewer iterations than basic
 			! QR, but each iteration is only O(n**2) instead of O(n**3), so it's
 			! cheap to just do a bunch of iterations
-			eigvals = eig_hess_qr(a, 5 * n**2, eigvecs)
+			call cpu_time(t0)
+			eigvals = eig_hess_qr(a, iters, eigvecs)
+			call cpu_time(t)
+			t_pq = t_pq + t - t0
 
 			!print *, "eigvecs = "
-			!print "(4es15.5)", eigvecs
+			!print "(5es15.5)", eigvecs
 
 			! Check the eigenvalues
 			diff = norm2(sorted(eigvals) - expect)
@@ -2050,7 +2082,7 @@ integer function chapter_6_hessenberg() result(nfail)
 			print *, "diff val = ", diff
 
 			!print *, "a * eigvecs / eigvecs = "
-			!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
+			!print "(5es15.5)", matmul(a0, eigvecs) / eigvecs
 			!!print *, "spread = "
 			!!print "(4es15.5)", spread(eigvals, 1, n)
 
@@ -2060,10 +2092,47 @@ integer function chapter_6_hessenberg() result(nfail)
 			print *, "diff vec = ", diff
 
 			print *, ""
+			!********
+			print *, "Hessenberg QR with kernel:"
+
+			a = a0
+			call cpu_time(t0)
+			eigvals = eig_hess_qr_kernel(a, iters, eigvecs)
+			call cpu_time(t)
+			t_kr = t_kr + t - t0
+
+			! The magnitudes of eigvecs may differ from above, but their
+			! directions are the same, thus the spread test passes in all cases
+			!print *, "eigvecs = "
+			!print "(5es15.5)", eigvecs
+
+			! Check the eigenvalues
+			diff = norm2(sorted(eigvals) - expect)
+			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr val 1")
+			print *, "diff val = ", diff
+
+			!print *, "a * eigvecs / eigvecs = "
+			!print "(5es15.5)", matmul(a0, eigvecs) / eigvecs
+			!!print *, "spread = "
+			!!print "(4es15.5)", spread(eigvals, 1, n)
+
+			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
+			diff = norm2(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n))
+			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_basic_qr vec 2")
+			print *, "diff vec = ", diff
+
+			print *, ""
+
+			!********
+			!stop
+
 		end do
 
 		deallocate(s)
 	end do
+
+	write(*,*) "Q product  fuzz time = ", to_str(t_pq), " s"
+	write(*,*) "Null space fuzz time = ", to_str(t_kr), " s"
 
 	!********
 	!print *, ""

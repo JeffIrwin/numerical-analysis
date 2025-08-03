@@ -1018,6 +1018,33 @@ subroutine hess(a, u)
 
 end subroutine hess
 
+subroutine hess_no_pq(a)
+	! Apply the Householder Hessenberg reduction to `a`
+	double precision, intent(inout) :: a(:,:)
+	!********
+
+	integer :: k, m
+	double precision, allocatable :: x(:), v(:)
+
+	m = size(a,1)
+
+	do k = 1, m-2
+
+		x = a(k+1:, k)
+		v = x
+		v(1) = v(1) + sign_(x(1)) * norm2(x)
+		v = v / norm2(v)
+
+		! TODO: avoid outer_product() at least, and maybe `x` temp array.
+		! Avoiding `v` temp array might be a little more work than worthwhile
+
+		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
+		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
+
+	end do
+
+end subroutine hess_no_pq
+
 !********
 
 subroutine qr_factor(a, diag_)
@@ -2851,12 +2878,12 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double precision :: h1, h2, rad, givens(2,2), eigval
-	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
-		eigvec(:), pq(:,:), r(:,:), v(:,:)
-	integer :: i, j, k, n
+	double precision :: h1, h2, rad, givens(2,2)
+	double precision, allocatable :: c(:), s(:), &
+		pq(:,:), r(:,:)
+	integer :: i, k, n
 
-	a0 = a  ! TODO: testing only? or is it actually used for eigvecs
+	!a0 = a  ! TODO: testing only? or is it actually used for eigvecs
 
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
@@ -2933,17 +2960,15 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!
 	! Especially the linked code:  https://gist.github.com/uranix/2b4bb821a0e3ffc4531bec547ea67727
 
-	! TODO: eliminate temp array `v` and just re-use eigvecs instead
-
-	! Find the eigenvectors `v` of `r`
-	v = eye(n)
+	! Find the eigenvectors of `r`
+	eigvecs = eye(n)
 	do i = 2, n
-		v(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
+		eigvecs(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
 	end do
-	!print *, "v = "
-	!print "(4es15.5)", v
+	!print *, "R eigvecs = "
+	!print "(4es15.5)", eigvecs
 
-	eigvecs = matmul(pq, v)
+	eigvecs = matmul(pq, eigvecs)
 	!print *, "eigvecs hess qr = "
 	!print "(4es15.5)", eigvecs
 
@@ -2953,12 +2978,91 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!print *, "a * w / w ="
 	!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
 
-	return
-	! TODO:  benchmark different eigvecs algos and probably delete this next one
+end function eig_hess_qr
 
+!===============================================================================
+
+function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
+	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
+	! QR algorithm
+	!
+	! To get the eigenvectors, find the kernel (null-space) of A-lambda*I for
+	! each eigenvalue lambda
+
+	use numa__utils, only:  sorted
+	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable :: eigvals(:)
+	integer, intent(in) :: iters
+	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
+	!********
+
+	double precision :: h1, h2, rad, givens(2,2), eigval
+	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
+		eigvec(:)
+	integer :: i, j, k, n
+
+	a0 = a
+
+	n = size(a, 1)
+	allocate(c(n-1), s(n-1))
+
+	call hess_no_pq(a)
+
+	do i = 1, iters
+
+		do k = 1, n-1
+			h1 = a(k, k)
+			h2 = a(k+1, k)
+
+			rad = norm2([h1, h2])
+			!print *, "rad = ", rad
+			c(k) =  h1 / rad
+			s(k) = -h2 / rad
+			givens(1,:) = [c(k), -s(k)]
+			givens(2,:) = [s(k),  c(k)]
+
+			! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
+
+			! TODO: is there overhead here such that I should avoid matmul on slices?
+			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
+
+		end do
+		!print *, "r = "
+		!print "(4es15.5)", a
+
+		!! If you stop here, `a` has been overwritten with `r` from its QR
+		!! factorization.  You could also compute Q by applying the matmuls in the
+		!! loop above to an initial identity matrix, but we don't need Q explicitly
+		!! for a Hessenberg QR step
+		!stop
+
+		! The rest of the Hessenberg QR step is not part of the QR factorization,
+		! rather, it overwrites `a` with R * Q
+
+		! Apply the Givens rotations from the right
+		do k = 1, n-1
+			givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
+			givens(2,:) = [-s(k), c(k)]
+			a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
+
+		end do
+
+	end do
+	!print *, "a = "
+	!print "(4es15.5)", a
+
+	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
+	! it's hard to tell which eigvec corresponds to which eigval.  Is it worth
+	! sorting at all here?  For general complex eigvals, there is technically no
+	! ordering, although LAPACK and/or MATLAB probably have some convention
+
+	!eigvals = sorted(diag(a))
+	eigvals = diag(a)
 
 	if (.not. present(eigvecs)) return
 	allocate(eigvecs(n,n))
+
+	!print *, "getting eigvecs via kernel ..."
 
 	do i = 1, n
 		eigval = eigvals(i)
@@ -2998,7 +3102,7 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 
 	end do
 
-end function eig_hess_qr
+end function eig_hess_qr_kernel
 
 !===============================================================================
 
