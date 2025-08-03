@@ -27,12 +27,18 @@ module numa
 		end function
 	end interface
 
-	interface invmul
+	interface lu_invmul
 		! The built-in `matmul()` works on matrices and vectors similarly
 		!
-		! TODO: make a fn version.  Name?
+		! This is the subroutine version which modifies its args
 		procedure :: lu_invmul_vec
 		procedure :: lu_invmul_mat
+	end interface lu_invmul
+
+	interface invmul
+		! This is the function version which returns the result
+		procedure :: invmul_vec
+		procedure :: invmul_mat
 	end interface invmul
 
 	interface zeros
@@ -818,6 +824,34 @@ end subroutine lu_invmul_vec
 
 !********
 
+function invmul_vec(a, b) result(x)
+	double precision, intent(in)  :: a(:,:)
+	double precision, intent(in)  :: b(:)
+	double precision, allocatable :: x(:)
+	!********
+	double precision, allocatable :: aa(:,:)
+
+	x = b
+	aa = a
+	call lu_invmul(aa, x)
+
+end function invmul_vec
+
+function invmul_mat(a, b) result(x)
+	double precision, intent(in)  :: a(:,:)
+	double precision, intent(in)  :: b(:,:)
+	double precision, allocatable :: x(:,:)
+	!********
+	double precision, allocatable :: aa(:,:)
+
+	x = b
+	aa = a
+	call lu_invmul(aa, x)
+
+end function invmul_mat
+
+!********
+
 subroutine lu_invmul_mat(a, bx)
 	! Solve the linear algebra problem for `x`:
 	!
@@ -936,17 +970,21 @@ end function sign_
 
 !********
 
-subroutine hess(a)
+subroutine hess(a, u)
 	! Apply the Householder Hessenberg reduction to `a`
+	!
+	! TODO: make `u` optional
 	!
 	! Source:  https://dspace.mit.edu/bitstream/handle/1721.1/75282/18-335j-fall-2006/contents/lecture-notes/lec14.pdf
 	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable, intent(out) :: u(:,:)
 	!********
 
 	integer :: k, m
-	double precision, allocatable :: x(:), v(:)
+	double precision, allocatable :: x(:), v(:), vv(:,:)
 
 	m = size(a,1)
+	allocate(vv(m, m-2))
 
 	do k = 1, m-2
 
@@ -957,13 +995,36 @@ subroutine hess(a)
 
 		! TODO: avoid outer_product() at least, and maybe `x` temp array.
 		! Avoiding `v` temp array might be a little more work than worthwhile
-		!
-		! Need tests before i fuck with this
 
 		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
 		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
 
+		!vv(:,k) = v
+		vv(1: size(v), k) = v
+
 	end do
+
+	! TODO: If vv not present, return early (and don't allocate vv above)
+
+	u = eye(m)
+	do k = m-2, 1, -1
+
+		!v = vv(:,k)
+		v = vv(1: m-k, k)
+
+		u(k+1:, k+1:) = u(k+1:, k+1:) - &
+			outer_product(2 * v, matmul(v, u(k+1:, k+1:)))
+			!outer_product(2 * vv(:,k), matmul(vv(:,k), u(k+1:, k+1:)))
+
+	end do
+	print *, "u = "
+	print "(4es15.5)", u
+
+
+
+
+
+
 
 end subroutine hess
 
@@ -1031,6 +1092,9 @@ end function qr_get_q_expl
 
 function qr_get_r_expl(qr) result(r)
 	! Explicitly get R by zeroing lower triangle
+	!
+	! TODO: this is not just for QR.  In MATLAB there is a fn named `triu()`
+	! that does this (and similar `tril()`)
 	double precision, intent(in) :: qr(:,:)
 	double precision, allocatable :: r(:,:)
 	!********
@@ -2731,16 +2795,18 @@ function eig_basic_qr(a, iters) result(eigvals)
 	integer, intent(in) :: iters
 	!********
 
-	double precision, allocatable :: diag_(:), q(:,:)!, a0(:,:), pq(:,:), pq0(:,:)
-	integer :: i
+	double precision, allocatable :: diag_(:), q(:,:), a0(:,:), pq(:,:), &
+		r(:,:), v(:,:), eigvecs(:,:)
+	integer :: i, n
 
-	!a0 = a  ! TODO: testing only
-	!print *, "a = "
-	!print "(4es15.5)", a
-	!pq = eye(size(a,1))
-	!!pq0 = eye(size(a,1))
-	!print *, "pq = "
-	!print "(4es15.5)", pq
+	n = size(a,1)
+
+	a0 = a  ! TODO: testing only
+	print *, "a = "
+	print "(4es19.9)", a
+	pq = eye(n)
+	print *, "pq = "
+	print "(4es15.5)", pq
 
 	do i = 1, iters
 		call qr_factor(a, diag_)
@@ -2749,39 +2815,67 @@ function eig_basic_qr(a, iters) result(eigvals)
 		! but two transposes seems expensive
 		q = qr_get_q_expl(a, diag_)
 
-		!!pq0 = pq
-		!pq = matmul(pq, q)
-		!!pq = matmul(pq0, q)
-		!!pq = matmul(transpose(q), pq0)
+		pq = matmul(pq, q)
 		!print *, "    pq = "
 		!print "(4es15.5)", pq
 
-		a = matmul_upper_ge(a, q)
+		a = matmul_triu_ge(a, q)
 
 	end do
-	!print *, "a = "
-	!print "(4es15.5)", a
-	!print *, "pq = "
-	!print "(4es15.5)", pq
+	print *, "a = "
+	print "(4es15.5)", a
+	print *, "pq = "
+	print "(4es15.5)", pq
 
-	! Somehow I'm getting the first eigenvector this way but none of the others
-	! :(
-
+	!! Somehow I'm getting the first eigenvector this way but none of the others
+	!! :(
 	!print *, "v1 = "
 	!print "(4es15.5)", matmul(a0, pq) / pq
 	!print *, ""
 	!print "(4es15.5)", matmul(a0, pq(:,1)) / pq(:,1)
 	!print "(4es15.5)", matmul(a0, pq(:,2)) / pq(:,2)
-	!stop
 
 	eigvals = sorted(diag(a))
-	!print *, "eigvals = ", eigvals
+	print *, "eigvals = ", eigvals
+
+	r = qr_get_r_expl(a)
+	print *, "r = "
+	print "(4es15.5)", r
+
+	! In order to get the eigenvectors of `a0`, we first have to get the
+	! eigenvectors of `r` and then transform them by `pq`
+	!
+	! Ref:  https://math.stackexchange.com/a/3947396/232771
+	!
+	! Especially the linked code:  https://gist.github.com/uranix/2b4bb821a0e3ffc4531bec547ea67727
+
+	! Find the eigenvectors `v` of `r`
+	v = eye(n)
+	do i = 2, n
+		v(1: i-1, i) = &
+			invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
+			!invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i))
+			!invmul(eigvals(i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i))
+			!invmul(pq, r(:,1))
+	end do
+	print *, "v = "
+	print "(4es15.5)", v
+
+	eigvecs = matmul(pq, v)
+	print *, "eigvecs = "
+	print "(4es15.5)", eigvecs
+
+	print *, "a * w / w ="
+	print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
+
+	!stop
 
 end function eig_basic_qr
 
 !===============================================================================
 
-function matmul_upper_ge(upper, ge) result(res)
+function matmul_triu_ge(upper, ge) result(res)
+	! Multiply an upper-triangular matrix by a general dense matrix
 	double precision, intent(in) :: upper(:,:), ge(:,:)
 	double precision, allocatable :: res(:,:)
 	!********
@@ -2794,7 +2888,7 @@ function matmul_upper_ge(upper, ge) result(res)
 
 	if (nj /= size(ge, 1)) then
 		! TODO: panic
-		print *, "Error: inner dimensions do not agree in matmul_upper_ge()"
+		print *, "Error: inner dimensions do not agree in matmul_triu_ge()"
 	end if
 
 	res = zeros(ni, nk)
@@ -2810,7 +2904,7 @@ function matmul_upper_ge(upper, ge) result(res)
 	end do
 	end do
 
-end function matmul_upper_ge
+end function matmul_triu_ge
 
 !===============================================================================
 
@@ -2827,17 +2921,17 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 
 	double precision :: h1, h2, r, givens(2,2), eigval
 	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
-		eigvec(:) !, pq(:,:)
+		eigvec(:), pq(:,:)
 	integer :: i, j, k, n
 
-	a0 = a  ! TODO: testing only
+	a0 = a  ! TODO: testing only? or is it actually used for eigvecs
 
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
 
 	!pq = eye(n)  ! product of all Q's from each step
 
-	call hess(a)
+	call hess(a, pq)
 	do i = 1, iters
 
 		do k = 1, n-1
@@ -2856,10 +2950,13 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			! TODO: is there overhead here such that I should avoid matmul on slices?
 			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
 
-			givens(1,:) = [c(k), -s(k)]
-			givens(2,:) = [s(k),  c(k)]
+			!givens(1,:) = [c(k), -s(k)]
+			!givens(2,:) = [s(k),  c(k)]
 			!!pq(k:k+1, k:) = matmul(givens, pq(k:k+1, k:))
+
 			!pq(k:k+1, :) = matmul(givens, pq(k:k+1, :))
+			!pq(k:k+1, :) = matmul(transpose(givens), pq(k:k+1, :))
+			!pq(:, k:k+1) = matmul(pq(:, k:k+1), transpose(givens))
 
 		end do
 		!print *, "r = "
@@ -2883,8 +2980,8 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
 
 			!!pq(k:k+1, :) = matmul(pq(k:k+1, :), givens)
-			!pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
-			!!pq(1: k+1, k:k+1) = matmul(pq(1: k+1, k:k+1), givens)
+			pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
+			!pq(1: k+1, k:k+1) = matmul(pq(1: k+1, k:k+1), givens)
 
 		end do
 
@@ -2892,10 +2989,17 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!print *, "a = "
 	!print "(4es15.5)", a
 
-	!print *, "pq = "
-	!print "(4es15.5)", pq
-	!print *, "v1 = "
-	!print "(4es15.5)", matmul(a0, pq) / pq
+	! Once again, I'm only getting one eigenvector from the pq product.  The
+	! others are wrong :(
+	print *, "pq = "
+	print "(4es15.5)", pq
+	print *, "v1 = "
+	print "(4es15.5)", matmul(a0, pq) / pq
+	print *, ""
+	print *, matmul(a0, pq(:,1)) / pq(:,1)
+	print *, matmul(a0, pq(1,:)) / pq(1,:)
+	print *, matmul(transpose(a0), pq(:,1)) / pq(:,1)
+	print *, matmul(transpose(a0), pq(1,:)) / pq(1,:)
 
 	eigvals = sorted(diag(a))
 

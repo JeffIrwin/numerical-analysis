@@ -505,7 +505,7 @@ integer function chapter_4_lu() result(nfail)
 	print *, "a = "
 	print "(5es18.6)", a
 
-	call invmul(a, bx)
+	call lu_invmul(a, bx)
 	print "(a,5es18.6)", "bx = ", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
@@ -546,7 +546,7 @@ integer function chapter_4_lu() result(nfail)
 			!print "(a,6es15.5)", "b  = ", bx
 
 			call cpu_time(t0)
-			call invmul(a, bx)
+			call lu_invmul(a, bx)
 			call cpu_time(t)
 			t_lu = t_lu + t - t0
 			!print "(a,6es15.5)", "bx = ", bx
@@ -614,7 +614,7 @@ integer function chapter_2_tridiag_corner() result(nfail)
 	a(:,6) = [ 7.d0,  8.d0, 12.d0]
 
 	bx = [8.d0, 9.d0, 10.d0, 11.d0, 12.d0, 13.d0]
-	call invmul(ad, bx)
+	call lu_invmul(ad, bx)
 	print "(a,6es18.6)", "bx (dense) = ", bx
 
 	bx = [8.d0, 9.d0, 10.d0, 11.d0, 12.d0, 13.d0]
@@ -1666,7 +1666,7 @@ integer function chapter_4_inv() result(nfail)
 	print *, "a = "
 	print "(5es18.6)", a
 
-	call invmul(a, bx)
+	call lu_invmul(a, bx)
 	print *, "bx = "
 	print "(5es18.6)", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul_mat() 5x5")
@@ -1685,7 +1685,7 @@ integer function chapter_4_inv() result(nfail)
 	!print *, "eye = "
 	!print "(5es18.6)", ainv
 
-	call invmul(a, ainv)
+	call lu_invmul(a, ainv)
 
 	print *, "ainv = "
 	print "(5es18.6)", ainv
@@ -2007,8 +2007,8 @@ integer function chapter_6_hessenberg() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 5, 25, 5
-	!do n = 4, 4
+	!do n = 5, 25, 5
+	do n = 4, 4 !TODO
 
 		allocate(s (n, n))
 
@@ -2041,8 +2041,8 @@ integer function chapter_6_hessenberg() result(nfail)
 			! cheap to just do a bunch of iterations
 			eigvals = eig_hess_qr(a, 5 * n**2, eigvecs)
 
-			!print *, "eigvecs = "
-			!print "(4es15.5)", eigvecs
+			print *, "eigvecs = "
+			print "(4es15.5)", eigvecs
 
 			! Check the eigenvalues
 			diff = norm2(eigvals - expect)
