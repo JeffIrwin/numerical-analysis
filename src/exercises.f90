@@ -1993,7 +1993,7 @@ integer function chapter_6_hessenberg() result(nfail)
 
 	double precision :: diff
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
-		expect(:)
+		expect(:), eigvecs(:,:), a0(:,:)
 
 	integer :: i, n, nrng, irep
 
@@ -2007,23 +2007,22 @@ integer function chapter_6_hessenberg() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 4, 45, 3
-	do n = 4, 4  ! TODO
+	do n = 5, 25, 5
+	!do n = 4, 4
 
 		allocate(s (n, n))
 
-		!if (mod(n, 10) == 0) then
-		!	print *, "Testing Hessenberg with n = " // to_str(n) // " ..."
-		!end if
+		print *, "Testing Hessenberg with n = " // to_str(n) // " ..."
 
-		!do irep = 1, 2
-		do irep = 1, 1  ! TODO
+		do irep = 1, 1
 
 			! Construct a random matrix `a` with known real eigenvalues
 
 			! Known eigenvalues
 			expect = zeros(n)
 			call random_number(expect)
+
+			!expect(3) = expect(2)
 
 			d = diag(expect)
 			call sort(expect)
@@ -2032,20 +2031,33 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			call random_number(s)  ! random matrix
 			a = matmul(matmul(s, d), inv(s))
-			print *, "a = "
-			print "(4es18.8)", a
+			!print *, "a = "
+			!print "(4es18.8)", a
+
+			a0 = a
 
 			! Hessenberg QR doesn't converge in any fewer iterations than basic
 			! QR, but each iteration is only O(n**2) instead of O(n**3), so it's
 			! cheap to just do a bunch of iterations
-			eigvals = eig_hess_qr(a, iters = 5 * n**2)
-			!eigvals = eig_hess_qr(a, iters = 5 * n)
+			eigvals = eig_hess_qr(a, 5 * n**2, eigvecs)
 
+			!print *, "eigvecs = "
+			!print "(4es15.5)", eigvecs
+
+			! Check the eigenvalues
 			diff = norm2(eigvals - expect)
-			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr 1")
-			print *, "diff = ", diff
+			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr val 1")
+			print *, "diff val = ", diff
 
-			! TODO: get eigenvectors and test
+			!print *, "a * eigvecs / eigvecs = "
+			!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
+			!!print *, "spread = "
+			!!print "(4es15.5)", spread(eigvals, 1, n)
+
+			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
+			diff = norm2(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n))
+			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_basic_qr vec 2")
+			print *, "diff vec = ", diff
 
 			print *, ""
 		end do

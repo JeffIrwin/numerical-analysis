@@ -2814,7 +2814,7 @@ end function matmul_upper_ge
 
 !===============================================================================
 
-function eig_hess_qr(a, iters) result(eigvals)
+function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
 	! QR algorithm
 
@@ -2822,11 +2822,12 @@ function eig_hess_qr(a, iters) result(eigvals)
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: eigvals(:)
 	integer, intent(in) :: iters
+	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
 	double precision :: h1, h2, r, givens(2,2), eigval
 	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
-		eigenvec(:) !, pq(:,:)
+		eigvec(:) !, pq(:,:)
 	integer :: i, j, k, n
 
 	a0 = a  ! TODO: testing only
@@ -2842,16 +2843,16 @@ function eig_hess_qr(a, iters) result(eigvals)
 		do k = 1, n-1
 			h1 = a(k, k)
 			h2 = a(k+1, k)
-	
+
 			r = norm2([h1, h2])
 			!print *, "r = ", r
 			c(k) =  h1 / r
 			s(k) = -h2 / r
 			givens(1,:) = [c(k), -s(k)]
 			givens(2,:) = [s(k),  c(k)]
-	
+
 			! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
-	
+
 			! TODO: is there overhead here such that I should avoid matmul on slices?
 			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
 
@@ -2859,22 +2860,22 @@ function eig_hess_qr(a, iters) result(eigvals)
 			givens(2,:) = [s(k),  c(k)]
 			!!pq(k:k+1, k:) = matmul(givens, pq(k:k+1, k:))
 			!pq(k:k+1, :) = matmul(givens, pq(k:k+1, :))
-	
+
 		end do
 		!print *, "r = "
 		!print "(4es15.5)", a
 		!print *, "pq = "
 		!print "(4es15.5)", pq
-	
+
 		!! If you stop here, `a` has been overwritten with `r` from its QR
 		!! factorization.  You could also compute Q by applying the matmuls in the
 		!! loop above to an initial identity matrix, but we don't need Q explicitly
 		!! for a Hessenberg QR step
 		!stop
-	
+
 		! The rest of the Hessenberg QR step is not part of the QR factorization,
 		! rather, it overwrites `a` with R * Q
-	
+
 		! Apply the Givens rotations from the right
 		do k = 1, n-1
 			givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
@@ -2898,42 +2899,48 @@ function eig_hess_qr(a, iters) result(eigvals)
 
 	eigvals = sorted(diag(a))
 
-	! TODO: return early here if only eigvals are requested.  Add opt arg for
-	! vecs
+	if (.not. present(eigvecs)) return
+	allocate(eigvecs(n,n))
 
-	! TODO: iterate to get all eigvecs
-	i = 1
-	eigval = eigvals(i)
+	do i = 1, n
+		eigval = eigvals(i)
 
-	! Get eigenvector by finding the null-space of A - eigval * eye
-	!
-	! Take the transpose because the columns of Q form the null space of A', not
-	! A
-	a = transpose(a0)
-	do j = 1, n
-		a(j,j) = a(j,j) - eigval
+		! Get eigenvector by finding the null-space of A - eigval * eye
+		!
+		! Take the transpose because the columns of Q form the null space of A', not
+		! A
+		a = transpose(a0)
+		do j = 1, n
+			a(j,j) = a(j,j) - eigval
+		end do
+		!print *, "a = "
+		!print "(4es15.5)", a
+
+		! Find null-space using QR decomposition
+		call qr_factor(a, diag_)
+		!subroutine qr_factor(a, diag_)
+		q = qr_get_q_expl(a, diag_)
+		!print *, "q = "
+		!print "(4es15.5)", q
+
+		! A - eigval*eye is singular, so the last row of Q will be in its null space
+		! and thus an eigenvector of A
+		!
+		! TODO: this probably won't work for eigenvalues with multiplicity.  In
+		! that case, you would need to get the last several rows and set
+		! multiple rows in the output
+		eigvec = q(:,n)
+		!print *, "eigvec = ", eigvec
+
+		!! Confirm that it's an eigenvec.  All components of this print should be the
+		!! same number
+		!print *, "eigval = ", matmul(a0, eigvec) / eigvec
+		!print *, "eigval = ", matmul(transpose(a0), eigvec) / eigvec
+
+		eigvecs(:,i) = eigvec
+
+		! TODO: assert test in caller
 	end do
-	print *, "a = "
-	print "(4es15.5)", a
-
-	! Find null-space using QR decomposition
-	call qr_factor(a, diag_)
-	!subroutine qr_factor(a, diag_)
-	q = qr_get_q_expl(a, diag_)
-	print *, "q = "
-	print "(4es15.5)", q
-
-	! A - eigval*eye is singular, so the last row of Q will be in its null space
-	! and thus an eigenvector of A
-	eigenvec = q(:,n)
-	print *, "eigenvec = ", eigenvec
-
-	! Confirm that it's an eigenvec.  All components of this print should be the
-	! same number
-	print *, "eigenval = ", matmul(a0, eigenvec) / eigenvec
-	!print *, "eigenval = ", matmul(transpose(a0), eigenvec) / eigenvec
-
-	! TODO: assert test in caller
 
 end function eig_hess_qr
 
