@@ -1016,61 +1016,6 @@ end subroutine qr_factor
 
 !********
 
-subroutine hess_qr_step(a)
-	! Apply one step of A = R * Q on a Hessenberg matrix `a`
-	!
-	! Maybe this should just be inlined in eig_hess_qr()
-	double precision, intent(inout) :: a(:,:)
-	!********
-
-	double precision :: h1, h2, r, givens(2,2)
-	double precision, allocatable :: c(:), s(:)
-	integer :: k, n
-
-	n = size(a, 1)
-	allocate(c(n-1), s(n-1))
-
-	do k = 1, n-1
-		h1 = a(k, k)
-		h2 = a(k+1, k)
-
-		r = norm2([h1, h2])
-		!print *, "r = ", r
-		c(k) =  h1 / r
-		s(k) = -h2 / r
-		givens(1,:) = [c(k), -s(k)]
-		givens(2,:) = [s(k),  c(k)]
-
-		! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
-		!
-		! The source doesn't make it clear how to get the Givens rotations, but
-		! that part is shown on wiki:  https://en.wikipedia.org/wiki/Givens_rotation
-
-		! TODO: is there overhead here such that I should avoid matmul on slices?
-		a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
-
-	end do
-	!print *, "r = "
-	!print "(4es15.5)", a
-
-	!! If you stop here, `a` has been overwritten with `r` from its QR
-	!! factorization.  You could also compute Q by applying the matmuls in the
-	!! loop above to an initial identity matrix, but we don't need Q explicitly
-	!! for a Hessenberg QR step
-	!stop
-
-	! The rest of the Hessenberg QR step is not part of the QR factorization,
-	! rather, it overwrites `a` with R * Q
-
-	! Apply the Givens rotations from the right
-	do k = 1, n-1
-		givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
-		givens(2,:) = [-s(k), c(k)]
-		a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
-	end do
-
-end subroutine hess_qr_step
-
 !********
 
 function qr_get_q_expl(qr, diag_) result(q)
@@ -2786,8 +2731,16 @@ function eig_basic_qr(a, iters) result(eigvals)
 	integer, intent(in) :: iters
 	!********
 
-	double precision, allocatable :: diag_(:), q(:,:)
+	double precision, allocatable :: diag_(:), q(:,:)!, a0(:,:), pq(:,:), pq0(:,:)
 	integer :: i
+
+	!a0 = a  ! TODO: testing only
+	!print *, "a = "
+	!print "(4es15.5)", a
+	!pq = eye(size(a,1))
+	!!pq0 = eye(size(a,1))
+	!print *, "pq = "
+	!print "(4es15.5)", pq
 
 	do i = 1, iters
 		call qr_factor(a, diag_)
@@ -2795,13 +2748,34 @@ function eig_basic_qr(a, iters) result(eigvals)
 		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
 		! but two transposes seems expensive
 		q = qr_get_q_expl(a, diag_)
-		a = matmul_upper_ge(a, q)  ! TODO: apply these opts to eig_hess_qr()
+
+		!!pq0 = pq
+		!pq = matmul(pq, q)
+		!!pq = matmul(pq0, q)
+		!!pq = matmul(transpose(q), pq0)
+		!print *, "    pq = "
+		!print "(4es15.5)", pq
+
+		a = matmul_upper_ge(a, q)
 
 	end do
 	!print *, "a = "
 	!print "(4es15.5)", a
+	!print *, "pq = "
+	!print "(4es15.5)", pq
+
+	! Somehow I'm getting the first eigenvector this way but none of the others
+	! :(
+
+	!print *, "v1 = "
+	!print "(4es15.5)", matmul(a0, pq) / pq
+	!print *, ""
+	!print "(4es15.5)", matmul(a0, pq(:,1)) / pq(:,1)
+	!print "(4es15.5)", matmul(a0, pq(:,2)) / pq(:,2)
+	!stop
 
 	eigvals = sorted(diag(a))
+	!print *, "eigvals = ", eigvals
 
 end function eig_basic_qr
 
@@ -2850,16 +2824,116 @@ function eig_hess_qr(a, iters) result(eigvals)
 	integer, intent(in) :: iters
 	!********
 
-	integer :: i
+	double precision :: h1, h2, r, givens(2,2), eigval
+	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
+		eigenvec(:) !, pq(:,:)
+	integer :: i, j, k, n
+
+	a0 = a  ! TODO: testing only
+
+	n = size(a, 1)
+	allocate(c(n-1), s(n-1))
+
+	!pq = eye(n)  ! product of all Q's from each step
 
 	call hess(a)
 	do i = 1, iters
-		call hess_qr_step(a)
+
+		do k = 1, n-1
+			h1 = a(k, k)
+			h2 = a(k+1, k)
+	
+			r = norm2([h1, h2])
+			!print *, "r = ", r
+			c(k) =  h1 / r
+			s(k) = -h2 / r
+			givens(1,:) = [c(k), -s(k)]
+			givens(2,:) = [s(k),  c(k)]
+	
+			! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
+	
+			! TODO: is there overhead here such that I should avoid matmul on slices?
+			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
+
+			givens(1,:) = [c(k), -s(k)]
+			givens(2,:) = [s(k),  c(k)]
+			!!pq(k:k+1, k:) = matmul(givens, pq(k:k+1, k:))
+			!pq(k:k+1, :) = matmul(givens, pq(k:k+1, :))
+	
+		end do
+		!print *, "r = "
+		!print "(4es15.5)", a
+		!print *, "pq = "
+		!print "(4es15.5)", pq
+	
+		!! If you stop here, `a` has been overwritten with `r` from its QR
+		!! factorization.  You could also compute Q by applying the matmuls in the
+		!! loop above to an initial identity matrix, but we don't need Q explicitly
+		!! for a Hessenberg QR step
+		!stop
+	
+		! The rest of the Hessenberg QR step is not part of the QR factorization,
+		! rather, it overwrites `a` with R * Q
+	
+		! Apply the Givens rotations from the right
+		do k = 1, n-1
+			givens(1,:) = [ c(k), s(k)]  ! note this is transposed compared to above
+			givens(2,:) = [-s(k), c(k)]
+			a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
+
+			!!pq(k:k+1, :) = matmul(pq(k:k+1, :), givens)
+			!pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
+			!!pq(1: k+1, k:k+1) = matmul(pq(1: k+1, k:k+1), givens)
+
+		end do
+
 	end do
 	!print *, "a = "
 	!print "(4es15.5)", a
 
+	!print *, "pq = "
+	!print "(4es15.5)", pq
+	!print *, "v1 = "
+	!print "(4es15.5)", matmul(a0, pq) / pq
+
 	eigvals = sorted(diag(a))
+
+	! TODO: return early here if only eigvals are requested.  Add opt arg for
+	! vecs
+
+	! TODO: iterate to get all eigvecs
+	i = 1
+	eigval = eigvals(i)
+
+	! Get eigenvector by finding the null-space of A - eigval * eye
+	!
+	! Take the transpose because the columns of Q form the null space of A', not
+	! A
+	a = transpose(a0)
+	do j = 1, n
+		a(j,j) = a(j,j) - eigval
+	end do
+	print *, "a = "
+	print "(4es15.5)", a
+
+	! Find null-space using QR decomposition
+	call qr_factor(a, diag_)
+	!subroutine qr_factor(a, diag_)
+	q = qr_get_q_expl(a, diag_)
+	print *, "q = "
+	print "(4es15.5)", q
+
+	! A - eigval*eye is singular, so the last row of Q will be in its null space
+	! and thus an eigenvector of A
+	eigenvec = q(:,n)
+	print *, "eigenvec = ", eigenvec
+
+	! Confirm that it's an eigenvec.  All components of this print should be the
+	! same number
+	print *, "eigenval = ", matmul(a0, eigenvec) / eigenvec
+	!print *, "eigenval = ", matmul(transpose(a0), eigenvec) / eigenvec
+
+	! TODO: assert test in caller
 
 end function eig_hess_qr
 

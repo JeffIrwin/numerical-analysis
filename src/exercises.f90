@@ -2007,8 +2007,8 @@ integer function chapter_6_hessenberg() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 4, 45, 3
-	!do n = 4, 4  ! TODO
+	!do n = 4, 45, 3
+	do n = 4, 4  ! TODO
 
 		allocate(s (n, n))
 
@@ -2032,8 +2032,8 @@ integer function chapter_6_hessenberg() result(nfail)
 
 			call random_number(s)  ! random matrix
 			a = matmul(matmul(s, d), inv(s))
-			!print *, "a = "
-			!print "(4es18.8)", a
+			print *, "a = "
+			print "(4es18.8)", a
 
 			! Hessenberg QR doesn't converge in any fewer iterations than basic
 			! QR, but each iteration is only O(n**2) instead of O(n**3), so it's
@@ -2045,6 +2045,9 @@ integer function chapter_6_hessenberg() result(nfail)
 			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_basic_qr 1")
 			print *, "diff = ", diff
 
+			! TODO: get eigenvectors and test
+
+			print *, ""
 		end do
 
 		deallocate(s)
