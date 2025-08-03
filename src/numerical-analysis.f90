@@ -999,7 +999,6 @@ subroutine hess(a, u)
 		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
 		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
 
-		!vv(:,k) = v
 		vv(1: size(v), k) = v
 
 	end do
@@ -1009,22 +1008,13 @@ subroutine hess(a, u)
 	u = eye(m)
 	do k = m-2, 1, -1
 
-		!v = vv(:,k)
 		v = vv(1: m-k, k)
-
 		u(k+1:, k+1:) = u(k+1:, k+1:) - &
 			outer_product(2 * v, matmul(v, u(k+1:, k+1:)))
-			!outer_product(2 * vv(:,k), matmul(vv(:,k), u(k+1:, k+1:)))
 
 	end do
-	print *, "u = "
-	print "(4es15.5)", u
-
-
-
-
-
-
+	!print *, "u = "
+	!print "(4es15.5)", u
 
 end subroutine hess
 
@@ -2795,18 +2785,8 @@ function eig_basic_qr(a, iters) result(eigvals)
 	integer, intent(in) :: iters
 	!********
 
-	double precision, allocatable :: diag_(:), q(:,:), a0(:,:), pq(:,:), &
-		r(:,:), v(:,:), eigvecs(:,:)
-	integer :: i, n
-
-	n = size(a,1)
-
-	a0 = a  ! TODO: testing only
-	print *, "a = "
-	print "(4es19.9)", a
-	pq = eye(n)
-	!print *, "pq = "
-	!print "(4es15.5)", pq
+	double precision, allocatable :: diag_(:), q(:,:)
+	integer :: i
 
 	do i = 1, iters
 		call qr_factor(a, diag_)
@@ -2814,52 +2794,13 @@ function eig_basic_qr(a, iters) result(eigvals)
 		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
 		! but two transposes seems expensive
 		q = qr_get_q_expl(a, diag_)
-
-		pq = matmul(pq, q)
-		!print *, "    pq = "
-		!print "(4es15.5)", pq
-
 		a = matmul_triu_ge(a, q)
-
 	end do
-	print *, "a = "
-	print "(4es15.5)", a
-	print *, "pq = "
-	print "(4es15.5)", pq
+	!print *, "a = "
+	!print "(4es15.5)", a
 
 	eigvals = sorted(diag(a))
-	print *, "eigvals = ", eigvals
-
-	! TODO: remove the rest after testing if we don't return eigvecs from this
-	! routine
-
-	r = qr_get_r_expl(a)
-	print *, "r = "
-	print "(4es15.5)", r
-
-	! In order to get the eigenvectors of `a0`, we first have to get the
-	! eigenvectors of `r` and then transform them by `pq`
-	!
-	! Ref:  https://math.stackexchange.com/a/3947396/232771
-	!
-	! Especially the linked code:  https://gist.github.com/uranix/2b4bb821a0e3ffc4531bec547ea67727
-
-	! Find the eigenvectors `v` of `r`
-	v = eye(n)
-	do i = 2, n
-		v(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
-	end do
-	print *, "v = "
-	print "(4es15.5)", v
-
-	eigvecs = matmul(pq, v)
-	print *, "eigvecs = "
-	print "(4es15.5)", eigvecs
-
-	print *, "a * w / w ="
-	print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
-
-	!stop
+	!print *, "eigvals = ", eigvals
 
 end function eig_basic_qr
 
@@ -2920,9 +2861,11 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
 
-	!pq = eye(n)  ! product of all Q's from each step
-
+	! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
+	! can't initialize pq to eye here.  Instead, we need an initial
+	! transformation from the Hessenberg reduction
 	call hess(a, pq)
+
 	do i = 1, iters
 
 		do k = 1, n-1
@@ -2941,19 +2884,9 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			! TODO: is there overhead here such that I should avoid matmul on slices?
 			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
 
-			!givens(1,:) = [c(k), -s(k)]
-			!givens(2,:) = [s(k),  c(k)]
-			!!pq(k:k+1, k:) = matmul(givens, pq(k:k+1, k:))
-
-			!pq(k:k+1, :) = matmul(givens, pq(k:k+1, :))
-			!pq(k:k+1, :) = matmul(transpose(givens), pq(k:k+1, :))
-			!pq(:, k:k+1) = matmul(pq(:, k:k+1), transpose(givens))
-
 		end do
 		!print *, "r = "
 		!print "(4es15.5)", a
-		!print *, "pq = "
-		!print "(4es15.5)", pq
 
 		!! If you stop here, `a` has been overwritten with `r` from its QR
 		!! factorization.  You could also compute Q by applying the matmuls in the
@@ -2970,9 +2903,8 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			givens(2,:) = [-s(k), c(k)]
 			a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
 
-			!!pq(k:k+1, :) = matmul(pq(k:k+1, :), givens)
+			! Update Q product.  TODO: skip if eigvecs not present
 			pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
-			!pq(1: k+1, k:k+1) = matmul(pq(1: k+1, k:k+1), givens)
 
 		end do
 
@@ -2980,28 +2912,19 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!print *, "a = "
 	!print "(4es15.5)", a
 
-	! Once again, I'm only getting one eigenvector from the pq product.  The
-	! others are wrong :(
-	print *, "pq = "
-	print "(4es15.5)", pq
-	print *, "v1 = "
-	print "(4es15.5)", matmul(a0, pq) / pq
-	print *, ""
-	print *, matmul(a0, pq(:,1)) / pq(:,1)
-	print *, matmul(a0, pq(1,:)) / pq(1,:)
-	print *, matmul(transpose(a0), pq(:,1)) / pq(:,1)
-	print *, matmul(transpose(a0), pq(1,:)) / pq(1,:)
-
 	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
-	! it's hard to tell which eigvec corresponds to which eigval
+	! it's hard to tell which eigvec corresponds to which eigval.  Is it worth
+	! sorting at all here?  For general complex eigvals, there is technically no
+	! ordering, although LAPACK and/or MATLAB probably have some convention
+
 	!eigvals = sorted(diag(a))
 	eigvals = diag(a)
 
 	!********
 
 	r = qr_get_r_expl(a)
-	print *, "r = "
-	print "(4es15.5)", r
+	!print *, "r = "
+	!print "(4es15.5)", r
 
 	! In order to get the eigenvectors of `a0`, we first have to get the
 	! eigenvectors of `r` and then transform them by `pq`
@@ -3017,20 +2940,18 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	do i = 2, n
 		v(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
 	end do
-	print *, "v = "
-	print "(4es15.5)", v
+	!print *, "v = "
+	!print "(4es15.5)", v
 
 	eigvecs = matmul(pq, v)
-	print *, "eigvecs hess qr = "
-	print "(4es15.5)", eigvecs
+	!print *, "eigvecs hess qr = "
+	!print "(4es15.5)", eigvecs
 
-	print *, "a0 = "
-	print "(4es15.5)", a0
+	!print *, "a0 = "
+	!print "(4es15.5)", a0
 
-	print *, "a * w / w ="
-	print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
-
-	!stop
+	!print *, "a * w / w ="
+	!print "(4es15.5)", matmul(a0, eigvecs) / eigvecs
 
 	return
 	! TODO:  benchmark different eigvecs algos and probably delete this next one
@@ -3055,7 +2976,6 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 
 		! Find null-space using QR decomposition
 		call qr_factor(a, diag_)
-		!subroutine qr_factor(a, diag_)
 		q = qr_get_q_expl(a, diag_)
 		!print *, "q = "
 		!print "(4es15.5)", q
@@ -3076,7 +2996,6 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 
 		eigvecs(:,i) = eigvec
 
-		! TODO: assert test in caller
 	end do
 
 end function eig_hess_qr

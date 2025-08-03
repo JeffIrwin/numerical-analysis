@@ -2041,8 +2041,8 @@ integer function chapter_6_hessenberg() result(nfail)
 			! cheap to just do a bunch of iterations
 			eigvals = eig_hess_qr(a, 5 * n**2, eigvecs)
 
-			print *, "eigvecs = "
-			print "(4es15.5)", eigvecs
+			!print *, "eigvecs = "
+			!print "(4es15.5)", eigvecs
 
 			! Check the eigenvalues
 			diff = norm2(sorted(eigvals) - expect)
