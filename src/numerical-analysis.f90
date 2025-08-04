@@ -1101,6 +1101,64 @@ end subroutine qr_factor
 
 !********
 
+subroutine qr_factor_c64(a, diag_)
+	! Replace `a` with its QR factorization using Householder transformations
+	!
+	! TODO: overload interface
+	double complex, intent(inout) :: a(:,:)
+	double complex, allocatable, intent(out) :: diag_(:)
+
+	!********
+
+	double complex :: s, u1, wa
+	double precision :: normx
+	integer :: j, k, n
+
+	n = size(a, 1)
+	allocate(diag_(n))
+	diag_ = 0.d0
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	do j = 1, n
+
+		normx = norm2c(a(j:, j))
+		! TODO: panic if normx == 0
+
+		!s = -sign_(a(j,j))
+		s = -a(j,j) / abs(a(j,j))
+
+		u1 = a(j,j) - s * normx
+		a(j+1:, j) = a(j+1:, j) / u1
+		a(j,j) = s * normx
+		diag_(j) = -s * u1 / normx
+
+		do k = j+1, n
+
+			! TODO: independently test qr c64 (i.e. not just as part of
+			! eig_francis_qr()).  I have no idea if this is correct
+
+			! TODO: what needs conjugated?  dot_product() already includes a
+			! conjg
+			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+			!wa = diag_(j) * (dot_product(a(j+1:, j), conjg(a(j+1:, k))) + a(j,k))
+
+			a(j,k) = a(j,k) - wa
+			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
+		end do
+
+	end do
+	!print *, "diag_ = "
+	!print "(es15.5)", diag_
+
+	! In the end, `R` is formed by zeroing appropriate elements of `a`
+	!
+	! And then `Q` can be expensively calculated as inv(r) * a (or some similar
+	! transpose), or more efficiently like in the loop below
+	!
+	! Results can be checked by verifying that q' * q == eye() or that a = q * r
+
+end subroutine qr_factor_c64
+
 !********
 
 function qr_get_q_expl(qr, diag_) result(q)
@@ -1133,6 +1191,36 @@ end function qr_get_r_expl
 
 !********
 
+function qr_get_q_expl_c64(qr, diag_) result(q)
+	! Explicitly get the unitary Q matrix from a previously QR-decomposed
+	! matrix.  In most cases you will want to avoid using this fn and just
+	! implicitly multiply something by Q instead using qr_mul()
+	double complex, intent(in) :: qr(:,:), diag_(:)
+	double complex, allocatable :: q(:,:)
+
+	q = qr_mul_c64(qr, diag_, eye_c64(size(qr,1)))
+
+end function qr_get_q_expl_c64
+
+function qr_get_r_expl_c64(qr) result(r)
+	! Explicitly get R by zeroing lower triangle
+	!
+	! TODO: this is not just for QR.  In MATLAB there is a fn named `triu()`
+	! that does this (and similar `tril()`)
+	double complex, intent(in) :: qr(:,:)
+	double complex, allocatable :: r(:,:)
+	!********
+	integer :: i
+
+	r = qr
+	do i = 1, size(qr, 1)
+		r(i+1:, i) = 0
+	end do
+
+end function qr_get_r_expl_c64
+
+!********
+
 function qr_mul(qr, diag_, x) result(qx)
 	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
 	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
@@ -1160,6 +1248,34 @@ function qr_mul(qr, diag_, x) result(qx)
 	!print "(5es15.5)", qx
 
 end function qr_mul
+
+function qr_mul_c64(qr, diag_, x) result(qx)
+	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
+	double complex, intent(in) :: qr(:,:), diag_(:), x(:,:)
+	double complex, allocatable :: qx(:,:)
+	!********
+	double complex :: wq
+	integer :: j, k, n
+
+	!print *, "qr = "
+	!print "(5es15.5)", qr
+
+	n = size(qr, 1)
+	qx = x  ! could make a subroutine version which replaces x instead
+
+	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
+	do j = n, 1, -1
+		do k = 1, n
+			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
+			qx(j, k) = qx(j, k) - wq
+			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+		end do
+	end do
+
+	!print *, "qx = "
+	!print "(5es15.5)", qx
+
+end function qr_mul_c64
 
 !********
 
@@ -2624,6 +2740,28 @@ function eye(n)
 
 end function eye
 
+function eye_c64(n) result(eye_)
+	! n x n identity matrix
+	!
+	! TODO: overload interface
+
+	integer, intent(in) :: n
+	double complex, allocatable :: eye_(:,:)
+
+	integer :: i, j
+	allocate(eye_(n, n))
+	do i = 1, n
+		do j = 1, n
+			if (i == j) then
+				eye_(i,j) = 1.d0
+			else
+				eye_(i,j) = 0.d0
+			end if
+		end do
+	end do
+
+end function eye_c64
+
 !********
 
 function zeros_mat(m, n) result(a)
@@ -2969,7 +3107,7 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	! Find the eigenvectors of `r`
 	eigvecs = eye(n)
 	do i = 2, n
-		eigvecs(1: i-1, i) = -invmul(r(:i-1, :i-1) - r(i,i) * eye(i-1), r(:i-1, i))
+		eigvecs(1: i-1, i) = invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1) , r(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
 	!print "(4es15.5)", eigvecs
@@ -3026,29 +3164,28 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	use numa__utils, only:  sorted, to_str
 	double precision, intent(inout) :: h(:,:)
 	double complex, allocatable :: eigvals(:)
-	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
+	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double precision, parameter :: eps = 1.d-40  ! TODO: arg
+	double complex :: l1, l2, eigval
+	double complex, allocatable :: eigvec(:), aa(:,:), diag_(:), qq(:,:)
 
+	double precision, parameter :: eps = 1.d-40  ! TODO: arg
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
-	double complex :: l1, l2, l10, l20
-	double precision, allocatable :: &!c(:), s(:), &
-		pq(:,:), rr(:,:)
-	integer :: i, i1, ie, k, n, p, q, r  ! TODO: rename p, q, r -> ip, ...
+	double precision, allocatable :: pq(:,:), rr(:,:), a0(:,:)
+
+	integer :: i, i1, ie, j, k, n, p, q, r  ! TODO: rename p, q, r -> ip, ...
 	logical, allocatable :: is_real(:)
 
-	!a0 = h  ! TODO: testing only? or is it actually used for eigvecs
+	a0 = h  ! TODO: necessary?
 
 	n = size(h, 1)
-	!allocate(c(n-1), s(n-1))
 
 	! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
 	! can't initialize pq to eye here.  Instead, we need an initial
 	! transformation from the Hessenberg reduction
 	call hess(h, pq)
-	!h = transpose(h)  ! why?
 
 	!print *, "h = "
 	!print "("//to_str(n)//"es19.9)", h
@@ -3068,8 +3205,6 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 			! Determine the Householder reflector `p3`
 			p3 = house([x, y, z])
-			!p3 = transpose(p3)  ! p3 is symmetric so transpose doesn't matter
-
 			!print *, "p3 = "
 			!print "(3es15.5)", p3
 
@@ -3077,8 +3212,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 			h(k+1: k+3, r:) = matmul(p3, h(k+1: k+3, r:))
 
 			r = min(k+4, p)
-			!h(:r, k+1: k+3) = matmul(h(:r, k+1: k+3), p3)
-			h(:r, k+1: k+3) = matmul(h(:r, k+1: k+3), transpose(p3))
+			h(:r, k+1: k+3) = matmul(h(:r, k+1: k+3), p3)
+
+			! TODO: only if eigvecs is present
+			pq(:, k+1: k+3) = matmul(pq(:, k+1: k+3), p3)
 
 			x = h(k+2, k+1)
 			y = h(k+3, k+1)
@@ -3088,35 +3225,18 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 		end do
 
-		!! Determine the 2D Givens rotation `p2`
-		!p2 = house([x, y])
-		!!p2 = transpose(p2)
-
-		!print *, "p2 house = "
-		!print "(2es15.5)", p2
-
-	!		rad = norm2([h1, h2])
-	!		!print *, "rad = ", rad
-	!		c(k) =  h1 / rad
-	!		s(k) = -h2 / rad
-	!		givens(1,:) = [c(k), -s(k)]
-	!		givens(2,:) = [s(k),  c(k)]
+		! Determine the 2D Givens rotation `p2`
 		rad = norm2([x, y])
 		ck =  x / rad
 		sk = -y / rad
 		p2(1,:) = [ck, -sk]
 		p2(2,:) = [sk,  ck]
-		!p2 = transpose(p2)
-
-		!print *, "p2 givens = "
-		!print "(2es15.5)", p2
-		!print *, "p2 * [x,y] = ", matmul(p2, [x,y])
-		!!stop
 
 		h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
 		h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
-		!h(p,q) = 0.d0
-		!h(q,p) = 0.d0
+
+		! TODO: only if eigvecs is present
+		pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
 
 		! Check for convergence
 
@@ -3135,19 +3255,11 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 			q = p - 1
 		end if
 
-		!if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
-		!	h(p-1, q-1) = 0
-		!	p = p - 2
-		!	q = p - 1
-		!else if (abs(h(p,q)) < eps * (abs(h(q,q)) + abs(h(p,p)))) then
-		!	h(p,q) = 0
-		!	p = p - 1
-		!	q = p - 1  ! unnecessary?  happens at top of while loop anyway
-		!end if
-
 	end do
 	print *, "h = "
 	print "("//to_str(n)//"es19.9)", h
+	print *, "pq = "
+	print "("//to_str(n)//"es19.9)", pq
 
 	! Process 2x2 block along diagonal and get their eigenvalues.  Some
 	! may be real, some may be complex
@@ -3160,13 +3272,15 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!do i = 1, n, 2
 
 		i1 = i + 1
-		if (i1 > n) i1 = i1 - n
+		if (i1 > n) i1 = i1 - n  ! TODO: unnecessary
 
 		! Cyclic modular 2x2 block around diagonal
 		a = h(i , i )
 		b = h(i1, i )
 		c = h(i , i1)
 		d = h(i1, i1)
+
+		! TODO: if b over tol, just cycle now and remove later condition
 
 		t = a + d         ! trace
 		det_ = a*d - b*c  ! determinant
@@ -3175,38 +3289,30 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		l1 = t/2 + sqrt(dcmplx(t**2/4 - det_))
 		l2 = t/2 - sqrt(dcmplx(t**2/4 - det_))
 
-		print *, "b  = ", b
-		print *, "l1 = ", l1
-		print *, "l2 = ", l2
-		print *, ""
+		!print *, "b  = ", b
+		!print *, "l1 = ", l1
+		!print *, "l2 = ", l2
+		!print *, ""
 
 		if (abs(b) > eps) then
 			is_real(i ) = .false.
 			is_real(i1) = .false.
-			eigvals(ie+1) = l1
-			eigvals(ie+2) = l2
+
+			!eigvals(ie+1) = l1
+			!eigvals(ie+2) = l2
+			eigvals(i ) = l1
+			eigvals(i1) = l2
+
 			ie = ie + 2
 		end if
-
-		!!eigvals(i ) = l1
-		!!eigvals(i1) = l2
-
-		!if (i == 1 .or. abs(l1 - l20) > 1.d-10) then
-		!	eigvals(ie) = l1
-		!	ie = ie + 1
-		!end if
-		!eigvals(ie) = l2
-		!ie = ie + 1
-
-		!l10 = l1
-		!l20 = l2
 
 	end do
 
 	! Second pass: collect the real eigenvalues not saved in the first pass
 	do i = 1, n
 		if (.not. is_real(i)) cycle
-		eigvals(ie+1) = h(i,i)
+		!eigvals(ie+1) = h(i,i)
+		eigvals(i) = h(i,i)
 		ie = ie + 1
 	end do
 
@@ -3216,14 +3322,110 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!********
 	if (.not. present(eigvecs)) return
 
+	allocate(eigvecs(n,n))
+
+	!print *, "getting eigvecs via kernel ..."
+
+	do i = 1, n
+		eigval = eigvals(i)
+
+		! Get eigenvector by finding the null-space of A - eigval * eye
+		!
+		! Take the transpose because the columns of Q form the null space of A', not
+		! A
+		aa = transpose(a0)
+		do j = 1, n
+			aa(j,j) = aa(j,j) - eigval
+		end do
+		!print *, "aa = "
+		!print "(4es15.5)", aa
+
+		! Find null-space (kernel) using QR decomposition
+		call qr_factor_c64(aa, diag_)
+		qq = qr_get_q_expl_c64(aa, diag_)
+		!print *, "qq = "
+		!print "(4es15.5)", qq
+
+		! A - eigval*eye is singular, so the last row of Q will be in its null space
+		! and thus an eigenvector of A
+		!
+		! TODO: this probably won't work for eigenvalues with multiplicity.  In
+		! that case, you would need to get the last several rows and set
+		! multiple rows in the output
+		eigvec = qq(:,n)
+		!print *, "eigvec = ", eigvec
+
+		!! Confirm that it's an eigenvec.  All components of this print should be the
+		!! same number
+		!print *, "eigval = ", matmul(a0, eigvec) / eigvec
+		!print *, "eigval = ", matmul(transpose(a0), eigvec) / eigvec
+
+		eigvecs(:,i) = eigvec
+
+	end do
+
+	return
+	!********
+	! WIP, attempting the Q product method but haven't figured it out.  Some
+	! eigvecs are correct but others aren't
+
+	! Zero the remaining below-diagonal non-zeros
+
+	do p = 2, n
+	!do p = 1, n-1
+
+		y = h(p, p-1)
+
+		if (abs(y) < eps) cycle
+
+		print *, "Zeroing at p = ", p
+		print *, "y = ", y
+
+		x = h(p-1, p-1)
+		print *, "x = ", x
+
+		! Determine the 2D Givens rotation `p2`
+		rad = norm2([x, y])
+		ck =  x / rad
+		sk = -y / rad
+		p2(1,:) = [ck, -sk]
+		p2(2,:) = [sk,  ck]
+
+		!h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
+
+		h(p-1:p, p-1:) = matmul(p2, h(p-1:p, p-1:))
+
+		!h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+
+		! TODO: only if eigvecs is present
+		pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
+
+		print *, "h = "
+		print "("//to_str(n)//"es19.9)", h
+		print *, ""
+		!stop
+
+	end do
+
+	!********
+
 	rr = qr_get_r_expl(h)
-	!print *, "rr = "
-	!print "("//to_str(n)//"es19.9)", rr
+	!rr = h
+
+	print *, "rr = "
+	print "("//to_str(n)//"es19.9)", rr
+
+	!do i = 1, n
+	!	rr(i,i) = dble(eigvals(i))
+	!end do
 
 	! Find the eigenvectors of `rr`
 	eigvecs = eye(n)
 	do i = 2, n
-		eigvecs(1: i-1, i) = -invmul(rr(:i-1, :i-1) - rr(i,i) * eye(i-1), rr(:i-1, i))
+
+		!eigvecs(1: i-1, i) = invmul(rr(i,i) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
+		eigvecs(1: i-1, i) = invmul(dble(eigvals(i)) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
+
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs

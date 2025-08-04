@@ -2151,8 +2151,8 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	double precision :: diff
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &
-		expect(:), eigvecs(:,:), a0(:,:)
-	double complex, allocatable :: eigvals(:)
+		expect(:), a0(:,:)
+	double complex, allocatable :: eigvals(:), eigvecs(:,:)
 
 	integer :: i, n, nrng, irep, iters
 
@@ -2162,13 +2162,19 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	! Matrix from literature with complex eigenvalues
 	! TODO
-	allocate(a(6,6))
+	n = 6
+	allocate(a(n,n))
 	a(:,1) = [ 7,  3,  4, -11, -9, -2]
 	a(:,2) = [-6,  4, -5,   7,  1, 12]
 	a(:,3) = [-1, -9,  2,   2,  9,  1]
 	a(:,4) = [-8,  0, -1,   5,  0,  8]
 	a(:,5) = [-4,  3, -5,   7,  2, 10]
 	a(:,6) = [ 6,  1,  4, -11, -7, -1]
+
+	!call random_number(a)
+	!print *, "a = "
+	!print "("//to_str(n)//"es19.9)", a
+
 	a0 = a
 	!    --> spec(a')
 	!     ans  =
@@ -2181,8 +2187,16 @@ integer function chapter_6_francis_qr() result(nfail)
 	!       4. + 0.i
 
 	eigvals = eig_francis_qr(a, eigvecs)
-	print *, "eigvals = ", eigvals
+
+	print *, "eigvals = [real, imag]"
+	print "(2es15.5)", eigvals
+
+	print *, "a * eigvecs / eigvecs = "
+	print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
+
 	!stop
+
+	! TODO: add fuzz testing for full random mats with complex eigvals
 
 	!********
 	! Fuzz test
@@ -2190,8 +2204,8 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 5, 25, 1
-	do n = 5, 11, 1  ! TODO
+	do n = 5, 25, 1
+	!do n = 5, 11, 1  ! TODO
 	!do n = 4, 4 !TODO
 	!do n = 5, 5 !TODO
 
@@ -2216,8 +2230,8 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			call random_number(s)  ! random matrix
 			a = matmul(matmul(s, d), inv(s))
-			!print *, "a = "
-			!print "("//to_str(n)//"es19.9)", a
+			print *, "a = "
+			print "("//to_str(n)//"es19.9)", a
 
 			a0 = a
 
@@ -2225,30 +2239,36 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			eigvals = eig_francis_qr(a, eigvecs)
 
-			!print *, "eigvecs = "
-			!print "("//to_str(n)//"es19.9)", eigvecs
+			print *, "eigvecs = "
+			print "("//to_str(2*n)//"es15.5)", eigvecs
 
 			! Check the eigenvalues
 
 			!diff = norm2(sorted(eigvals) - expect)  ! TODO: sort for dcmplx
 			diff = norm2(sorted(dble(eigvals)) - expect)
 
-			call test(diff, 0.d0, 1.d-4 * n, nfail, "eig_francis_qr val 1")
+			call test(diff, 0.d0, 1.d-8 * n, nfail, "eig_francis_qr val 1")
 			print *, "diff val = ", diff
-
 			print *, "expect = ", expect
-			print *, "actual = ", sorted(dble(eigvals))
+			!print *, "actual = ", sorted(dble(eigvals))
 
-			!print *, "a * eigvecs / eigvecs = "
-			!print "("//to_str(n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
+			!********
+
+			print *, "a * eigvecs / eigvecs = "
+			print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
 			!!print *, "spread = "
 			!!print "("//to_str(n)//"4es15.5)", spread(eigvals, 1, n)
 
-			!! TODO:
-			!! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
-			!diff = norm2(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n))
-			!call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_francis_qr vec 2")
-			!print *, "diff vec = ", diff
+			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
+			!
+			! idk if norm2(abs( [complex_matrix] )) is a good norm but i don't feel like making my
+			! own matrix norm rn.  need to figure out what built-in norm2() is
+			! doing on matrices, whether it just reshapes them to vec or does
+			! some more involved matrix norm
+
+			diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
+			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_francis_qr vec 2")
+			print *, "diff vec = ", diff
 
 			print *, ""
 
