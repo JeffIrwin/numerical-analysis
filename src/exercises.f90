@@ -2154,7 +2154,7 @@ integer function chapter_6_francis_qr() result(nfail)
 		expect(:), a0(:,:)
 	double complex, allocatable :: eigvals(:), eigvecs(:,:)
 
-	integer :: i, n, nrng, irep, iters
+	integer :: i, n, nrng, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
