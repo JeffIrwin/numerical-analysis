@@ -400,6 +400,7 @@ double precision function norm2c(v)
 	! Note that dot_product() already conjugates one of the arguments, so there
 	! is no need for additional conjugation
 
+	!print *, "v = ", v
 	norm2c = dble(sqrt(dot_product(v, v)))
 
 end function norm2c
@@ -897,7 +898,7 @@ subroutine lu_factor(a, pivot)
 	!logical, parameter :: DO_PIVOT = .false.
 
 	double precision, intent(inout) :: a(:,:)
-	integer, intent(inout) :: pivot(:)
+	integer, allocatable, intent(inout) :: pivot(:)
 
 	!********
 
@@ -906,6 +907,14 @@ subroutine lu_factor(a, pivot)
 	!print *, "pivot = ", pivot
 
 	n = size(a, 1)
+
+	!if (.not. allocated(pivot)) allocate(pivot(n))
+	!if (allocated(pivot)) deallocate(pivot)
+	!allocate(pivot(n))
+	if (.not. allocated(pivot)) then
+		! TODO: panic. caller must allocate and initialize
+		print *, "Error: pivot is not allocated in lu_factor()"
+	end if
 
 	do i = 1, n
 		! Find max value in column i
@@ -934,6 +943,62 @@ subroutine lu_factor(a, pivot)
 	end do
 
 end subroutine lu_factor
+
+!********
+
+subroutine lu_factor_nopiv(a)
+
+	double precision, intent(inout) :: a(:,:)
+
+	!********
+
+	integer :: i, j, k, n
+
+	n = size(a, 1)
+
+	do i = 1, n
+		do j = i+1, n
+			a    (j, i) = &
+				a(j, i) / &
+				a(i, i)
+			do k = i+1, n
+				a    (j, k) = &
+					a(j, k) - &
+					a(j, i) * &
+					a(i, k)
+			end do
+		end do
+
+	end do
+
+end subroutine lu_factor_nopiv
+
+subroutine lu_factor_nopiv_c64(a)
+
+	double complex, intent(inout) :: a(:,:)
+
+	!********
+
+	integer :: i, j, k, n
+
+	n = size(a, 1)
+
+	do i = 1, n
+		do j = i+1, n
+			a    (j, i) = &
+				a(j, i) / &
+				a(i, i)
+			do k = i+1, n
+				a    (j, k) = &
+					a(j, k) - &
+					a(j, i) * &
+					a(i, k)
+			end do
+		end do
+
+	end do
+
+end subroutine lu_factor_nopiv_c64
 
 !********
 
@@ -1110,9 +1175,11 @@ subroutine qr_factor_c64(a, diag_)
 
 	!********
 
-	double complex :: s, u1, wa
+	double complex :: s, u1!, wa
+	double complex, allocatable :: w(:)
+
 	double precision :: normx
-	integer :: j, k, n
+	integer :: j, n!, k
 
 	n = size(a, 1)
 	allocate(diag_(n))
@@ -1123,28 +1190,40 @@ subroutine qr_factor_c64(a, diag_)
 
 		normx = norm2c(a(j:, j))
 		! TODO: panic if normx == 0
+		print *, "normx = ", normx
 
 		!s = -sign_(a(j,j))
 		s = -a(j,j) / abs(a(j,j))
+		!s = -exp(IMAG * arg(a(j,j)))
+		!s = -exp(IMAG * atan2(a(j,j)%im, a(j,j)%re))  ! same thing
 
 		u1 = a(j,j) - s * normx
-		a(j+1:, j) = a(j+1:, j) / u1
+
+		w = a(j:, j) / u1  ! TODO: avoid `w` temp array
+		w(1) = 1.d0
+
+		!a(j+1:, j) = a(j+1:, j) / u1
+		a(j+1:, j) = w(2:)
+
 		a(j,j) = s * normx
 		diag_(j) = -s * u1 / normx
 
-		do k = j+1, n
+		a(j:, j+1:) = a(j:, j+1:) - &
+			outer_product_c64(diag_(j) * w, matmul(conjg(w), a(j:, j+1:)))
 
-			! TODO: independently test qr c64 (i.e. not just as part of
-			! eig_francis_qr()).  I have no idea if this is correct
+		!do k = j+1, n
 
-			! TODO: what needs conjugated?  dot_product() already includes a
-			! conjg
-			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
-			!wa = diag_(j) * (dot_product(a(j+1:, j), conjg(a(j+1:, k))) + a(j,k))
+		!	! TODO: independently test qr c64 (i.e. not just as part of
+		!	! eig_francis_qr()).  I have no idea if this is correct
 
-			a(j,k) = a(j,k) - wa
-			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
-		end do
+		!	! TODO: what needs conjugated?  dot_product() already includes a
+		!	! conjg
+		!	wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + conjg(a(j,k)))
+		!	!wa = diag_(j) * (dot_product(a(j+1:, j), conjg(a(j+1:, k))) + a(j,k))
+
+		!	a(j,k) = a(j,k) - wa
+		!	a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
+		!end do
 
 	end do
 	!print *, "diag_ = "
@@ -1254,8 +1333,9 @@ function qr_mul_c64(qr, diag_, x) result(qx)
 	double complex, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double complex, allocatable :: qx(:,:)
 	!********
-	double complex :: wq
-	integer :: j, k, n
+	!double complex :: wq
+	double complex, allocatable :: w(:)
+	integer :: j, n!, k
 
 	!print *, "qr = "
 	!print "(5es15.5)", qr
@@ -1263,13 +1343,34 @@ function qr_mul_c64(qr, diag_, x) result(qx)
 	n = size(qr, 1)
 	qx = x  ! could make a subroutine version which replaces x instead
 
+	!! To multiply by transpose(Q) instead, just loop from 1 up to n instead
+	!do j = n, 1, -1
+	!	do k = 1, n
+	!		wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + conjg(qx(j,k)))
+	!		qx(j, k) = qx(j, k) - wq
+	!		qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+	!	end do
+	!end do
+
 	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
-		do k = 1, n
-			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
-			qx(j, k) = qx(j, k) - wq
-			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
-		end do
+		w = [dcmplx(1.d0), qr(j+1:, j)]
+
+		! TODO: avoid temp array for outer_product()
+		qx(j:, :) = qx(j:, :) - &
+			outer_product_c64(diag_(j) * w, matmul(conjg(w), qx(j:, :)))
+		! TODO: avoid `w` temp array
+
+		!!qx(j:, :) = qx(j:, :) - &
+		!!	outer_product(diag_(j) * w, matmul(w, qx(j:, :)))
+
+		!do k = 1, n
+		!	wq = dot_product(w, qx(j:, k))
+		!	do i = j, n
+		!		qx(i, k) = qx(i, k) - diag_(j) * w(i-j+1) * wq
+		!	end do
+		!end do
+
 	end do
 
 	!print *, "qx = "
@@ -1295,6 +1396,24 @@ function outer_product(a, b) result(c)
 	end do
 
 end function outer_product
+
+function outer_product_c64(a, b) result(c)
+	double complex, intent(in) :: a(:), b(:)
+	double complex, allocatable :: c(:,:)
+
+	integer :: i, j, na, nb
+	na = size(a)
+	nb = size(b)
+
+	allocate(c(na, nb))
+	do j = 1, nb
+	do i = 1, na
+		!c(i,j) = a(i) * conjg(b(j))
+		c(i,j) = a(i) * b(j)
+	end do
+	end do
+
+end function outer_product_c64
 
 !********
 
@@ -3168,7 +3287,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!********
 
 	double complex :: l1, l2, eigval
-	double complex, allocatable :: eigvec(:), aa(:,:), diag_(:), qq(:,:)
+	double complex, allocatable :: eigvec(:), aa(:,:)!, diag_(:), qq(:,:)
 
 	double precision, parameter :: eps = 1.d-40  ! TODO: arg
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
@@ -3340,20 +3459,26 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!print *, "aa = "
 		!print "(4es15.5)", aa
 
-		! Find null-space (kernel) using QR decomposition
-		call qr_factor_c64(aa, diag_)
-		qq = qr_get_q_expl_c64(aa, diag_)
-		!print *, "qq = "
-		!print "(4es15.5)", qq
+		! Undo transpose for lu_kernel.  TODO
+		aa = transpose(aa)
+		eigvec = lu_kernel_c64(aa)
 
-		! A - eigval*eye is singular, so the last row of Q will be in its null space
-		! and thus an eigenvector of A
-		!
-		! TODO: this probably won't work for eigenvalues with multiplicity.  In
-		! that case, you would need to get the last several rows and set
-		! multiple rows in the output
-		eigvec = qq(:,n)
-		!print *, "eigvec = ", eigvec
+		!!********
+		!! Find null-space (kernel) using QR decomposition
+		!call qr_factor_c64(aa, diag_)
+		!qq = qr_get_q_expl_c64(aa, diag_)
+		!!print *, "qq = "
+		!!print "(4es15.5)", qq
+
+		!! A - eigval*eye is singular, so the last row of Q will be in its null space
+		!! and thus an eigenvector of A
+		!!
+		!! TODO: this probably won't work for eigenvalues with multiplicity.  In
+		!! that case, you would need to get the last several rows and set
+		!! multiple rows in the output
+		!eigvec = qq(:,n)
+		!!print *, "eigvec = ", eigvec
+		!!********
 
 		!! Confirm that it's an eigenvec.  All components of this print should be the
 		!! same number
@@ -3444,6 +3569,113 @@ end function eig_francis_qr
 
 !===============================================================================
 
+function lu_kernel(a) result(kernel)
+	! Find the kernel or null-space of `a` using LU decomposition.  This only
+	! returns 1 vector of the kernel, not the whole kernel basis
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable :: kernel(:)
+
+	double precision, allocatable :: a0(:,:)
+	integer :: i, n
+	integer, allocatable :: pivot(:)
+
+	a0 = a  ! TODO: testing only
+
+	n = size(a, 1)
+	kernel = zeros(n)
+
+	! The kernel of `a` is the same as `u`
+	pivot = [(i, i = 1, size(a,1))]
+
+	call lu_factor(a, pivot)
+	!call lu_factor_nopiv(a)  ! TODO: fix it with pivoting
+
+	!kernel(n) = 1.d0
+	kernel(pivot(n)) = 1.d0
+
+	do i = n-1, 1, -1
+
+		!kernel(i) = -dot_product(kernel(i+1:), a(i, i+1:n)) / a(i,i)
+		!kernel(i) = -dot_product(kernel(i+1:), a(i, pivot(i+1:n))) / a(i,i)
+		kernel(pivot(i)) = &
+			-dot_product(kernel(pivot(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i),i)
+
+	end do
+
+	! Unpivot
+	kernel = kernel(pivot)
+
+	print *, "a0 = "
+	print "("//to_str(n)//"es19.9)", a0
+	print *, "kernel = ", kernel
+	print *, "a0 * kernel = ", matmul(a0, kernel)
+
+	if (norm2(matmul(a0, kernel)) > 0.001d0) then
+		print *, "Error: residual too large in lu_kernel_c64()"
+		stop
+	end if
+	!stop
+
+end function lu_kernel
+
+!===============================================================================
+
+function lu_kernel_c64(a) result(kernel)
+	! Find the kernel or null-space of `a` using LU decomposition
+	use numa__utils
+	double complex, intent(inout) :: a(:,:)
+	double complex, allocatable :: kernel(:)
+
+	double complex, allocatable :: a0(:,:)
+	integer :: i, n
+	integer, allocatable :: pivot(:)
+
+	a0 = a  ! TODO: testing only
+
+	n = size(a, 1)
+	kernel = zeros(n)
+
+	! The kernel of `a` is the same as `u`
+	pivot = [(i, i = 1, size(a,1))]
+
+	!call lu_factor(a, pivot)
+	call lu_factor_nopiv_c64(a)  ! TODO: fix it with pivoting.  see real version lu_kernel()
+
+	!kernel(n) = 1.d0
+	kernel(pivot(n)) = 1.d0
+
+	do i = n-1, 1, -1
+
+		!kernel(i) = -dot_product(kernel(i+1:), a(i, i+1:n)) / a(i,i)
+		kernel(i) = -dot_product(conjg(kernel(i+1:)), a(i, i+1:n)) / a(i,i)
+		!kernel(i) = -dot_product(kernel(i+1:), conjg(a(i, i+1:n))) / a(i,i)
+
+		!kernel(i) = -dot_product(kernel(i+1:), a(i, pivot(i+1:n))) / a(i,i)
+		!kernel(pivot(i)) = &
+		!	-dot_product(kernel(pivot(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i),i)
+
+	end do
+
+	! Unpivot
+	kernel = kernel(pivot)
+
+	print *, "a0 = "
+	print "("//to_str(n)//"es19.9)", a0
+	print *, "kernel = ", kernel
+	print *, "a0 * kernel = ", matmul(a0, kernel)
+	print *, "norm = ", norm2c(matmul(a0, kernel))
+
+	if (norm2c(matmul(a0, kernel)) > 0.001d0) then
+		print *, "Error: residual too large in lu_kernel_c64()"
+		stop
+	end if
+	!stop
+
+end function lu_kernel_c64
+
+!===============================================================================
+
 function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
 	! QR algorithm
@@ -3459,7 +3691,7 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 	!********
 
 	double precision :: h1, h2, rad, givens(2,2), eigval
-	double precision, allocatable :: c(:), s(:), a0(:,:), diag_(:), q(:,:), &
+	double precision, allocatable :: c(:), s(:), a0(:,:), &!diag_(:), q(:,:), &
 		eigvec(:)
 	integer :: i, j, k, n
 
@@ -3539,20 +3771,26 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 		!print *, "a = "
 		!print "(4es15.5)", a
 
-		! Find null-space using QR decomposition
-		call qr_factor(a, diag_)
-		q = qr_get_q_expl(a, diag_)
-		!print *, "q = "
-		!print "(4es15.5)", q
+		! Undo transpose for lu_kernel.  TODO
+		a = transpose(a)
+		eigvec = lu_kernel(a)
 
-		! A - eigval*eye is singular, so the last row of Q will be in its null space
-		! and thus an eigenvector of A
-		!
-		! TODO: this probably won't work for eigenvalues with multiplicity.  In
-		! that case, you would need to get the last several rows and set
-		! multiple rows in the output
-		eigvec = q(:,n)
-		!print *, "eigvec = ", eigvec
+		!********
+		!! Find null-space using QR decomposition
+		!call qr_factor(a, diag_)
+		!q = qr_get_q_expl(a, diag_)
+		!!print *, "q = "
+		!!print "(4es15.5)", q
+
+		!! A - eigval*eye is singular, so the last row of Q will be in its null space
+		!! and thus an eigenvector of A
+		!!
+		!! TODO: this probably won't work for eigenvalues with multiplicity.  In
+		!! that case, you would need to get the last several rows and set
+		!! multiple rows in the output
+		!eigvec = q(:,n)
+		!!print *, "eigvec = ", eigvec
+		!********
 
 		!! Confirm that it's an eigenvec.  All components of this print should be the
 		!! same number

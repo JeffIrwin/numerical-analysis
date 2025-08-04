@@ -1858,7 +1858,7 @@ integer function chapter_4_qr() result(nfail)
 
 	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), diag_(:)
 
-	integer :: i, n, nrng, irep
+	integer :: i, n, nrng, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1870,11 +1870,13 @@ integer function chapter_4_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
+	p0 = -1
 	do n = 2, 70, 5
 
 		allocate(a0(n, n))
 
-		if (mod(n, 10) == 0) then
+		if (n/10 > p0) then
+			p0 = n/10
 			print *, "Testing QR decomposition with n = " // to_str(n) // " ..."
 		end if
 
@@ -1910,6 +1912,107 @@ integer function chapter_4_qr() result(nfail)
 	print *, ""
 
 end function chapter_4_qr
+
+!===============================================================================
+
+integer function chapter_4_qr_c64() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_qr_c64"
+
+	double precision, allocatable :: ar(:,:), ai(:,:)
+	double complex, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), diag_(:)
+
+	integer :: i, n, nrng, irep, p0
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+
+	! TODO: this doesn't work
+
+	n = 2
+	allocate(a0(n,n))
+	a0(:,1) = [dcmplx(1.d0), IMAG]
+	a0(:,2) = [-IMAG, dcmplx(1.d0)]
+	print *, "a0 = "
+	print "("//to_str(2*n)//"es15.5)", a0
+
+	a = a0
+	call qr_factor_c64(a, diag_)
+
+	print *, "qr(a) = "
+	print "("//to_str(2*n)//"es15.5)", a
+
+	r = qr_get_r_expl_c64(a)
+	print *, "r = "
+	print "("//to_str(2*n)//"es15.5)", r
+
+	q = qr_get_q_expl_c64(a, diag_)
+	print *, "q = "
+	print "("//to_str(2*n)//"es15.5)", q
+
+	call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() 1 fuzz n x n")
+
+	stop
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	p0 = -1
+	!do n = 2, 70, 5
+	do n = 4, 4  ! TODO
+
+		allocate(ai(n,n), ar(n,n))
+
+		!if (mod(n, 10) == 0) then
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing QR decomposition with n = " // to_str(n) // " ..."
+		end if
+
+		!do irep = 1, 3
+		do irep = 1, 1  ! TODO
+
+			call random_number(ar)  ! random matrix
+			call random_number(ai)  ! random matrix
+			a0 = ar + IMAG * ai
+
+			print *, "a0 = "
+			print "("//to_str(2*n)//"es15.5)", a0
+			!print "("//es15.5)", a0
+
+			a = a0
+			call qr_factor_c64(a, diag_)
+
+			print *, "qr(a) = "
+			print "("//to_str(2*n)//"es15.5)", a
+
+			r = qr_get_r_expl_c64(a)
+			!print *, "r = "
+			!print "(5es15.5)", r
+
+			q = qr_get_q_expl_c64(a, diag_)
+			!print *, "q = "
+			!print "(5es15.5)", q
+
+			call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() 1 fuzz n x n")
+			call test(norm2(abs(matmul(transpose(q), q) - eye(n))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() 1 q' * q, n x n")
+
+		end do
+
+		deallocate(a0)
+	end do
+
+	!********
+	print *, ""
+	stop
+
+end function chapter_4_qr_c64
 
 !===============================================================================
 
