@@ -1932,9 +1932,16 @@ integer function chapter_4_qr_c64() result(nfail)
 
 	n = 2
 	allocate(a0(n,n))
-	!a0(:,1) = [dcmplx(1.d0), 2*IMAG]
-	a0(:,1) = [(1.d0, 1.d0), 2*IMAG]
-	a0(:,2) = [-IMAG, dcmplx(1.d0)]
+	!a0(:,1) = [dcmplx(1.d0), 2*IMAG_]
+
+	a0(:,1) = dcmplx([(1.d0, 1.d0), 2*IMAG_])
+	a0(:,2) = dcmplx([-IMAG_, dcmplx(1.d0)])
+
+	!a0(1,1) = (1.d0, 1.d0)
+	!a0(1,2) = 2*IMAG_
+	!a0(1,2) = -IMAG_
+	!a0(2,2) = dcmplx(1.d0)
+
 	print *, "a0 = "
 	print "("//to_str(2*n)//"es15.5)", a0
 
@@ -1961,15 +1968,13 @@ integer function chapter_4_qr_c64() result(nfail)
 	call test(norm2(abs(matmul(transpose(conjg(q)), q) - eye(n))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q 2x2")
 	deallocate(a0)
 
-	!stop
 	!--------------------------------------
 
 	n = 3
 	allocate(a0(n,n))
-	a0(:,1) = [( 1.d0,  1.d0), ( 0.d0,  2.d0), ( 0.d0,  0.d0)]  ! does not work
-	!a0(:,1) = [( 1.d0,  0.d0), ( 0.d0,  2.d0), ( 0.d0,  0.d0)]  ! works (only a(1,1)%im changed)
-	a0(:,2) = [( 0.d0, -1.d0), ( 1.d0,  0.d0), ( 1.d0,  0.d0)]
-	a0(:,3) = [( 0.d0,  3.d0), ( 0.d0,  0.d0), ( 2.d0,  0.d0)]
+	a0(:,1) = dcmplx([( 1.d0,  1.d0), ( 0.d0,  2.d0), ( 0.d0,  0.d0)])
+	a0(:,2) = dcmplx([( 0.d0, -1.d0), ( 1.d0,  0.d0), ( 1.d0,  0.d0)])
+	a0(:,3) = dcmplx([( 0.d0,  3.d0), ( 0.d0,  0.d0), ( 2.d0,  0.d0)])
 	print *, "a0 = "
 	print "("//to_str(2*n)//"es15.5)", a0
 
@@ -2026,7 +2031,7 @@ integer function chapter_4_qr_c64() result(nfail)
 
 			call random_number(ar)  ! random matrix
 			call random_number(ai)  ! random matrix
-			a0 = ar + IMAG * ai
+			a0 = ar + IMAG_ * ai
 
 			!print *, "a0 = "
 			!print "("//to_str(2*n)//"es15.5)", a0

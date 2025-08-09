@@ -12,7 +12,7 @@ module numa
 	!   make panic use a macro to log the filename and line number
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
-	double complex, parameter :: IMAG = (0.d0, 1.d0)  ! sqrt(-1)
+	double complex, parameter :: IMAG_ = (0.d0, 1.d0)  ! sqrt(-1)
 
 	integer, parameter :: &
 		SPLINE_CASE_NO_CURVE   = 1, &
@@ -473,7 +473,7 @@ function fft_core(x, invert_) result(xx)
 
 			! The main difference between fft and ifft is the sign of this
 			! exponent
-			e = exp(sgn * IMAG * PI * j / 2 ** m)
+			e = exp(sgn * IMAG_ * PI * j / 2 ** m)
 
 			do r = 1, n2, 2 ** m
 				u = xx(r + j)
@@ -3589,69 +3589,10 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	if (.not. present(eigvecs)) return
 
 	! Zero the remaining below-diagonal non-zeros
+	call real_schur_to_complex(aa, pq, ca, cq, eps)
 
-	! Cast to complex
-	ca = aa
-	cq = pq
-
-	!print *, "ca = "
-	!print "("//to_str(2*n)//"es19.9)", ca
-	!print *, ""
-	!stop
-
-	do i = 2, n
-		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
-
-		! Source:
-		!
-		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
-
-		if (abs(ca(i, i-1)) <= eps * (abs(ca(i-1, i-1)) + abs(ca(i,i)))) then
-			ca(i, i-1) = 0
-			cycle
-		end if
-
-		!print *, "Zeroing at i = ", i
-		!print *, "ca(i, i-1) = ", ca(i, i-1)
-
-		! 2x2 block around diagonal
-		a = dble(ca(i-1, i-1))
-		b = dble(ca(i, i-1))
-		c = dble(ca(i-1, i))
-		d = dble(ca(i, i))
-
-		t = a + d         ! trace
-		det_ = a*d - b*c  ! determinant
-
-		! Eigenvalues of 2x2 block
-		mu(1) = t/2 + sqrt(dcmplx(t**2/4 - det_))
-		mu(2) = t/2 - sqrt(dcmplx(t**2/4 - det_))
-		!print *, "mu = ", mu
-
-		! Some of the eigenvalues get swapped around in this loop
-		eigvals(i-1) = mu(1)
-		eigvals(i)   = mu(2)
-
-		mu = mu - ca(i,i)
-
-		rad = norm2c([mu(1), ca(i, i-1)])
-		cc = mu(1) / rad
-		sc = ca(i, i-1) / rad
-
-		g(1,:) = [conjg(cc), sc]
-		g(2,:) = [-sc, cc]
-
-		ca(i-1:i, i-1:) = matmul(g, ca(i-1:i, i-1:))
-		ca(:i, i-1:i)   = matmul(ca(:i, i-1:i), transpose(conjg(g)))
-		cq(: , i-1:i)   = matmul(cq(: , i-1:i), transpose(conjg(g)))
-
-		ca(i, i-1) = 0
-
-		!print *, "ca = "
-		!print "("//to_str(2*n)//"es19.9)", ca
-		!print *, ""
-
-	end do
+	! Some of the eigenvalues get swapped around in real_schur_to_complex()
+	eigvals = diag(ca)
 
 	!********
 
@@ -3679,6 +3620,79 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	!print "("//to_str(n)//"es19.9)", eigvecs
 
 end function eig_francis_qr
+
+!===============================================================================
+
+subroutine real_schur_to_complex(r, q, cr, cq, eps)
+	! Convert real Schur form [r, q] to complex Schur form [cr, cq].  Compare
+	! the MATLAB and scipy functions rsf2csf()
+	!
+	! Matrix `r` is quasi-triangular and `q` is unitary
+
+	double precision, intent(in) :: r(:,:), q(:,:)
+	double complex, allocatable, intent(out) :: cr(:,:), cq(:,:)
+	double precision, intent(in) :: eps
+	!********
+
+	double complex :: mu(2), cc, sc, g(2,2)
+
+	double precision :: a, b, c, d, t, det_, rad
+
+	integer :: i
+
+	! Cast to complex
+	cr = r
+	cq = q
+
+	do i = 2, size(r, 1)
+		! Source:
+		!
+		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
+
+		if (abs(cr(i, i-1)) <= eps * (abs(cr(i-1, i-1)) + abs(cr(i,i)))) then
+			cr(i, i-1) = 0
+			cycle
+		end if
+
+		!print *, "Zeroing at i = ", i
+		!print *, "cr(i, i-1) = ", cr(i, i-1)
+
+		! 2x2 block around diagonal
+		a = dble(cr(i-1, i-1))
+		b = dble(cr(i, i-1))
+		c = dble(cr(i-1, i))
+		d = dble(cr(i, i))
+
+		t = a + d         ! trace
+		det_ = a*d - b*c  ! determinant
+
+		! Eigenvalues of 2x2 block
+		mu(1) = t/2 + sqrt(dcmplx(t**2/4 - det_))
+		mu(2) = t/2 - sqrt(dcmplx(t**2/4 - det_))
+		!print *, "mu = ", mu
+
+		mu(1) = mu(1) - cr(i,i)
+
+		rad = norm2c([mu(1), cr(i, i-1)])
+		cc = mu(1) / rad
+		sc = cr(i, i-1) / rad
+
+		g(1,:) = [conjg(cc), sc]
+		g(2,:) = [-sc, cc]
+
+		cr(i-1:i, i-1:) = matmul(g, cr(i-1:i, i-1:))
+		cr(:i, i-1:i)   = matmul(cr(:i, i-1:i), transpose(conjg(g)))
+		cq(: , i-1:i)   = matmul(cq(: , i-1:i), transpose(conjg(g)))
+
+		cr(i, i-1) = 0
+
+		!print *, "cr = "
+		!print "("//to_str(2*n)//"es19.9)", cr
+		!print *, ""
+
+	end do
+
+end subroutine real_schur_to_complex
 
 !===============================================================================
 
