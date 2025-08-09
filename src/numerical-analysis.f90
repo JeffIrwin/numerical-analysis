@@ -3426,19 +3426,17 @@ end function house
 
 !===============================================================================
 
-function eig_francis_qr(h, eigvecs) result(eigvals)
-	! Get the eigenvalues of `h` using the Francis double step QR algorithm
-	!
-	! TODO: rename h -> a
+function eig_francis_qr(aa, eigvecs) result(eigvals)
+	! Get the eigenvalues of `aa` using the Francis double step QR algorithm
 
 	use numa__utils, only:  sorted, to_str
-	double precision, intent(inout) :: h(:,:)
+	double precision, intent(inout) :: aa(:,:)
 	double complex, allocatable :: eigvals(:)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
 	double complex :: l1, l2, mu(2), cc, sc, g(2,2)
-	double complex, allocatable :: hc(:,:), cq(:,:)
+	double complex, allocatable :: ca(:,:), cq(:,:)
 
 	double precision, parameter :: eps = 1.d-10  ! TODO: arg?
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
@@ -3446,62 +3444,62 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	double precision, allocatable :: pq(:,:), a0(:,:)
 
 	integer, parameter :: iters = 100  ! TODO: arg?
-	integer :: i, i1, ie, k, n, p, q, r, m, iter  ! TODO: rename p, q, r -> ip, ...
+	integer :: i, i1, ie, k, n, j, k1, iter
 
 	logical, allocatable :: is_real(:)
 
-	a0 = h  ! TODO: necessary?
+	a0 = aa  ! TODO: necessary?
 
-	n = size(h, 1)
+	n = size(aa, 1)
 
 	! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
 	! can't initialize pq to eye here.  Instead, we need an initial
 	! transformation from the Hessenberg reduction
-	call hess(h, pq)
+	call hess(aa, pq)
 
-	!print *, "h = "
-	!print "("//to_str(n)//"es19.9)", h
+	!print *, "aa = "
+	!print "("//to_str(n)//"es19.9)", aa
 
-	p = n  ! p indicates the active matrix size
+	i = n  ! i indicates the active matrix size
 	iter = 0
 
-	do while (p > 2)
+	do while (i > 2)
 		iter = iter + 1
 		if (iter > iters) then
 			print *, "Error: Francis failed to converge"
 			exit
 		end if
-		!print *, "p = ", p
+		!print *, "i = ", i
 
-		q = p - 1
-		s = h(q,q) + h(p,p)
-		t = h(q,q) * h(p,p) - h(q,p) * h(p,q)
+		j = i - 1
+		s = aa(j,j) + aa(i,i)
+		t = aa(j,j) * aa(i,i) - aa(j,i) * aa(i,j)
 
 		! Compute first 3 elements of first column of M
-		x = h(1,1)**2 + h(1,2) * h(2,1) - s * h(1,1) + t
-		y = h(2,1) * (h(1,1) + h(2,2) - s)
-		z = h(2,1) * h(3,2)
+		x = aa(1,1)**2 + aa(1,2) * aa(2,1) - s * aa(1,1) + t
+		y = aa(2,1) * (aa(1,1) + aa(2,2) - s)
+		z = aa(2,1) * aa(3,2)
 
-		do k = 0, p-3
+		do k = 0, i-3
 
 			! Determine the Householder reflector `p3`
 			p3 = house([x, y, z])
 			!print *, "p3 = "
 			!print "(3es15.5)", p3
 
-			r = max(1, k)
-			h(k+1: k+3, r:) = matmul(p3, h(k+1: k+3, r:))
+			k1 = max(1, k)
+			aa(k+1: k+3, k1:) = matmul(p3, aa(k+1: k+3, k1:))
 
-			r = min(k+4, p)
-			h(:r, k+1: k+3) = matmul(h(:r, k+1: k+3), p3)
+			k1 = min(k+4, i)
+			aa(:k1, k+1: k+3) = matmul(aa(:k1, k+1: k+3), p3)
 
 			! TODO: only if eigvecs is present
 			pq(:, k+1: k+3) = matmul(pq(:, k+1: k+3), p3)
 
-			x = h(k+2, k+1)
-			y = h(k+3, k+1)
-			if (k < p-3) then
-				z = h(k+4, k+1)
+			x = aa(k+2, k+1)
+			y = aa(k+3, k+1)
+			if (k < i-3) then
+				z = aa(k+4, k+1)
 			end if
 
 		end do
@@ -3515,34 +3513,32 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		p2(1,:) = [ck, -sk]
 		p2(2,:) = [sk,  ck]
 
-		h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
-		h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+		aa(j:i, i-2:) = matmul(p2, aa(j:i, i-2:))
+		aa(:i, i-1:i) = matmul(aa(:i, i-1:i), transpose(p2))
 
 		! TODO: only if eigvecs is present
-		pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
+		pq(:, i-1:i) = matmul(pq(:, i-1:i), transpose(p2))
 
 		! Check for convergence
 
-		!print *, "h(p,q)     = ", h(p,q)
-		!print *, "h(p-1,q-1) = ", h(p-1,q-1)
+		!print *, "aa(i,j)     = ", aa(i,j)
+		!print *, "aa(i-1,j-1) = ", aa(i-1,j-1)
 
-		if (abs(h(p,q)) < eps * (abs(h(q,q)) + abs(h(p,p)))) then
-			!print *, "p -= 1"
-			h(p,q) = 0.d0
-			p = p - 1
+		if (abs(aa(i,j)) < eps * (abs(aa(j,j)) + abs(aa(i,i)))) then
+			!print *, "i -= 1"
+			aa(i,j) = 0.d0
+			i = i - 1
 			iter = 0
-			q = p - 1  ! unnecessary?  happens at top of while loop anyway
-		else if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
-			!print *, "p -= 2"
-			h(p-1, q-1) = 0.d0
-			p = p - 2
+		else if (abs(aa(i-1, j-1)) < eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
+			!print *, "i -= 2"
+			aa(i-1, j-1) = 0.d0
+			i = i - 2
 			iter = 0
-			q = p - 1
 		end if
 
 	end do
-	!print *, "h = "
-	!print "("//to_str(n)//"es19.9)", h
+	!print *, "aa = "
+	!print "("//to_str(n)//"es19.9)", aa
 	!print *, "pq = "
 	!print "("//to_str(n)//"es19.9)", pq
 
@@ -3556,10 +3552,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		i1 = i + 1
 
 		! 2x2 block around diagonal
-		a = h(i , i )
-		b = h(i1, i )
-		c = h(i , i1)
-		d = h(i1, i1)
+		a = aa(i , i )
+		b = aa(i1, i )
+		c = aa(i , i1)
+		d = aa(i1, i1)
 
 		! TODO: if b over tol, just cycle now and remove later condition
 
@@ -3590,7 +3586,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	! Second pass: collect the real eigenvalues not saved in the first pass
 	do i = 1, n
 		if (.not. is_real(i)) cycle
-		eigvals(i) = h(i,i)
+		eigvals(i) = aa(i,i)
 		ie = ie + 1
 	end do
 
@@ -3603,34 +3599,34 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	! Zero the remaining below-diagonal non-zeros
 
 	! Cast to complex
-	hc = h
+	ca = aa
 	cq = pq
 
-	!print *, "hc = "
-	!print "("//to_str(2*n)//"es19.9)", hc
+	!print *, "ca = "
+	!print "("//to_str(2*n)//"es19.9)", ca
 	!print *, ""
 	!stop
 
-	do m = 2, n
+	do i = 2, n
 		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
 
 		! Source:
 		!
 		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
 
-		if (abs(hc(m, m-1)) <= eps * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
-			hc(m, m-1) = 0
+		if (abs(ca(i, i-1)) <= eps * (abs(ca(i-1, i-1)) + abs(ca(i,i)))) then
+			ca(i, i-1) = 0
 			cycle
 		end if
 
-		!print *, "Zeroing at m = ", m
-		!print *, "hc(m, m-1) = ", hc(m, m-1)
+		!print *, "Zeroing at i = ", i
+		!print *, "ca(i, i-1) = ", ca(i, i-1)
 
 		! 2x2 block around diagonal
-		a = dble(hc(m-1, m-1))
-		b = dble(hc(m, m-1))
-		c = dble(hc(m-1, m))
-		d = dble(hc(m, m))
+		a = dble(ca(i-1, i-1))
+		b = dble(ca(i, i-1))
+		c = dble(ca(i-1, i))
+		d = dble(ca(i, i))
 
 		t = a + d         ! trace
 		det_ = a*d - b*c  ! determinant
@@ -3641,36 +3637,36 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!print *, "mu = ", mu
 
 		! Some of the eigenvalues get swapped around in this loop
-		eigvals(m-1) = mu(1)
-		eigvals(m)   = mu(2)
+		eigvals(i-1) = mu(1)
+		eigvals(i)   = mu(2)
 
-		mu = mu - hc(m,m)
+		mu = mu - ca(i,i)
 
-		rad = norm2c([mu(1), dcmplx(hc(m, m-1))])
+		rad = norm2c([mu(1), dcmplx(ca(i, i-1))])
 		cc = mu(1) / rad
-		sc = hc(m, m-1) / rad
+		sc = ca(i, i-1) / rad
 
 		g(1,:) = [conjg(cc), sc]
 		g(2,:) = [-sc, cc]
 
-		hc(m-1:m, m-1:) = matmul(g, hc(m-1:m, m-1:))
-		hc(:m, m-1:m) = matmul(hc(:m, m-1:m), transpose(conjg(g)))
-		cq(:, m-1:m) = matmul(cq(:, m-1:m), transpose(conjg(g)))
+		ca(i-1:i, i-1:) = matmul(g, ca(i-1:i, i-1:))
+		ca(:i, i-1:i)   = matmul(ca(:i, i-1:i), transpose(conjg(g)))
+		cq(: , i-1:i)   = matmul(cq(: , i-1:i), transpose(conjg(g)))
 
-		hc(m, m-1) = 0
+		ca(i, i-1) = 0
 
-		!print *, "hc = "
-		!print "("//to_str(2*n)//"es19.9)", hc
+		!print *, "ca = "
+		!print "("//to_str(2*n)//"es19.9)", ca
 		!print *, ""
 
 	end do
 
 	!********
 
-	!print *, "hc = "
-	!print "("//to_str(2*n)//"es19.9)", hc
+	!print *, "ca = "
+	!print "("//to_str(2*n)//"es19.9)", ca
 
-	! Find the eigenvectors of `hc`
+	! Find the eigenvectors of triangular `ca`
 	eigvecs = eye(n)
 	do i = 2, n
 		! Looking at LAPACK, it has a special-purpose quasi-triangular solver
@@ -3680,7 +3676,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!
 		!     https://netlib.org/lapack/explore-html/d2/d98/group__trevc3_gaee05b7252c5a3b2b935d5a4a6101033d.html
 		!
-		eigvecs(1: i-1, i) = invmul_c64(hc(i,i) * eye(i-1) - hc(:i-1, :i-1) , hc(:i-1, i))
+		eigvecs(1: i-1, i) = invmul_c64(ca(i,i) * eye(i-1) - ca(:i-1, :i-1) , ca(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
