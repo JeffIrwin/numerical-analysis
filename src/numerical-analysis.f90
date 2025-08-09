@@ -3437,8 +3437,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double complex :: l1, l2, mu(2), ac, bc, cc, dc, sc, g(2,2), tc, detc
-	double complex, allocatable :: hc(:,:), cq(:,:)!, diag_(:), qq(:,:)
+	double complex :: l1, l2, mu(2), cc, sc, g(2,2)
+	double complex, allocatable :: hc(:,:), cq(:,:)
 
 	double precision, parameter :: eps = 1.d-10  ! TODO: arg?
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
@@ -3627,17 +3627,17 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!print *, "hc(m, m-1) = ", hc(m, m-1)
 
 		! 2x2 block around diagonal
-		ac = hc(m-1, m-1)
-		bc = hc(m, m-1)
-		cc = hc(m-1, m)
-		dc = hc(m, m)
+		a = dble(hc(m-1, m-1))
+		b = dble(hc(m, m-1))
+		c = dble(hc(m-1, m))
+		d = dble(hc(m, m))
 
-		tc = ac + dc          ! trace
-		detc = ac*dc - bc*cc  ! determinant
+		t = a + d         ! trace
+		det_ = a*d - b*c  ! determinant
 
 		! Eigenvalues of 2x2 block
-		mu(1) = tc/2.d0 + sqrt(dcmplx(tc**2/4.d0 - detc))
-		mu(2) = tc/2.d0 - sqrt(dcmplx(tc**2/4.d0 - detc))
+		mu(1) = t/2.d0 + sqrt(dcmplx(t**2/4.d0 - det_))
+		mu(2) = t/2.d0 - sqrt(dcmplx(t**2/4.d0 - det_))
 		!print *, "mu = ", mu
 
 		! Some of the eigenvalues get swapped around in this loop
