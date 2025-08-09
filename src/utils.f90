@@ -38,11 +38,26 @@ module numa__utils
 	interface sorted
 		! Functions
 		procedure :: sorted_f64
+		procedure :: sorted_c64
 	end interface
 
 	interface sort
 		! Subroutines
 		procedure :: sort_f64
+		procedure :: sort_c64
+	end interface
+
+	interface compare_lex
+		procedure :: compare_lex  ! TODO: rename routines that clash with the overload
+		procedure :: compare_lex_c64
+	end interface
+	interface lt_lex
+		procedure :: lt_lex
+		procedure :: lt_lex_c64
+	end interface
+	interface lte_lex
+		procedure :: lte_lex
+		procedure :: lte_lex_c64
 	end interface
 
 	integer, parameter :: &
@@ -160,27 +175,59 @@ integer function compare_lex(a, b) result(compare)
 
 end function compare_lex
 
+integer function compare_lex_c64(a, b) result(compare)
+
+	! Lexicographically compare int vectors a and b.  Return COMPARE_LESS_ if a < b,
+	! COMPARE_EQUAL_ if a == b, or COMPARE_GREATER_ if a > b.
+
+	double complex, intent(in) :: a, b
+
+	if (a%re < b%re) then
+		compare = COMPARE_LESS_
+		return
+	else if (a%re > b%re) then
+		compare = COMPARE_GREATER_
+		return
+	end if
+	if (a%im < b%im) then
+		compare = COMPARE_LESS_
+		return
+	else if (a%im > b%im) then
+		compare = COMPARE_GREATER_
+		return
+	end if
+
+	compare = COMPARE_EQUAL_
+
+end function compare_lex_c64
+
 !===============================================================================
 
 logical function lt_lex(a, b) result(lt)
-
 	integer, intent(in) :: a(:), b(:)
-
 	lt = compare_lex(a, b) == COMPARE_LESS_
-
 end function lt_lex
+
+logical function lt_lex_c64(a, b) result(lt)
+	double complex, intent(in) :: a, b
+	lt = compare_lex(a, b) == COMPARE_LESS_
+end function lt_lex_c64
 
 !===============================================================================
 
 logical function lte_lex(a, b) result(lte)
-
 	integer, intent(in) :: a(:), b(:)
 	integer :: comp
-
 	comp = compare_lex(a, b)
 	lte = comp == COMPARE_LESS_ .or. comp == COMPARE_EQUAL_
-
 end function lte_lex
+
+logical function lte_lex_c64(a, b) result(lte)
+	double complex, intent(in) :: a, b
+	integer :: comp
+	comp = compare_lex(a, b)
+	lte = comp == COMPARE_LESS_ .or. comp == COMPARE_EQUAL_
+end function lte_lex_c64
 
 !===============================================================================
 
@@ -299,6 +346,16 @@ subroutine sort_f64(a)
 
 end subroutine sort_f64
 
+subroutine sort_c64(a)
+	! Replace `a` with its ascending sort
+	double complex, intent(inout) :: a(:)
+
+	integer, allocatable :: idx(:)
+	call sortidx_c64_1(a, idx)
+	a = a(idx)
+
+end subroutine sort_c64
+
 function sorted_f64(a) result(s)
 	! Return `a` sorted in ascending order
 	double precision, intent(in) :: a(:)
@@ -308,6 +365,17 @@ function sorted_f64(a) result(s)
 	call sort_f64(s)
 
 end function sorted_f64
+
+function sorted_c64(a) result(s)
+	! Return `a` sorted in ascending order with lexicographical ordering for
+	! complex values
+	double complex, intent(in) :: a(:)
+	double complex, allocatable :: s(:)
+
+	s = a
+	call sort_c64(s)
+
+end function sorted_c64
 
 recursive subroutine sortidx_f64_1(a, idx, lo_in, hi_in)
 
@@ -347,6 +415,44 @@ recursive subroutine sortidx_f64_1(a, idx, lo_in, hi_in)
 
 end subroutine sortidx_f64_1
 
+recursive subroutine sortidx_c64_1(a, idx, lo_in, hi_in)
+
+	! Quicksort a rank-2 array a along its 2nd dimension and return the
+	! sort permutation idx
+	!
+	! See also:  https://github.com/JeffIrwin/aoc-2022/blob/381da3c2d468b4e2a9d4bb1068d84a9e8ae6bec6/2022/23/main.f90#L114
+
+	double complex, intent(in) :: a(:)
+	integer, allocatable :: idx(:)
+	integer, optional :: lo_in, hi_in
+
+	integer :: lo, hi, p, i
+
+	logical :: outer
+
+	lo = 1
+	hi = size(a, 1)
+	outer = .true.
+
+	if (present(lo_in)) lo = lo_in
+	if (present(hi_in)) then
+		hi = hi_in
+		outer = .false.
+	end if
+
+	if (lo >= hi .or. lo < 1) return
+
+	if (.not. allocated(idx)) then
+		idx = [(i, i = 1, size(a, 1))]
+	end if
+
+	p = partition_c64_1(a, idx, lo, hi)
+
+	call sortidx_c64_1(a, idx, lo, p - 1)
+	call sortidx_c64_1(a, idx, p + 1, hi)
+
+end subroutine sortidx_c64_1
+
 !===============================================================================
 
 integer function partition_f64_1(a, idx, lo, hi) result(ans)
@@ -382,6 +488,40 @@ integer function partition_f64_1(a, idx, lo, hi) result(ans)
 	ans = i
 
 end function partition_f64_1
+
+integer function partition_c64_1(a, idx, lo, hi) result(ans)
+
+	double complex, intent(in) :: a(:)
+	integer, allocatable :: idx(:)  ! TODO: intent, allocatable
+	double complex :: pivot
+	integer :: lo, hi, i, j, mid
+
+	!pivot = a(:, idx(hi))
+
+	mid = (lo + hi) / 2
+	if (lt_lex(a(idx(mid)), a(idx(lo)))) then
+		idx([lo, mid]) = idx([mid, lo])
+	else if (lt_lex(a(idx(hi)), a(idx(lo)))) then
+		idx([lo, hi]) = idx([hi, lo])
+	else if (lt_lex(a(idx(mid)), a(idx(hi)))) then
+		idx([mid, hi]) = idx([hi, mid])
+	end if
+	pivot = a(idx(hi))
+
+	i = lo - 1
+	do j = lo, hi - 1
+	!do j = lo, hi
+		if (lte_lex(a(idx(j)), pivot)) then
+			i = i + 1
+			idx([i, j]) = idx([j, i])
+		end if
+	end do
+
+	i = i + 1
+	idx([i, hi]) = idx([hi, i])
+	ans = i
+
+end function partition_c64_1
 
 !===============================================================================
 

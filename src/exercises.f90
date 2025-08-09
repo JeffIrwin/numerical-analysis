@@ -2296,6 +2296,50 @@ end function chapter_6_hessenberg_qr
 
 !===============================================================================
 
+double precision function diff_complex_vecs(a, b) result(delta)
+	! Compare the "difference" between two complex vectors.  Cost is O(n**2) so
+	! avoid this when possible
+	double complex, intent(in) :: a(:), b(:)
+	!********
+
+	double complex :: ai, bi
+	double precision :: di
+	integer :: i
+
+	delta = 1.d0
+	if (size(a) /= size(b)) return
+
+	delta = 0.d0
+
+	! Apparently comparing complex vectors is hard.  It's not enough to sort
+	! then take the norm of the difference, as is possible with doubles, because
+	! small differences will completely change the lexicographical sort order
+
+	! For each a, find the closest element in b, and vice versa.  Add up the
+	! differences in a norm2 sense
+	!
+	! The two-way comparison is required in case the mapping is onto but not 1:1
+
+	do i = 1, size(a)
+		ai = a(i)
+		di = minval(abs(b - ai))
+		delta = delta + di**2
+		!print *, "di = ", di
+	end do
+
+	do i = 1, size(b)
+		bi = b(i)
+		di = minval(abs(a - bi))
+		delta = delta + di**2
+		!print *, "di = ", di
+	end do
+
+	delta = sqrt(delta)
+
+end function diff_complex_vecs
+
+!===============================================================================
+
 integer function chapter_6_francis_qr() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_6_francis_qr"
@@ -2336,11 +2380,18 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	eigvals = eig_francis_qr(a, eigvecs)
 	print *, "eigvals = [real, imag]"
-	print "(2es15.5)", eigvals
+	print "(2es15.5)", sorted(eigvals)
 
-	! Eigenvectors are optional to save work.  Beware, ordering may be different
+	! Eigenvectors are optional to save work.  Beware, rounding and ordering may be different
 	eigvals2 = eig_francis_qr(a)
-	call test(norm2c(eigvals2 - eigvals), 0.d0, 1.d-8, nfail, "eig_francis_qr no vecs")
+
+	diff = diff_complex_vecs(eigvals, eigvals2)
+	print *, "diff eigvals2 = ", diff
+	call test(diff, 0.d0, 1.d-8, nfail, "eig_francis_qr no vecs")
+	!call test(norm2c(sorted(eigvals2) - sorted(eigvals)), 0.d0, 1.d-8, nfail, "eig_francis_qr no vecs")
+
+	print *, "eigvals2 = [real, imag]"
+	print "(2es15.5)", sorted(eigvals2)
 
 	!print *, "a * eigvecs / eigvecs = "
 	!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs

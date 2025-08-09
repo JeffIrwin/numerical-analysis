@@ -20,6 +20,7 @@ RUN fpm --version
 ARG BRANCH="main"
 RUN echo "BRANCH = $BRANCH"
 
+RUN echo 42
 RUN git clone https://github.com/jeffirwin/numerical-analysis --branch "$BRANCH"
 WORKDIR /workdir/numerical-analysis
 
