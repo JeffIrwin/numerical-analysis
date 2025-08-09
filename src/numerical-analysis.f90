@@ -1131,18 +1131,16 @@ end function sign_
 subroutine hess(a, u)
 	! Apply the Householder Hessenberg reduction to `a`
 	!
-	! TODO: make `u` optional
-	!
 	! Source:  https://dspace.mit.edu/bitstream/handle/1721.1/75282/18-335j-fall-2006/contents/lecture-notes/lec14.pdf
 	double precision, intent(inout) :: a(:,:)
-	double precision, allocatable, intent(out) :: u(:,:)
+	double precision, allocatable, optional, intent(out) :: u(:,:)
 	!********
 
 	integer :: k, m
 	double precision, allocatable :: x(:), v(:), vv(:,:)
 
 	m = size(a,1)
-	allocate(vv(m, m-2))
+	if (present(u)) allocate(vv(m, m-2))
 
 	do k = 1, m-2
 
@@ -1154,14 +1152,13 @@ subroutine hess(a, u)
 		! TODO: avoid outer_product() at least, and maybe `x` temp array.
 		! Avoiding `v` temp array might be a little more work than worthwhile
 
-		a(k+1:, k:) = a(k+1:, k:) - outer_product(2.d0 * v, matmul(v, a(k+1:, k:)))
-		a(:, k+1:)  = a(:, k+1:)  - outer_product(matmul(a(:, k+1:), v), 2.d0 * v)
+		a(k+1:, k:) = a(k+1:, k:) - outer_product(2 * v, matmul(v, a(k+1:, k:)))
+		a(:, k+1:)  = a(:, k+1:)  - outer_product(matmul(a(:, k+1:), v), 2 * v)
 
-		vv(1: size(v), k) = v
+		if (present(u)) vv(1: size(v), k) = v
 
 	end do
-
-	! TODO: If vv not present, return early (and don't allocate vv above)
+	if (.not. present(u)) return
 
 	u = eye(m)
 	do k = m-2, 1, -1
@@ -3438,22 +3435,26 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	double complex :: l1, l2
 	double complex, allocatable :: ca(:,:), cq(:,:)
 
-	double precision, parameter :: eps = 1.d-10  ! TODO: arg?
+	double precision, parameter :: eps = 1.d-10  ! should eps and iters be args?
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
 	double precision, allocatable :: pq(:,:)
 
-	integer, parameter :: iters = 100  ! TODO: arg?
+	integer, parameter :: iters = 100
 	integer :: i, i1, k, n, j, k1, iter
 
 	logical, allocatable :: is_real(:)
 
 	n = size(aa, 1)
 
-	! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
-	! can't initialize pq to eye here.  Instead, we need an initial
-	! transformation from the Hessenberg reduction
-	call hess(aa, pq)
+	if (present(eigvecs)) then
+		! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
+		! can't initialize pq to eye here.  Instead, we need an initial
+		! transformation from the Hessenberg reduction
+		call hess(aa, pq)
+	else
+		call hess(aa)
+	end if
 
 	!print *, "aa = "
 	!print "("//to_str(n)//"es19.9)", aa
@@ -3494,8 +3495,9 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 			k1 = min(k+4, i)
 			aa(:k1, k+1: k+3) = matmul(aa(:k1, k+1: k+3), p3)
 
-			! TODO: only if eigvecs is present
-			pq(:, k+1: k+3) = matmul(pq(:, k+1: k+3), p3)
+			if (present(eigvecs)) then
+				pq(:, k+1: k+3) = matmul(pq(:, k+1: k+3), p3)
+			end if
 
 			x = aa(k+2, k+1)
 			y = aa(k+3, k+1)
@@ -3517,8 +3519,9 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 		aa(j:i, i-2:) = matmul(p2, aa(j:i, i-2:))
 		aa(:i, i-1:i) = matmul(aa(:i, i-1:i), transpose(p2))
 
-		! TODO: only if eigvecs is present
-		pq(:, i-1:i) = matmul(pq(:, i-1:i), transpose(p2))
+		if (present(eigvecs)) then
+			pq(:, i-1:i) = matmul(pq(:, i-1:i), transpose(p2))
+		end if
 
 		! Check for convergence
 
@@ -3596,8 +3599,6 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 
 	! Some of the eigenvalues get swapped around in real_schur_to_complex()
 	eigvals = diag(ca)
-
-	!********
 
 	!print *, "ca = "
 	!print "("//to_str(2*n)//"es19.9)", ca

@@ -2303,7 +2303,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	double precision :: diff
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &
 		expect(:), a0(:,:)!, ar(:,:), ai(:,:)
-	double complex, allocatable :: eigvals(:), eigvecs(:,:)
+	double complex, allocatable :: eigvals(:), eigvals2(:), eigvecs(:,:)
 
 	integer :: i, n, nrng, irep, p0
 
@@ -2335,9 +2335,12 @@ integer function chapter_6_francis_qr() result(nfail)
 	!       4. + 0.i
 
 	eigvals = eig_francis_qr(a, eigvecs)
-
 	print *, "eigvals = [real, imag]"
 	print "(2es15.5)", eigvals
+
+	! Eigenvectors are optional to save work.  Beware, ordering may be different
+	eigvals2 = eig_francis_qr(a)
+	call test(norm2c(eigvals2 - eigvals), 0.d0, 1.d-8, nfail, "eig_francis_qr no vecs")
 
 	!print *, "a * eigvecs / eigvecs = "
 	!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
