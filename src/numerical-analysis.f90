@@ -3483,7 +3483,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	double complex :: l1, l2, mu(2), ac, bc, cc, dc, sc, g(2,2), tc, detc
 	double complex, allocatable :: hc(:,:), cq(:,:)!, diag_(:), qq(:,:)
 
-	double precision, parameter :: eps = 1.d-10  ! TODO: arg
+	double precision, parameter :: eps = 1.d-10  ! TODO: arg?
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
 	double precision, allocatable :: pq(:,:), a0(:,:)
@@ -3575,10 +3575,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		end if
 
 	end do
-	print *, "h = "
-	print "("//to_str(n)//"es19.9)", h
-	print *, "pq = "
-	print "("//to_str(n)//"es19.9)", pq
+	!print *, "h = "
+	!print "("//to_str(n)//"es19.9)", h
+	!print *, "pq = "
+	!print "("//to_str(n)//"es19.9)", pq
 
 	! Process 2x2 block along diagonal and get their eigenvalues.  Some
 	! may be real, some may be complex
@@ -3706,15 +3706,19 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	hc = h
 	cq = pq
 
-	print *, "hc = "
-	print "("//to_str(2*n)//"es19.9)", hc
-	print *, ""
+	!print *, "hc = "
+	!print "("//to_str(2*n)//"es19.9)", hc
+	!print *, ""
 	!stop
 
 	!do p = 2, n
 	!do p = 1, n-1
 	do m = n, 2, -1
 		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
+
+		! Source:
+		!
+		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
 
 		! TODO: appropriate precision?
 		!if (abs(hc(m, m-1)) <= 1.d-14 * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
@@ -3723,8 +3727,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 			cycle
 		end if
 
-		print *, "Zeroing at m = ", m
-		print *, "hc(m, m-1) = ", hc(m, m-1)
+		!print *, "Zeroing at m = ", m
+		!print *, "hc(m, m-1) = ", hc(m, m-1)
 
 		! 2x2 block around diagonal
 		ac = hc(m-1, m-1)
@@ -3738,10 +3742,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		! Eigenvalues of 2x2 block
 		mu(1) = tc/2.d0 + sqrt(dcmplx(tc**2/4.d0 - detc))
 		mu(2) = tc/2.d0 - sqrt(dcmplx(tc**2/4.d0 - detc))
-		print *, "mu = ", mu
-
-		l1 = mu(1)
-		l2 = mu(2)
+		!print *, "mu = ", mu
 
 		!eigvals(m-1) = mu(2)
 		!eigvals(m)   = mu(1)
@@ -3761,36 +3762,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		cq(:, m-1:m) = matmul(cq(:, m-1:m), transpose(conjg(g)))
 
 		hc(m, m-1) = 0
-		!hc(m-1, m-1) = l2
-		!hc(m, m) = l1
 
-		print *, "hc = "
-		print "("//to_str(2*n)//"es19.9)", hc
-		print *, ""
-
-		!y = h(p, p-1)
-		!if (abs(y) < eps) cycle
-		!print *, "Zeroing at p = ", p
-		!print *, "y = ", y
-		!x = h(p-1, p-1)
-		!print *, "x = ", x
-
-		!! Determine the 2D Givens rotation `p2`
-		!rad = norm2([x, y])
-		!ck =  x / rad
-		!sk = -y / rad
-		!p2(1,:) = [ck, -sk]
-		!p2(2,:) = [sk,  ck]
-		!!h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
-		!h(p-1:p, p-1:) = matmul(p2, h(p-1:p, p-1:))
-		!!h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
-
-		!pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
-
-		!print *, "h = "
-		!print "("//to_str(n)//"es19.9)", h
+		!print *, "hc = "
+		!print "("//to_str(2*n)//"es19.9)", hc
 		!print *, ""
-		!!stop
 
 	end do
 
@@ -3799,57 +3774,28 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	! TODO: why do some eigvals get swapped around?
 	eigvals = diag(hc)
 
-	!rr = qr_get_r_expl(h)
-	!!rr = h
-
 	!! TODO: can this improve rounding error?
 	!hc = qr_get_r_expl_c64(hc)
 
-	print *, "hc = "
-	print "("//to_str(2*n)//"es19.9)", hc
-
-	!do i = 1, n
-	!	rr(i,i) = dble(eigvals(i))
-	!end do
+	!print *, "hc = "
+	!print "("//to_str(2*n)//"es19.9)", hc
 
 	! Find the eigenvectors of `hc`
 	eigvecs = eye_c64(n)
 	do i = 2, n
-
-		eigvecs(1: i-1, i) = invmul_c64(hc(i,i) * eye_c64(i-1) - hc(:i-1, :i-1) , hc(:i-1, i))
-
-		! TODO: implement invmul() for c64 and check this.  I doubt it will work
-		! because I can't even get the eigvecs for the real eigvals this way,
-		! but it might be as simple as a missing conjg() or transpose(). Or it
-		! might be more complicated because of the 2x2 diagonal blocks.  Maybe
-		! what I need is to convert from real Schur form to complex Schur form.
-		! The MATLAB fn rsf2csf() does this but i can't find an OSS alternative
-		!
 		! Looking at LAPACK, it has a special-purpose quasi-triangular solver
 		! for this problem.  There are cases for 1x1 blocks, 2x2 blocks, and
 		! real or complex eigenvectors, with all complex numbers encoded as
-		! pairs of reals:
+		! pairs of reals, without explicitly doing rsf2csf:
 		!
 		!     https://netlib.org/lapack/explore-html/d2/d98/group__trevc3_gaee05b7252c5a3b2b935d5a4a6101033d.html
 		!
-		! Maybe i'm on the right track with the Givens rotations above.  That's
-		! what scipy does, but it's a complex Givens rotation:
-		!
-		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
-		!
-
-		!eigvecs(1: i-1, i) = invmul(eigvals(i) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
-		!!eigvecs(1: i-1, i) = invmul(rr(i,i) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
-		!!eigvecs(1: i-1, i) = invmul(dble(eigvals(i)) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
-
+		eigvecs(1: i-1, i) = invmul_c64(hc(i,i) * eye_c64(i-1) - hc(:i-1, :i-1) , hc(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
 
-	!eigvecs = matmul(pq, eigvecs)
 	eigvecs = matmul(cq, eigvecs)
-
-	!eigvecs = matmul(pq, conjg(eigvecs))
 
 	!print *, "eigvecs francis qr = "
 	!print "("//to_str(n)//"es19.9)", eigvecs

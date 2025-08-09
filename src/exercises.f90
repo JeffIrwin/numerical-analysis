@@ -2326,18 +2326,8 @@ integer function chapter_6_francis_qr() result(nfail)
 	a(:,4) = [-8,  0, -1,   5,  0,  8]
 	a(:,5) = [-4,  3, -5,   7,  2, 10]
 	a(:,6) = [ 6,  1,  4, -11, -7, -1]
-
-	!n = 4
-	!allocate(a(n,n))
-	!a(:,1) = [ 7,  3,  4, -11]
-	!a(:,2) = [-6,  4, -5,   7]
-	!a(:,3) = [-1, -9,  2,   2]
-	!a(:,4) = [-8,  0, -1,   5]
-
-	!call random_number(a)
 	print *, "a = "
 	print "("//to_str(n)//"es19.9)", a
-
 	a0 = a
 	!    --> spec(a')
 	!     ans  =
@@ -2386,10 +2376,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 5, 25, 1
-	!do n = 5, 11, 1  ! TODO
-	!do n = 4, 5 !TODO
-	!do n = 5, 5 !TODO
+	do n = 5, 65
 
 		allocate(s (n, n))
 
@@ -2407,13 +2394,12 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			d = diag(expect)
 			call sort(expect)
-			!print *, "expect  = ", expect
-			print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
+			!print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
 
 			call random_number(s)  ! random matrix
 			a = matmul(matmul(s, d), inv(s))
-			print *, "a = "
-			print "("//to_str(n)//"es19.9)", a
+			!print *, "a = "
+			!print "("//to_str(n)//"es19.9)", a
 
 			a0 = a
 
@@ -2421,8 +2407,8 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			eigvals = eig_francis_qr(a, eigvecs)
 
-			print *, "eigvecs = "
-			print "("//to_str(2*n)//"es15.5)", eigvecs
+			!print *, "eigvecs = "
+			!print "("//to_str(2*n)//"es15.5)", eigvecs
 
 			! Check the eigenvalues
 
@@ -2430,14 +2416,14 @@ integer function chapter_6_francis_qr() result(nfail)
 			diff = norm2(sorted(dble(eigvals)) - expect)
 
 			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_francis_qr val 1")
-			print *, "diff val = ", diff
-			print *, "expect = ", expect
+			!print *, "diff val = ", diff
+			!print *, "expect = ", expect
 			!print *, "actual = ", sorted(dble(eigvals))
 
 			!********
 
-			print *, "a * eigvecs / eigvecs = "
-			print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
+			!print *, "a * eigvecs / eigvecs = "
+			!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
 			!!print *, "spread = "
 			!!print "("//to_str(n)//"4es15.5)", spread(eigvals, 1, n)
 
@@ -2448,15 +2434,13 @@ integer function chapter_6_francis_qr() result(nfail)
 			! doing on matrices, whether it just reshapes them to vec or does
 			! some more involved matrix norm
 
-			print *, "eigvals = ", eigvals
+			!print *, "eigvals = ", eigvals
 
-			!diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
 			diff = norm2(abs( &
 				matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
 			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_francis_qr vec 3")
-			print *, "diff vec = ", diff
-
-			print *, ""
+			!print *, "diff vec = ", diff
+			!print *, ""
 
 		end do
 
@@ -2464,79 +2448,51 @@ integer function chapter_6_francis_qr() result(nfail)
 	end do
 	deallocate(a)
 
-	!return ! TODO
-
-	do n = 5, 25 !TODO
-	!do n = 4, 5
+	do n = 5, 35
 
 		allocate(a(n, n))
 
 		print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
 
 		do irep = 1, 5
-			print *, "irep = ", irep
+			!print *, "irep = ", irep
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,
 			! most likely a mixture of real and complex eigenvalues
-
-			print *, "calling random_number()"
 			call random_number(a)
-
 			!print *, "a = "
 			!print "("//to_str(n)//"es19.9)", a
-
-			print *, "copying to a0"
 			a0 = a
 
 			!********
 
-			print *, "calling eig_francis_qr()"
 			eigvals = eig_francis_qr(a, eigvecs)
 
-			print *, "eigvals = [real, imag]"
-			print "(2es15.5)", eigvals
+			!print *, "eigvals = [real, imag]"
+			!print "(2es15.5)", eigvals
 
 			!print *, "eigvecs = "
 			!print "("//to_str(2*n)//"es15.5)", eigvecs
 
 			! Eigenvalues cannot be verified by themselves because we don't know
 			! what they should be a priori
-
-			!! Check the eigenvalues
-
-			!!diff = norm2(sorted(eigvals) - expect)  ! TODO: sort for dcmplx
-			!diff = norm2(sorted(dble(eigvals)) - expect)
-
-			!call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_francis_qr val 1")
-			!print *, "diff val = ", diff
-			!print *, "expect = ", expect
-			!!print *, "actual = ", sorted(dble(eigvals))
-
-			!********
-
+			!
 			! We can still verify that `a0 * eigvecs == eigvals * eigvecs`
 
-			print *, "a * eigvecs / eigvecs = "
-			print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
+			!print *, "a * eigvecs / eigvecs = "
+			!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
 			!!print *, "spread = "
 			!!print "("//to_str(n)//"4es15.5)", spread(eigvals, 1, n)
 
-			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
-			!
-			! idk if norm2(abs( [complex_matrix] )) is a good norm but i don't feel like making my
-			! own matrix norm rn.  need to figure out what built-in norm2() is
-			! doing on matrices, whether it just reshapes them to vec or does
-			! some more involved matrix norm
+			!print *, "a * eigvecs - eigvals * eigvecs = "
+			!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs
 
-			print *, "a * eigvecs - eigvals * eigvecs = "
-			print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs
-
-			print *, "checking diff"
+			!print *, "checking diff"
 			!diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
 			diff = norm2(abs( &
 				matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
 			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_francis_qr vec 4")
-			print *, "diff vec = ", diff
+			!print *, "diff vec = ", diff
 
 			!print *, ""
 
