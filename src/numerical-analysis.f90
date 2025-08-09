@@ -406,13 +406,6 @@ double precision function norm2c(v)
 
 end function norm2c
 
-!! TODO: this is already a GNU extension.  Might need uncommented for Intel
-!double complex function dcmplx(x)
-!	! Cast x from double to double complex
-!	double precision, intent(in) :: x
-!	dcmplx = cmplx(x, kind = 8)
-!end function dcmplx
-
 !===============================================================================
 function fft(x) result(xx)
 	! Forward fast Fourier transform
@@ -1405,32 +1398,16 @@ subroutine qr_factor_c64(a, diag_)
 	diag_ = 0.d0
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
-
 	do j = 1, n
 
-		!w = house_c64(a(j,j), a(j+1:, j), diag_(j))
-		call house_c64(a(j,j), a(j+1:, j), diag_(j))  ! TODO: avoid `w` temp array
+		call house_c64(a(j,j), a(j+1:, j), diag_(j))
 
-		!a(j:, j+1:) = a(j:, j+1:) - &
-		!	conjg(diag_(j)) * outer_product_c64((w), (matmul(conjg(w), a(j:, j+1:))))
 		do k = j+1, n
 			! Note diag_ is conjugated here, unlike in qr_mul_c64()
 			wa = conjg(diag_(j)) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
 			a(j,k) = a(j,k) - wa
 			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
 		end do
-
-		!normx = norm2(a(j:, j))
-		!s = -sign_(a(j,j))
-		!u1 = a(j,j) - s * normx
-		!a(j+1:, j) = a(j+1:, j) / u1
-		!a(j,j) = s * normx
-		!diag_(j) = -s * u1 / normx
-		!do k = j+1, n
-		!	wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
-		!	a(j,k) = a(j,k) - wa
-		!	a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
-		!end do
 
 	end do
 	!print *, "diag_ = "
@@ -1455,24 +1432,14 @@ function qr_mul_c64(qr, diag_, x) result(qx)
 
 	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
-		!w = [dcmplx(1.d0), qr(j+1:, j)]  ! TODO: avoid temp w
-
 		! Note that diag_ is *not* conjugated here, unlike in qr_factor_c64()
-
-		!qx(j:, :) = qx(j:, :) - &
-		!	(diag_(j)) * outer_product_c64((w), (matmul(conjg(w), qx(j:, :))))
-
 		do k = 1, n
 			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
 			qx(j, k) = qx(j, k) - wq
 			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
 		end do
-
 	end do
-	!qx = 1 - qx
-
 	!print *, "qx = "
-
 	!print "(5es15.5)", qx
 
 end function qr_mul_c64
@@ -3034,28 +3001,6 @@ function eye(n)
 
 end function eye
 
-function eye_c64(n) result(eye_)
-	! n x n identity matrix
-	!
-	! TODO: overload interface
-
-	integer, intent(in) :: n
-	double complex, allocatable :: eye_(:,:)
-
-	integer :: i, j
-	allocate(eye_(n, n))
-	do i = 1, n
-		do j = 1, n
-			if (i == j) then
-				eye_(i,j) = 1.d0
-			else
-				eye_(i,j) = 0.d0
-			end if
-		end do
-	end do
-
-end function eye_c64
-
 !********
 
 function zeros_mat(m, n) result(a)
@@ -3190,11 +3135,22 @@ subroutine gauss_jordan(a)
 	integer :: i, j, k, n, r, r1(1)
 
 	n = size(a, 1)
+	!print *, "n = ", n
 	p = [(i, i = 1, n)]
 
 	do j = 1, n
 
-		r1 = maxloc(abs(a(j+1: n, j))) + j
+		if (j < n) then
+			r1 = maxloc(abs(a(j+1: n, j))) + j
+		else
+			r1 = n
+		end if
+
+		!print *, "a : = ", a(j+1: n, j)
+		!print *, "maxloc = ", maxloc(abs(a(j+1: n, j)))
+		!print *, "r1 = ", r1
+		!print *, ""
+
 		r = r1(1)
 		max_ = abs(a(r, j))
 		if (max_ == 0) then
@@ -3489,7 +3445,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		a, b, c, d, det_
 	double precision, allocatable :: pq(:,:), a0(:,:)
 
-	integer, parameter :: iters = 100
+	integer, parameter :: iters = 100  ! TODO: arg?
 	integer :: i, i1, ie, k, n, p, q, r, m, iter  ! TODO: rename p, q, r -> ip, ...
 
 	logical, allocatable :: is_real(:)
@@ -3516,10 +3472,6 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 			exit
 		end if
 		!print *, "p = ", p
-
-		! TODO: add arg for max iters per deflation. Reset a count each time `p`
-		! is decremented.  If we go through more iters of this loop without
-		! decrementing, panic
 
 		q = p - 1
 		s = h(q,q) + h(p,p)
@@ -3600,12 +3552,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	is_real = .true.
 	ie = 0
 	allocate(eigvals(n))
-	!do i = 1, n
 	do i = 1, n-1
-	!do i = 1, n, 2
-
 		i1 = i + 1
-		if (i1 > n) i1 = i1 - n  ! TODO: unnecessary
 
 		! 2x2 block around diagonal
 		a = h(i , i )
@@ -3708,13 +3656,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!return
 
 	!********
-	! WIP, attempting the Q product method but haven't figured it out.  Some
-	! eigvecs are correct but others aren't
 
 	! Zero the remaining below-diagonal non-zeros
-	!
-	! TODO: try using house_c64()?  Since eigvecs are complex, it would make
-	! sense that we have to cast `pq` to complex at some point
 
 	! Cast to complex
 	hc = h
@@ -3725,8 +3668,6 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!print *, ""
 	!stop
 
-	!do p = 2, n
-	!do p = 1, n-1
 	do m = n, 2, -1
 		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
 
@@ -3795,7 +3736,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!print "("//to_str(2*n)//"es19.9)", hc
 
 	! Find the eigenvectors of `hc`
-	eigvecs = eye_c64(n)
+	eigvecs = eye(n)
 	do i = 2, n
 		! Looking at LAPACK, it has a special-purpose quasi-triangular solver
 		! for this problem.  There are cases for 1x1 blocks, 2x2 blocks, and
@@ -3804,7 +3745,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!
 		!     https://netlib.org/lapack/explore-html/d2/d98/group__trevc3_gaee05b7252c5a3b2b935d5a4a6101033d.html
 		!
-		eigvecs(1: i-1, i) = invmul_c64(hc(i,i) * eye_c64(i-1) - hc(:i-1, :i-1) , hc(:i-1, i))
+		eigvecs(1: i-1, i) = invmul_c64(hc(i,i) * eye(i-1) - hc(:i-1, :i-1) , hc(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
