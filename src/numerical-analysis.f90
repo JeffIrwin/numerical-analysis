@@ -3347,12 +3347,9 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	!print *, "a = "
 	!print "(4es15.5)", a
 
-	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
-	! it's hard to tell which eigvec corresponds to which eigval.  Is it worth
-	! sorting at all here?  For general complex eigvals, there is technically no
-	! ordering, although LAPACK and/or MATLAB probably have some convention
-
+	! Don't sort the eigvals, because that will break the ordering of eigvecs
 	!eigvals = sorted(diag(a))
+
 	eigvals = diag(a)
 
 	if (.not. present(eigvecs)) return
@@ -3435,7 +3432,7 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double complex :: l1, l2, mu(2), cc, sc, g(2,2)
+	double complex :: l1, l2
 	double complex, allocatable :: ca(:,:), cq(:,:)
 
 	double precision, parameter :: eps = 1.d-10  ! TODO: arg?
@@ -3460,6 +3457,9 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 
 	i = n  ! i indicates the active matrix size
 	iter = 0
+
+	! LAPACK has lots of logic to scale to avoid over/under flow which is
+	! skipped here and thus not robust
 
 	do while (i > 2)
 		iter = iter + 1
@@ -3703,11 +3703,11 @@ function lu_kernel(a) result(kernel)
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: kernel(:)
 
-	double precision, allocatable :: a0(:,:)
+	!double precision, allocatable :: a0(:,:)
 	integer :: i, n
 	integer, allocatable :: pivot(:)
 
-	a0 = a  ! TODO: testing only
+	!a0 = a  ! testing only
 
 	n = size(a, 1)
 	kernel = zeros(n)
@@ -3722,16 +3722,15 @@ function lu_kernel(a) result(kernel)
 			-dot_product(kernel(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
 	end do
 
-	print *, "a0 = "
-	print "("//to_str(n)//"es19.9)", a0
-	print *, "kernel = ", kernel
-	print *, "a0 * kernel = ", matmul(a0, kernel)
-
-	if (norm2(matmul(a0, kernel)) > 0.001d0) then
-		print *, "Error: residual too large in lu_kernel()"
-		stop
-	end if
-	!stop
+	!print *, "a0 = "
+	!print "("//to_str(n)//"es19.9)", a0
+	!print *, "kernel = ", kernel
+	!print *, "a0 * kernel = ", matmul(a0, kernel)
+	!if (norm2(matmul(a0, kernel)) > 0.001d0) then
+	!	print *, "Error: residual too large in lu_kernel()"
+	!	stop
+	!end if
+	!!stop
 
 end function lu_kernel
 
@@ -3739,6 +3738,8 @@ end function lu_kernel
 
 function lu_kernel_c64(a) result(kernel)
 	! Find the kernel or null-space of `a` using LU decomposition
+	!
+	! TODO: add tests before changing.  This is currently unused
 	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 	double complex, allocatable :: kernel(:)
@@ -3807,7 +3808,7 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 	!********
 
 	double precision :: h1, h2, rad, givens(2,2), eigval
-	double precision, allocatable :: c(:), s(:), a0(:,:), &!diag_(:), q(:,:), &
+	double precision, allocatable :: c(:), s(:), a0(:,:), &
 		eigvec(:)
 	integer :: i, j, k, n
 
@@ -3860,12 +3861,9 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 	!print *, "a = "
 	!print "(4es15.5)", a
 
-	! TODO: save the sort idx and apply it to eigvecs too?  With the pq method
-	! it's hard to tell which eigvec corresponds to which eigval.  Is it worth
-	! sorting at all here?  For general complex eigvals, there is technically no
-	! ordering, although LAPACK and/or MATLAB probably have some convention
-
+	! Don't sort the eigvals, because that will break the ordering of eigvecs
 	!eigvals = sorted(diag(a))
+
 	eigvals = diag(a)
 
 	if (.not. present(eigvecs)) return
@@ -3877,18 +3875,13 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 		eigval = eigvals(i)
 
 		! Get eigenvector by finding the null-space of A - eigval * eye
-		!
-		! Take the transpose because the columns of Q form the null space of A', not
-		! A
-		a = transpose(a0)
+		a = a0
 		do j = 1, n
 			a(j,j) = a(j,j) - eigval
 		end do
 		!print *, "a = "
 		!print "(4es15.5)", a
 
-		! Undo transpose for lu_kernel.  TODO
-		a = transpose(a)
 		eigvec = lu_kernel(a)
 
 		!********

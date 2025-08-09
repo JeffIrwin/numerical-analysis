@@ -2015,8 +2015,6 @@ integer function chapter_4_qr_c64() result(nfail)
 
 	p0 = -1
 	do n = 2, 70, 3
-	!do n = 4, 4  ! TODO
-	!do n = 3, 3  ! TODO
 
 		allocate(ai(n,n), ar(n,n))
 
@@ -2026,8 +2024,7 @@ integer function chapter_4_qr_c64() result(nfail)
 			print *, "Testing complex QR decomposition with n = " // to_str(n) // " ..."
 		end if
 
-		!do irep = 1, 3
-		do irep = 1, 1  ! TODO
+		do irep = 1, 3
 
 			call random_number(ar)  ! random matrix
 			call random_number(ai)  ! random matrix
@@ -2417,7 +2414,6 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			! Check the eigenvalues
 
-			!diff = norm2(sorted(eigvals) - expect)  ! TODO: sort for dcmplx
 			diff = norm2(sorted(dble(eigvals)) - expect)
 
 			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_francis_qr val 1")
