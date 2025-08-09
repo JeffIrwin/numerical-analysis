@@ -3483,7 +3483,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	double complex :: l1, l2, eigval, mu(2), ac, bc, cc, dc, sc, g(2,2), tc, detc
 	double complex, allocatable :: eigvec(:), aa(:,:), hc(:,:), cq(:,:)!, diag_(:), qq(:,:)
 
-	double precision, parameter :: eps = 1.d-40  ! TODO: arg
+	double precision, parameter :: eps = 1.d-10  ! TODO: arg
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
 	double precision, allocatable :: pq(:,:), rr(:,:), a0(:,:)
@@ -3716,6 +3716,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	do m = n, 2, -1
 		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
 
+		! TODO: appropriate precision?
+		!if (abs(hc(m, m-1)) <= 1.d-14 * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
 		if (abs(hc(m, m-1)) <= eps * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
 			hc(m, m-1) = 0
 			cycle

@@ -2386,9 +2386,9 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	!do n = 5, 25, 1
+	do n = 5, 25, 1
 	!do n = 5, 11, 1  ! TODO
-	do n = 4, 5 !TODO
+	!do n = 4, 5 !TODO
 	!do n = 5, 5 !TODO
 
 		allocate(s (n, n))
@@ -2466,14 +2466,14 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	!return ! TODO
 
-	!do n = 5, 25 !TODO
-	do n = 4, 5
+	do n = 5, 25 !TODO
+	!do n = 4, 5
 
 		allocate(a(n, n))
 
 		print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
 
-		do irep = 1, 1
+		do irep = 1, 5
 			print *, "irep = ", irep
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,
@@ -2493,8 +2493,8 @@ integer function chapter_6_francis_qr() result(nfail)
 			print *, "calling eig_francis_qr()"
 			eigvals = eig_francis_qr(a, eigvecs)
 
-			!print *, "eigvals = [real, imag]"
-			!print "(2es15.5)", eigvals
+			print *, "eigvals = [real, imag]"
+			print "(2es15.5)", eigvals
 
 			!print *, "eigvecs = "
 			!print "("//to_str(2*n)//"es15.5)", eigvecs
