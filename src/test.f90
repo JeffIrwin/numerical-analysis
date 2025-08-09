@@ -56,7 +56,7 @@ program main
 	nfail = nfail + chapter_4_inv()
 	nfail = nfail + chapter_4_cholesky()
 	nfail = nfail + chapter_4_qr()
-	!nfail = nfail + chapter_4_qr_c64()  ! TODO
+	nfail = nfail + chapter_4_qr_c64()
 
 	! TODO: gram schmidt
 
@@ -67,9 +67,10 @@ program main
 	! Chapter 6: Eigenvalue Problems
 
 	! TODO: add unit tests for sorting routines
+
 	nfail = nfail + chapter_6_basic_qr()
 	nfail = nfail + chapter_6_hessenberg_qr()
-	nfail = nfail + chapter_6_francis_qr()  ! TODO
+	nfail = nfail + chapter_6_francis_qr()
 
 	!-------------------------------------------------------
 	! Chapter 7: Ordinary Differential Equations

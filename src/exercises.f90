@@ -280,8 +280,8 @@ integer function chapter_2_fft_2() result(nfail)
 	!
 	!     https://www.mathworks.com/help/matlab/ref/fft.html
 
-	!Fs = 1000;            % Sampling frequency                    
-	!T = 1/Fs;             % Sampling period       
+	!Fs = 1000;            % Sampling frequency
+	!T = 1/Fs;             % Sampling period
 	!L = 1500;             % Length of signal
 	!t = (0:L-1)*T;        % Time vector
 	fs = 1000       ! sampling frequency
@@ -1930,11 +1930,10 @@ integer function chapter_4_qr_c64() result(nfail)
 
 	!********
 
-	! TODO: this doesn't work
-
 	n = 2
 	allocate(a0(n,n))
-	a0(:,1) = [dcmplx(1.d0), IMAG]
+	!a0(:,1) = [dcmplx(1.d0), 2*IMAG]
+	a0(:,1) = [(1.d0, 1.d0), 2*IMAG]
 	a0(:,2) = [-IMAG, dcmplx(1.d0)]
 	print *, "a0 = "
 	print "("//to_str(2*n)//"es15.5)", a0
@@ -1953,9 +1952,55 @@ integer function chapter_4_qr_c64() result(nfail)
 	print *, "q = "
 	print "("//to_str(2*n)//"es15.5)", q
 
-	call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() 1 fuzz n x n")
+	print *, "q * r ="
+	print "("//to_str(2*n)//"es15.5)", matmul(q, r)
+	print *, "q' * q ="
+	print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
 
-	stop
+	call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q*r 2x2")
+	call test(norm2(abs(matmul(transpose(conjg(q)), q) - eye(n))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q 2x2")
+	deallocate(a0)
+
+	!stop
+	!--------------------------------------
+
+	n = 3
+	allocate(a0(n,n))
+	a0(:,1) = [( 1.d0,  1.d0), ( 0.d0,  2.d0), ( 0.d0,  0.d0)]  ! does not work
+	!a0(:,1) = [( 1.d0,  0.d0), ( 0.d0,  2.d0), ( 0.d0,  0.d0)]  ! works (only a(1,1)%im changed)
+	a0(:,2) = [( 0.d0, -1.d0), ( 1.d0,  0.d0), ( 1.d0,  0.d0)]
+	a0(:,3) = [( 0.d0,  3.d0), ( 0.d0,  0.d0), ( 2.d0,  0.d0)]
+	print *, "a0 = "
+	print "("//to_str(2*n)//"es15.5)", a0
+
+	a = a0
+	call qr_factor_c64(a, diag_)
+	!stop
+
+	print *, "qr(a) = "
+	print "("//to_str(2*n)//"es15.5)", a
+
+	r = qr_get_r_expl_c64(a)
+	print *, "r = "
+	print "("//to_str(2*n)//"es15.5)", r
+
+	q = qr_get_q_expl_c64(a, diag_)
+	print *, "q = "
+	print "("//to_str(2*n)//"es15.5)", q
+
+	print *, "q * r ="
+	print "("//to_str(2*n)//"es15.5)", matmul(q, r)
+	print *, "q' * q ="
+	print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
+	print *, "q' * q  - eye ="
+	print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q) - eye(n)
+	print *, "norm(q' * q  - eye) =", norm2(abs(matmul(transpose(conjg(q)), q) - eye(n)))
+
+	call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q*r 3x3")
+	call test(norm2(abs(matmul(transpose(conjg(q)), q) - dcmplx(eye(n)))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q 3x3")
+	deallocate(a0)
+
+	!stop
 
 	!********
 	! Fuzz test
@@ -1964,15 +2009,16 @@ integer function chapter_4_qr_c64() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	p0 = -1
-	!do n = 2, 70, 5
-	do n = 4, 4  ! TODO
+	do n = 2, 70, 3
+	!do n = 4, 4  ! TODO
+	!do n = 3, 3  ! TODO
 
 		allocate(ai(n,n), ar(n,n))
 
 		!if (mod(n, 10) == 0) then
 		if (n/10 > p0) then
 			p0 = n/10
-			print *, "Testing QR decomposition with n = " // to_str(n) // " ..."
+			print *, "Testing complex QR decomposition with n = " // to_str(n) // " ..."
 		end if
 
 		!do irep = 1, 3
@@ -1982,35 +2028,42 @@ integer function chapter_4_qr_c64() result(nfail)
 			call random_number(ai)  ! random matrix
 			a0 = ar + IMAG * ai
 
-			print *, "a0 = "
-			print "("//to_str(2*n)//"es15.5)", a0
-			!print "("//es15.5)", a0
+			!print *, "a0 = "
+			!print "("//to_str(2*n)//"es15.5)", a0
 
 			a = a0
 			call qr_factor_c64(a, diag_)
 
-			print *, "qr(a) = "
-			print "("//to_str(2*n)//"es15.5)", a
+			!print *, "qr(a) = "
+			!print "("//to_str(2*n)//"es15.5)", a
 
 			r = qr_get_r_expl_c64(a)
 			!print *, "r = "
-			!print "(5es15.5)", r
+			!print "("//to_str(2*n)//"es15.5)", r
 
 			q = qr_get_q_expl_c64(a, diag_)
 			!print *, "q = "
-			!print "(5es15.5)", q
+			!print "("//to_str(2*n)//"es15.5)", q
 
-			call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() 1 fuzz n x n")
-			call test(norm2(abs(matmul(transpose(q), q) - eye(n))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() 1 q' * q, n x n")
+			!print *, "q * r ="
+			!print "("//to_str(2*n)//"es15.5)", matmul(q, r)
+			!print *, "q' * q ="
+			!print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
+			!print *, "q' * q  - eye ="
+			!print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q) - eye(n)
+			!print *, "norm(q' * q  - eye) =", norm2(abs(matmul(transpose(conjg(q)), q) - eye(n)))
+
+			call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q*r nxn")
+			call test(norm2(abs(matmul(transpose(conjg(q)), q) - dcmplx(eye(n)))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q nxn")
 
 		end do
 
-		deallocate(a0)
+		deallocate(ai, ar)
 	end do
 
 	!********
 	print *, ""
-	stop
+	!stop
 
 end function chapter_4_qr_c64
 
@@ -2254,7 +2307,7 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	double precision :: diff
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &
-		expect(:), a0(:,:)
+		expect(:), a0(:,:)!, ar(:,:), ai(:,:)
 	double complex, allocatable :: eigvals(:), eigvecs(:,:)
 
 	integer :: i, n, nrng, irep
@@ -2275,13 +2328,13 @@ integer function chapter_6_francis_qr() result(nfail)
 	a(:,6) = [ 6,  1,  4, -11, -7, -1]
 
 	!call random_number(a)
-	!print *, "a = "
-	!print "("//to_str(n)//"es19.9)", a
+	print *, "a = "
+	print "("//to_str(n)//"es19.9)", a
 
 	a0 = a
 	!    --> spec(a')
 	!     ans  =
-	!    
+	!
 	!       5. + 6.i
 	!       5. - 6.i
 	!       1. + 2.i
@@ -2297,9 +2350,28 @@ integer function chapter_6_francis_qr() result(nfail)
 	print *, "a * eigvecs / eigvecs = "
 	print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
 
-	!stop
+	print *, "a * eigvecs = "
+	print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs)
 
-	! TODO: add fuzz testing for full random mats with complex eigvals
+	print *, "eigvals * eigvecs = "
+	print "("//to_str(2*n)//"es15.5)", spread(eigvals, 1, n) * eigvecs
+
+	print *, "a * eigvecs - eigvals * eigvecs = "
+	print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs
+
+	diff = norm2(abs( &
+		matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
+	print *, "diff = ", diff
+	call test(diff, 0.d0, 1.d-12 * n, nfail, "eig_francis_qr vec 2")
+
+	!! TODO: some components of some eigenvectors are 0, so dividing like this is
+	!! ill-conditioned.  Need to multiple instead.  The fuzz tests are fine for
+	!! now because the probability of getting a 0 eigvec component is almost 0
+
+	!diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
+	!call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_francis_qr vec 2")
+
+	!stop
 
 	!********
 	! Fuzz test
@@ -2314,9 +2386,9 @@ integer function chapter_6_francis_qr() result(nfail)
 
 		allocate(s (n, n))
 
-		print *, "Testing Francis double step with n = " // to_str(n) // " ..."
+		print *, "Testing real Francis double step with n = " // to_str(n) // " ..."
 
-		do irep = 1, 1
+		do irep = 1, 3
 
 			! Construct a random matrix `a` with known real eigenvalues
 
@@ -2350,7 +2422,7 @@ integer function chapter_6_francis_qr() result(nfail)
 			!diff = norm2(sorted(eigvals) - expect)  ! TODO: sort for dcmplx
 			diff = norm2(sorted(dble(eigvals)) - expect)
 
-			call test(diff, 0.d0, 1.d-8 * n, nfail, "eig_francis_qr val 1")
+			call test(diff, 0.d0, 1.d-9 * n, nfail, "eig_francis_qr val 1")
 			print *, "diff val = ", diff
 			print *, "expect = ", expect
 			!print *, "actual = ", sorted(dble(eigvals))
@@ -2370,7 +2442,7 @@ integer function chapter_6_francis_qr() result(nfail)
 			! some more involved matrix norm
 
 			diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
-			call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_francis_qr vec 2")
+			call test(diff, 0.d0, 1.d-9 * n, nfail, "eig_francis_qr vec 2")
 			print *, "diff vec = ", diff
 
 			print *, ""
@@ -2379,7 +2451,80 @@ integer function chapter_6_francis_qr() result(nfail)
 
 		deallocate(s)
 	end do
+	deallocate(a)
 
+	do n = 5, 25 !TODO
+
+		allocate(a(n, n))
+
+		print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
+
+		do irep = 1, 3
+			print *, "irep = ", irep
+
+			! Construct a random matrix `a`.  It can have complex eigenvalues,
+			! most likely a mixture of real and complex eigenvalues
+
+			print *, "calling random_number()"
+			call random_number(a)
+
+			!print *, "a = "
+			!print "("//to_str(n)//"es19.9)", a
+
+			print *, "copying to a0"
+			a0 = a
+
+			!********
+
+			print *, "calling eig_francis_qr()"
+			eigvals = eig_francis_qr(a, eigvecs)
+
+			!print *, "eigvals = [real, imag]"
+			!print "(2es15.5)", eigvals
+
+			!print *, "eigvecs = "
+			!print "("//to_str(2*n)//"es15.5)", eigvecs
+
+			! Eigenvalues cannot be verified by themselves because we don't know
+			! what they should be a priori
+
+			!! Check the eigenvalues
+
+			!!diff = norm2(sorted(eigvals) - expect)  ! TODO: sort for dcmplx
+			!diff = norm2(sorted(dble(eigvals)) - expect)
+
+			!call test(diff, 0.d0, 1.d-8 * n, nfail, "eig_francis_qr val 1")
+			!print *, "diff val = ", diff
+			!print *, "expect = ", expect
+			!!print *, "actual = ", sorted(dble(eigvals))
+
+			!********
+
+			! We can still verify that `a0 * eigvecs == eigvals * eigvecs`
+
+			!print *, "a * eigvecs / eigvecs = "
+			!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
+			!!print *, "spread = "
+			!!print "("//to_str(n)//"4es15.5)", spread(eigvals, 1, n)
+
+			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
+			!
+			! idk if norm2(abs( [complex_matrix] )) is a good norm but i don't feel like making my
+			! own matrix norm rn.  need to figure out what built-in norm2() is
+			! doing on matrices, whether it just reshapes them to vec or does
+			! some more involved matrix norm
+
+			print *, "checking diff"
+			diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
+			call test(diff, 0.d0, 1.d-10 * n, nfail, "eig_francis_qr vec 2")
+			print *, "diff vec = ", diff
+
+			!print *, ""
+
+		end do
+
+		deallocate(a)
+	end do
 	!********
 	print *, ""
 

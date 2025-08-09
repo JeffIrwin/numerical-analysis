@@ -49,6 +49,7 @@ module numa
 	interface diag
 		procedure :: diag_set
 		procedure :: diag_get
+		procedure :: diag_get_c64
 	end interface diag
 
 	! If this file gets too long, it might be good to split it up roughly
@@ -907,6 +908,7 @@ subroutine lu_factor(a, pivot)
 	!print *, "pivot = ", pivot
 
 	n = size(a, 1)
+	! TODO: panic if `a` is not square
 
 	!if (.not. allocated(pivot)) allocate(pivot(n))
 	!if (allocated(pivot)) deallocate(pivot)
@@ -1122,12 +1124,15 @@ end subroutine hess_no_pq
 subroutine qr_factor(a, diag_)
 	! Replace `a` with its QR factorization using Householder transformations
 	double precision, intent(inout) :: a(:,:)
+
 	double precision, allocatable, intent(out) :: diag_(:)
 
 	!********
 
 	double precision :: s, normx, u1, wa
+
 	integer :: j, k, n
+
 
 	n = size(a, 1)
 	allocate(diag_(n))
@@ -1158,85 +1163,40 @@ subroutine qr_factor(a, diag_)
 	! In the end, `R` is formed by zeroing appropriate elements of `a`
 	!
 	! And then `Q` can be expensively calculated as inv(r) * a (or some similar
-	! transpose), or more efficiently like in the loop below
+	! transpose), or more efficiently using qr_get_q_expl()
 	!
 	! Results can be checked by verifying that q' * q == eye() or that a = q * r
 
 end subroutine qr_factor
 
-!********
-
-subroutine qr_factor_c64(a, diag_)
-	! Replace `a` with its QR factorization using Householder transformations
-	!
-	! TODO: overload interface
-	double complex, intent(inout) :: a(:,:)
-	double complex, allocatable, intent(out) :: diag_(:)
-
+function qr_mul(qr, diag_, x) result(qx)
+	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
+	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
+	double precision, allocatable :: qx(:,:)
 	!********
+	double precision :: wq
 
-	double complex :: s, u1!, wa
-	double complex, allocatable :: w(:)
+	integer :: j, k, n
 
-	double precision :: normx
-	integer :: j, n!, k
+	!print *, "qr = "
+	!print "(5es15.5)", qr
 
-	n = size(a, 1)
-	allocate(diag_(n))
-	diag_ = 0.d0
+	n = size(qr, 1)
+	qx = x  ! could make a subroutine version which replaces x instead
 
-	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
-	do j = 1, n
-
-		normx = norm2c(a(j:, j))
-		! TODO: panic if normx == 0
-		print *, "normx = ", normx
-
-		!s = -sign_(a(j,j))
-		s = -a(j,j) / abs(a(j,j))
-		!s = -exp(IMAG * arg(a(j,j)))
-		!s = -exp(IMAG * atan2(a(j,j)%im, a(j,j)%re))  ! same thing
-
-		u1 = a(j,j) - s * normx
-
-		w = a(j:, j) / u1  ! TODO: avoid `w` temp array
-		w(1) = 1.d0
-
-		!a(j+1:, j) = a(j+1:, j) / u1
-		a(j+1:, j) = w(2:)
-
-		a(j,j) = s * normx
-		diag_(j) = -s * u1 / normx
-
-		a(j:, j+1:) = a(j:, j+1:) - &
-			outer_product_c64(diag_(j) * w, matmul(conjg(w), a(j:, j+1:)))
-
-		!do k = j+1, n
-
-		!	! TODO: independently test qr c64 (i.e. not just as part of
-		!	! eig_francis_qr()).  I have no idea if this is correct
-
-		!	! TODO: what needs conjugated?  dot_product() already includes a
-		!	! conjg
-		!	wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + conjg(a(j,k)))
-		!	!wa = diag_(j) * (dot_product(a(j+1:, j), conjg(a(j+1:, k))) + a(j,k))
-
-		!	a(j,k) = a(j,k) - wa
-		!	a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
-		!end do
-
+	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
+	do j = n, 1, -1
+		do k = 1, n
+			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
+			qx(j, k) = qx(j, k) - wq
+			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+		end do
 	end do
-	!print *, "diag_ = "
-	!print "(es15.5)", diag_
 
-	! In the end, `R` is formed by zeroing appropriate elements of `a`
-	!
-	! And then `Q` can be expensively calculated as inv(r) * a (or some similar
-	! transpose), or more efficiently like in the loop below
-	!
-	! Results can be checked by verifying that q' * q == eye() or that a = q * r
+	!print *, "qx = "
+	!print "(5es15.5)", qx
 
-end subroutine qr_factor_c64
+end function qr_mul
 
 !********
 
@@ -1270,6 +1230,167 @@ end function qr_get_r_expl
 
 !********
 
+!function house_c64(alpha, x, diag_) result(v)
+subroutine house_c64(alpha, x, diag_)
+	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
+	!
+	! This was adapted from reference LAPACK:  https://netlib.org/lapack/explore-html/d8/d0d/group__larfg_ga11ff37151d75113678103648c1a68c11.html
+	!
+	! The diagonal "tau" factor would've been impossible to figure out
+	! otherwise.  I had an unpacked version working which exploded Q and R into
+	! separate arrays, but keeping them both in the A matrix (and diagonal
+	! vector) was too hard without looking at LAPACK
+
+	use numa__utils
+	double complex, intent(inout) :: alpha
+	double complex, intent(inout) :: x(:)
+	double complex, intent(out) :: diag_
+	!********
+
+	!double complex, allocatable :: pp(:,:)
+	!double complex :: alpha0
+	!double complex, allocatable :: v(:), x0(:)
+
+	double precision :: xnorm, beta, alphr, alphi
+
+	integer :: n
+
+	n = size(x) !- 1
+
+	!alpha0 = alpha  ! testing only
+	!x0 = x
+
+	xnorm = norm2c(x)
+	alphr = alpha%re
+	alphi = alpha%im
+
+	if (xnorm == 0 .and. alphi == 0) then
+		! TODO: panic
+		diag_ = 0
+		return
+	end if
+
+	!beta = -sign(norm2([alphr, alphi, xnorm]), alphr)
+	beta = -sign_(alphr) * norm2([alphr, alphi, xnorm])
+
+	! Skip checking if abs(beta) < machine_precision
+
+	diag_ = dcmplx((beta - alphr) / beta, -alphi / beta)
+	alpha = 1.d0 / (alpha - beta)
+	x = x * alpha
+
+	alpha = beta
+
+	!v = [dcmplx(1.d0, 0.d0), x]
+
+	!pp = eye(n+1) - conjg(diag_) * outer_product_c64(v, conjg(v))  ! Note conjg convention here
+
+	!!print *, "in house_c64():"
+	!!print *, "n = ", n
+	!!print *, "v = ", v
+	!!print *, "x0 = ", x0
+	!!print *, "pp = "
+	!!print "("//to_str(2*(n+1))//"es15.5)", pp
+	!!print *, "pp * x = ", matmul(pp, [alpha0, x0])  ! Note conjg convention here too
+
+	!! Note that if the conjugation conventions are not followed, then we do not
+	!! get the expected result of pp*x == [beta, 0, 0, 0, ...]
+
+end subroutine house_c64
+
+subroutine qr_factor_c64(a, diag_)
+	! Replace `a` with its QR factorization using Householder transformations
+	!
+	! TODO: overload interface
+	double complex, intent(inout) :: a(:,:)
+
+	double complex, allocatable, intent(out) :: diag_(:)
+
+	!********
+
+	!double complex, allocatable :: w(:)
+	double complex :: wa
+	integer :: j, k, n
+
+	n = size(a, 1)
+	allocate(diag_(n))
+	diag_ = 0.d0
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+
+	do j = 1, n
+
+		!w = house_c64(a(j,j), a(j+1:, j), diag_(j))
+		call house_c64(a(j,j), a(j+1:, j), diag_(j))  ! TODO: avoid `w` temp array
+
+		!a(j:, j+1:) = a(j:, j+1:) - &
+		!	conjg(diag_(j)) * outer_product_c64((w), (matmul(conjg(w), a(j:, j+1:))))
+		do k = j+1, n
+			! Note diag_ is conjugated here, unlike in qr_mul_c64()
+			wa = conjg(diag_(j)) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+			a(j,k) = a(j,k) - wa
+			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
+		end do
+
+		!normx = norm2(a(j:, j))
+		!s = -sign_(a(j,j))
+		!u1 = a(j,j) - s * normx
+		!a(j+1:, j) = a(j+1:, j) / u1
+		!a(j,j) = s * normx
+		!diag_(j) = -s * u1 / normx
+		!do k = j+1, n
+		!	wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+		!	a(j,k) = a(j,k) - wa
+		!	a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
+		!end do
+
+	end do
+	!print *, "diag_ = "
+	!print "(es15.5)", diag_
+
+end subroutine qr_factor_c64
+
+function qr_mul_c64(qr, diag_, x) result(qx)
+	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
+	double complex, intent(in) :: qr(:,:), diag_(:), x(:,:)
+	double complex, allocatable :: qx(:,:)
+	!********
+	double complex :: wq
+	!double complex, allocatable :: w(:)
+	integer :: j, k, n
+
+	!print *, "qr = "
+	!print "(5es15.5)", qr
+
+	n = size(qr, 1)
+	qx = x
+
+	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
+	do j = n, 1, -1
+		!w = [dcmplx(1.d0), qr(j+1:, j)]  ! TODO: avoid temp w
+
+		! Note that diag_ is *not* conjugated here, unlike in qr_factor_c64()
+
+		!qx(j:, :) = qx(j:, :) - &
+		!	(diag_(j)) * outer_product_c64((w), (matmul(conjg(w), qx(j:, :))))
+
+		do k = 1, n
+			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
+			qx(j, k) = qx(j, k) - wq
+			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+		end do
+
+	end do
+	!qx = 1 - qx
+
+	!print *, "qx = "
+
+	!print "(5es15.5)", qx
+
+end function qr_mul_c64
+
+!********
+
 function qr_get_q_expl_c64(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
@@ -1277,7 +1398,7 @@ function qr_get_q_expl_c64(qr, diag_) result(q)
 	double complex, intent(in) :: qr(:,:), diag_(:)
 	double complex, allocatable :: q(:,:)
 
-	q = qr_mul_c64(qr, diag_, eye_c64(size(qr,1)))
+	q = qr_mul_c64(qr, diag_, dcmplx(eye(size(qr,1))))
 
 end function qr_get_q_expl_c64
 
@@ -1297,86 +1418,6 @@ function qr_get_r_expl_c64(qr) result(r)
 	end do
 
 end function qr_get_r_expl_c64
-
-!********
-
-function qr_mul(qr, diag_, x) result(qx)
-	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
-	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
-	double precision, allocatable :: qx(:,:)
-	!********
-	double precision :: wq
-	integer :: j, k, n
-
-	!print *, "qr = "
-	!print "(5es15.5)", qr
-
-	n = size(qr, 1)
-	qx = x  ! could make a subroutine version which replaces x instead
-
-	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
-	do j = n, 1, -1
-		do k = 1, n
-			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
-			qx(j, k) = qx(j, k) - wq
-			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
-		end do
-	end do
-
-	!print *, "qx = "
-	!print "(5es15.5)", qx
-
-end function qr_mul
-
-function qr_mul_c64(qr, diag_, x) result(qx)
-	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
-	double complex, intent(in) :: qr(:,:), diag_(:), x(:,:)
-	double complex, allocatable :: qx(:,:)
-	!********
-	!double complex :: wq
-	double complex, allocatable :: w(:)
-	integer :: j, n!, k
-
-	!print *, "qr = "
-	!print "(5es15.5)", qr
-
-	n = size(qr, 1)
-	qx = x  ! could make a subroutine version which replaces x instead
-
-	!! To multiply by transpose(Q) instead, just loop from 1 up to n instead
-	!do j = n, 1, -1
-	!	do k = 1, n
-	!		wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + conjg(qx(j,k)))
-	!		qx(j, k) = qx(j, k) - wq
-	!		qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
-	!	end do
-	!end do
-
-	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
-	do j = n, 1, -1
-		w = [dcmplx(1.d0), qr(j+1:, j)]
-
-		! TODO: avoid temp array for outer_product()
-		qx(j:, :) = qx(j:, :) - &
-			outer_product_c64(diag_(j) * w, matmul(conjg(w), qx(j:, :)))
-		! TODO: avoid `w` temp array
-
-		!!qx(j:, :) = qx(j:, :) - &
-		!!	outer_product(diag_(j) * w, matmul(w, qx(j:, :)))
-
-		!do k = 1, n
-		!	wq = dot_product(w, qx(j:, k))
-		!	do i = j, n
-		!		qx(i, k) = qx(i, k) - diag_(j) * w(i-j+1) * wq
-		!	end do
-		!end do
-
-	end do
-
-	!print *, "qx = "
-	!print "(5es15.5)", qx
-
-end function qr_mul_c64
 
 !********
 
@@ -2931,6 +2972,21 @@ function diag_get(a) result(v)
 
 end function diag_get
 
+function diag_get_c64(a) result(v)
+	! Get the diagonal vector `v` from a matrix `a`
+	double complex, intent(in) :: a(:,:)
+	double complex, allocatable :: v(:)
+	!********
+	integer :: i, n
+
+	n = min(size(a,1), size(a,2))
+	allocate(v(n))
+	do i = 1, n
+		v(i) = a(i,i)
+	end do
+
+end function diag_get_c64
+
 !===============================================================================
 
 function inv(a)
@@ -3244,6 +3300,10 @@ end function eig_hess_qr
 
 function house(x) result(pp)
 	! Return the Householder reflector `pp` such that pp * x == [1, 0, 0, ...]
+	!
+	! Could just return `v` like house_c64(), but this fn is only used for 3x3
+	! matrices, whereas house_c64() runs on arbitrarily large matrices for QR
+	! factoring
 
 	double precision, intent(in) :: x(:)
 	double precision, allocatable :: pp(:,:)
@@ -3311,6 +3371,12 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 	p = n  ! p indicates the active matrix size
 	do while (p > 2)
+		!print *, "p = ", p
+
+		! TODO: add arg for max iters per deflation. Reset a count each time `p`
+		! is decremented.  If we go through more iters of this loop without
+		! decrementing, panic
+
 		q = p - 1
 		s = h(q,q) + h(p,p)
 		t = h(q,q) * h(p,p) - h(q,p) * h(p,q)
@@ -3401,6 +3467,9 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 		! TODO: if b over tol, just cycle now and remove later condition
 
+		! TODO: is a == d?  That may be the case for "real Schur form", which is
+		! what i think `h` is here, and it would simplify the l1 and l2 exprs
+
 		t = a + d         ! trace
 		det_ = a*d - b*c  ! determinant
 
@@ -3464,6 +3533,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		eigvec = lu_kernel_c64(aa)
 
 		!!********
+		!!
+		!! TODO: benchmark LU vs QR for eigvecs.  pq method will probably be
+		!! best if i can make it correct
+		!!
 		!! Find null-space (kernel) using QR decomposition
 		!call qr_factor_c64(aa, diag_)
 		!qq = qr_get_q_expl_c64(aa, diag_)
@@ -3476,7 +3549,7 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!! TODO: this probably won't work for eigenvalues with multiplicity.  In
 		!! that case, you would need to get the last several rows and set
 		!! multiple rows in the output
-		!eigvec = qq(:,n)
+		!eigvec = conjg(qq(:,n))
 		!!print *, "eigvec = ", eigvec
 		!!********
 
@@ -3490,47 +3563,51 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	end do
 
 	return
+
 	!********
 	! WIP, attempting the Q product method but haven't figured it out.  Some
 	! eigvecs are correct but others aren't
 
 	! Zero the remaining below-diagonal non-zeros
+	!
+	! TODO: try using house_c64()?  Since eigvecs are complex, it would make
+	! sense that we have to cast `pq` to complex at some point
 
-	do p = 2, n
-	!do p = 1, n-1
+	!do p = 2, n
+	!!do p = 1, n-1
 
-		y = h(p, p-1)
+	!	y = h(p, p-1)
 
-		if (abs(y) < eps) cycle
+	!	if (abs(y) < eps) cycle
 
-		print *, "Zeroing at p = ", p
-		print *, "y = ", y
+	!	print *, "Zeroing at p = ", p
+	!	print *, "y = ", y
 
-		x = h(p-1, p-1)
-		print *, "x = ", x
+	!	x = h(p-1, p-1)
+	!	print *, "x = ", x
 
-		! Determine the 2D Givens rotation `p2`
-		rad = norm2([x, y])
-		ck =  x / rad
-		sk = -y / rad
-		p2(1,:) = [ck, -sk]
-		p2(2,:) = [sk,  ck]
+	!	! Determine the 2D Givens rotation `p2`
+	!	rad = norm2([x, y])
+	!	ck =  x / rad
+	!	sk = -y / rad
+	!	p2(1,:) = [ck, -sk]
+	!	p2(2,:) = [sk,  ck]
 
-		!h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
+	!	!h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
 
-		h(p-1:p, p-1:) = matmul(p2, h(p-1:p, p-1:))
+	!	h(p-1:p, p-1:) = matmul(p2, h(p-1:p, p-1:))
 
-		!h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+	!	!h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
 
-		! TODO: only if eigvecs is present
-		pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
+	!	! TODO: only if eigvecs is present
+	!	pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
 
-		print *, "h = "
-		print "("//to_str(n)//"es19.9)", h
-		print *, ""
-		!stop
+	!	print *, "h = "
+	!	print "("//to_str(n)//"es19.9)", h
+	!	print *, ""
+	!	!stop
 
-	end do
+	!end do
 
 	!********
 
@@ -3548,14 +3625,37 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	eigvecs = eye(n)
 	do i = 2, n
 
-		!eigvecs(1: i-1, i) = invmul(rr(i,i) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
-		eigvecs(1: i-1, i) = invmul(dble(eigvals(i)) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
+		! TODO: implement invmul() for c64 and check this.  I doubt it will work
+		! because I can't even get the eigvecs for the real eigvals this way,
+		! but it might be as simple as a missing conjg() or transpose(). Or it
+		! might be more complicated because of the 2x2 diagonal blocks.  Maybe
+		! what I need is to convert from real Schur form to complex Schur form.
+		! The MATLAB fn rsf2csf() does this but i can't find an OSS alternative
+		!
+		! Looking at LAPACK, it has a special-purpose quasi-triangular solver
+		! for this problem.  There are cases for 1x1 blocks, 2x2 blocks, and
+		! real or complex eigenvectors, with all complex numbers encoded as
+		! pairs of reals:
+		!
+		!     https://netlib.org/lapack/explore-html/d2/d98/group__trevc3_gaee05b7252c5a3b2b935d5a4a6101033d.html
+		!
+		! Maybe i'm on the right track with the Givens rotations above.  That's
+		! what scipy does, but it's a complex Givens rotation:
+		!
+		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
+		!
+
+		!eigvecs(1: i-1, i) = invmul(eigvals(i) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
+		!!eigvecs(1: i-1, i) = invmul(rr(i,i) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
+		!!eigvecs(1: i-1, i) = invmul(dble(eigvals(i)) * eye(i-1) - rr(:i-1, :i-1) , rr(:i-1, i))
 
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
 
 	eigvecs = matmul(pq, eigvecs)
+	!eigvecs = matmul(pq, conjg(eigvecs))
+
 	!print *, "eigvecs francis qr = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
 
@@ -3586,25 +3686,14 @@ function lu_kernel(a) result(kernel)
 	kernel = zeros(n)
 
 	! The kernel of `a` is the same as `u`
+
 	pivot = [(i, i = 1, size(a,1))]
-
 	call lu_factor(a, pivot)
-	!call lu_factor_nopiv(a)  ! TODO: fix it with pivoting
-
-	!kernel(n) = 1.d0
-	kernel(pivot(n)) = 1.d0
-
+	kernel(n) = 1.d0
 	do i = n-1, 1, -1
-
-		!kernel(i) = -dot_product(kernel(i+1:), a(i, i+1:n)) / a(i,i)
-		!kernel(i) = -dot_product(kernel(i+1:), a(i, pivot(i+1:n))) / a(i,i)
-		kernel(pivot(i)) = &
-			-dot_product(kernel(pivot(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i),i)
-
+		kernel(i) = &
+			-dot_product(kernel(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
 	end do
-
-	! Unpivot
-	kernel = kernel(pivot)
 
 	print *, "a0 = "
 	print "("//to_str(n)//"es19.9)", a0
@@ -3612,7 +3701,7 @@ function lu_kernel(a) result(kernel)
 	print *, "a0 * kernel = ", matmul(a0, kernel)
 
 	if (norm2(matmul(a0, kernel)) > 0.001d0) then
-		print *, "Error: residual too large in lu_kernel_c64()"
+		print *, "Error: residual too large in lu_kernel()"
 		stop
 	end if
 	!stop
@@ -3660,17 +3749,17 @@ function lu_kernel_c64(a) result(kernel)
 	! Unpivot
 	kernel = kernel(pivot)
 
-	print *, "a0 = "
-	print "("//to_str(n)//"es19.9)", a0
-	print *, "kernel = ", kernel
-	print *, "a0 * kernel = ", matmul(a0, kernel)
-	print *, "norm = ", norm2c(matmul(a0, kernel))
+	!print *, "a0 = "
+	!print "("//to_str(n)//"es19.9)", a0
+	!print *, "kernel = ", kernel
+	!print *, "a0 * kernel = ", matmul(a0, kernel)
+	!print *, "norm = ", norm2c(matmul(a0, kernel))
 
-	if (norm2c(matmul(a0, kernel)) > 0.001d0) then
-		print *, "Error: residual too large in lu_kernel_c64()"
-		stop
-	end if
-	!stop
+	!if (norm2c(matmul(a0, kernel)) > 0.001d0) then
+	!	print *, "Error: residual too large in lu_kernel_c64()"
+	!	stop
+	!end if
+	!!stop
 
 end function lu_kernel_c64
 
@@ -3776,7 +3865,7 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 		eigvec = lu_kernel(a)
 
 		!********
-		!! Find null-space using QR decomposition
+		!! Find null-space using QR decomposition.  This also works
 		!call qr_factor(a, diag_)
 		!q = qr_get_q_expl(a, diag_)
 		!!print *, "q = "
