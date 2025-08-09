@@ -497,16 +497,16 @@ integer function chapter_4_lu() result(nfail)
 
 	x = [+4.0000d+00, +2.0000d+00, -1.0000d+00, +7.0000d+00, +1.8000d+01]
 
-	! Print this to check that the solution is correct in the transpose sense
-	print *, "a * x = ", matmul(a, x)
+	!! Print this to check that the solution is correct in the transpose sense
+	!print *, "a * x = ", matmul(a, x)
 
 	bx = [102.48d0, 274.92d0, 434.72d0, 463.8d0, 373.8d0]
 
-	print *, "a = "
-	print "(5es18.6)", a
+	!print *, "a = "
+	!print "(5es18.6)", a
 
 	call lu_invmul(a, bx)
-	print "(a,5es18.6)", "bx = ", bx
+	!print "(a,5es18.6)", "bx = ", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
 	deallocate(a, x, bx)
@@ -1660,15 +1660,15 @@ integer function chapter_4_inv() result(nfail)
 
 	bx = matmul(a, x)
 
-	print *, "a * x = "
-	print "(5es18.6)", bx
+	!print *, "a * x = "
+	!print "(5es18.6)", bx
 
-	print *, "a = "
-	print "(5es18.6)", a
+	!print *, "a = "
+	!print "(5es18.6)", a
 
 	call lu_invmul(a, bx)
-	print *, "bx = "
-	print "(5es18.6)", bx
+	!print *, "bx = "
+	!print "(5es18.6)", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul_mat() 5x5")
 
 	deallocate(a, x, bx)
@@ -1687,11 +1687,11 @@ integer function chapter_4_inv() result(nfail)
 
 	call lu_invmul(a, ainv)
 
-	print *, "ainv = "
-	print "(5es18.6)", ainv
+	!print *, "ainv = "
+	!print "(5es18.6)", ainv
 
-	print *, "a * ainv = "
-	print "(5es18.6)", matmul(a0, ainv)
+	!print *, "a * ainv = "
+	!print "(5es18.6)", matmul(a0, ainv)
 
 	call test(norm2(matmul(a0, ainv) - eye(n)), 0.d0, 1.d-11, nfail, "matrix inverse 1")
 
@@ -1933,36 +1933,30 @@ integer function chapter_4_qr_c64() result(nfail)
 	n = 2
 	allocate(a0(n,n))
 	!a0(:,1) = [dcmplx(1.d0), 2*IMAG_]
-
 	a0(:,1) = dcmplx([(1.d0, 1.d0), 2*IMAG_])
 	a0(:,2) = dcmplx([-IMAG_, dcmplx(1.d0)])
 
-	!a0(1,1) = (1.d0, 1.d0)
-	!a0(1,2) = 2*IMAG_
-	!a0(1,2) = -IMAG_
-	!a0(2,2) = dcmplx(1.d0)
-
-	print *, "a0 = "
-	print "("//to_str(2*n)//"es15.5)", a0
+	!print *, "a0 = "
+	!print "("//to_str(2*n)//"es15.5)", a0
 
 	a = a0
 	call qr_factor_c64(a, diag_)
 
-	print *, "qr(a) = "
-	print "("//to_str(2*n)//"es15.5)", a
+	!print *, "qr(a) = "
+	!print "("//to_str(2*n)//"es15.5)", a
 
 	r = qr_get_r_expl_c64(a)
-	print *, "r = "
-	print "("//to_str(2*n)//"es15.5)", r
+	!print *, "r = "
+	!print "("//to_str(2*n)//"es15.5)", r
 
 	q = qr_get_q_expl_c64(a, diag_)
-	print *, "q = "
-	print "("//to_str(2*n)//"es15.5)", q
+	!print *, "q = "
+	!print "("//to_str(2*n)//"es15.5)", q
 
-	print *, "q * r ="
-	print "("//to_str(2*n)//"es15.5)", matmul(q, r)
-	print *, "q' * q ="
-	print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
+	!print *, "q * r ="
+	!print "("//to_str(2*n)//"es15.5)", matmul(q, r)
+	!print *, "q' * q ="
+	!print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
 
 	call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q*r 2x2")
 	call test(norm2(abs(matmul(transpose(conjg(q)), q) - eye(n))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q 2x2")
@@ -1975,31 +1969,31 @@ integer function chapter_4_qr_c64() result(nfail)
 	a0(:,1) = dcmplx([( 1.d0,  1.d0), ( 0.d0,  2.d0), ( 0.d0,  0.d0)])
 	a0(:,2) = dcmplx([( 0.d0, -1.d0), ( 1.d0,  0.d0), ( 1.d0,  0.d0)])
 	a0(:,3) = dcmplx([( 0.d0,  3.d0), ( 0.d0,  0.d0), ( 2.d0,  0.d0)])
-	print *, "a0 = "
-	print "("//to_str(2*n)//"es15.5)", a0
+	!print *, "a0 = "
+	!print "("//to_str(2*n)//"es15.5)", a0
 
 	a = a0
 	call qr_factor_c64(a, diag_)
 	!stop
 
-	print *, "qr(a) = "
-	print "("//to_str(2*n)//"es15.5)", a
+	!print *, "qr(a) = "
+	!print "("//to_str(2*n)//"es15.5)", a
 
 	r = qr_get_r_expl_c64(a)
-	print *, "r = "
-	print "("//to_str(2*n)//"es15.5)", r
+	!print *, "r = "
+	!print "("//to_str(2*n)//"es15.5)", r
 
 	q = qr_get_q_expl_c64(a, diag_)
-	print *, "q = "
-	print "("//to_str(2*n)//"es15.5)", q
+	!print *, "q = "
+	!print "("//to_str(2*n)//"es15.5)", q
 
-	print *, "q * r ="
-	print "("//to_str(2*n)//"es15.5)", matmul(q, r)
-	print *, "q' * q ="
-	print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
-	print *, "q' * q  - eye ="
-	print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q) - eye(n)
-	print *, "norm(q' * q  - eye) =", norm2(abs(matmul(transpose(conjg(q)), q) - eye(n)))
+	!print *, "q * r ="
+	!print "("//to_str(2*n)//"es15.5)", matmul(q, r)
+	!print *, "q' * q ="
+	!print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q)
+	!print *, "q' * q  - eye ="
+	!print "("//to_str(2*n)//"es15.5)", matmul(transpose(conjg(q)), q) - eye(n)
+	!print *, "norm(q' * q  - eye) =", norm2(abs(matmul(transpose(conjg(q)), q) - eye(n)))
 
 	call test(norm2(abs(matmul(q, r) - a0)), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q*r 3x3")
 	call test(norm2(abs(matmul(transpose(conjg(q)), q) - dcmplx(eye(n)))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q 3x3")
@@ -2018,7 +2012,6 @@ integer function chapter_4_qr_c64() result(nfail)
 
 		allocate(ai(n,n), ar(n,n))
 
-		!if (mod(n, 10) == 0) then
 		if (n/10 > p0) then
 			p0 = n/10
 			print *, "Testing complex QR decomposition with n = " // to_str(n) // " ..."
@@ -2312,7 +2305,7 @@ integer function chapter_6_francis_qr() result(nfail)
 		expect(:), a0(:,:)!, ar(:,:), ai(:,:)
 	double complex, allocatable :: eigvals(:), eigvecs(:,:)
 
-	integer :: i, n, nrng, irep
+	integer :: i, n, nrng, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2378,11 +2371,15 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
+	p0 = -1
 	do n = 5, 35
 
 		allocate(s (n, n))
 
-		print *, "Testing real Francis double step with n = " // to_str(n) // " ..."
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing real Francis double step with n = " // to_str(n) // " ..."
+		end if
 
 		do irep = 1, 5
 
@@ -2449,11 +2446,15 @@ integer function chapter_6_francis_qr() result(nfail)
 	end do
 	deallocate(a)
 
+	p0 = -1
 	do n = 5, 35
 
 		allocate(a(n, n))
 
-		print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
+		end if
 
 		do irep = 1, 5
 			!print *, "irep = ", irep

@@ -4,12 +4,15 @@ module numa
 	implicit none
 
 	! TODO:
+	!
 	! - There are several places where I note a routine should "panic" or issue
 	!   a "fatal" error, only logging a warning for now and continuing.  These
 	!   should actually stop (or wrap a stop), unless an optional `iostat` arg
 	!   is given to the function, in which case we can continue and let the
 	!   caller decide how to recover.  I guess this is the Fortranic way.  Also
 	!   make panic use a macro to log the filename and line number
+	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
+	!   specifically for Intel, e.g. initialization of complex arrays
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG_ = (0.d0, 1.d0)  ! sqrt(-1)
@@ -3739,7 +3742,9 @@ end function lu_kernel
 function lu_kernel_c64(a) result(kernel)
 	! Find the kernel or null-space of `a` using LU decomposition
 	!
-	! TODO: add tests before changing.  This is currently unused
+	! TODO: add tests before changing.  This is currently unused.  lu_kernel()
+	! (real) could use independent testing as well, outside of
+	! eig_hess_qr_kernel()
 	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 	double complex, allocatable :: kernel(:)
