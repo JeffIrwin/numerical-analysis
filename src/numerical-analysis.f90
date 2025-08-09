@@ -3480,15 +3480,15 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double complex :: l1, l2, eigval, mu(2), ac, bc, cc, dc, sc, g(2,2), tc, detc
-	double complex, allocatable :: eigvec(:), aa(:,:), hc(:,:), cq(:,:)!, diag_(:), qq(:,:)
+	double complex :: l1, l2, mu(2), ac, bc, cc, dc, sc, g(2,2), tc, detc
+	double complex, allocatable :: hc(:,:), cq(:,:)!, diag_(:), qq(:,:)
 
 	double precision, parameter :: eps = 1.d-10  ! TODO: arg
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
-	double precision, allocatable :: pq(:,:), rr(:,:), a0(:,:)
+	double precision, allocatable :: pq(:,:), a0(:,:)
 
-	integer :: i, i1, ie, j, k, n, p, q, r, m  ! TODO: rename p, q, r -> ip, ...
+	integer :: i, i1, ie, k, n, p, q, r, m  ! TODO: rename p, q, r -> ip, ...
 	logical, allocatable :: is_real(:)
 
 	a0 = h  ! TODO: necessary?
