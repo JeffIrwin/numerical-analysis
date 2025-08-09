@@ -3441,14 +3441,12 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	double precision, parameter :: eps = 1.d-10  ! TODO: arg?
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
-	double precision, allocatable :: pq(:,:), a0(:,:)
+	double precision, allocatable :: pq(:,:)
 
 	integer, parameter :: iters = 100  ! TODO: arg?
-	integer :: i, i1, ie, k, n, j, k1, iter
+	integer :: i, i1, k, n, j, k1, iter
 
 	logical, allocatable :: is_real(:)
-
-	a0 = aa  ! TODO: necessary?
 
 	n = size(aa, 1)
 
@@ -3546,7 +3544,6 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	! may be real, some may be complex
 	allocate(is_real(n))
 	is_real = .true.
-	ie = 0
 	allocate(eigvals(n))
 	do i = 1, n-1
 		i1 = i + 1
@@ -3557,7 +3554,7 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 		c = aa(i , i1)
 		d = aa(i1, i1)
 
-		! TODO: if b over tol, just cycle now and remove later condition
+		if (abs(b) <= eps * (abs(a) + abs(d))) cycle
 
 		t = a + d         ! trace
 		det_ = a*d - b*c  ! determinant
@@ -3571,15 +3568,11 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 		!print *, "l2 = ", l2
 		!print *, ""
 
-		if (abs(b) > eps * (abs(a) + abs(d))) then
-			is_real(i ) = .false.
-			is_real(i1) = .false.
+		is_real(i ) = .false.
+		is_real(i1) = .false.
 
-			eigvals(i ) = l1
-			eigvals(i1) = l2
-
-			ie = ie + 2
-		end if
+		eigvals(i ) = l1
+		eigvals(i1) = l2
 
 	end do
 
@@ -3587,7 +3580,6 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	do i = 1, n
 		if (.not. is_real(i)) cycle
 		eigvals(i) = aa(i,i)
-		ie = ie + 1
 	end do
 
 	!!print *, "eigvals sorted = ", sorted(eigvals)
@@ -3632,8 +3624,8 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 		det_ = a*d - b*c  ! determinant
 
 		! Eigenvalues of 2x2 block
-		mu(1) = t/2.d0 + sqrt(dcmplx(t**2/4.d0 - det_))
-		mu(2) = t/2.d0 - sqrt(dcmplx(t**2/4.d0 - det_))
+		mu(1) = t/2 + sqrt(dcmplx(t**2/4 - det_))
+		mu(2) = t/2 - sqrt(dcmplx(t**2/4 - det_))
 		!print *, "mu = ", mu
 
 		! Some of the eigenvalues get swapped around in this loop
@@ -3642,7 +3634,7 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 
 		mu = mu - ca(i,i)
 
-		rad = norm2c([mu(1), dcmplx(ca(i, i-1))])
+		rad = norm2c([mu(1), ca(i, i-1)])
 		cc = mu(1) / rad
 		sc = ca(i, i-1) / rad
 
@@ -3685,12 +3677,6 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 
 	!print *, "eigvecs francis qr = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
-
-	!print *, "a0 = "
-	!print "("//to_str(n)//"es19.9)", a0
-
-	!print *, "h * w / w ="
-	!print "("//to_str(n)//"es19.9)", matmul(a0, eigvecs) / eigvecs
 
 end function eig_francis_qr
 
