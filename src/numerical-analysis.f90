@@ -3575,12 +3575,10 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		!print *, "l2 = ", l2
 		!print *, ""
 
-		if (abs(b) > eps) then
+		if (abs(b) > eps * (abs(a) + abs(d))) then
 			is_real(i ) = .false.
 			is_real(i1) = .false.
 
-			!eigvals(ie+1) = l1
-			!eigvals(ie+2) = l2
 			eigvals(i ) = l1
 			eigvals(i1) = l2
 
@@ -3592,7 +3590,6 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	! Second pass: collect the real eigenvalues not saved in the first pass
 	do i = 1, n
 		if (.not. is_real(i)) cycle
-		!eigvals(ie+1) = h(i,i)
 		eigvals(i) = h(i,i)
 		ie = ie + 1
 	end do
@@ -3602,60 +3599,6 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 	!********
 	if (.not. present(eigvecs)) return
-
-	allocate(eigvecs(n,n))
-
-	!!print *, "getting eigvecs via kernel ..."
-	!do i = 1, n
-	!	eigval = eigvals(i)
-
-	!	! Get eigenvector by finding the null-space of A - eigval * eye
-	!	!
-	!	! Take the transpose because the columns of Q form the null space of A', not
-	!	! A
-	!	aa = transpose(a0)
-	!	do j = 1, n
-	!		aa(j,j) = aa(j,j) - eigval
-	!	end do
-	!	!print *, "aa = "
-	!	!print "(4es15.5)", aa
-
-	!	! Undo transpose for lu_kernel.  TODO
-	!	aa = transpose(aa)
-	!	eigvec = lu_kernel_c64(aa)
-
-	!	!!********
-	!	!!
-	!	!! TODO: benchmark LU vs QR for eigvecs.  pq method will probably be
-	!	!! best if i can make it correct
-	!	!!
-	!	!! Find null-space (kernel) using QR decomposition
-	!	!call qr_factor_c64(aa, diag_)
-	!	!qq = qr_get_q_expl_c64(aa, diag_)
-	!	!!print *, "qq = "
-	!	!!print "(4es15.5)", qq
-
-	!	!! A - eigval*eye is singular, so the last row of Q will be in its null space
-	!	!! and thus an eigenvector of A
-	!	!!
-	!	!! TODO: this probably won't work for eigenvalues with multiplicity.  In
-	!	!! that case, you would need to get the last several rows and set
-	!	!! multiple rows in the output
-	!	!eigvec = conjg(qq(:,n))
-	!	!!print *, "eigvec = ", eigvec
-	!	!!********
-
-	!	!! Confirm that it's an eigenvec.  All components of this print should be the
-	!	!! same number
-	!	!print *, "eigval = ", matmul(a0, eigvec) / eigvec
-	!	!print *, "eigval = ", matmul(transpose(a0), eigvec) / eigvec
-
-	!	eigvecs(:,i) = eigvec
-
-	!end do
-	!return
-
-	!********
 
 	! Zero the remaining below-diagonal non-zeros
 
@@ -3668,15 +3611,13 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!print *, ""
 	!stop
 
-	do m = n, 2, -1
+	do m = 2, n
 		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
 
 		! Source:
 		!
 		!     https://github.com/scipy/scipy/blob/3fe8b5088d1b63e7557d26314cf5f40851f46a45/scipy/linalg/_decomp_schur.py#L329
 
-		! TODO: appropriate precision?
-		!if (abs(hc(m, m-1)) <= 1.d-14 * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
 		if (abs(hc(m, m-1)) <= eps * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
 			hc(m, m-1) = 0
 			cycle
@@ -3699,15 +3640,15 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		mu(2) = tc/2.d0 - sqrt(dcmplx(tc**2/4.d0 - detc))
 		!print *, "mu = ", mu
 
-		!eigvals(m-1) = mu(2)
-		!eigvals(m)   = mu(1)
+		! Some of the eigenvalues get swapped around in this loop
+		eigvals(m-1) = mu(1)
+		eigvals(m)   = mu(2)
 
 		mu = mu - hc(m,m)
 
 		rad = norm2c([mu(1), dcmplx(hc(m, m-1))])
 		cc = mu(1) / rad
 		sc = hc(m, m-1) / rad
-		!sc = mu(2) / rad
 
 		g(1,:) = [conjg(cc), sc]
 		g(2,:) = [-sc, cc]
@@ -3725,12 +3666,6 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	end do
 
 	!********
-
-	! TODO: why do some eigvals get swapped around?
-	eigvals = diag(hc)
-
-	!! TODO: can this improve rounding error?
-	!hc = qr_get_r_expl_c64(hc)
 
 	!print *, "hc = "
 	!print "("//to_str(2*n)//"es19.9)", hc
