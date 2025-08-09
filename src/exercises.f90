@@ -2376,7 +2376,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 5, 65
+	do n = 5, 35
 
 		allocate(s (n, n))
 

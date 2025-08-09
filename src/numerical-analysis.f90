@@ -3452,6 +3452,8 @@ function house(x) result(pp)
 	alpha = -sign_(x(1)) * norm2(x)
 	v = x
 	v(1) = v(1) - alpha
+
+	! TODO: panic if norm2 v == 0
 	v = v / norm2(v)
 
 	pp = eye(n) - 2.d0 * outer_product(v, v)
@@ -3469,8 +3471,7 @@ end function house
 !===============================================================================
 
 function eig_francis_qr(h, eigvecs) result(eigvals)
-	! Get the real (?) eigenvalues of `h` using the Francis double step QR
-	! algorithm
+	! Get the eigenvalues of `h` using the Francis double step QR algorithm
 	!
 	! TODO: rename h -> a
 
@@ -3488,7 +3489,9 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		a, b, c, d, det_
 	double precision, allocatable :: pq(:,:), a0(:,:)
 
-	integer :: i, i1, ie, k, n, p, q, r, m  ! TODO: rename p, q, r -> ip, ...
+	integer, parameter :: iters = 100
+	integer :: i, i1, ie, k, n, p, q, r, m, iter  ! TODO: rename p, q, r -> ip, ...
+
 	logical, allocatable :: is_real(:)
 
 	a0 = h  ! TODO: necessary?
@@ -3504,7 +3507,14 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!print "("//to_str(n)//"es19.9)", h
 
 	p = n  ! p indicates the active matrix size
+	iter = 0
+
 	do while (p > 2)
+		iter = iter + 1
+		if (iter > iters) then
+			print *, "Error: Francis failed to converge"
+			exit
+		end if
 		!print *, "p = ", p
 
 		! TODO: add arg for max iters per deflation. Reset a count each time `p`
@@ -3545,6 +3555,8 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		end do
 
 		! Determine the 2D Givens rotation `p2`
+		!
+		! TODO: panic if rad == 0
 		rad = norm2([x, y])
 		ck =  x / rad
 		sk = -y / rad
@@ -3566,11 +3578,13 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 			!print *, "p -= 1"
 			h(p,q) = 0.d0
 			p = p - 1
+			iter = 0
 			q = p - 1  ! unnecessary?  happens at top of while loop anyway
 		else if (abs(h(p-1, q-1)) < eps * (abs(h(q-1, q-1)) + abs(h(q,q)))) then
 			!print *, "p -= 2"
 			h(p-1, q-1) = 0.d0
 			p = p - 2
+			iter = 0
 			q = p - 1
 		end if
 
