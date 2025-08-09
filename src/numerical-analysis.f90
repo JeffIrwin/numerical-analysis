@@ -804,6 +804,39 @@ end subroutine banded_invmul
 
 !===============================================================================
 
+function invmul_c64(a, b) result(x)
+	! Solve the linear algebra problem for `x`:
+	!
+	!     a * x = b
+
+	double complex, intent(in) :: a(:,:)
+	double complex, intent(in) :: b(:)
+	double complex, allocatable :: x(:)
+
+	!********
+
+	double complex, allocatable :: aa(:,:)
+
+	integer :: i
+	integer, allocatable :: pivot(:)
+
+	x = b
+	aa = a
+
+	! Initialize pivot to identity
+	pivot = [(i, i = 1, size(aa,1))]
+
+	call lu_factor_c64(aa, pivot)
+
+	!print *, "pivot = ", pivot
+	!print *, "lu_factor(aa) = "
+	!!print "(5es18.6)", aa
+	!print "(6es15.5)", transpose(aa)
+
+	call lu_solve_c64(aa, x, pivot)
+
+end function invmul_c64
+
 subroutine lu_invmul_vec(a, bx)
 	! Solve the linear algebra problem for `x`:
 	!
@@ -945,6 +978,61 @@ subroutine lu_factor(a, pivot)
 	end do
 
 end subroutine lu_factor
+
+!********
+
+subroutine lu_factor_c64(a, pivot)
+
+	!! Make pivoting optional (for comparison to other solvers)
+	!logical, parameter :: DO_PIVOT = .false.
+
+	double complex, intent(inout) :: a(:,:)
+	integer, allocatable, intent(inout) :: pivot(:)
+
+	!********
+
+	integer :: i, j, k, n, max_index
+
+	!print *, "pivot = ", pivot
+
+	n = size(a, 1)
+	! TODO: panic if `a` is not square
+
+	!if (.not. allocated(pivot)) allocate(pivot(n))
+	!if (allocated(pivot)) deallocate(pivot)
+	!allocate(pivot(n))
+	if (.not. allocated(pivot)) then
+		! TODO: panic. caller must allocate and initialize
+		print *, "Error: pivot is not allocated in lu_factor_c64()"
+	end if
+
+	do i = 1, n
+		! Find max value in column i
+		max_index = i
+		!if (DO_PIVOT) then
+			do j = i+1, n
+				if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+			end do
+		!end if
+
+		! Swap rows
+		pivot([i, max_index]) = pivot([max_index, i])
+
+		do j = i+1, n
+			a    (pivot(j), i) = &
+				a(pivot(j), i) / &
+				a(pivot(i), i)
+			do k = i+1, n
+				a    (pivot(j), k) = &
+					a(pivot(j), k) - &
+					a(pivot(j), i) * &
+					a(pivot(i), k)
+			end do
+		end do
+
+	end do
+
+end subroutine lu_factor_c64
 
 !********
 
@@ -1504,6 +1592,52 @@ subroutine cholesky_solve(a, bx)
 	! No pivoting for Cholesky
 
 end subroutine cholesky_solve
+
+!********
+
+subroutine lu_solve_c64(a, bx, pivot)
+
+	double complex, intent(in) :: a(:,:)
+	double complex, intent(inout) :: bx(:)
+	integer, intent(in) :: pivot(:)
+
+	integer :: i, j, n
+
+	!print *, "pivot lu_solve_c64 = ", pivot
+
+	n = size(a, 1)
+	!print *, "bx init = ", bx
+
+	! Forward substitution
+	do i = 1, n
+		do j = 1, i-1
+			bx    (pivot(i)) = &
+				bx(pivot(i)) - &
+				a (pivot(i), j) * &
+				bx(pivot(j))
+		end do
+	end do
+	!print *, "bx forward = ", bx
+
+	! Back substitution
+	do i = n, 1, -1
+		do j = i+1, n
+			bx    (pivot(i)) = &
+				bx(pivot(i)) - &
+				a (pivot(i), j) * &
+				bx(pivot(j))
+		end do
+		bx    (pivot(i)) = &
+			bx(pivot(i)) / &
+			a (pivot(i), i)
+	end do
+	!print *, "bx back = ", bx
+
+	! Unpivot
+	bx = bx(pivot)
+	!print *, "bx unpivot = ", bx
+
+end subroutine lu_solve_c64
 
 !********
 
@@ -3346,15 +3480,15 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
 	!********
 
-	double complex :: l1, l2, eigval
-	double complex, allocatable :: eigvec(:), aa(:,:)!, diag_(:), qq(:,:)
+	double complex :: l1, l2, eigval, mu(2), ac, bc, cc, dc, sc, g(2,2), tc, detc
+	double complex, allocatable :: eigvec(:), aa(:,:), hc(:,:), cq(:,:)!, diag_(:), qq(:,:)
 
 	double precision, parameter :: eps = 1.d-40  ! TODO: arg
 	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
 		a, b, c, d, det_
 	double precision, allocatable :: pq(:,:), rr(:,:), a0(:,:)
 
-	integer :: i, i1, ie, j, k, n, p, q, r  ! TODO: rename p, q, r -> ip, ...
+	integer :: i, i1, ie, j, k, n, p, q, r, m  ! TODO: rename p, q, r -> ip, ...
 	logical, allocatable :: is_real(:)
 
 	a0 = h  ! TODO: necessary?
@@ -3459,16 +3593,13 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 		i1 = i + 1
 		if (i1 > n) i1 = i1 - n  ! TODO: unnecessary
 
-		! Cyclic modular 2x2 block around diagonal
+		! 2x2 block around diagonal
 		a = h(i , i )
 		b = h(i1, i )
 		c = h(i , i1)
 		d = h(i1, i1)
 
 		! TODO: if b over tol, just cycle now and remove later condition
-
-		! TODO: is a == d?  That may be the case for "real Schur form", which is
-		! what i think `h` is here, and it would simplify the l1 and l2 exprs
 
 		t = a + d         ! trace
 		det_ = a*d - b*c  ! determinant
@@ -3512,57 +3643,55 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 
 	allocate(eigvecs(n,n))
 
-	!print *, "getting eigvecs via kernel ..."
+	!!print *, "getting eigvecs via kernel ..."
+	!do i = 1, n
+	!	eigval = eigvals(i)
 
-	do i = 1, n
-		eigval = eigvals(i)
+	!	! Get eigenvector by finding the null-space of A - eigval * eye
+	!	!
+	!	! Take the transpose because the columns of Q form the null space of A', not
+	!	! A
+	!	aa = transpose(a0)
+	!	do j = 1, n
+	!		aa(j,j) = aa(j,j) - eigval
+	!	end do
+	!	!print *, "aa = "
+	!	!print "(4es15.5)", aa
 
-		! Get eigenvector by finding the null-space of A - eigval * eye
-		!
-		! Take the transpose because the columns of Q form the null space of A', not
-		! A
-		aa = transpose(a0)
-		do j = 1, n
-			aa(j,j) = aa(j,j) - eigval
-		end do
-		!print *, "aa = "
-		!print "(4es15.5)", aa
+	!	! Undo transpose for lu_kernel.  TODO
+	!	aa = transpose(aa)
+	!	eigvec = lu_kernel_c64(aa)
 
-		! Undo transpose for lu_kernel.  TODO
-		aa = transpose(aa)
-		eigvec = lu_kernel_c64(aa)
+	!	!!********
+	!	!!
+	!	!! TODO: benchmark LU vs QR for eigvecs.  pq method will probably be
+	!	!! best if i can make it correct
+	!	!!
+	!	!! Find null-space (kernel) using QR decomposition
+	!	!call qr_factor_c64(aa, diag_)
+	!	!qq = qr_get_q_expl_c64(aa, diag_)
+	!	!!print *, "qq = "
+	!	!!print "(4es15.5)", qq
 
-		!!********
-		!!
-		!! TODO: benchmark LU vs QR for eigvecs.  pq method will probably be
-		!! best if i can make it correct
-		!!
-		!! Find null-space (kernel) using QR decomposition
-		!call qr_factor_c64(aa, diag_)
-		!qq = qr_get_q_expl_c64(aa, diag_)
-		!!print *, "qq = "
-		!!print "(4es15.5)", qq
+	!	!! A - eigval*eye is singular, so the last row of Q will be in its null space
+	!	!! and thus an eigenvector of A
+	!	!!
+	!	!! TODO: this probably won't work for eigenvalues with multiplicity.  In
+	!	!! that case, you would need to get the last several rows and set
+	!	!! multiple rows in the output
+	!	!eigvec = conjg(qq(:,n))
+	!	!!print *, "eigvec = ", eigvec
+	!	!!********
 
-		!! A - eigval*eye is singular, so the last row of Q will be in its null space
-		!! and thus an eigenvector of A
-		!!
-		!! TODO: this probably won't work for eigenvalues with multiplicity.  In
-		!! that case, you would need to get the last several rows and set
-		!! multiple rows in the output
-		!eigvec = conjg(qq(:,n))
-		!!print *, "eigvec = ", eigvec
-		!!********
+	!	!! Confirm that it's an eigenvec.  All components of this print should be the
+	!	!! same number
+	!	!print *, "eigval = ", matmul(a0, eigvec) / eigvec
+	!	!print *, "eigval = ", matmul(transpose(a0), eigvec) / eigvec
 
-		!! Confirm that it's an eigenvec.  All components of this print should be the
-		!! same number
-		!print *, "eigval = ", matmul(a0, eigvec) / eigvec
-		!print *, "eigval = ", matmul(transpose(a0), eigvec) / eigvec
+	!	eigvecs(:,i) = eigvec
 
-		eigvecs(:,i) = eigvec
-
-	end do
-
-	return
+	!end do
+	!return
 
 	!********
 	! WIP, attempting the Q product method but haven't figured it out.  Some
@@ -3573,57 +3702,119 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	! TODO: try using house_c64()?  Since eigvecs are complex, it would make
 	! sense that we have to cast `pq` to complex at some point
 
+	! Cast to complex
+	hc = h
+	cq = pq
+
+	print *, "hc = "
+	print "("//to_str(2*n)//"es19.9)", hc
+	print *, ""
+	!stop
+
 	!do p = 2, n
-	!!do p = 1, n-1
+	!do p = 1, n-1
+	do m = n, 2, -1
+		! TODO: refactor this as real_schur_to_complex() or rsf2csf()
 
-	!	y = h(p, p-1)
+		if (abs(hc(m, m-1)) <= eps * (abs(hc(m-1, m-1)) + abs(hc(m,m)))) then
+			hc(m, m-1) = 0
+			cycle
+		end if
 
-	!	if (abs(y) < eps) cycle
+		print *, "Zeroing at m = ", m
+		print *, "hc(m, m-1) = ", hc(m, m-1)
 
-	!	print *, "Zeroing at p = ", p
-	!	print *, "y = ", y
+		! 2x2 block around diagonal
+		ac = hc(m-1, m-1)
+		bc = hc(m, m-1)
+		cc = hc(m-1, m)
+		dc = hc(m, m)
 
-	!	x = h(p-1, p-1)
-	!	print *, "x = ", x
+		tc = ac + dc          ! trace
+		detc = ac*dc - bc*cc  ! determinant
 
-	!	! Determine the 2D Givens rotation `p2`
-	!	rad = norm2([x, y])
-	!	ck =  x / rad
-	!	sk = -y / rad
-	!	p2(1,:) = [ck, -sk]
-	!	p2(2,:) = [sk,  ck]
+		! Eigenvalues of 2x2 block
+		mu(1) = tc/2.d0 + sqrt(dcmplx(tc**2/4.d0 - detc))
+		mu(2) = tc/2.d0 - sqrt(dcmplx(tc**2/4.d0 - detc))
+		print *, "mu = ", mu
 
-	!	!h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
+		l1 = mu(1)
+		l2 = mu(2)
 
-	!	h(p-1:p, p-1:) = matmul(p2, h(p-1:p, p-1:))
+		!eigvals(m-1) = mu(2)
+		!eigvals(m)   = mu(1)
 
-	!	!h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+		mu = mu - hc(m,m)
 
-	!	! TODO: only if eigvecs is present
-	!	pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
+		rad = norm2c([mu(1), dcmplx(hc(m, m-1))])
+		cc = mu(1) / rad
+		sc = hc(m, m-1) / rad
+		!sc = mu(2) / rad
 
-	!	print *, "h = "
-	!	print "("//to_str(n)//"es19.9)", h
-	!	print *, ""
-	!	!stop
+		g(1,:) = [conjg(cc), sc]
+		g(2,:) = [-sc, cc]
 
-	!end do
+		hc(m-1:m, m-1:) = matmul(g, hc(m-1:m, m-1:))
+		hc(:m, m-1:m) = matmul(hc(:m, m-1:m), transpose(conjg(g)))
+		cq(:, m-1:m) = matmul(cq(:, m-1:m), transpose(conjg(g)))
+
+		hc(m, m-1) = 0
+		!hc(m-1, m-1) = l2
+		!hc(m, m) = l1
+
+		print *, "hc = "
+		print "("//to_str(2*n)//"es19.9)", hc
+		print *, ""
+
+		!y = h(p, p-1)
+		!if (abs(y) < eps) cycle
+		!print *, "Zeroing at p = ", p
+		!print *, "y = ", y
+		!x = h(p-1, p-1)
+		!print *, "x = ", x
+
+		!! Determine the 2D Givens rotation `p2`
+		!rad = norm2([x, y])
+		!ck =  x / rad
+		!sk = -y / rad
+		!p2(1,:) = [ck, -sk]
+		!p2(2,:) = [sk,  ck]
+		!!h(q:p, p-2:) = matmul(p2, h(q:p, p-2:))
+		!h(p-1:p, p-1:) = matmul(p2, h(p-1:p, p-1:))
+		!!h(:p, p-1:p) = matmul(h(:p, p-1:p), transpose(p2))
+
+		!pq(:, p-1:p) = matmul(pq(:, p-1:p), transpose(p2))
+
+		!print *, "h = "
+		!print "("//to_str(n)//"es19.9)", h
+		!print *, ""
+		!!stop
+
+	end do
 
 	!********
 
-	rr = qr_get_r_expl(h)
-	!rr = h
+	! TODO: why do some eigvals get swapped around?
+	eigvals = diag(hc)
 
-	print *, "rr = "
-	print "("//to_str(n)//"es19.9)", rr
+	!rr = qr_get_r_expl(h)
+	!!rr = h
+
+	!! TODO: can this improve rounding error?
+	!hc = qr_get_r_expl_c64(hc)
+
+	print *, "hc = "
+	print "("//to_str(2*n)//"es19.9)", hc
 
 	!do i = 1, n
 	!	rr(i,i) = dble(eigvals(i))
 	!end do
 
-	! Find the eigenvectors of `rr`
-	eigvecs = eye(n)
+	! Find the eigenvectors of `hc`
+	eigvecs = eye_c64(n)
 	do i = 2, n
+
+		eigvecs(1: i-1, i) = invmul_c64(hc(i,i) * eye_c64(i-1) - hc(:i-1, :i-1) , hc(:i-1, i))
 
 		! TODO: implement invmul() for c64 and check this.  I doubt it will work
 		! because I can't even get the eigvecs for the real eigvals this way,
@@ -3653,7 +3844,9 @@ function eig_francis_qr(h, eigvecs) result(eigvals)
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
 
-	eigvecs = matmul(pq, eigvecs)
+	!eigvecs = matmul(pq, eigvecs)
+	eigvecs = matmul(cq, eigvecs)
+
 	!eigvecs = matmul(pq, conjg(eigvecs))
 
 	!print *, "eigvecs francis qr = "
