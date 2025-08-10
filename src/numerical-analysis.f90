@@ -13,6 +13,10 @@ module numa
 	!   make panic use a macro to log the filename and line number
 	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
 	!   specifically for Intel, e.g. initialization of complex arrays
+	! - Add more doxygen doc strings, maybe at least just a `brief` for each
+	!   public fn.  See `lagrange_interpolator()` which has an example doc
+	!   string
+	!   * host the generated html on github pages?
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG_ = (0.d0, 1.d0)  ! sqrt(-1)
@@ -1175,35 +1179,6 @@ subroutine hess(a, u)
 	!print "(4es15.5)", u
 
 end subroutine hess
-
-subroutine hess_no_pq(a)
-	! Apply the Householder Hessenberg reduction to `a`
-	!
-	! TODO: `pq` (u) is now optional in hess(), so just delete this version
-	double precision, intent(inout) :: a(:,:)
-	!********
-
-	integer :: k, m
-	double precision, allocatable :: x(:), v(:)
-
-	m = size(a,1)
-
-	do k = 1, m-2
-
-		x = a(k+1:, k)
-		v = x
-		v(1) = v(1) + sign_(x(1)) * norm2(x)
-		v = v / norm2(v)
-
-		! TODO: avoid outer_product() at least, and maybe `x` temp array.
-		! Avoiding `v` temp array might be a little more work than worthwhile
-
-		a(k+1:, k:) = a(k+1:, k:) - 2 * outer_product(v, matmul(v, a(k+1:, k:)))
-		a(:, k+1:)  = a(:, k+1:)  - 2 * outer_product(matmul(a(:, k+1:), v), v)
-
-	end do
-
-end subroutine hess_no_pq
 
 !********
 
@@ -3828,7 +3803,7 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
 
-	call hess_no_pq(a)
+	call hess(a)
 
 	do i = 1, iters
 
