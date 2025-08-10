@@ -30,7 +30,6 @@ module numa
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
 	!   public fn.  See `lagrange_interpolator()` which has an example doc
 	!   string
-	!   * host the generated html on github pages?
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG_ = (0.d0, 1.d0)  ! sqrt(-1)
