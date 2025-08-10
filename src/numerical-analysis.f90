@@ -946,11 +946,9 @@ subroutine lu_factor(a, pivot)
 	n = size(a, 1)
 	! TODO: panic if `a` is not square
 
-	!if (.not. allocated(pivot)) allocate(pivot(n))
-	!if (allocated(pivot)) deallocate(pivot)
-	!allocate(pivot(n))
 	if (.not. allocated(pivot)) then
-		! TODO: panic. caller must allocate and initialize
+		! TODO: panic. caller must allocate and initialize.  Or we could just
+		! allocate and initialize (to identity perm) here
 		print *, "Error: pivot is not allocated in lu_factor()"
 	end if
 
@@ -1001,11 +999,9 @@ subroutine lu_factor_c64(a, pivot)
 	n = size(a, 1)
 	! TODO: panic if `a` is not square
 
-	!if (.not. allocated(pivot)) allocate(pivot(n))
-	!if (allocated(pivot)) deallocate(pivot)
-	!allocate(pivot(n))
 	if (.not. allocated(pivot)) then
-		! TODO: panic. caller must allocate and initialize
+		! TODO: panic. caller must allocate and initialize.  Or we could just
+		! allocate and initialize (to identity perm) here
 		print *, "Error: pivot is not allocated in lu_factor_c64()"
 	end if
 
@@ -1036,62 +1032,6 @@ subroutine lu_factor_c64(a, pivot)
 	end do
 
 end subroutine lu_factor_c64
-
-!********
-
-subroutine lu_factor_nopiv(a)
-
-	double precision, intent(inout) :: a(:,:)
-
-	!********
-
-	integer :: i, j, k, n
-
-	n = size(a, 1)
-
-	do i = 1, n
-		do j = i+1, n
-			a    (j, i) = &
-				a(j, i) / &
-				a(i, i)
-			do k = i+1, n
-				a    (j, k) = &
-					a(j, k) - &
-					a(j, i) * &
-					a(i, k)
-			end do
-		end do
-
-	end do
-
-end subroutine lu_factor_nopiv
-
-subroutine lu_factor_nopiv_c64(a)
-
-	double complex, intent(inout) :: a(:,:)
-
-	!********
-
-	integer :: i, j, k, n
-
-	n = size(a, 1)
-
-	do i = 1, n
-		do j = i+1, n
-			a    (j, i) = &
-				a(j, i) / &
-				a(i, i)
-			do k = i+1, n
-				a    (j, k) = &
-					a(j, k) - &
-					a(j, i) * &
-					a(i, k)
-			end do
-		end do
-
-	end do
-
-end subroutine lu_factor_nopiv_c64
 
 !********
 
@@ -3687,11 +3627,8 @@ function lu_kernel(a) result(kernel)
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: kernel(:)
 
-	!double precision, allocatable :: a0(:,:)
 	integer :: i, n
 	integer, allocatable :: pivot(:)
-
-	!a0 = a  ! testing only
 
 	n = size(a, 1)
 	kernel = zeros(n)
@@ -3706,74 +3643,31 @@ function lu_kernel(a) result(kernel)
 			-dot_product(kernel(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
 	end do
 
-	!print *, "a0 = "
-	!print "("//to_str(n)//"es19.9)", a0
-	!print *, "kernel = ", kernel
-	!print *, "a0 * kernel = ", matmul(a0, kernel)
-	!if (norm2(matmul(a0, kernel)) > 0.001d0) then
-	!	print *, "Error: residual too large in lu_kernel()"
-	!	stop
-	!end if
-	!!stop
-
 end function lu_kernel
 
 !===============================================================================
 
 function lu_kernel_c64(a) result(kernel)
 	! Find the kernel or null-space of `a` using LU decomposition
-	!
-	! TODO: add tests before changing.  This is currently unused.  lu_kernel()
-	! (real) could use independent testing as well, outside of
-	! eig_hess_qr_kernel()
 	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 	double complex, allocatable :: kernel(:)
 
-	double complex, allocatable :: a0(:,:)
 	integer :: i, n
 	integer, allocatable :: pivot(:)
-
-	a0 = a  ! TODO: testing only
 
 	n = size(a, 1)
 	kernel = zeros(n)
 
 	! The kernel of `a` is the same as `u`
+
 	pivot = [(i, i = 1, size(a,1))]
-
-	!call lu_factor(a, pivot)
-	call lu_factor_nopiv_c64(a)  ! TODO: fix it with pivoting.  see real version lu_kernel()
-
-	!kernel(n) = 1.d0
-	kernel(pivot(n)) = 1.d0
-
+	call lu_factor_c64(a, pivot)
+	kernel(n) = 1.d0
 	do i = n-1, 1, -1
-
-		!kernel(i) = -dot_product(kernel(i+1:), a(i, i+1:n)) / a(i,i)
-		kernel(i) = -dot_product(conjg(kernel(i+1:)), a(i, i+1:n)) / a(i,i)
-		!kernel(i) = -dot_product(kernel(i+1:), conjg(a(i, i+1:n))) / a(i,i)
-
-		!kernel(i) = -dot_product(kernel(i+1:), a(i, pivot(i+1:n))) / a(i,i)
-		!kernel(pivot(i)) = &
-		!	-dot_product(kernel(pivot(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i),i)
-
+		kernel(i) = &
+			-dot_product(conjg(kernel(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i), i)
 	end do
-
-	! Unpivot
-	kernel = kernel(pivot)
-
-	!print *, "a0 = "
-	!print "("//to_str(n)//"es19.9)", a0
-	!print *, "kernel = ", kernel
-	!print *, "a0 * kernel = ", matmul(a0, kernel)
-	!print *, "norm = ", norm2c(matmul(a0, kernel))
-
-	!if (norm2c(matmul(a0, kernel)) > 0.001d0) then
-	!	print *, "Error: residual too large in lu_kernel_c64()"
-	!	stop
-	!end if
-	!!stop
 
 end function lu_kernel_c64
 
