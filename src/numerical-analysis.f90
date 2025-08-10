@@ -60,7 +60,7 @@ module numa
 
 	!********
 
-	private :: simpson_adapt_aux, gk15_aux, gk15i_aux
+	private :: simpson_adapt_aux, gk15_aux, gk15i_aux, spline_general
 
 	!********
 
@@ -101,14 +101,17 @@ module numa
 contains
 
 !===============================================================================
+
+!> @brief  Interpolates a function at given points using Lagrange interpolation
+!>
+!> @details  "Lagrange's formula is, in general, not as suitable for actual
+!> calculations as some other methods to be described below ... ."
+!>
+!> @param[in]  xi  Support point x values where the function is evaluated directly
+!> @param[in]  f   Function to be evaluated and interpolated
+!> @param[in]  x   Point x values where the function will be interpolated
+!> @return         Interpolated y value results
 double precision function lagrange_interpolator(xi, f, x) result(fx)
-
-	! Given support points `xi` and function `f`, interpolate f at `x` using
-	! Lagrange interpolation
-	!
-	! "Lagrange's formula is, in general, not as suitable for actual
-	! calculations as some other methods to be described below ... ."
-
 	double precision, intent(in) :: xi(:)
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: x
@@ -1175,6 +1178,8 @@ end subroutine hess
 
 subroutine hess_no_pq(a)
 	! Apply the Householder Hessenberg reduction to `a`
+	!
+	! TODO: `pq` (u) is now optional in hess(), so just delete this version
 	double precision, intent(inout) :: a(:,:)
 	!********
 

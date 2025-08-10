@@ -2384,14 +2384,12 @@ integer function chapter_6_francis_qr() result(nfail)
 
 	! Eigenvectors are optional to save work.  Beware, rounding and ordering may be different
 	eigvals2 = eig_francis_qr(a)
-
 	diff = diff_complex_vecs(eigvals, eigvals2)
 	print *, "diff eigvals2 = ", diff
 	call test(diff, 0.d0, 1.d-8, nfail, "eig_francis_qr no vecs")
-	!call test(norm2c(sorted(eigvals2) - sorted(eigvals)), 0.d0, 1.d-8, nfail, "eig_francis_qr no vecs")
 
-	print *, "eigvals2 = [real, imag]"
-	print "(2es15.5)", sorted(eigvals2)
+	!print *, "eigvals2 = [real, imag]"
+	!print "(2es15.5)", sorted(eigvals2)
 
 	!print *, "a * eigvecs / eigvecs = "
 	!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
