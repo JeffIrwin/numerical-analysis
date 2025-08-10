@@ -1,0 +1,9 @@
+<map id="numa::qr_get_q_expl" name="numa::qr_get_q_expl">
+<area shape="rect" id="Node000001" title=" " alt="" coords="519,31,677,56"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#ae7d6a62bbce0ce64938739cd99d4aaec" title=" " alt="" coords="244,5,471,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="504,36,470,33,471,27,505,31"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#adfd5c2910cff05505adeebe1578fc633" title=" " alt="" coords="283,55,431,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="505,55,432,63,431,57,505,50"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____exercises.html#abe2ff90773182a35f995724ed53c8230" title=" " alt="" coords="5,47,196,87"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="270,70,196,70,196,65,270,65"/>
+</map>

@@ -1,0 +1,15 @@
+<map id="numa::lu_factor" name="numa::lu_factor">
+<area shape="rect" id="Node000001" title=" " alt="" coords="729,55,853,80"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#aa1f654b533ed64d09c947d63891234dd" title=" " alt="" coords="517,5,681,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="728,54,649,33,651,28,729,49"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#a97c9aa915b072280f24a5c07ac0812ab" title=" " alt="" coords="519,55,680,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="716,70,680,70,680,65,716,65"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#a03cbbc710eec444575e25f5cfaf10824" title=" " alt="" coords="536,104,663,129"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="729,86,651,106,649,101,728,81"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8" title=" " alt="" coords="244,79,469,104"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="522,111,469,106,470,100,522,106"/>
+<area shape="rect" id="Node000006" href="$namespacenuma.html#a8d203d91355ca28bba055d8721703650" title=" " alt="" coords="261,128,452,153"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="522,127,453,134,452,129,522,122"/>
+<area shape="rect" id="Node000007" href="$namespacenuma____exercises.html#acbb53e512ebb071fb9c47793da1d237d" title=" " alt="" coords="5,121,196,161"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="248,143,196,143,196,138,248,138"/>
+</map>

@@ -1,0 +1,14 @@
+<map id="numa::hess" name="numa::hess">
+<area shape="rect" id="Node000001" title=" " alt="" coords="483,62,580,87"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#a858ae4d27ebc6e99f7e225bb68e59631" title=" " alt="" coords="260,13,419,38"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="469,61,434,52,390,41,392,35,435,47,470,56"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#a02f0c1f8b16e98329dc5fe4c55a30c67" title=" " alt="" coords="267,62,411,87"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="469,77,411,77,411,72,469,72"/>
+<area shape="rect" id="Node000006" href="$namespacenuma.html#a8d203d91355ca28bba055d8721703650" title=" " alt="" coords="244,111,435,137"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="470,93,390,114,389,109,469,88"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#ab5b37a891f8826f3449413ee25b677d8" title=" " alt="" coords="5,5,196,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="246,28,196,28,196,23,246,23"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____exercises.html#acbb53e512ebb071fb9c47793da1d237d" title=" " alt="" coords="5,87,196,127"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="254,89,197,97,196,91,254,83"/>
+<area shape="poly" id="edge6_Node000006_Node000005" title=" " alt="" coords="230,119,196,116,196,111,231,113"/>
+</map>

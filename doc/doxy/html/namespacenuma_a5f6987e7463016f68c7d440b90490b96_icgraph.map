@@ -1,0 +1,18 @@
+<map id="numa::gauss_jordan" name="numa::gauss_jordan">
+<area shape="rect" id="Node000001" title=" " alt="" coords="397,38,551,63"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#a7445206a9d5cf89ab743a6e4c38fcd58" title=" " alt="" coords="5,5,196,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="409,38,349,28,271,23,196,24,196,18,271,18,350,23,410,32"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#ac61632c270e90da5163ec8260d13d6a2" title=" " alt="" coords="253,111,340,137"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="431,71,330,114,328,109,429,66"/>
+<area shape="rect" id="Node000007" href="$namespacenuma.html#a462c36b5ed960dcac5d6268da550bb7e" title=" " alt="" coords="244,38,349,63"/>
+<area shape="poly" id="edge8_Node000001_Node000007" title=" " alt="" coords="383,53,350,53,350,48,383,48"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="267,105,233,82,195,60,167,48,169,43,197,55,236,77,270,101"/>
+<area shape="poly" id="edge7_Node000003_Node000003" title=" " alt="" coords="328,101,319,93,297,90,278,92,268,97,266,102,272,110,267,113,261,103,264,93,277,87,297,85,321,88,331,97"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____exercises.html#abe2ff90773182a35f995724ed53c8230" title=" " alt="" coords="5,69,196,109"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="239,117,196,109,197,104,240,111"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____exercises.html#ab5b37a891f8826f3449413ee25b677d8" title=" " alt="" coords="5,133,196,173"/>
+<area shape="poly" id="edge5_Node000003_Node000005" title=" " alt="" coords="240,135,197,142,196,136,239,130"/>
+<area shape="rect" id="Node000006" href="$namespacenuma____exercises.html#acbb53e512ebb071fb9c47793da1d237d" title=" " alt="" coords="5,197,196,237"/>
+<area shape="poly" id="edge6_Node000003_Node000006" title=" " alt="" coords="268,147,197,188,169,200,166,195,195,183,265,142"/>
+<area shape="poly" id="edge9_Node000007_Node000002" title=" " alt="" coords="230,45,196,40,196,35,230,39"/>
+</map>

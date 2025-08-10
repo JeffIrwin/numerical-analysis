@@ -1,0 +1,10 @@
+<map id="numa__utils::sorted_f64" name="numa__utils::sorted_f64">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,37,184,62"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="232,37,395,62"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="184,47,218,47,218,52,184,52"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="443,29,597,69"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="395,47,429,47,429,52,395,52"/>
+<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="481,30,479,20,485,11,499,5,520,3,544,6,557,13,555,18,542,11,520,8,500,10,489,15,484,21,486,28"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____utils.html#aa743df57005f55647002a6dbe4f7253b" title=" " alt="" coords="645,29,809,69"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="598,47,632,47,632,52,598,52"/>
+</map>

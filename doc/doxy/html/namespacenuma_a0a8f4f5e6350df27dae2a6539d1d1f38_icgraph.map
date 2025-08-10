@@ -1,0 +1,16 @@
+<map id="numa::tridiag_factor" name="numa::tridiag_factor">
+<area shape="rect" id="Node000001" title=" " alt="" coords="692,71,847,97"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#a24466cee1dc1e751770c8f51fa800642" title=" " alt="" coords="485,35,642,75"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="678,74,642,68,642,63,679,68"/>
+<area shape="rect" id="Node000006" href="$namespacenuma.html#a6e76fcf01062a3d604ffd06e7e4f0a1e" title=" " alt="" coords="483,99,644,125"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="679,99,644,104,644,98,678,94"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#a44c077e257b59d383246fbe11b8bc2c7" title=" " alt="" coords="244,5,435,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="471,45,434,40,435,35,472,40"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#a0acf2a3f7dab2c3ed7855c7cb3a5dd2e" title=" " alt="" coords="249,70,430,95"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="472,69,431,74,430,69,471,64"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____exercises.html#aa8b46d6d4c197927e2e141cfcbf23911" title=" " alt="" coords="5,63,196,103"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="235,85,196,85,196,80,235,80"/>
+<area shape="poly" id="edge7_Node000006_Node000004" title=" " alt="" coords="468,102,430,97,431,92,469,97"/>
+<area shape="rect" id="Node000007" href="$namespacenuma____exercises.html#a0e2881f671b73e0aced99ae64fdac131" title=" " alt="" coords="244,120,435,160"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="469,126,435,131,434,125,468,121"/>
+</map>

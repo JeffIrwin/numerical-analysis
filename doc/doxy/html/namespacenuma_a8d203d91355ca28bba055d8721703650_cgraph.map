@@ -1,0 +1,17 @@
+<map id="numa::eig_hess_qr_kernel" name="numa::eig_hess_qr_kernel">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,141,196,167"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#ae9ffddb64b05eda1a19dd7e5b93c9f45" title=" " alt="" coords="259,97,356,123"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="160,139,244,121,246,126,162,144"/>
+<area shape="rect" id="Node000006" href="$namespacenuma.html#a03cbbc710eec444575e25f5cfaf10824" title=" " alt="" coords="244,165,371,191"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="197,162,231,166,230,172,196,168"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#acc700dfd9710fae3362917b302e3bbf2" title=" " alt="" coords="452,29,543,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="338,95,418,63,439,56,441,61,420,69,340,100"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#ae45c00471fbc73ab66e2b473d392ec17" title=" " alt="" coords="419,79,576,104"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="356,103,405,98,405,103,357,108"/>
+<area shape="rect" id="Node000005" href="$namespacenuma.html#a64abe54a7ff752a18722999d0438667b" title=" " alt="" coords="447,152,548,177"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="353,120,440,146,439,151,351,125"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="466,31,459,21,463,11,476,5,497,3,523,6,534,15,531,19,521,11,497,8,477,10,467,15,465,20,470,28"/>
+<area shape="poly" id="edge6_Node000005_Node000005" title=" " alt="" coords="466,153,459,144,463,134,476,128,497,125,523,129,534,138,531,142,521,134,497,131,477,133,467,137,465,143,470,150"/>
+<area shape="rect" id="Node000007" href="$namespacenuma.html#ad32be8e1143cef47d62e67fe8904398d" title=" " alt="" coords="435,201,559,227"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="372,187,422,197,421,202,371,193"/>
+</map>

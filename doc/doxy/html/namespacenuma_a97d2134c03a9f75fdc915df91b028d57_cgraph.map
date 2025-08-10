@@ -1,0 +1,7 @@
+<map id="numa::invmul_c64" name="numa::invmul_c64">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,31,148,56"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#aff878991885babc28520ef70154df7f9" title=" " alt="" coords="196,5,351,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="148,32,182,27,183,32,148,37"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#ae17e47b505925317bf45c68e82311a7a" title=" " alt="" coords="198,55,349,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="148,49,184,54,184,59,148,55"/>
+</map>

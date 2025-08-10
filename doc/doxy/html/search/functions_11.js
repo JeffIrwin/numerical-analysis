@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['select_5fmax_5fn_0',['select_max_n',['../namespacenuma____utils.html#a656d44b9d4efa4cb4be854515dfd3b2e',1,'numa__utils']]],
+  ['sign_5f_1',['sign_',['../namespacenuma.html#a64abe54a7ff752a18722999d0438667b',1,'numa']]],
+  ['simpson_5f13_5fintegrator_2',['simpson_13_integrator',['../namespacenuma.html#acba6f040e8f5b88701eb2c83d7be3902',1,'numa']]],
+  ['simpson_5f38_5fintegrator_3',['simpson_38_integrator',['../namespacenuma.html#a4e34b3811a31d581fb218d7cc006d642',1,'numa']]],
+  ['simpson_5fadaptive_5fintegrator_4',['simpson_adaptive_integrator',['../namespacenuma.html#acdd029f9e1f6f8769675265f48ce7d68',1,'numa']]],
+  ['simpson_5fintegrator_5fvals_5',['simpson_integrator_vals',['../namespacenuma.html#ac8a5c04b0d97ae4f8f9428104e23a937',1,'numa']]],
+  ['sin_5ffn_6',['sin_fn',['../namespacenuma____functions.html#a2d5c62e4aeb215e34a5fd0732e108144',1,'numa__functions']]],
+  ['sinx_5fx_7',['sinx_x',['../namespacenuma____functions.html#a4d8ddfd3480b04c865bbd769483537e9',1,'numa__functions']]],
+  ['sort_5fc64_8',['sort_c64',['../namespacenuma____utils.html#ac0fa38a990899fba300b008198c47400',1,'numa__utils']]],
+  ['sort_5ff64_9',['sort_f64',['../namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f',1,'numa__utils']]],
+  ['sorted_5fc64_10',['sorted_c64',['../namespacenuma____utils.html#aa89549567a73f000fb32b38db5e03070',1,'numa__utils']]],
+  ['sorted_5ff64_11',['sorted_f64',['../namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e',1,'numa__utils']]],
+  ['sortidx_5fc64_5f1_12',['sortidx_c64_1',['../namespacenuma____utils.html#a361d6677057b5989ce0ac3d716dc2908',1,'numa__utils']]],
+  ['sortidx_5ff64_5f1_13',['sortidx_f64_1',['../namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0',1,'numa__utils']]],
+  ['sortidx_5fi32_5f2_14',['sortidx_i32_2',['../namespacenuma____utils.html#adcc1939d35e0d2f859c832263a979853',1,'numa__utils']]],
+  ['spline_5fno_5fcurve_15',['spline_no_curve',['../namespacenuma.html#ab027fd81d1cff38531287180234d19ce',1,'numa']]],
+  ['spline_5fperiodic_16',['spline_periodic',['../namespacenuma.html#a385afd7c9a2216d0c91e5dbce55d940d',1,'numa']]],
+  ['spline_5fprescribed_17',['spline_prescribed',['../namespacenuma.html#a0acf2a3f7dab2c3ed7855c7cb3a5dd2e',1,'numa']]],
+  ['sqrt_5ffn_18',['sqrt_fn',['../namespacenuma____functions.html#a749164d5a22f001078f51556c0a0cec2',1,'numa__functions']]]
+];

@@ -1,0 +1,7 @@
+<map id="numa::banded_solve" name="numa::banded_solve">
+<area shape="rect" id="Node000001" title=" " alt="" coords="459,13,616,38"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#a1537952d739aa19bc9d2501f08dd7385" title=" " alt="" coords="244,13,411,38"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="445,28,411,28,411,23,445,23"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#a509607e963cce84ad1615d634d6817e6" title=" " alt="" coords="5,5,196,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="230,28,196,28,196,23,230,23"/>
+</map>

@@ -1,0 +1,16 @@
+<map id="numa::newton_cotes_integrator" name="numa::newton_cotes_integrator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="508,73,665,113"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#a67b5331d43645860e170581773a17f39" title=" " alt="" coords="265,5,439,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="527,70,459,45,417,33,419,28,461,39,529,65"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#acba6f040e8f5b88701eb2c83d7be3902" title=" " alt="" coords="244,55,460,80"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="494,85,460,82,461,76,494,80"/>
+<area shape="rect" id="Node000005" href="$namespacenuma.html#a4e34b3811a31d581fb218d7cc006d642" title=" " alt="" coords="244,104,460,129"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="494,105,461,108,460,103,494,99"/>
+<area shape="rect" id="Node000006" href="$namespacenuma.html#a796e1c7b671205dd06c0222e8ff0115e" title=" " alt="" coords="259,153,445,179"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="525,120,461,143,414,156,412,151,459,138,523,115"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#a73968566bd91091b3b473c73cc78ad6a" title=" " alt="" coords="5,73,196,113"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="276,36,245,45,154,75,153,70,243,39,274,31"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="231,82,197,86,196,80,230,77"/>
+<area shape="poly" id="edge6_Node000005_Node000003" title=" " alt="" coords="230,108,196,104,197,99,231,102"/>
+<area shape="poly" id="edge8_Node000006_Node000003" title=" " alt="" coords="279,153,243,143,156,115,158,110,245,138,280,148"/>
+</map>

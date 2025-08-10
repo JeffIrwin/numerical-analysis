@@ -1,0 +1,7 @@
+<map id="numa::tridiag_corner_invmul" name="numa::tridiag_corner_invmul">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,23,163,63"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#a0a8f4f5e6350df27dae2a6539d1d1f38" title=" " alt="" coords="211,5,365,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="163,31,196,27,197,32,164,36"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#a4ca722516e8d0db62b7826e1e526f97a" title=" " alt="" coords="213,55,363,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="163,50,199,54,199,60,163,55"/>
+</map>

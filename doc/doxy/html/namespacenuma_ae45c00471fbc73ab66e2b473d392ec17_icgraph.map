@@ -1,0 +1,19 @@
+<map id="numa::outer_product" name="numa::outer_product">
+<area shape="rect" id="Node000001" title=" " alt="" coords="637,38,795,63"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#ae9ffddb64b05eda1a19dd7e5b93c9f45" title=" " alt="" coords="487,62,585,87"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="624,66,585,71,585,66,623,60"/>
+<area shape="rect" id="Node000008" href="$namespacenuma.html#a17285ac7419dfc8e8e15a7dd983f0005" title=" " alt="" coords="483,13,589,38"/>
+<area shape="poly" id="edge8_Node000001_Node000008" title=" " alt="" coords="623,40,589,35,590,30,624,35"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#a858ae4d27ebc6e99f7e225bb68e59631" title=" " alt="" coords="260,13,419,38"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="473,62,390,41,391,35,475,57"/>
+<area shape="rect" id="Node000005" href="$namespacenuma.html#a02f0c1f8b16e98329dc5fe4c55a30c67" title=" " alt="" coords="267,62,411,87"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="473,77,411,77,411,72,473,72"/>
+<area shape="rect" id="Node000007" href="$namespacenuma.html#a8d203d91355ca28bba055d8721703650" title=" " alt="" coords="244,111,435,137"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="475,93,391,114,390,109,473,87"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____exercises.html#ab5b37a891f8826f3449413ee25b677d8" title=" " alt="" coords="5,5,196,45"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="246,28,196,28,196,23,246,23"/>
+<area shape="rect" id="Node000006" href="$namespacenuma____exercises.html#acbb53e512ebb071fb9c47793da1d237d" title=" " alt="" coords="5,87,196,127"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="254,89,197,97,196,91,254,83"/>
+<area shape="poly" id="edge7_Node000007_Node000006" title=" " alt="" coords="230,119,196,116,196,111,231,113"/>
+<area shape="poly" id="edge9_Node000008_Node000003" title=" " alt="" coords="468,28,419,28,419,23,468,23"/>
+</map>
