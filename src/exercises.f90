@@ -476,8 +476,8 @@ integer function chapter_4_lu() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision :: t0, t, t_lu
-	double precision, allocatable :: a(:,:), bx(:), x(:)
-	integer :: i, n, nrng, irep
+	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:)
+	integer :: i, n, nrng, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -559,6 +559,42 @@ integer function chapter_4_lu() result(nfail)
 		deallocate(a, x, bx)
 	end do
 	write(*,*) "LU fuzz time = ", to_str(t_lu), " s"
+	write(*,*)
+
+	!********
+	! Test lu_kernel()
+
+	p0 = -1
+	do n = 2, 40, 5
+
+		! LU decomposition is still fast for n >> 90, but maybe not fast enough
+		! for multiple reps in a unit test
+
+		allocate(a(n, n))
+
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing lu_kernel() with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 1
+			call random_number(a)  ! random matrix
+
+			! Make the last column a linear combination of the other columns
+			a(:,n) = matmul(a(:, :n-1), a(:n-1, n))
+
+			a0 = a
+
+			kernel = lu_kernel(a)
+			!print *, "kernel = ", kernel
+			!print *, "a * kernel = ", matmul(a0, kernel)
+
+			call test(norm2(matmul(a0, kernel)), 0.d0, 1.d-9 * n, nfail, "lu_kernel()")
+
+		end do
+
+		deallocate(a)
+	end do
 
 	!********
 	print *, ""
