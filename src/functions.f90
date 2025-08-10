@@ -1,4 +1,5 @@
 
+!> Function callback definitions for testing interpolators, integrators, etc.
 module numa__functions
 
 	implicit none

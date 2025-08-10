@@ -1,4 +1,5 @@
 
+!> Common utilities with minimal dependencies
 module numa__utils
 
 	implicit none

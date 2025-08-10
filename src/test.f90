@@ -1,4 +1,5 @@
 
+!> Main program module for the unit tests
 module numa__test
 
 	use numa
@@ -7,6 +8,7 @@ module numa__test
 
 end module numa__test
 
+!> Main program for the unit tests
 program main
 
 	use numa__test

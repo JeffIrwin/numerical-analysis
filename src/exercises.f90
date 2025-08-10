@@ -1,4 +1,5 @@
 
+!> Unit tests and exercises
 module numa__exercises
 
 	use numa
