@@ -582,6 +582,8 @@ integer function chapter_4_lu() result(nfail)
 
 			! Make the last column a linear combination of the other columns
 			a(:,n) = matmul(a(:, :n-1), a(:n-1, n))
+			!print *, "a = "
+			!print "("//to_str(n)//"es15.5)", a
 
 			a0 = a
 
@@ -600,6 +602,107 @@ integer function chapter_4_lu() result(nfail)
 	print *, ""
 
 end function chapter_4_lu
+
+!===============================================================================
+
+integer function chapter_4_lu_c64() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_lu_c64"
+
+	double precision, allocatable :: ar(:,:), ai(:,:), xr(:), xi(:)
+	double complex, allocatable :: a0(:,:), a(:,:), bx(:), x(:), kernel(:)
+	integer :: i, n, nrng, irep, p0
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	p0 = -1
+	do n = 2, 30, 3
+
+		allocate(ar(n, n), ai(n, n), xr(n), xi(n))
+
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing invmul_c64() with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 2
+
+			call random_number(ar)  ! random matrix
+			call random_number(ai)  ! random matrix
+			call random_number(xr)
+			call random_number(xi)
+			a0 = ar + IMAG_ * ai
+			x  = xr + IMAG_ * xi
+
+			a = a0
+			bx = matmul(a, x)      ! calculate rhs
+
+			!print *, "a = "
+			!print "(6es15.5)", a
+			!print "(a,6es15.5)", "x  = ", x
+			!print "(a,6es15.5)", "b  = ", bx
+
+			bx = invmul_c64(a, bx)
+			!print "(a,6es15.5)", "bx = ", bx
+
+			! Rounding error grows with `n`
+			call test(norm2c(bx - x), 0.d0, 1.d-12 * n, nfail, "invmul_c64() fuzz n x n")
+
+		end do
+
+		deallocate(ar, ai, xr, xi)
+	end do
+
+	!********
+	! Test lu_kernel()
+
+	p0 = -1
+	do n = 2, 30, 5
+
+		! LU decomposition is still fast for n >> 90, but maybe not fast enough
+		! for multiple reps in a unit test
+
+		allocate(ar(n, n), ai(n, n))
+
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing lu_kernel() with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 2
+			call random_number(ar)  ! random matrix
+			call random_number(ai)  ! random matrix
+			a0 = ar + IMAG_ * ai
+			a = a0
+
+			! Make the last column a (random) linear combination of the other columns
+			a(:,n) = matmul(a(:, :n-1), a(:n-1, n))
+
+			a0 = a
+
+			kernel = lu_kernel_c64(a)
+			!print *, "kernel = ", kernel
+			!print *, "a * kernel = ", matmul(a0, kernel)
+
+			call test(norm2c(matmul(a0, kernel)), 0.d0, 1.d-12 * n, nfail, "lu_kernel_c64()")
+
+		end do
+
+		deallocate(ar, ai)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_4_lu_c64
 
 !===============================================================================
 
