@@ -68,6 +68,7 @@ var namespacenuma =
     [ "outer_product_c64", "namespacenuma.html#aaa4fb5bb3fdc1591e7d64f88988f41ba", null ],
     [ "qr_factor", "namespacenuma.html#a54dd9343deb6b39f61be2a009a511197", null ],
     [ "qr_factor_c64", "namespacenuma.html#ae35ce28098d277a604167bef8892ce7d", null ],
+    [ "qr_factor_gram_schmidt", "namespacenuma.html#a3741388dbad89db83728d6278e95b143", null ],
     [ "qr_get_q_expl", "namespacenuma.html#a3211b0bb9ce8de05fef665b6f17b0589", null ],
     [ "qr_get_q_expl_c64", "namespacenuma.html#a34fceccdae1f913e369b3de4f08d01df", null ],
     [ "qr_get_r_expl", "namespacenuma.html#a2d4392f090a5fe8246988627df668530", null ],

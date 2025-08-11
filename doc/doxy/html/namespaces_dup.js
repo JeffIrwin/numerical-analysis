@@ -17,6 +17,7 @@ var namespaces_dup =
       [ "chapter_3_newton_cotes", "namespacenuma____exercises.html#a73968566bd91091b3b473c73cc78ad6a", null ],
       [ "chapter_3_romberg", "namespacenuma____exercises.html#aad35ac7830061b6a189dd112a43b70c3", null ],
       [ "chapter_4_cholesky", "namespacenuma____exercises.html#ae99429cf231bf4e706fa4a50fff64449", null ],
+      [ "chapter_4_gram_schmidt", "namespacenuma____exercises.html#a3bb7364c661fee9c7f22c2d0c4bf89ff", null ],
       [ "chapter_4_inv", "namespacenuma____exercises.html#a7445206a9d5cf89ab743a6e4c38fcd58", null ],
       [ "chapter_4_lu", "namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8", null ],
       [ "chapter_4_lu_c64", "namespacenuma____exercises.html#a6e19080f83b0300f98894c21e88ae167", null ],
