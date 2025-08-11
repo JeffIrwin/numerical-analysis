@@ -60,8 +60,7 @@ program main
 	nfail = nfail + chapter_4_cholesky()
 	nfail = nfail + chapter_4_qr()
 	nfail = nfail + chapter_4_qr_c64()
-
-	! TODO: gram schmidt
+	nfail = nfail + chapter_4_gram_schmidt()
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods

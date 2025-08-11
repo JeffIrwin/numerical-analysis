@@ -193,7 +193,7 @@ integer function chapter_2_fft_1() result(nfail)
 	!
 	! The idea is to start with a signal composed of a few simple sine waves.
 	! Then the expected fft of that signal is just a few spikes in the frequency
-	! domain with zeroes (or near machine zero) for the other frequency
+	! domain with zeros (or near machine zero) for the other frequency
 	! components
 
 	sr = 256  ! sampling rate
@@ -2052,6 +2052,63 @@ integer function chapter_4_qr() result(nfail)
 	print *, ""
 
 end function chapter_4_qr
+
+!===============================================================================
+
+integer function chapter_4_gram_schmidt() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_gram_schmidt"
+
+	double precision, allocatable :: a0(:,:), a(:,:), r(:,:)
+
+	integer :: i, n, nrng, irep, p0
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	p0 = -1
+	do n = 2, 25, 5
+
+		allocate(a0(n, n))
+
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing Gram-Schmidt QR with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 1
+
+			call random_number(a0)  ! random matrix
+			!print *, "a0 = "
+			!print "(5es15.5)", a0
+
+			a = a0
+			call qr_factor_gram_schmidt(a, r)
+
+			!print *, "gram schmidt q = "
+			!print "("//to_str(n)//"es15.5)", a
+			!print *, "r = "
+			!print "("//to_str(n)//"es15.5)", r
+
+			call test(norm2(matmul(transpose(a), a) - eye(n)), 0.d0, 1.d-12 * n, nfail, "gram schmidt 1 q' * q, n x n")
+			call test(norm2(matmul(a, r) - a0), 0.d0, 1.d-12 * n, nfail, "gram schmidt 1 fuzz n x n")
+
+		end do
+
+		deallocate(a0)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_4_gram_schmidt
 
 !===============================================================================
 

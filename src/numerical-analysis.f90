@@ -707,7 +707,7 @@ subroutine banded_factor(a, al, indx, nl, nu)
 	! TODO: check a(1,1) == 0 and a(3,n) == 0?
 	mm = nl + 1 + nu
 
-	! Left-shift the top nl rows by the number of zeroes
+	! Left-shift the top nl rows by the number of zeros
 	do i = 1, nl
 		a(1: mm-nl+i-1, i) = a(1+nl-i+1: mm, i)
 		a(mm - nl + i: mm, i) = 0
@@ -1132,6 +1132,45 @@ subroutine hess(a, u)
 	!print "(4es15.5)", u
 
 end subroutine hess
+
+!********
+
+subroutine qr_factor_gram_schmidt(a, r)
+	! Replace `a` with its QR factorization using modified Gram-Schmidt
+	!
+	! The Householder algorithm in `qr_factor()` is better because it is more
+	! numerically stable
+
+	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable, intent(out) :: r(:,:)
+	!********
+
+	double precision, allocatable :: ai(:)
+
+	integer :: i, j, n
+
+	n = size(a, 1)
+	r = zeros(n, n)
+
+	do i = 1, n
+
+		ai = a(:,i)  ! save backup to get r later
+		do j = 1, i-1
+
+			a(:,i) = a(:,i) - a(:,j) * &
+				dot_product(a(:,j), a(:,i)) / dot_product(a(:,j), a(:,j))
+
+		end do
+		a(:,i) = a(:,i) / norm2(a(:,i))
+
+		r(i,i) = dot_product(a(:,i), ai)
+		do j = i+1, n
+			r(i,j) = dot_product(a(:,i), a(:,j))
+		end do
+
+	end do
+
+end subroutine qr_factor_gram_schmidt
 
 !********
 
