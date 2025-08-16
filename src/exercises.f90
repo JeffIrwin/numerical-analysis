@@ -2266,6 +2266,88 @@ end function chapter_4_gram_schmidt
 
 !===============================================================================
 
+integer function chapter_4_lls() result(nfail)
+	! Linear least squares applied to polynomial data fitting
+
+	character(len = *), parameter :: label = "chapter_4_lls"
+
+	double precision, allocatable :: data(:,:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+
+	data = reshape([ &
+		1,  6, &
+		2,  5, &
+		3,  7, &
+		4, 10  &
+		], &
+		[2, 4] &
+	)
+
+	print *, "data = "
+	print "(2es15.5)", data
+
+	lls_poly: block
+	! TODO: routine
+	double precision, allocatable :: x(:,:), beta(:), y(:), xtx(:,:), xty(:), &
+		xmin, xmax, xy(:,:)
+	integer :: i, n, ni, fid
+
+	n = size(data, 2)
+	y = data(2,:)
+	print *, "n = ", n
+	print *, "y = ", y
+
+	allocate(x(2, n))
+	x(1,:) = 1
+
+	!x(2,:) = [(i, i = 1, n)]
+	x(2,:) = data(1,:)
+
+	print *, "x = ", x
+
+	!xtx = matmul(transpose(x), x)
+	!xty = matmul(transpose(x), y)
+	xtx = matmul(x, transpose(x))
+	xty = matmul(x, y)
+
+	beta = invmul(xtx, xty)
+	print *, "beta = ", beta
+
+	! Number of interpolation points
+	ni = 100
+	xmin = minval(data(1,:))
+	xmax = maxval(data(1,:))
+	allocate(xy(2, ni))
+	xy(1,:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
+	do i = 1, ni
+		! TODO: generalize for any degree.  make polyval fn
+		xy(2,i) = beta(1) + xy(1,i) * beta(2)
+	end do
+
+	open(file = "plot-poly-1.txt", newunit = fid)
+	write(fid, *) "# x, y"
+	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
+	close(fid)
+
+	open(file = "plot-poly-data-1.txt", newunit = fid)
+	write(fid, *) "# x, y"
+	write(fid, "(2es18.6)") [(data(1,i), data(2,i), i = 1, size(data, 2))]
+	close(fid)
+
+	end block lls_poly
+
+	!********
+	print *, ""
+
+end function chapter_4_lls
+
+!===============================================================================
+
 integer function chapter_4_qr_c64() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_qr_c64"

@@ -31,7 +31,6 @@ program main
 	nfail = nfail + test_bad_numa_usage()
 
 	!-------------------------------------------------------
-
 	! Chapter 1: Error Analysis (no exercises here)
 
 	!-------------------------------------------------------
@@ -47,7 +46,6 @@ program main
 	nfail = nfail + chapter_2_tridiag()
 	nfail = nfail + chapter_2_tridiag_corner()
 	nfail = nfail + chapter_2_banded()
-
 	nfail = nfail + chapter_2_cubic_splines()
 	nfail = nfail + chapter_2_bezier_splines()
 
@@ -59,6 +57,16 @@ program main
 	nfail = nfail + chapter_3_adaptive()
 
 	!-------------------------------------------------------
+	! Chapter 6: Eigenvalue Problems
+	! TODO: move in chapter order
+
+	! TODO: add unit tests for sorting routines
+
+	nfail = nfail + chapter_6_basic_qr()
+	nfail = nfail + chapter_6_hessenberg_qr()
+	nfail = nfail + chapter_6_francis_qr()
+
+	!-------------------------------------------------------
 	! Chapter 4: Systems of Linear Equations
 	nfail = nfail + chapter_4_lu()
 	nfail = nfail + chapter_4_lu_c64()
@@ -67,18 +75,10 @@ program main
 	nfail = nfail + chapter_4_qr()
 	nfail = nfail + chapter_4_qr_c64()
 	nfail = nfail + chapter_4_gram_schmidt()
+	nfail = nfail + chapter_4_lls()
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
-
-	!-------------------------------------------------------
-	! Chapter 6: Eigenvalue Problems
-
-	! TODO: add unit tests for sorting routines
-
-	nfail = nfail + chapter_6_basic_qr()
-	nfail = nfail + chapter_6_hessenberg_qr()
-	nfail = nfail + chapter_6_francis_qr()
 
 	!-------------------------------------------------------
 	! Chapter 7: Ordinary Differential Equations
