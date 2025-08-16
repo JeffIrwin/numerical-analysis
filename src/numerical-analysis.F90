@@ -12,8 +12,6 @@
 
 !===============================================================================
 
-!! TODO: rename everything (including this file) to .F90 for auto pre-processing
-
 !! include is *not* pre-processed
 !include "panic.F90"
 
