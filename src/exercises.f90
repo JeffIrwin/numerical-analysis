@@ -2272,7 +2272,7 @@ integer function chapter_4_lls() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_lls"
 
 	double precision :: xmin, xmax
-	double precision, allocatable :: x(:), y(:), p(:), pe(:), xi(:), yi(:)
+	double precision, allocatable :: x(:), y(:), p(:), pk(:), xi(:), yi(:)
 	integer :: i, nx, ni, fid
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -2284,6 +2284,7 @@ integer function chapter_4_lls() result(nfail)
 	! TODO: seed
 
 	nx = 100
+	!nx = 3 ! TODO
 	allocate(x(nx), y(nx))
 
 	call random_number(x)
@@ -2292,10 +2293,14 @@ integer function chapter_4_lls() result(nfail)
 	call random_number(y)
 	y = 2*(y - 0.5d0) * 0.1d0
 
-	pe = [3, 5, -2, 2]  ! expected polynomial coefficients
-	y = y + polyval(pe, x)
+	pk = [3, 5, -2, 2]  ! known polynomial coefficients
+	!pk = [3, 5] ! TODO
 
-	p = polyfit(x, y, 3)
+	y = y + polyval(pk, x)
+
+	!p = polyfit(x, y, 3)
+	p = polyfit(x, y, size(pk) - 1)
+
 	print *, "p = ", p
 
 	! Number of interpolation points
@@ -2316,7 +2321,7 @@ integer function chapter_4_lls() result(nfail)
 	write(fid, "(2es18.6)") [(x(i), y(i), i = 1, size(x))]
 	close(fid)
 
-	call test(norm2(p - pe), 0.d0, 1.d-1, nfail, "polyfit")
+	call test(norm2(p - pk), 0.d0, 1.d-1, nfail, "polyfit")
 
 	!********
 	print *, ""

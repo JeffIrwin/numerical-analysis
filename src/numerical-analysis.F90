@@ -1297,9 +1297,14 @@ subroutine qr_factor(a, diag_)
 
 	integer :: j, k, n
 
-	n = size(a, 1)
+	!n = size(a, 1)
+	n = min(size(a,1), size(a,2))
+
 	allocate(diag_(n))
 	diag_ = 0.d0
+
+	! TODO: panic if `a` not square, but add `allow_rect` arg for polyfit()
+	! least-squares
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
 	do j = 1, n
@@ -1313,6 +1318,7 @@ subroutine qr_factor(a, diag_)
 		a(j,j) = s * normx
 		diag_(j) = -s * u1 / normx
 
+		!do k = j+1, size(a,2)
 		do k = j+1, n
 			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
 			a(j,k) = a(j,k) - wa
@@ -1344,12 +1350,11 @@ function qr_mul(qr, diag_, x) result(qx)
 	!print *, "qr = "
 	!print "(5es15.5)", qr
 
-	n = size(qr, 1)
+	n = min(size(qr,1), size(qr,2))
 	qx = x  ! could make a subroutine version which replaces x instead
 
-	! To multiply by transpose(Q) instead, just loop from 1 up to n instead
 	do j = n, 1, -1
-		do k = 1, n
+		do k = 1, size(qr, 2)
 			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
 			qx(j, k) = qx(j, k) - wq
 			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
@@ -1361,6 +1366,39 @@ function qr_mul(qr, diag_, x) result(qx)
 
 end function qr_mul
 
+function qr_mul_transpose(qr, diag_, x) result(qx)
+	! Implicitly multiply transpose(Q) * x with a previously computed QR factorization `qr`
+	!
+	! TODO: add c64 version
+	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
+	double precision, allocatable :: qx(:,:)
+	!********
+	double precision :: wq
+
+	integer :: j, k, n
+
+	!print *, "qr = "
+	!print "(5es15.5)", qr
+
+	n = min(size(qr,1), size(qr,2))
+	qx = x  ! could make a subroutine version which replaces x instead
+
+	! This loop order is the only difference from qr_mul()
+	do j = 1, n
+		do k = 1, size(qx, 2)
+		!do k = 1, size(qr, 2)
+		!do k = 1, n
+			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
+			qx(j, k) = qx(j, k) - wq
+			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+		end do
+	end do
+
+	!print *, "qx = "
+	!print "(5es15.5)", qx
+
+end function qr_mul_transpose
+
 !********
 
 function qr_get_q_expl(qr, diag_) result(q)
@@ -1371,6 +1409,7 @@ function qr_get_q_expl(qr, diag_) result(q)
 	double precision, allocatable :: q(:,:)
 
 	q = qr_mul(qr, diag_, eye(size(qr,1)))
+	!q = qr_mul(qr, diag_, eye(min(size(qr,1), size(qr,2))))
 
 end function qr_get_q_expl
 
@@ -1382,10 +1421,11 @@ function qr_get_r_expl(qr) result(r)
 	double precision, intent(in) :: qr(:,:)
 	double precision, allocatable :: r(:,:)
 	!********
-	integer :: i
+	integer :: i, n
 
-	r = qr
-	do i = 1, size(qr, 1)
+	n = min(size(qr,1), size(qr,2))
+	r = qr(:n, :n)
+	do i = 1, n
 		r(i+1:, i) = 0
 	end do
 
@@ -3955,7 +3995,14 @@ end function eig_hess_qr_kernel
 
 !===============================================================================
 
-function polyfit(x, y, n, iostat) result(p)
+function polyfit_lu(x, y, n, iostat) result(p)
+	! Fit a polynomial using LU decomposition.  The function polyfit() should be
+	! used instead, which avoid unnecessary matmul's, using QR decomposition
+	! instead
+	!
+	! TODO: add test
+	!
+	! Polynomial coefficients `p` are in ascending powers, unlike MATLAB's polyfit()
 	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
 	integer, intent(in) :: n
@@ -3966,6 +4013,61 @@ function polyfit(x, y, n, iostat) result(p)
 
 	character(len = :), allocatable :: msg
 	double precision, allocatable :: xx(:,:), xtx(:,:)
+	integer :: i, nx
+
+	if (present(iostat)) iostat = 0
+
+	nx = size(x)
+
+	if (nx /= size(y)) then
+		msg = "size(x) does not match size(y) in polyfit_lu()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	if (n+1 > nx) then
+		msg = "polynomial degree is too high for size of data in polyfit_lu()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+	if (n < 0) then
+		msg = "polynomial degree is negative in polyfit_lu()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
+
+	allocate(xx(nx, n+1))
+	xx(:,1) = 1
+	do i = 2, n+1
+		xx(:,i) = x * xx(:, i-1)
+	end do
+
+	xtx = matmul(transpose(xx), xx)
+	p   = matmul(transpose(xx), y)
+
+	call lu_invmul(xtx, p)
+	!print *, "p = ", p
+	!print *, "y = ", y
+
+end function polyfit_lu
+
+!===============================================================================
+
+function polyfit(x, y, n, iostat) result(p)
+	! Polynomial coefficients `p` are in ascending powers, unlike MATLAB's polyfit()
+	use numa__utils
+	double precision, intent(in) :: x(:), y(:)
+	integer, intent(in) :: n
+	integer, optional, intent(out) :: iostat
+
+	double precision, allocatable :: p(:)
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision, allocatable :: xx(:,:), diag_(:), &
+		qty(:,:), r(:,:)
 	integer :: i, nx
 
 	if (present(iostat)) iostat = 0
@@ -3996,15 +4098,62 @@ function polyfit(x, y, n, iostat) result(p)
 	do i = 2, n+1
 		xx(:,i) = x * xx(:, i-1)
 	end do
-	!print *, "xx = ", xx
+	!print *, "xx = "
+	!!print "("//to_str(nx)//"es16.6)", xx
+	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
-	xtx = matmul(transpose(xx), xx)
-	p   = matmul(transpose(xx), y)
+	! TODO: refactor the rest as a standalone least_squares() matrix solver
 
-	call lu_invmul(xtx, p)
-	!print *, "p = ", p
+	call qr_factor(xx, diag_)
+	!print *, "qr(xx) = "
+	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
+
+	!q = qr_get_q_expl(xx, diag_)
+	!print *, "q = "
+	!print "(3es16.6)", transpose(q)
+
+	!q = q(:, 1:n+1)
+	!print *, "q1 = "
+	!print "(2es16.6)", transpose(q)
+
+	!qty = matmul(transpose(q), reshape(y, [nx, 1]))
+
+	!qty = qr_mul_transpose(xx, diag_, reshape(y, [1, nx]))
+	qty = qr_mul_transpose(xx, diag_, reshape(y, [nx, 1]))
+	qty = qty(1: n+1, :)  ! TODO: make qr_factor() just return the "economical" factorization
+	!print *, "qty = ", qty
+
+	r = qr_get_r_expl(xx)  ! TODO: avoid explicitl op
+	!print *, "r = "
+	!print "(2es16.6)", transpose(r)
+
+	!p = invmul(r, qty(:,1))
+	p = qty(:,1)
+	call backsub(r, p)
+	!p = backsub(r, qty(:,1))
 
 end function polyfit
+
+!===============================================================================
+
+subroutine backsub(a, bx)
+	! Perform the back-substitution solve phase without pivoting.  This works as
+	! a full solve if matrix `a` is upper (right) triangular
+	double precision, intent(in) :: a(:,:)
+	double precision, intent(inout) :: bx(:)
+	!********
+	integer :: i, j, n
+
+	n = size(a,1)
+	do i = n, 1, -1
+		do j = i+1, n
+			bx(i) = bx(i) - a(i, j) * bx(j)
+		end do
+		bx(i) = bx(i) / a(i, i)
+	end do
+	!print *, "bx back = ", bx
+
+end subroutine backsub
 
 !===============================================================================
 
