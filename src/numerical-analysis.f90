@@ -12,6 +12,14 @@
 
 !===============================================================================
 
+!! TODO: rename everything (including this file) to .F90 for auto pre-processing
+
+!! include is *not* pre-processed
+!include "panic.F90"
+
+! include *is* pre-processed
+#include "panic.F90"
+
 !> Main public-facing module for numerical analysis
 module numa
 
@@ -25,6 +33,7 @@ module numa
 	!   is given to the function, in which case we can continue and let the
 	!   caller decide how to recover.  I guess this is the Fortranic way.  Also
 	!   make panic use a macro to log the filename and line number
+	!   * wip
 	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
 	!   specifically for Intel, e.g. initialization of complex arrays
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
@@ -942,27 +951,52 @@ end subroutine lu_invmul_mat
 
 !********
 
-subroutine lu_factor(a, pivot)
+subroutine lu_factor(a, pivot, allow_singular, iostat)
 
 	!! Make pivoting optional (for comparison to other solvers)
 	!logical, parameter :: DO_PIVOT = .false.
 
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	integer, allocatable, intent(inout) :: pivot(:)
+	integer, optional, intent(out) :: iostat
+	logical, optional, intent(in) :: allow_singular
 
 	!********
 
+	character(len = :), allocatable :: msg
 	integer :: i, j, k, n, max_index
+	logical :: allow_singular_, is_fatal
+
+	is_fatal = .true.
+	if (present(iostat)) then
+		is_fatal = .false.
+		iostat = 0
+	end if
+
+	allow_singular_ = .false.
+	if (present(allow_singular)) allow_singular_ = allow_singular
 
 	!print *, "pivot = ", pivot
 
 	n = size(a, 1)
-	! TODO: panic if `a` is not square
+
+	if (size(a, 2) /= n) then
+		msg = "matrix is not square in lu_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 1
+		return
+	end if
 
 	if (.not. allocated(pivot)) then
-		! TODO: panic. caller must allocate and initialize.  Or we could just
-		! allocate and initialize (to identity perm) here
-		print *, "Error: pivot is not allocated in lu_factor()"
+		! Or we could just allocate and initialize (to identity perm) here
+		!
+		! Maybe this shouldn't be checked manually at all and we should just let
+		! a stacktrace get issued, as with `a`
+		msg = "pivot is not allocated in lu_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 2
+		return
 	end if
 
 	do i = 1, n
@@ -976,6 +1010,13 @@ subroutine lu_factor(a, pivot)
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
+
+		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
+			msg = "matrix is singular in lu_factor()"
+			call PANIC(msg, is_fatal)
+			iostat = 3
+			return
+		end if
 
 		do j = i+1, n
 			a    (pivot(j), i) = &
@@ -995,40 +1036,67 @@ end subroutine lu_factor
 
 !********
 
-subroutine lu_factor_c64(a, pivot)
+subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 
-	!! Make pivoting optional (for comparison to other solvers)
-	!logical, parameter :: DO_PIVOT = .false.
-
+	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 	integer, allocatable, intent(inout) :: pivot(:)
+	logical, optional, intent(in) :: allow_singular
+	integer, optional, intent(out) :: iostat
 
 	!********
 
+	character(len = :), allocatable :: msg
 	integer :: i, j, k, n, max_index
+	logical :: allow_singular_, is_fatal
+
+	is_fatal = .true.
+	if (present(iostat)) then
+		is_fatal = .false.
+		iostat = 0
+	end if
+
+	allow_singular_ = .false.
+	if (present(allow_singular)) allow_singular_ = allow_singular
 
 	!print *, "pivot = ", pivot
 
 	n = size(a, 1)
-	! TODO: panic if `a` is not square
+
+	if (size(a, 2) /= n) then
+		msg = "matrix is not square in lu_factor_c64()"
+		call PANIC(msg, is_fatal)
+		iostat = 1
+		return
+	end if
 
 	if (.not. allocated(pivot)) then
-		! TODO: panic. caller must allocate and initialize.  Or we could just
-		! allocate and initialize (to identity perm) here
-		print *, "Error: pivot is not allocated in lu_factor_c64()"
+		! Or we could just allocate and initialize (to identity perm) here
+		!
+		! Maybe this shouldn't be checked manually at all and we should just let
+		! a stacktrace get issued, as with `a`
+		msg = "pivot is not allocated in lu_factor_c64()"
+		call PANIC(msg, is_fatal)
+		iostat = 2
+		return
 	end if
 
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
-		!if (DO_PIVOT) then
-			do j = i+1, n
-				if (abs(a(j,i)) > abs(a(i,i))) max_index = j
-			end do
-		!end if
+		do j = i+1, n
+			if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+		end do
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
+
+		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
+			msg = "matrix is singular in lu_factor_c64()"
+			call PANIC(msg, is_fatal)
+			iostat = 3
+			return
+		end if
 
 		do j = i+1, n
 			a    (pivot(j), i) = &
@@ -1048,18 +1116,39 @@ end subroutine lu_factor_c64
 
 !********
 
-subroutine cholesky_factor(a)
+subroutine cholesky_factor(a, allow_singular, iostat)
 	! Cholesky factorization is only possible for positive definite matrices
 	! `a`!  There is no enforcement here
 
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
+	logical, optional, intent(in) :: allow_singular
+	integer, optional, intent(out) :: iostat
 
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: x, p
 	integer :: i, j, k, n
+	logical :: allow_singular_, is_fatal
+
+	is_fatal = .true.
+	if (present(iostat)) then
+		is_fatal = .false.
+		iostat = 0
+	end if
+
+	allow_singular_ = .false.
+	if (present(allow_singular)) allow_singular_ = allow_singular
 
 	n = size(a, 1)
+
+	if (size(a, 2) /= n) then
+		msg = "matrix is not square in cholesky_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 1
+		return
+	end if
 
 	do i = 1, n
 	do k = i, n
@@ -1068,9 +1157,11 @@ subroutine cholesky_factor(a)
 			x = x - a(k,j) * a(i,j)
 		end do
 		if (i == k) then
-			if (x <= 0.d0) then
-				! TODO: panic
-				print *, "Error: singular matrix in cholesky_factor()"
+			if (x <= 0.d0 .and. .not. allow_singular_) then
+				msg = "matrix is singular in cholesky_factor()"
+				call PANIC(msg, is_fatal)
+				iostat = 1
+				return
 			end if
 			p = 1.d0 / sqrt(x)
 		end if
@@ -1185,7 +1276,6 @@ subroutine qr_factor(a, diag_)
 	double precision :: s, normx, u1, wa
 
 	integer :: j, k, n
-
 
 	n = size(a, 1)
 	allocate(diag_(n))
@@ -3688,7 +3778,7 @@ function lu_kernel(a) result(kernel)
 	! The kernel of `a` is the same as `u`
 
 	pivot = [(i, i = 1, size(a,1))]
-	call lu_factor(a, pivot)
+	call lu_factor(a, pivot, allow_singular = .true.)
 	kernel(n) = 1.d0
 	do i = n-1, 1, -1
 		kernel(i) = &

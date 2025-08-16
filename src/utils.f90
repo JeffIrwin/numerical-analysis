@@ -1,4 +1,6 @@
 
+#include "panic.F90"
+
 !> Common utilities with minimal dependencies
 module numa__utils
 
@@ -523,6 +525,22 @@ integer function partition_c64_1(a, idx, lo, hi) result(ans)
 	ans = i
 
 end function partition_c64_1
+
+!===============================================================================
+
+subroutine panic_core(msg, is_fatal, file, line)
+	! Call this from the PANIC macro in panic.F90 to add file and line
+	use iso_fortran_env
+	character(len = *), intent(in) :: msg
+	logical, intent(in) :: is_fatal
+	character(len = *), intent(in) :: file
+	integer, intent(in) :: line
+
+	write(ERROR_UNIT, "(a)") " " // ERROR // BOLD // msg // COLOR_RESET
+	write(ERROR_UNIT, "(a)") " " // "Error at " // file // ":" // to_str(line)
+	if (is_fatal) error stop
+
+end subroutine panic_core
 
 !===============================================================================
 

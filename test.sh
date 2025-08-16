@@ -4,7 +4,7 @@ set -exu
 
 flags=""
 flags+=" -Wno-tabs "
-#flags+=" -cpp "  # fortran pre-processing
+flags+=" -cpp "  # fortran pre-processing. TODO: remove
 
 # TODO: add debug/release arg option to switch flags
 #flags+=" -O3 "

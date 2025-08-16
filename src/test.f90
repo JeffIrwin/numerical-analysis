@@ -26,6 +26,12 @@ program main
 	nfail = 0
 
 	!-------------------------------------------------------
+	! Test some pre-requisite basic functionality before getting into the actual
+	! numerical analysis
+	nfail = nfail + test_bad_numa_usage()
+
+	!-------------------------------------------------------
+
 	! Chapter 1: Error Analysis (no exercises here)
 
 	!-------------------------------------------------------

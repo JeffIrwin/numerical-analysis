@@ -24,11 +24,8 @@ end function assert
 
 !===============================================================================
 
-! TODO:  see fynth for a macro that also logs the source filename and line
-! number:
-!
-!     https://github.com/JeffIrwin/fynth/blob/9def56a846a9dd305acc788d0d3f0c7d31a943da/test/test.F90#L96
-!
+! This could be a macro like PANIC, but it has so many arguments that there
+! might be line truncation issues
 subroutine test(val, expect, tol, nfail, msg)
 	double precision, intent(in) :: val, expect, tol
 	integer, intent(inout) :: nfail
@@ -39,10 +36,38 @@ subroutine test(val, expect, tol, nfail, msg)
 
 	io = assert(abs(val - expect) < tol)
 	nfail = nfail + io
-	if (io /= 0) write(*,*) ERROR // "assert failed for value " // &
-		to_str(val) // " in "// msg
+	if (io /= 0) then
+
+		write(*,*) ERROR // "assert failed for value " // &
+			to_str(val) // " in "// msg
+
+		!! Could be helpful sometimes, but maybe too noisy.  Maybe add a cmd arg
+		!! to enable backtrace for unit test failures.  Also this is gfortran
+		!! extension, intel has `tracebackqq()`
+		!call backtrace()
+
+	end if
 
 end subroutine test
+
+!********
+
+subroutine test_ne(val, unexpect, nfail, msg)
+	integer, intent(in) :: val, unexpect
+	integer, intent(inout) :: nfail
+	character(len = *), intent(in) :: msg
+
+	!********
+	integer :: io
+
+	io = assert(val /= unexpect)
+	nfail = nfail + io
+	if (io /= 0) then
+		write(*,*) ERROR // "assert failed for value " // &
+			to_str(val) // " in "// msg
+	end if
+
+end subroutine test_ne
 
 !********
 
@@ -59,6 +84,106 @@ end subroutine tests
 
 !===============================================================================
 
+integer function test_bad_numa_usage() result(nfail)
+
+	character(len = *), parameter :: label = "test_bad_numa_usage"
+
+	integer :: io
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+	!-----------------------------------
+
+	b_lu_factor: block
+	double precision, allocatable :: a(:,:)
+	integer, allocatable :: pivot(:)
+
+	!********
+	! Pivot not allocated
+
+	!call lu_factor(a, pivot)              ! this will stop in lu_factor()
+	call lu_factor(a, pivot, iostat = io)  ! this will let caller handle error
+	call test_ne(io, 0, nfail, "lu_factor pivot unallocated")
+
+	!********
+	! Singular matrix `a`
+	allocate(a(3, 3))
+	pivot = [1, 2, 3]
+	a = 0
+
+	call lu_factor(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor singular matrix")
+
+	!********
+	! Non-square `a`
+	deallocate(a)
+	allocate(a(3, 2))
+	call lu_factor(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor non-square matrix")
+
+	!********
+
+	deallocate(pivot)
+	!call lu_factor(a, pivot)     ! this will stop in lu_factor()
+
+	end block b_lu_factor
+	!-----------------------------------
+
+	b_lu_factor_c64: block
+	double complex, allocatable :: a(:,:)
+	integer, allocatable :: pivot(:)
+
+	!********
+	! Pivot not allocated
+
+	call lu_factor_c64(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor_c64 pivot unallocated")
+
+	!********
+	! Singular matrix `a`
+	allocate(a(3, 3))
+	pivot = [1, 2, 3]
+	a = 0
+
+	call lu_factor_c64(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor_c64 singular matrix")
+
+	!********
+	! Non-square `a`
+	deallocate(a)
+	allocate(a(3, 2))
+	call lu_factor_c64(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor_c64 non-square matrix")
+
+	end block b_lu_factor_c64
+	!-----------------------------------
+
+	b_cholesky_factor: block
+	double precision, allocatable :: a(:,:)
+
+	!********
+	! Singular matrix `a`
+	allocate(a(3, 3))
+	a = 0
+
+	call cholesky_factor(a, iostat = io)
+	call test_ne(io, 0, nfail, "cholesky_factor singular matrix")
+
+	!********
+	! Non-square `a`
+	deallocate(a)
+	allocate(a(3, 2))
+	call cholesky_factor(a, iostat = io)
+	call test_ne(io, 0, nfail, "cholesky_factor non-square matrix")
+
+	end block b_cholesky_factor
+	!-----------------------------------
+
+end function test_bad_numa_usage
+
+!===============================================================================
+
 integer function chapter_2_exercise_2() result(nfail)
 
 	! 2. Interpolate the function ln x by a quadratic polynomial at x = 10, 11,
@@ -67,7 +192,6 @@ integer function chapter_2_exercise_2() result(nfail)
 	!        the interpolating polynomial
 
 	double precision, parameter :: tol = 1.d-3
-	!double precision, parameter :: tol = 4.d-5
 	double precision :: x, fx
 	double precision, allocatable :: xi(:), xs(:), fxs(:)
 
