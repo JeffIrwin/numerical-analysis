@@ -3804,7 +3804,7 @@ function lu_kernel_c64(a) result(kernel)
 	! The kernel of `a` is the same as `u`
 
 	pivot = [(i, i = 1, size(a,1))]
-	call lu_factor_c64(a, pivot)
+	call lu_factor_c64(a, pivot, allow_singular = .true.)
 	kernel(n) = 1.d0
 	do i = n-1, 1, -1
 		kernel(i) = &
