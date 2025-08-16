@@ -321,7 +321,7 @@ function newton_interpolator_vals(xi, fi, xs) result(fxs)
 		a(i) = t(1)
 	end do
 
-	! Interpolate f, O(n1)
+	! Interpolate f, O(n1) per point
 	allocate(fxs( size(xs) ))
 	fxs = a(n1)
 	do i = n1-1, 1, -1
@@ -3986,26 +3986,19 @@ function polyfit(x, y, n) result(p)
 	! TODO: panic if n > nx+1?
 
 	nx = size(x)
-	!print *, "y = ", y
 
-	allocate(xx(n+1, nx))  ! TODO: transpose?
-	xx(1,:) = 1
-
-	!xx(2,:) = [(i, i = 1, n)]
-	!xx(2,:) = x
+	allocate(xx(nx, n+1))
+	xx(:,1) = 1
 	do i = 2, n+1
-		xx(i,:) = x ** (i-1)
+		xx(:,i) = x * xx(:, i-1)
 	end do
+	!print *, "xx = ", xx
 
-	print *, "xx = ", xx
-
-	!xtx = matmul(transpose(x), x)
-	!xty = matmul(transpose(x), y)
-	xtx = matmul(xx, transpose(xx))
-	xty = matmul(xx, y)
+	xtx = matmul(transpose(xx), xx)
+	xty = matmul(transpose(xx), y)
 
 	p = invmul(xtx, xty)
-	print *, "p = ", p
+	!print *, "p = ", p
 
 end function polyfit
 

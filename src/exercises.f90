@@ -2271,10 +2271,9 @@ integer function chapter_4_lls() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lls"
 
-	double precision, allocatable :: data(:,:), p(:)
-
-	double precision, allocatable :: xmin, xmax, xy(:,:)
-	integer :: i, j, ni, fid
+	double precision :: xmin, xmax, xpow
+	double precision, allocatable :: x(:), y(:), p(:), pe(:), xi(:), yi(:)
+	integer :: i, j, nx, ni, fid
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2282,46 +2281,59 @@ integer function chapter_4_lls() result(nfail)
 
 	!********
 
-	data = reshape([ &
-		1,  6, &
-		2,  5, &
-		3,  7, &
-		10, 10  &
-		], &
-		[2, 4] &
-	)
+	! TODO: seed
 
-	print *, "data = "
-	print "(2es15.5)", data
+	!x = [1, 2, 3, 10]
+	!y = [6, 5, 7, 10]
+	nx = 100
+	allocate(x(nx), y(nx))
 
-	p = polyfit(data(1,:), data(2,:), 3)
+	call random_number(x)
+	x = x * 5 - 2.5
+
+	call random_number(y)
+	y = 2*(y - 0.5d0) * 0.1d0
+
+	pe = [3, 5, -2, 2]  ! expected polynomial coefficients
+
+	! TODO: polyval plus noise
+	do i = 1, nx
+		do j = 1, size(pe)
+			y(i) = y(i) + pe(j) * x(i) ** (j-1)
+		end do
+	end do
+
+	p = polyfit(x, y, 3)
+	print *, "p = ", p
 
 	! Number of interpolation points
 	ni = 100
-	xmin = minval(data(1,:))
-	xmax = maxval(data(1,:))
-	allocate(xy(2, ni))
-	xy(1,:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
+	xmin = minval(x)
+	xmax = maxval(x)
+	allocate(xi(ni), yi(ni))
+	xi(:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
 	do i = 1, ni
 		! TODO: make polyval fn
-		xy(2,i) = 0
-		do j = 1, size(p)
-			! There's probably a more efficient way to do this with less pow/mul ops
-			xy(2,i) = xy(2,i) + p(j) * xy(1,i) ** (j-1)
+		yi(i) = p(1)
+		xpow = xi(i)
+		do j = 2, size(p)
+			!yi(i) = yi(i) + p(j) * xi(i) ** (j-1)
+			yi(i) = yi(i) + p(j) * xpow
+			xpow = xpow * xi(i)
 		end do
 	end do
 
 	open(file = "plot-poly-1.txt", newunit = fid)
 	write(fid, *) "# x, y"
-	write(fid, "(2es18.6)") [(xy(1,i), xy(2,i), i = 1, size(xy, 2))]
+	write(fid, "(2es18.6)") [(xi(i), yi(i), i = 1, size(xi))]
 	close(fid)
 
 	open(file = "plot-poly-data-1.txt", newunit = fid)
 	write(fid, *) "# x, y"
-	write(fid, "(2es18.6)") [(data(1,i), data(2,i), i = 1, size(data, 2))]
+	write(fid, "(2es18.6)") [(x(i), y(i), i = 1, size(x))]
 	close(fid)
 
-	! TODO: test.  Make a known polynomial and add random noise
+	call test(norm2(p - pe), 0.d0, 1.d-1, nfail, "polyfit")
 
 	!********
 	print *, ""
