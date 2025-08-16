@@ -3972,20 +3972,46 @@ end function eig_hess_qr_kernel
 
 !===============================================================================
 
-function polyfit(x, y, n) result(p)
+function polyfit(x, y, n, iostat) result(p)
+	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
 	integer, intent(in) :: n
+	integer, optional, intent(out) :: iostat
+
 	double precision, allocatable :: p(:)
 	!********
 
+	character(len = :), allocatable :: msg
+	double precision, allocatable :: xx(:,:), xtx(:,:)
 	integer :: i, nx
-	double precision, allocatable :: xx(:,:), xtx(:,:), xty(:)
+	logical :: is_fatal
 
-	! TODO: panic for x/y size mismatch
-
-	! TODO: panic if n > nx+1?
+	is_fatal = .true.
+	if (present(iostat)) then
+		is_fatal = .false.
+		iostat = 0
+	end if
 
 	nx = size(x)
+
+	if (nx /= size(y)) then
+		msg = "size(x) does not match size(y) in polyfit()"
+		call PANIC(msg, is_fatal)
+		iostat = 1
+		return
+	end if
+	if (n+1 > nx) then
+		msg = "polynomial degree is too high for size of data in polyfit()"
+		call PANIC(msg, is_fatal)
+		iostat = 2
+		return
+	end if
+	if (n < 0) then
+		msg = "polynomial degree is negative in polyfit()"
+		call PANIC(msg, is_fatal)
+		iostat = 3
+		return
+	end if
 
 	allocate(xx(nx, n+1))
 	xx(:,1) = 1
@@ -3995,9 +4021,9 @@ function polyfit(x, y, n) result(p)
 	!print *, "xx = ", xx
 
 	xtx = matmul(transpose(xx), xx)
-	xty = matmul(transpose(xx), y)
+	p   = matmul(transpose(xx), y)
 
-	p = invmul(xtx, xty)
+	call lu_invmul(xtx, p)
 	!print *, "p = ", p
 
 end function polyfit
