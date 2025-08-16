@@ -180,6 +180,36 @@ integer function test_bad_numa_usage() result(nfail)
 	end block b_cholesky_factor
 	!-----------------------------------
 
+	b_tridiag_factor: block
+	double precision, allocatable :: a(:,:)
+
+	!********
+	! Non-tridiagonal a
+	allocate(a(4, 5))
+	a = 0
+
+	call tridiag_factor(a, iostat = io)
+	call test_ne(io, 0, nfail, "tridiag_factor non-tridiagonal")
+
+	!********
+	! Matrix a with non-zeros in bad places
+	deallocate(a)
+	allocate(a(3, 5))
+	a = 1
+	call tridiag_factor(a, iostat = io)
+	call test_ne(io, 0, nfail, "tridiag_factor with bad non-zeros")
+
+	!********
+	! Singular matrix
+	deallocate(a)
+	allocate(a(3, 5))
+	a = 0
+	call tridiag_factor(a, iostat = io)
+	call test_ne(io, 0, nfail, "tridiag_factor with bad non-zeros")
+
+	end block b_tridiag_factor
+	!-----------------------------------
+
 end function test_bad_numa_usage
 
 !===============================================================================

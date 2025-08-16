@@ -524,7 +524,7 @@ end function fft_core
 
 !===============================================================================
 
-subroutine tridiag_factor(a)
+subroutine tridiag_factor(a, iostat)
 	! This is the factorization phase of tridiag_invmul(), without pivoting
 	!
 	! If you are only solving once, the interface for tridiag_invmul() is
@@ -537,13 +537,41 @@ subroutine tridiag_factor(a)
 	!
 	!     https://github.com/JeffIrwin/ribbit/blob/ec868aa3db96258b95909f3101434128fc42428f/src/ribbit.f90#L1722
 
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
+
+	character(len = :), allocatable :: msg
 	integer :: i, n
+	logical :: is_fatal
+
+	is_fatal = .true.
+	if (present(iostat)) then
+		is_fatal = .false.
+		iostat = 0
+	end if
 
 	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
 
-	! TODO: check that size 1 is 3?
+	if (size(a, 1) /= 3) then
+		msg = "tridiagonal `a` size 1 is not 3 in tridiag_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 1
+		return
+	end if
+	if (a(1,1) /= 0) then
+		msg = "`a(1,1)` is not 0 in tridiag_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 2
+		return
+	end if
+	if (a(3,n) /= 0) then
+		msg = "`a(3,n)` is not 0 in tridiag_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 3
+		return
+	end if
 
 	! This implementation is based on wikipedia's "Tridiagonal
 	! matrix algorithm" page.  Note that variable names and
@@ -551,11 +579,22 @@ subroutine tridiag_factor(a)
 
 	! l(1) = a(1,1) is 0, u(n) = a(3,n) is 0
 
-	! TODO: check a(1,1) == 0 and a(3,n) == 0?
-
+	! Could add an `allow_singular` arg like other factor routines
+	if (a(2, 2) == 0) then
+		msg = "matrix is singular in tridiag_factor()"
+		call PANIC(msg, is_fatal)
+		iostat = 4
+		return
+	end if
 	a(3,1) = a(3,1) / a(2,1)
 	do i = 2, n - 1
 		a(2, i) = a(2, i) - a(1, i) * a(3, i-1)
+		if (a(2, i) == 0) then
+			msg = "matrix is singular in tridiag_factor()"
+			call PANIC(msg, is_fatal)
+			iostat = 4
+			return
+		end if
 		a(3, i) = a(3, i) / a(2, i)
 	end do
 
@@ -1371,7 +1410,6 @@ end function qr_get_r_expl
 
 !********
 
-!function house_c64(alpha, x, diag_) result(v)
 subroutine house_c64(alpha, x, diag_)
 	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
 	!
