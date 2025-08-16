@@ -4004,5 +4004,27 @@ end function polyfit
 
 !===============================================================================
 
+function polyval(p, x) result(y)
+	double precision, intent(in) :: p(:), x(:)
+	double precision, allocatable :: y(:)
+	!********
+	double precision :: xpow
+	integer :: i, j, nx
+
+	nx = size(x)
+	allocate(y(nx))
+	do i = 1, nx
+		y(i) = p(1)
+		xpow = x(i)
+		do j = 2, size(p)
+			y(i) = y(i) + p(j) * xpow
+			xpow = xpow * x(i)
+		end do
+	end do
+
+end function polyval
+
+!===============================================================================
+
 end module numa
 

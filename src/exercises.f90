@@ -2271,9 +2271,9 @@ integer function chapter_4_lls() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lls"
 
-	double precision :: xmin, xmax, xpow
+	double precision :: xmin, xmax
 	double precision, allocatable :: x(:), y(:), p(:), pe(:), xi(:), yi(:)
-	integer :: i, j, nx, ni, fid
+	integer :: i, nx, ni, fid
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2283,8 +2283,6 @@ integer function chapter_4_lls() result(nfail)
 
 	! TODO: seed
 
-	!x = [1, 2, 3, 10]
-	!y = [6, 5, 7, 10]
 	nx = 100
 	allocate(x(nx), y(nx))
 
@@ -2295,13 +2293,7 @@ integer function chapter_4_lls() result(nfail)
 	y = 2*(y - 0.5d0) * 0.1d0
 
 	pe = [3, 5, -2, 2]  ! expected polynomial coefficients
-
-	! TODO: polyval plus noise
-	do i = 1, nx
-		do j = 1, size(pe)
-			y(i) = y(i) + pe(j) * x(i) ** (j-1)
-		end do
-	end do
+	y = y + polyval(pe, x)
 
 	p = polyfit(x, y, 3)
 	print *, "p = ", p
@@ -2310,18 +2302,9 @@ integer function chapter_4_lls() result(nfail)
 	ni = 100
 	xmin = minval(x)
 	xmax = maxval(x)
-	allocate(xi(ni), yi(ni))
+	allocate(xi(ni))
 	xi(:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
-	do i = 1, ni
-		! TODO: make polyval fn
-		yi(i) = p(1)
-		xpow = xi(i)
-		do j = 2, size(p)
-			!yi(i) = yi(i) + p(j) * xi(i) ** (j-1)
-			yi(i) = yi(i) + p(j) * xpow
-			xpow = xpow * xi(i)
-		end do
-	end do
+	yi = polyval(p, xi)
 
 	open(file = "plot-poly-1.txt", newunit = fid)
 	write(fid, *) "# x, y"
