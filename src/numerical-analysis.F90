@@ -3972,5 +3972,44 @@ end function eig_hess_qr_kernel
 
 !===============================================================================
 
+function polyfit(x, y, n) result(p)
+	double precision, intent(in) :: x(:), y(:)
+	integer, intent(in) :: n
+	double precision, allocatable :: p(:)
+	!********
+
+	integer :: i, nx
+	double precision, allocatable :: xx(:,:), xtx(:,:), xty(:)
+
+	! TODO: panic for x/y size mismatch
+
+	! TODO: panic if n > nx+1?
+
+	nx = size(x)
+	!print *, "y = ", y
+
+	allocate(xx(n+1, nx))  ! TODO: transpose?
+	xx(1,:) = 1
+
+	!xx(2,:) = [(i, i = 1, n)]
+	!xx(2,:) = x
+	do i = 2, n+1
+		xx(i,:) = x ** (i-1)
+	end do
+
+	print *, "xx = ", xx
+
+	!xtx = matmul(transpose(x), x)
+	!xty = matmul(transpose(x), y)
+	xtx = matmul(xx, transpose(xx))
+	xty = matmul(xx, y)
+
+	p = invmul(xtx, xty)
+	print *, "p = ", p
+
+end function polyfit
+
+!===============================================================================
+
 end module numa
 

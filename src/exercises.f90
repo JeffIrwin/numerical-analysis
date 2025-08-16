@@ -2271,7 +2271,10 @@ integer function chapter_4_lls() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lls"
 
-	double precision, allocatable :: data(:,:)
+	double precision, allocatable :: data(:,:), p(:)
+
+	double precision, allocatable :: xmin, xmax, xy(:,:)
+	integer :: i, j, ni, fid
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2283,7 +2286,7 @@ integer function chapter_4_lls() result(nfail)
 		1,  6, &
 		2,  5, &
 		3,  7, &
-		4, 10  &
+		10, 10  &
 		], &
 		[2, 4] &
 	)
@@ -2291,32 +2294,7 @@ integer function chapter_4_lls() result(nfail)
 	print *, "data = "
 	print "(2es15.5)", data
 
-	lls_poly: block
-	! TODO: routine
-	double precision, allocatable :: x(:,:), beta(:), y(:), xtx(:,:), xty(:), &
-		xmin, xmax, xy(:,:)
-	integer :: i, n, ni, fid
-
-	n = size(data, 2)
-	y = data(2,:)
-	print *, "n = ", n
-	print *, "y = ", y
-
-	allocate(x(2, n))
-	x(1,:) = 1
-
-	!x(2,:) = [(i, i = 1, n)]
-	x(2,:) = data(1,:)
-
-	print *, "x = ", x
-
-	!xtx = matmul(transpose(x), x)
-	!xty = matmul(transpose(x), y)
-	xtx = matmul(x, transpose(x))
-	xty = matmul(x, y)
-
-	beta = invmul(xtx, xty)
-	print *, "beta = ", beta
+	p = polyfit(data(1,:), data(2,:), 3)
 
 	! Number of interpolation points
 	ni = 100
@@ -2325,8 +2303,12 @@ integer function chapter_4_lls() result(nfail)
 	allocate(xy(2, ni))
 	xy(1,:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
 	do i = 1, ni
-		! TODO: generalize for any degree.  make polyval fn
-		xy(2,i) = beta(1) + xy(1,i) * beta(2)
+		! TODO: make polyval fn
+		xy(2,i) = 0
+		do j = 1, size(p)
+			! There's probably a more efficient way to do this with less pow/mul ops
+			xy(2,i) = xy(2,i) + p(j) * xy(1,i) ** (j-1)
+		end do
 	end do
 
 	open(file = "plot-poly-1.txt", newunit = fid)
@@ -2339,7 +2321,7 @@ integer function chapter_4_lls() result(nfail)
 	write(fid, "(2es18.6)") [(data(1,i), data(2,i), i = 1, size(data, 2))]
 	close(fid)
 
-	end block lls_poly
+	! TODO: test.  Make a known polynomial and add random noise
 
 	!********
 	print *, ""
