@@ -1,3 +1,3 @@
 
-#define PANIC(msg, is_fatal) panic_core(msg, is_fatal, __FILE__, __LINE__)
+#define PANIC(msg, present_iostat) panic_core(msg, present_iostat, __FILE__, __LINE__)
 

@@ -544,31 +544,26 @@ subroutine tridiag_factor(a, iostat)
 
 	character(len = :), allocatable :: msg
 	integer :: i, n
-	logical :: is_fatal
 
-	is_fatal = .true.
-	if (present(iostat)) then
-		is_fatal = .false.
-		iostat = 0
-	end if
+	if (present(iostat)) iostat = 0
 
 	n = size(a, 2)  ! *not* same as size 1, which is always 3 for this tridiag storage scheme!
 
 	if (size(a, 1) /= 3) then
 		msg = "tridiagonal `a` size 1 is not 3 in tridiag_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
 	if (a(1,1) /= 0) then
 		msg = "`a(1,1)` is not 0 in tridiag_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 2
 		return
 	end if
 	if (a(3,n) /= 0) then
 		msg = "`a(3,n)` is not 0 in tridiag_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 3
 		return
 	end if
@@ -582,7 +577,7 @@ subroutine tridiag_factor(a, iostat)
 	! Could add an `allow_singular` arg like other factor routines
 	if (a(2, 2) == 0) then
 		msg = "matrix is singular in tridiag_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 4
 		return
 	end if
@@ -591,7 +586,7 @@ subroutine tridiag_factor(a, iostat)
 		a(2, i) = a(2, i) - a(1, i) * a(3, i-1)
 		if (a(2, i) == 0) then
 			msg = "matrix is singular in tridiag_factor()"
-			call PANIC(msg, is_fatal)
+			call PANIC(msg, present(iostat))
 			iostat = 4
 			return
 		end if
@@ -1003,13 +998,9 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 
 	character(len = :), allocatable :: msg
 	integer :: i, j, k, n, max_index
-	logical :: allow_singular_, is_fatal
+	logical :: allow_singular_
 
-	is_fatal = .true.
-	if (present(iostat)) then
-		is_fatal = .false.
-		iostat = 0
-	end if
+	if (present(iostat)) iostat = 0
 
 	allow_singular_ = .false.
 	if (present(allow_singular)) allow_singular_ = allow_singular
@@ -1020,7 +1011,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 
 	if (size(a, 2) /= n) then
 		msg = "matrix is not square in lu_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
@@ -1031,7 +1022,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 		! Maybe this shouldn't be checked manually at all and we should just let
 		! a stacktrace get issued, as with `a`
 		msg = "pivot is not allocated in lu_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 2
 		return
 	end if
@@ -1050,7 +1041,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 
 		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
 			msg = "matrix is singular in lu_factor()"
-			call PANIC(msg, is_fatal)
+			call PANIC(msg, present(iostat))
 			iostat = 3
 			return
 		end if
@@ -1085,13 +1076,9 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 
 	character(len = :), allocatable :: msg
 	integer :: i, j, k, n, max_index
-	logical :: allow_singular_, is_fatal
+	logical :: allow_singular_
 
-	is_fatal = .true.
-	if (present(iostat)) then
-		is_fatal = .false.
-		iostat = 0
-	end if
+	if (present(iostat)) iostat = 0
 
 	allow_singular_ = .false.
 	if (present(allow_singular)) allow_singular_ = allow_singular
@@ -1102,7 +1089,7 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 
 	if (size(a, 2) /= n) then
 		msg = "matrix is not square in lu_factor_c64()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
@@ -1113,7 +1100,7 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 		! Maybe this shouldn't be checked manually at all and we should just let
 		! a stacktrace get issued, as with `a`
 		msg = "pivot is not allocated in lu_factor_c64()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 2
 		return
 	end if
@@ -1130,7 +1117,7 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 
 		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
 			msg = "matrix is singular in lu_factor_c64()"
-			call PANIC(msg, is_fatal)
+			call PANIC(msg, present(iostat))
 			iostat = 3
 			return
 		end if
@@ -1167,13 +1154,9 @@ subroutine cholesky_factor(a, allow_singular, iostat)
 	character(len = :), allocatable :: msg
 	double precision :: x, p
 	integer :: i, j, k, n
-	logical :: allow_singular_, is_fatal
+	logical :: allow_singular_
 
-	is_fatal = .true.
-	if (present(iostat)) then
-		is_fatal = .false.
-		iostat = 0
-	end if
+	if (present(iostat)) iostat = 0
 
 	allow_singular_ = .false.
 	if (present(allow_singular)) allow_singular_ = allow_singular
@@ -1182,7 +1165,7 @@ subroutine cholesky_factor(a, allow_singular, iostat)
 
 	if (size(a, 2) /= n) then
 		msg = "matrix is not square in cholesky_factor()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
@@ -1196,7 +1179,7 @@ subroutine cholesky_factor(a, allow_singular, iostat)
 		if (i == k) then
 			if (x <= 0.d0 .and. .not. allow_singular_) then
 				msg = "matrix is singular in cholesky_factor()"
-				call PANIC(msg, is_fatal)
+				call PANIC(msg, present(iostat))
 				iostat = 1
 				return
 			end if
@@ -3984,31 +3967,26 @@ function polyfit(x, y, n, iostat) result(p)
 	character(len = :), allocatable :: msg
 	double precision, allocatable :: xx(:,:), xtx(:,:)
 	integer :: i, nx
-	logical :: is_fatal
 
-	is_fatal = .true.
-	if (present(iostat)) then
-		is_fatal = .false.
-		iostat = 0
-	end if
+	if (present(iostat)) iostat = 0
 
 	nx = size(x)
 
 	if (nx /= size(y)) then
 		msg = "size(x) does not match size(y) in polyfit()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
 	if (n+1 > nx) then
 		msg = "polynomial degree is too high for size of data in polyfit()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 2
 		return
 	end if
 	if (n < 0) then
 		msg = "polynomial degree is negative in polyfit()"
-		call PANIC(msg, is_fatal)
+		call PANIC(msg, present(iostat))
 		iostat = 3
 		return
 	end if

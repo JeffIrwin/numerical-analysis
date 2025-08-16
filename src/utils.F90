@@ -528,17 +528,17 @@ end function partition_c64_1
 
 !===============================================================================
 
-subroutine panic_core(msg, is_fatal, file, line)
+subroutine panic_core(msg, present_iostat, file, line)
 	! Call this from the PANIC macro in panic.F90 to add file and line
 	use iso_fortran_env
 	character(len = *), intent(in) :: msg
-	logical, intent(in) :: is_fatal
+	logical, intent(in) :: present_iostat
 	character(len = *), intent(in) :: file
 	integer, intent(in) :: line
 
 	write(ERROR_UNIT, "(a)") " " // ERROR // BOLD // msg // COLOR_RESET
 	write(ERROR_UNIT, "(a)") " " // "Error at " // file // ":" // to_str(line)
-	if (is_fatal) error stop
+	if (.not. present_iostat) error stop
 
 end subroutine panic_core
 
