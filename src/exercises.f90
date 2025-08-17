@@ -2409,6 +2409,62 @@ end function chapter_4_gauss_newton
 
 !===============================================================================
 
+integer function chapter_4_nelder_mead() result(nfail)
+	! Nonlinear least squares applied to data fitting
+
+	character(len = *), parameter :: label = "chapter_4_nelder_mead"
+
+	double precision :: xmin, xmax
+	double precision, allocatable :: x(:), y(:), p(:), pk(:), xi(:), yi(:)
+	integer :: i, ni, fid
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+
+	! Data to be fit
+	x = [   0.038,   0.194,   0.425,   0.626,    1.253,    2.5,      3.74  ]
+	y = [   0.05,    0.127,   0.094,   0.2122,   0.2729,   0.2665,   0.3317 ]
+
+	! Expected (known) parameters (beta)
+	pk = [0.362, 0.556]
+
+	!p = nelder_mead(x, y, rate_fn, beta0 = [0.9d0, 0.2d0], iters = 5)
+	p = nelder_mead(x, y, rate_fn, beta0 = [0.9d0, 0.2d0])
+	print *, "p = ", p
+
+	! Number of interpolation points
+	ni = 100
+	xmin = minval(x)
+	xmax = maxval(x)
+	allocate(xi(ni), yi(ni))
+	xi(:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
+	do i = 1, ni
+		!yi(i) = rate_fn(xi(i), pk)
+		yi(i) = rate_fn(xi(i), p)
+	end do
+
+	open(file = "plot-gn-1.txt", newunit = fid)
+	write(fid, *) "# x, y"
+	write(fid, "(2es18.6)") [(xi(i), yi(i), i = 1, size(xi))]
+	close(fid)
+
+	open(file = "plot-gn-data-1.txt", newunit = fid)
+	write(fid, *) "# x, y"
+	write(fid, "(2es18.6)") [(x(i), y(i), i = 1, size(x))]
+	close(fid)
+
+	call test(norm2(p - pk), 0.d0, 1.d-3, nfail, "nelder_mead")
+
+	!********
+	print *, ""
+
+end function chapter_4_nelder_mead
+
+!===============================================================================
+
 integer function chapter_4_qr_c64() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_qr_c64"

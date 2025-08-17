@@ -4286,6 +4286,10 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 	! Use the Gauss-Newton algorithm to find parameters `beta` to fit a function
 	! `f` to data `x` and `y` with an initial guess `beta0`.  The function has a
 	! gradient `df` == df/dx
+	!
+	! This requires knowledge of the analytic derivative of f.  If the
+	! derivative is not easily known, a derivative-free optimization algorithm
+	! could be used instead like nelder_mead()
 
 	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
@@ -4336,6 +4340,155 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 	end do
 
 end function gauss_newton
+
+!===============================================================================
+
+!function nelder_mead(x, y, f, df, beta0, iters) result(beta)
+function nelder_mead(x, y, f, beta0) result(beta)
+	! Find beta to minimize norm2(y - f(x, beta))
+
+	use numa__utils
+	double precision, intent(in) :: x(:), y(:)
+	procedure(fn_f64_beta_to_f64) :: f
+	!procedure(fn_f64_beta_to_vec_f64) :: df
+	double precision, intent(in) :: beta0(:)
+	!integer, intent(in) :: iters
+
+	double precision, allocatable :: beta(:)
+	!********
+
+	double precision :: fr, fe, fc
+	double precision, parameter :: alpha_ = 1, gamma_ = 2, rho_ = 0.5, sigma_ = 0.5
+	double precision, allocatable :: bs(:,:), fs(:), ys(:), bo(:), br(:), &
+		be(:), bc(:)
+
+	integer :: i, j, nx, nb, nb1, iter
+	integer, allocatable :: idx(:)
+	integer, parameter :: iters = 100
+
+	nx = size(x)
+	nb = size(beta0)
+	nb1 = nb + 1  ! number of simplex points
+
+	! Initial simplex
+	allocate(bs(nb, nb1))
+	do i = 1, nb
+		bs(:,i) = beta0
+		bs(i,i) = bs(i,i) + 1
+	end do
+	bs(:,nb1) = beta0
+
+	! Evaluate fn on initial simplex
+	allocate(ys(nx))
+	allocate(fs(nb1))
+	do i = 1, nb1
+		do j = 1, nx
+			ys(j) = f(x(j), bs(:,i))
+		end do
+		!fs(i) = norm2(y - ys)
+		fs(i) = dot_product(y - ys, y - ys)  ! TODO: optimize?
+	end do
+	print *, "fs init = ", fs
+
+	do iter = 1, iters
+
+		! Sort
+		call sortidx_f64_1(fs, idx)
+		print *, "idx = ", idx
+
+		fs = fs(idx)
+		bs = bs(:, idx)
+		print *, "fs = ", fs
+
+		print *, "bs = "
+		print "(2es16.6)", bs
+
+		! TODO: add termination condition instead of fixed iters
+
+		! Centroid
+		bo = sum(bs(:, 1: nb), dim = 2) / nb
+		print *, "bo = ", bo
+
+		! Reflect and evaluate
+		br = bo + alpha_ * (bo - bs(:,nb1))
+		do j = 1, nx
+			ys(j) = f(x(j), br)
+		end do
+		fr = dot_product(y - ys, y - ys)
+
+		if (fs(1) <= fr .and. fr < fs(nb)) then
+			! Replace
+			fs(nb1) = fr
+			bs(:,nb1) = br
+			cycle
+		end if
+
+		if (fr < fs(1)) then
+			! Expand and evaluate
+			be = bo + gamma_ * (br - bo)
+			do j = 1, nx
+				ys(j) = f(x(j), be)
+			end do
+			fe = dot_product(y-ys, y-ys)
+			if (fe < fr) then
+				fs(nb1) = fe
+				bs(:,nb1) = be
+			else
+				fs(nb1) = fr
+				bs(:,nb1) = br
+			end if
+			cycle
+		end if
+
+		! Contract and evaluate
+		if (fr < fs(nb1)) then
+
+			! Contract outward
+			bc = bo + rho_ * (br - bo)
+			do j = 1, nx
+				ys(j) = f(x(j), bc)
+			end do
+			fc = dot_product(y-ys, y-ys)
+
+			if (fc < fr) then
+				fs(nb1) = fc
+				bs(:,nb1) = bc
+				cycle
+			end if
+
+		else
+			! Contract inward
+			bc = bo + rho_ * (bs(:,nb1) - bo)
+			do j = 1, nx
+				ys(j) = f(x(j), bc)
+			end do
+			fc = dot_product(y-ys, y-ys)
+
+			if (fc < fs(nb1)) then
+				fs(nb1) = fc
+				bs(:,nb1) = bc
+				cycle
+			end if
+
+		end if
+
+		! Shrink
+		do i = 2, nb1
+			bs(:,i) = bs(:,1) + sigma_ * (bs(:,i) - bs(:,1))
+
+			! Evaluate
+			do j = 1, nx
+				ys(j) = f(x(j), bs(:,i))
+			end do
+			fs(i) = dot_product(y-ys, y-ys)
+
+		end do
+
+	end do
+
+	beta = bs(:,1)
+
+end function nelder_mead
 
 !===============================================================================
 

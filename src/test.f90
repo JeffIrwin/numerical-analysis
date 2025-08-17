@@ -77,6 +77,7 @@ program main
 	nfail = nfail + chapter_4_gram_schmidt()
 	nfail = nfail + chapter_4_lls()
 	nfail = nfail + chapter_4_gauss_newton()
+	nfail = nfail + chapter_4_nelder_mead()
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
