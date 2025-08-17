@@ -79,6 +79,11 @@ module numa
 		procedure :: diag_get_c64
 	end interface diag
 
+	interface qr_mul_transpose
+		procedure :: qr_mul_transpose_vec
+		procedure :: qr_mul_transpose_mat
+	end interface qr_mul_transpose
+
 	! If this file gets too long, it might be good to split it up roughly
 	! per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
 
@@ -1366,7 +1371,7 @@ function qr_mul(qr, diag_, x) result(qx)
 
 end function qr_mul
 
-function qr_mul_transpose(qr, diag_, x) result(qx)
+function qr_mul_transpose_mat(qr, diag_, x) result(qx)
 	! Implicitly multiply transpose(Q) * x with a previously computed QR factorization `qr`
 	!
 	! TODO: add c64 version
@@ -1386,18 +1391,47 @@ function qr_mul_transpose(qr, diag_, x) result(qx)
 	! This loop order is the only difference from qr_mul()
 	do j = 1, n
 		do k = 1, size(qx, 2)
-		!do k = 1, size(qr, 2)
-		!do k = 1, n
 			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
 			qx(j, k) = qx(j, k) - wq
 			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
 		end do
 	end do
+	qx = qx(1:n, :)
 
 	!print *, "qx = "
 	!print "(5es15.5)", qx
 
-end function qr_mul_transpose
+end function qr_mul_transpose_mat
+
+function qr_mul_transpose_vec(qr, diag_, x) result(qx)
+	! Implicitly multiply transpose(Q) * x with a previously computed QR factorization `qr`
+	!
+	! TODO: add c64 version
+	double precision, intent(in) :: qr(:,:), diag_(:), x(:)
+	double precision, allocatable :: qx(:)
+	!********
+	double precision :: wq
+
+	integer :: j, n
+
+	!print *, "qr = "
+	!print "(5es15.5)", qr
+
+	n = min(size(qr,1), size(qr,2))
+	qx = x  ! could make a subroutine version which replaces x instead
+
+	! This loop order is the only difference from qr_mul()
+	do j = 1, n
+		wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:)) + qx(j))
+		qx(j) = qx(j) - wq
+		qx(j+1:) = qx(j+1:) - qr(j+1:, j) * wq
+	end do
+	qx = qx(1:n)
+
+	!print *, "qx = "
+	!print "(5es15.5)", qx
+
+end function qr_mul_transpose_vec
 
 !********
 
@@ -4056,7 +4090,7 @@ function polyfit(x, y, n, iostat) result(p)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision, allocatable :: xx(:,:), diag_(:), qty(:,:)
+	double precision, allocatable :: xx(:,:), diag_(:)
 	integer :: i, nx
 
 	if (present(iostat)) iostat = 0
@@ -4091,17 +4125,14 @@ function polyfit(x, y, n, iostat) result(p)
 	!!print "("//to_str(nx)//"es16.6)", xx
 	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
-	! TODO: refactor the rest as a standalone least_squares() matrix solver
+	! TODO: refactor the rest as a standalone least_squares() matrix solver,
+	! short as it is:  xx * p == y (but rename things sanely)
 
 	call qr_factor(xx, diag_)
 	!print *, "qr(xx) = "
 	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
-	! We could skip copying qty to p, but they differ by rank.  It might be nice
-	! if qr_mul_transpose() (and qr_mul) were overloaded for vecs and mats like
-	! invmul()
-	qty = qr_mul_transpose(xx, diag_, reshape(y, [nx, 1]))
-	p = qty(1: n+1, 1)
+	p = qr_mul_transpose(xx, diag_, y)
 	!print *, "qty = ", p
 	call backsub(xx, p)
 

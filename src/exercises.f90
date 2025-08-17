@@ -2280,11 +2280,11 @@ integer function chapter_4_lls() result(nfail)
 	nfail = 0
 
 	!********
+	! polyfit_lu().  should be avoided in favor of polyfit()
 
 	! TODO: seed
 
 	nx = 100
-	!nx = 3 ! TODO
 	allocate(x(nx), y(nx))
 
 	call random_number(x)
@@ -2294,11 +2294,34 @@ integer function chapter_4_lls() result(nfail)
 	y = 2*(y - 0.5d0) * 0.1d0
 
 	pk = [3, 5, -2, 2]  ! known polynomial coefficients
-	!pk = [3, 5] ! TODO
 
 	y = y + polyval(pk, x)
 
-	!p = polyfit(x, y, 3)
+	p = polyfit_lu(x, y, size(pk) - 1)
+	print *, "p = ", p
+
+	call test(norm2(p - pk), 0.d0, 1.d-1, nfail, "polyfit")
+
+	deallocate(x, y)
+
+	!********
+	! polyfit()
+
+	! TODO: seed
+
+	nx = 100
+	allocate(x(nx), y(nx))
+
+	call random_number(x)
+	x = x * 5 - 2.5
+
+	call random_number(y)
+	y = 2*(y - 0.5d0) * 0.1d0
+
+	pk = [3, 5, -2, 2]  ! known polynomial coefficients
+
+	y = y + polyval(pk, x)
+
 	p = polyfit(x, y, size(pk) - 1)
 
 	print *, "p = ", p
