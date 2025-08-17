@@ -2186,7 +2186,7 @@ integer function chapter_4_qr() result(nfail)
 			!print *, "qr(a) = "
 			!print "(5es15.5)", a
 
-			r = qr_get_r_expl(a)
+			r = triu(a)
 			!print *, "r = "
 			!print "(5es15.5)", r
 
@@ -2384,11 +2384,11 @@ integer function chapter_4_qr_c64() result(nfail)
 	!print *, "qr(a) = "
 	!print "("//to_str(2*n)//"es15.5)", a
 
-	r = qr_get_r_expl_c64(a)
+	r = triu(a)
 	!print *, "r = "
 	!print "("//to_str(2*n)//"es15.5)", r
 
-	q = qr_get_q_expl_c64(a, diag_)
+	q = qr_get_q_expl(a, diag_)
 	!print *, "q = "
 	!print "("//to_str(2*n)//"es15.5)", q
 
@@ -2418,11 +2418,11 @@ integer function chapter_4_qr_c64() result(nfail)
 	!print *, "qr(a) = "
 	!print "("//to_str(2*n)//"es15.5)", a
 
-	r = qr_get_r_expl_c64(a)
+	r = triu(a)
 	!print *, "r = "
 	!print "("//to_str(2*n)//"es15.5)", r
 
-	q = qr_get_q_expl_c64(a, diag_)
+	q = qr_get_q_expl(a, diag_)
 	!print *, "q = "
 	!print "("//to_str(2*n)//"es15.5)", q
 
@@ -2471,11 +2471,11 @@ integer function chapter_4_qr_c64() result(nfail)
 			!print *, "qr(a) = "
 			!print "("//to_str(2*n)//"es15.5)", a
 
-			r = qr_get_r_expl_c64(a)
+			r = triu(a)
 			!print *, "r = "
 			!print "("//to_str(2*n)//"es15.5)", r
 
-			q = qr_get_q_expl_c64(a, diag_)
+			q = qr_get_q_expl(a, diag_)
 			!print *, "q = "
 			!print "("//to_str(2*n)//"es15.5)", q
 

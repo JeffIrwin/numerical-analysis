@@ -99,15 +99,30 @@ module numa
 		procedure :: diag_get_c64
 	end interface diag
 
+	interface triu
+		procedure :: triu_c64
+		procedure :: triu_f64
+	end interface triu
+
 	interface qr_factor
 		procedure :: qr_factor_c64
 		procedure :: qr_factor_f64
 	end interface qr_factor
+	interface qr_get_q_expl
+		procedure :: qr_get_q_expl_c64
+		procedure :: qr_get_q_expl_f64
+	end interface qr_get_q_expl
 
-	! qr_mul and c64 versions could also be overloaded like this
+	interface qr_mul
+		procedure :: qr_mul_mat_c64
+		procedure :: qr_mul_mat_f64
+		! Needs vec overloads
+	end interface qr_mul
+
 	interface qr_mul_transpose
-		procedure :: qr_mul_transpose_vec
-		procedure :: qr_mul_transpose_mat
+		procedure :: qr_mul_transpose_vec_f64
+		procedure :: qr_mul_transpose_mat_f64
+		! Needs c64 overloads
 	end interface qr_mul_transpose
 
 	! If this file gets too long, it might be good to split it up roughly
@@ -1369,7 +1384,7 @@ subroutine qr_factor_f64(a, diag_)
 
 end subroutine qr_factor_f64
 
-function qr_mul(qr, diag_, x) result(qx)
+function qr_mul_mat_f64(qr, diag_, x) result(qx)
 	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
 	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double precision, allocatable :: qx(:,:)
@@ -1395,9 +1410,9 @@ function qr_mul(qr, diag_, x) result(qx)
 	!print *, "qx = "
 	!print "(5es15.5)", qx
 
-end function qr_mul
+end function qr_mul_mat_f64
 
-function qr_mul_transpose_mat(qr, diag_, x) result(qx)
+function qr_mul_transpose_mat_f64(qr, diag_, x) result(qx)
 	! Implicitly multiply transpose(Q) * x with a previously computed QR factorization `qr`
 	!
 	! TODO: add c64 version
@@ -1427,9 +1442,9 @@ function qr_mul_transpose_mat(qr, diag_, x) result(qx)
 	!print *, "qx = "
 	!print "(5es15.5)", qx
 
-end function qr_mul_transpose_mat
+end function qr_mul_transpose_mat_f64
 
-function qr_mul_transpose_vec(qr, diag_, x) result(qx)
+function qr_mul_transpose_vec_f64(qr, diag_, x) result(qx)
 	! Implicitly multiply transpose(Q) * x with a previously computed QR factorization `qr`
 	!
 	! TODO: add c64 version
@@ -1457,11 +1472,11 @@ function qr_mul_transpose_vec(qr, diag_, x) result(qx)
 	!print *, "qx = "
 	!print "(5es15.5)", qx
 
-end function qr_mul_transpose_vec
+end function qr_mul_transpose_vec_f64
 
 !********
 
-function qr_get_q_expl(qr, diag_) result(q)
+function qr_get_q_expl_f64(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
@@ -1470,9 +1485,9 @@ function qr_get_q_expl(qr, diag_) result(q)
 
 	q = qr_mul(qr, diag_, eye(size(qr,1)))
 
-end function qr_get_q_expl
+end function qr_get_q_expl_f64
 
-function qr_get_r_expl(qr) result(r)
+function triu_f64(qr) result(r)
 	! Explicitly get R by zeroing lower triangle
 	!
 	! TODO: this is not just for QR.  In MATLAB there is a fn named `triu()`
@@ -1488,7 +1503,7 @@ function qr_get_r_expl(qr) result(r)
 		r(i+1:, i) = 0
 	end do
 
-end function qr_get_r_expl
+end function triu_f64
 
 !********
 
@@ -1595,7 +1610,7 @@ subroutine qr_factor_c64(a, diag_)
 
 end subroutine qr_factor_c64
 
-function qr_mul_c64(qr, diag_, x) result(qx)
+function qr_mul_mat_c64(qr, diag_, x) result(qx)
 	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
 	double complex, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double complex, allocatable :: qx(:,:)
@@ -1622,7 +1637,7 @@ function qr_mul_c64(qr, diag_, x) result(qx)
 	!print *, "qx = "
 	!print "(5es15.5)", qx
 
-end function qr_mul_c64
+end function qr_mul_mat_c64
 
 !********
 
@@ -1633,11 +1648,11 @@ function qr_get_q_expl_c64(qr, diag_) result(q)
 	double complex, intent(in) :: qr(:,:), diag_(:)
 	double complex, allocatable :: q(:,:)
 
-	q = qr_mul_c64(qr, diag_, dcmplx(eye(size(qr,1))))
+	q = qr_mul(qr, diag_, dcmplx(eye(size(qr,1))))
 
 end function qr_get_q_expl_c64
 
-function qr_get_r_expl_c64(qr) result(r)
+function triu_c64(qr) result(r)
 	! Explicitly get R by zeroing lower triangle
 	!
 	! TODO: this is not just for QR.  In MATLAB there is a fn named `triu()`
@@ -1652,7 +1667,7 @@ function qr_get_r_expl_c64(qr) result(r)
 		r(i+1:, i) = 0
 	end do
 
-end function qr_get_r_expl_c64
+end function triu_c64
 
 !********
 
@@ -3502,7 +3517,7 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	if (.not. present(eigvecs)) return
 	!********
 
-	r = qr_get_r_expl(a)
+	r = triu(a)
 	!print *, "r = "
 	!print "(4es15.5)", r
 
