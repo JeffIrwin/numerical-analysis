@@ -1652,28 +1652,18 @@ subroutine cholesky_solve(a, bx)
 	! Forward substitution
 	do i = 1, n
 		do j = 1, i-1
-			bx    (i) = &
-				bx(i) - &
-				a (i, j) * &
-				bx(j)
+			bx(i) = bx(i) - a(i, j) * bx(j)
 		end do
-		bx    (i) = &
-			bx(i) / &
-			a (i, i)
+		bx(i) = bx(i) / a(i, i)
 	end do
 	!print *, "bx forward = ", bx
 
 	! Back substitution
 	do i = n, 1, -1
 		do j = i+1, n
-			bx    (i) = &
-				bx(i) - &
-				a (j, i) * &
-				bx(j)
+			bx(i) = bx(i) - a(j, i) * bx(j)
 		end do
-		bx    (i) = &
-			bx(i) / &
-			a (i, i)
+		bx(i) = bx(i) / a (i, i)
 	end do
 	!print *, "bx back = ", bx
 
@@ -4066,8 +4056,7 @@ function polyfit(x, y, n, iostat) result(p)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision, allocatable :: xx(:,:), diag_(:), &
-		qty(:,:), r(:,:)
+	double precision, allocatable :: xx(:,:), diag_(:), qty(:,:)
 	integer :: i, nx
 
 	if (present(iostat)) iostat = 0
@@ -4108,29 +4097,13 @@ function polyfit(x, y, n, iostat) result(p)
 	!print *, "qr(xx) = "
 	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
-	!q = qr_get_q_expl(xx, diag_)
-	!print *, "q = "
-	!print "(3es16.6)", transpose(q)
-
-	!q = q(:, 1:n+1)
-	!print *, "q1 = "
-	!print "(2es16.6)", transpose(q)
-
-	!qty = matmul(transpose(q), reshape(y, [nx, 1]))
-
-	!qty = qr_mul_transpose(xx, diag_, reshape(y, [1, nx]))
+	! We could skip copying qty to p, but they differ by rank.  It might be nice
+	! if qr_mul_transpose() (and qr_mul) were overloaded for vecs and mats like
+	! invmul()
 	qty = qr_mul_transpose(xx, diag_, reshape(y, [nx, 1]))
-	qty = qty(1: n+1, :)  ! TODO: make qr_factor() just return the "economical" factorization
-	!print *, "qty = ", qty
-
-	r = qr_get_r_expl(xx)  ! TODO: avoid explicitl op
-	!print *, "r = "
-	!print "(2es16.6)", transpose(r)
-
-	!p = invmul(r, qty(:,1))
-	p = qty(:,1)
-	call backsub(r, p)
-	!p = backsub(r, qty(:,1))
+	p = qty(1: n+1, 1)
+	!print *, "qty = ", p
+	call backsub(xx, p)
 
 end function polyfit
 
@@ -4144,7 +4117,7 @@ subroutine backsub(a, bx)
 	!********
 	integer :: i, j, n
 
-	n = size(a,1)
+	n = min(size(a,1), size(a,2))
 	do i = n, 1, -1
 		do j = i+1, n
 			bx(i) = bx(i) - a(i, j) * bx(j)
