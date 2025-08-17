@@ -4359,10 +4359,10 @@ function nelder_mead(x, y, f, beta0) result(beta)
 
 	double precision :: fr, fe, fc
 	double precision, parameter :: alpha_ = 1, gamma_ = 2, rho_ = 0.5, sigma_ = 0.5
-	double precision, allocatable :: bs(:,:), fs(:), ys(:), bo(:), br(:), &
+	double precision, allocatable :: bs(:,:), fs(:), bo(:), br(:), &
 		be(:), bc(:)
 
-	integer :: i, j, nx, nb, nb1, iter
+	integer :: i, nx, nb, nb1, iter
 	integer, allocatable :: idx(:)
 	integer, parameter :: iters = 100
 
@@ -4379,42 +4379,34 @@ function nelder_mead(x, y, f, beta0) result(beta)
 	bs(:,nb1) = beta0
 
 	! Evaluate fn on initial simplex
-	allocate(ys(nx))
 	allocate(fs(nb1))
 	do i = 1, nb1
-		do j = 1, nx
-			ys(j) = f(x(j), bs(:,i))
-		end do
-		!fs(i) = norm2(y - ys)
-		fs(i) = dot_product(y - ys, y - ys)  ! TODO: optimize?
+		fs(i) = nm_eval_res(bs(:,i))
 	end do
-	print *, "fs init = ", fs
+	!print *, "fs init = ", fs
 
 	do iter = 1, iters
 
 		! Sort
 		call sortidx_f64_1(fs, idx)
-		print *, "idx = ", idx
+		!print *, "idx = ", idx
 
 		fs = fs(idx)
 		bs = bs(:, idx)
-		print *, "fs = ", fs
+		!print *, "fs = ", fs
 
-		print *, "bs = "
-		print "(2es16.6)", bs
+		!print *, "bs = "
+		!print "(2es16.6)", bs
 
 		! TODO: add termination condition instead of fixed iters
 
 		! Centroid
 		bo = sum(bs(:, 1: nb), dim = 2) / nb
-		print *, "bo = ", bo
+		!print *, "bo = ", bo
 
 		! Reflect and evaluate
 		br = bo + alpha_ * (bo - bs(:,nb1))
-		do j = 1, nx  ! TODO: DRY residual evals
-			ys(j) = f(x(j), br)
-		end do
-		fr = dot_product(y - ys, y - ys)
+		fr = nm_eval_res(br)
 
 		if (fs(1) <= fr .and. fr < fs(nb)) then
 			! Replace
@@ -4426,10 +4418,8 @@ function nelder_mead(x, y, f, beta0) result(beta)
 		if (fr < fs(1)) then
 			! Expand and evaluate
 			be = bo + gamma_ * (br - bo)
-			do j = 1, nx
-				ys(j) = f(x(j), be)
-			end do
-			fe = dot_product(y-ys, y-ys)
+			fe = nm_eval_res(be)
+
 			if (fe < fr) then
 				fs(nb1) = fe
 				bs(:,nb1) = be
@@ -4445,10 +4435,7 @@ function nelder_mead(x, y, f, beta0) result(beta)
 
 			! Contract outward
 			bc = bo + rho_ * (br - bo)
-			do j = 1, nx
-				ys(j) = f(x(j), bc)
-			end do
-			fc = dot_product(y-ys, y-ys)
+			fc = nm_eval_res(bc)
 
 			if (fc < fr) then
 				fs(nb1) = fc
@@ -4459,10 +4446,7 @@ function nelder_mead(x, y, f, beta0) result(beta)
 		else
 			! Contract inward
 			bc = bo + rho_ * (bs(:,nb1) - bo)
-			do j = 1, nx
-				ys(j) = f(x(j), bc)
-			end do
-			fc = dot_product(y-ys, y-ys)
+			fc = nm_eval_res(bc)
 
 			if (fc < fs(nb1)) then
 				fs(nb1) = fc
@@ -4475,18 +4459,25 @@ function nelder_mead(x, y, f, beta0) result(beta)
 		! Shrink
 		do i = 2, nb1
 			bs(:,i) = bs(:,1) + sigma_ * (bs(:,i) - bs(:,1))
-
-			! Evaluate
-			do j = 1, nx
-				ys(j) = f(x(j), bs(:,i))
-			end do
-			fs(i) = dot_product(y-ys, y-ys)
-
+			fs(i) = nm_eval_res(bs(:,i))
 		end do
 
 	end do
 
 	beta = bs(:,1)
+
+	!--------------------------------
+	contains
+
+		double precision function nm_eval_res(beta_) result(res)
+			! Evaluate the residual and sum its squares
+			double precision, intent(in) :: beta_(:)
+			integer :: k
+			res = 0
+			do k = 1, nx
+				res = res + (y(k) - f(x(k), beta_)) ** 2
+			end do
+		end function nm_eval_res
 
 end function nelder_mead
 
