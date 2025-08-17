@@ -4297,7 +4297,8 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 	double precision, allocatable :: beta(:)
 	!********
 
-	double precision, allocatable :: res(:), jac(:,:), jtj(:,:), jtr(:)
+	double precision, allocatable :: res(:), jac(:,:), &!jtj(:,:), jtr(:), &
+		delta(:), diag_(:)
 
 	integer :: i, nx, nb, iter
 
@@ -4322,10 +4323,15 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 		!print *, "jac = "
 		!print "(2es16.6)", transpose(jac)
 
-		! It would be better to use QR here instead of full LU with extra matmul's
-		jtr = matmul(transpose(jac), res)
-		jtj = matmul(transpose(jac), jac)
-		beta = beta - invmul(jtj, jtr)
+		!! It's better to use QR here instead of full LU with extra matmul's
+		!jtr = matmul(transpose(jac), res)
+		!jtj = matmul(transpose(jac), jac)
+		!beta = beta - invmul(jtj, jtr)
+
+		call qr_factor(jac, diag_)
+		delta = qr_mul_transpose(jac, diag_, res)
+		call backsub(jac, delta)
+		beta = beta - delta
 
 	end do
 

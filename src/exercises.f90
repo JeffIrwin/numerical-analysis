@@ -2400,6 +2400,8 @@ integer function chapter_4_gauss_newton() result(nfail)
 	write(fid, "(2es18.6)") [(x(i), y(i), i = 1, size(x))]
 	close(fid)
 
+	call test(norm2(p - pk), 0.d0, 1.d-3, nfail, "gauss_newton")
+
 	!********
 	print *, ""
 
