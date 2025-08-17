@@ -125,6 +125,11 @@ module numa
 		! Needs c64 overloads
 	end interface qr_mul_transpose
 
+	interface outer_product
+		procedure :: outer_product_c64
+		procedure :: outer_product_f64
+	end interface outer_product
+
 	! If this file gets too long, it might be good to split it up roughly
 	! per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
 
@@ -1487,18 +1492,15 @@ function qr_get_q_expl_f64(qr, diag_) result(q)
 
 end function qr_get_q_expl_f64
 
-function triu_f64(qr) result(r)
+function triu_f64(a) result(r)
 	! Explicitly get R by zeroing lower triangle
-	!
-	! TODO: this is not just for QR.  In MATLAB there is a fn named `triu()`
-	! that does this (and similar `tril()`)
-	double precision, intent(in) :: qr(:,:)
+	double precision, intent(in) :: a(:,:)
 	double precision, allocatable :: r(:,:)
 	!********
 	integer :: i, n
 
-	n = min(size(qr,1), size(qr,2))
-	r = qr(:n, :n)
+	n = min(size(a,1), size(a,2))
+	r = a(:n, :n)
 	do i = 1, n
 		r(i+1:, i) = 0
 	end do
@@ -1652,18 +1654,15 @@ function qr_get_q_expl_c64(qr, diag_) result(q)
 
 end function qr_get_q_expl_c64
 
-function triu_c64(qr) result(r)
-	! Explicitly get R by zeroing lower triangle
-	!
-	! TODO: this is not just for QR.  In MATLAB there is a fn named `triu()`
-	! that does this (and similar `tril()`)
-	double complex, intent(in) :: qr(:,:)
+function triu_c64(a) result(r)
+	! Explicitly get R (U) by zeroing lower triangle
+	double complex, intent(in) :: a(:,:)
 	double complex, allocatable :: r(:,:)
 	!********
 	integer :: i
 
-	r = qr
-	do i = 1, size(qr, 1)
+	r = a
+	do i = 1, size(a, 1)
 		r(i+1:, i) = 0
 	end do
 
@@ -1671,7 +1670,7 @@ end function triu_c64
 
 !********
 
-function outer_product(a, b) result(c)
+function outer_product_f64(a, b) result(c)
 	double precision, intent(in) :: a(:), b(:)
 	double precision, allocatable :: c(:,:)
 
@@ -1686,7 +1685,7 @@ function outer_product(a, b) result(c)
 	end do
 	end do
 
-end function outer_product
+end function outer_product_f64
 
 function outer_product_c64(a, b) result(c)
 	double complex, intent(in) :: a(:), b(:)
