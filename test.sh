@@ -18,6 +18,7 @@ flags+=" -Wno-uninitialized "
 flags+=" -Wno-do-subscript "  # warning is stupid re guard clauses
 flags+=" -Wno-compare-reals "
 
+fpm run --example --flag "$flags"
 fpm test --flag "$flags"
 
 ## sudo apt install gnuplot-qt

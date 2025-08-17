@@ -2458,6 +2458,8 @@ integer function chapter_4_nelder_mead() result(nfail)
 
 	call test(norm2(p - pk), 0.d0, 1.d-3, nfail, "nelder_mead")
 
+	! TODO: test nelder_mead on rosenbrock banana fn
+
 	!********
 	print *, ""
 

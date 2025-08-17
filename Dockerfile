@@ -20,10 +20,13 @@ RUN fpm --version
 ARG BRANCH="main"
 RUN echo "BRANCH = $BRANCH"
 
-RUN echo 45
+RUN echo 46
 RUN git clone https://github.com/jeffirwin/numerical-analysis --branch "$BRANCH"
 WORKDIR /workdir/numerical-analysis
 
 RUN fpm test --profile debug
 RUN fpm test --profile release
+
+RUN fpm run --example --profile debug
+RUN fpm run --example --profile release
 

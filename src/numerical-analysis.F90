@@ -4411,7 +4411,7 @@ function nelder_mead(x, y, f, beta0) result(beta)
 
 		! Reflect and evaluate
 		br = bo + alpha_ * (bo - bs(:,nb1))
-		do j = 1, nx
+		do j = 1, nx  ! TODO: DRY residual evals
 			ys(j) = f(x(j), br)
 		end do
 		fr = dot_product(y - ys, y - ys)
