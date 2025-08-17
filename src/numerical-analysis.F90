@@ -47,11 +47,31 @@ module numa
 		SPLINE_CASE_PRESCRIBED = 3
 
 	abstract interface
-		! This is a function interface for passing callbacks
+		! These are function interfaces for passing callbacks
+
+		! Simple real scalar to scalar function, e.g. for interpolation or
+		! integration
 		function fn_f64_to_f64(x) result(fx)
 			double precision, intent(in) :: x
 			double precision :: fx
 		end function
+
+		! Scalar to scalar with additional parameters `beta`, e.g. for
+		! non-linear least squares in gauss_newton()
+		function fn_f64_beta_to_f64(x, beta) result(fx)
+			double precision, intent(in) :: x
+			double precision, intent(in) :: beta(:)
+			double precision :: fx
+		end function
+
+		! Scalar to vector with beta parameters, e.g. the derivatives of
+		! fn_f64_beta_to_f64
+		function fn_f64_beta_to_vec_f64(x, beta) result(fx)
+			double precision, intent(in) :: x
+			double precision, intent(in) :: beta(:)
+			double precision, allocatable :: fx(:)
+		end function
+
 	end interface
 
 	interface lu_invmul
@@ -4259,6 +4279,57 @@ function polyval(p, x) result(y)
 	end do
 
 end function polyval
+
+!===============================================================================
+
+function gauss_newton(x, y, f, df, beta0, iters) result(beta)
+	! Use the Gauss-Newton algorithm to find parameters `beta` to fit a function
+	! `f` to data `x` and `y` with an initial guess `beta0`.  The function has a
+	! gradient `df` == df/dx
+
+	use numa__utils
+	double precision, intent(in) :: x(:), y(:)
+	procedure(fn_f64_beta_to_f64) :: f
+	procedure(fn_f64_beta_to_vec_f64) :: df
+	double precision, intent(in) :: beta0(:)
+	integer, intent(in) :: iters
+
+	double precision, allocatable :: beta(:)
+	!********
+
+	double precision, allocatable :: res(:), jac(:,:), jtj(:,:), jtr(:)
+
+	integer :: i, nx, nb, iter
+
+	nx = size(x)
+	nb = size(beta0)
+	allocate(res(nx))
+	allocate(jac(nx, nb))
+
+	beta = beta0
+	do iter = 1, iters
+
+		do i = 1, nx
+			! Evaluate residual
+			res(i) = y(i) - f(x(i), beta)
+		end do
+		!print *, "res = ", res
+
+		do i = 1, nx
+			! Evaluate Jacobian
+			jac(i,:) = -df(x(i), beta)
+		end do
+		!print *, "jac = "
+		!print "(2es16.6)", transpose(jac)
+
+		! It would be better to use QR here instead of full LU with extra matmul's
+		jtr = matmul(transpose(jac), res)
+		jtj = matmul(transpose(jac), jac)
+		beta = beta - invmul(jtj, jtr)
+
+	end do
+
+end function gauss_newton
 
 !===============================================================================
 

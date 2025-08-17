@@ -130,6 +130,24 @@ double precision function bessel_3_2p5(tau)
 
 end function bessel_3_2p5
 
+!********
+
+double precision function rate_fn(x, beta) result(y)
+	double precision, intent(in) :: x, beta(:)
+	y = beta(1) * x / (beta(2) + x)
+end function rate_fn
+
+function rate_dx_fn(x, beta) result(dy)
+	! Derivative of rate_fn() wrt x
+	double precision, intent(in) :: x, beta(:)
+	double precision, allocatable :: dy(:)
+	allocate(dy(2))
+
+	dy(1) = x / (beta(2) + x)
+	dy(2) = -beta(1) * x / (beta(2) + x)**2
+
+end function rate_dx_fn
+
 !===============================================================================
 
 end module numa__functions
