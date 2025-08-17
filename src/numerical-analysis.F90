@@ -62,10 +62,30 @@ module numa
 		procedure :: lu_invmul_mat
 	end interface lu_invmul
 
+	interface lu_factor
+		procedure :: lu_factor_c64
+		procedure :: lu_factor_f64
+	end interface lu_factor
+	interface lu_solve
+		procedure :: lu_solve_c64
+		procedure :: lu_solve_f64
+	end interface lu_solve
+	interface lu_kernel
+		procedure :: lu_kernel_c64
+		procedure :: lu_kernel_f64
+	end interface lu_kernel
+
+	interface backsub
+		procedure :: backsub_c64
+		procedure :: backsub_f64
+	end interface backsub
+
 	interface invmul
 		! This is the function version which returns the result
-		procedure :: invmul_vec
-		procedure :: invmul_mat
+		procedure :: invmul_vec_c64
+		!procedure :: invmul_mat_c64
+		procedure :: invmul_vec_f64
+		procedure :: invmul_mat_f64
 	end interface invmul
 
 	interface zeros
@@ -79,6 +99,12 @@ module numa
 		procedure :: diag_get_c64
 	end interface diag
 
+	interface qr_factor
+		procedure :: qr_factor_c64
+		procedure :: qr_factor_f64
+	end interface qr_factor
+
+	! qr_mul and c64 versions could also be overloaded like this
 	interface qr_mul_transpose
 		procedure :: qr_mul_transpose_vec
 		procedure :: qr_mul_transpose_mat
@@ -866,7 +892,7 @@ end subroutine banded_invmul
 
 !===============================================================================
 
-function invmul_c64(a, b) result(x)
+function invmul_vec_c64(a, b) result(x)
 	! Solve the linear algebra problem for `x`:
 	!
 	!     a * x = b
@@ -888,16 +914,16 @@ function invmul_c64(a, b) result(x)
 	! Initialize pivot to identity
 	pivot = [(i, i = 1, size(aa,1))]
 
-	call lu_factor_c64(aa, pivot)
+	call lu_factor(aa, pivot)
 
 	!print *, "pivot = ", pivot
 	!print *, "lu_factor(aa) = "
 	!!print "(5es18.6)", aa
 	!print "(6es15.5)", transpose(aa)
 
-	call lu_solve_c64(aa, x, pivot)
+	call lu_solve(aa, x, pivot)
 
-end function invmul_c64
+end function invmul_vec_c64
 
 subroutine lu_invmul_vec(a, bx)
 	! Solve the linear algebra problem for `x`:
@@ -928,7 +954,7 @@ end subroutine lu_invmul_vec
 
 !********
 
-function invmul_vec(a, b) result(x)
+function invmul_vec_f64(a, b) result(x)
 	double precision, intent(in)  :: a(:,:)
 	double precision, intent(in)  :: b(:)
 	double precision, allocatable :: x(:)
@@ -939,9 +965,9 @@ function invmul_vec(a, b) result(x)
 	aa = a
 	call lu_invmul(aa, x)
 
-end function invmul_vec
+end function invmul_vec_f64
 
-function invmul_mat(a, b) result(x)
+function invmul_mat_f64(a, b) result(x)
 	double precision, intent(in)  :: a(:,:)
 	double precision, intent(in)  :: b(:,:)
 	double precision, allocatable :: x(:,:)
@@ -952,7 +978,7 @@ function invmul_mat(a, b) result(x)
 	aa = a
 	call lu_invmul(aa, x)
 
-end function invmul_mat
+end function invmul_mat_f64
 
 !********
 
@@ -988,7 +1014,7 @@ end subroutine lu_invmul_mat
 
 !********
 
-subroutine lu_factor(a, pivot, allow_singular, iostat)
+subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 
 	!! Make pivoting optional (for comparison to other solvers)
 	!logical, parameter :: DO_PIVOT = .false.
@@ -1015,7 +1041,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 	n = size(a, 1)
 
 	if (size(a, 2) /= n) then
-		msg = "matrix is not square in lu_factor()"
+		msg = "matrix is not square in lu_factor_f64()"
 		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
@@ -1026,7 +1052,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 		!
 		! Maybe this shouldn't be checked manually at all and we should just let
 		! a stacktrace get issued, as with `a`
-		msg = "pivot is not allocated in lu_factor()"
+		msg = "pivot is not allocated in lu_factor_f64()"
 		call PANIC(msg, present(iostat))
 		iostat = 2
 		return
@@ -1045,7 +1071,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 		pivot([i, max_index]) = pivot([max_index, i])
 
 		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
-			msg = "matrix is singular in lu_factor()"
+			msg = "matrix is singular in lu_factor_f64()"
 			call PANIC(msg, present(iostat))
 			iostat = 3
 			return
@@ -1065,7 +1091,7 @@ subroutine lu_factor(a, pivot, allow_singular, iostat)
 
 	end do
 
-end subroutine lu_factor
+end subroutine lu_factor_f64
 
 !********
 
@@ -1290,7 +1316,7 @@ end subroutine qr_factor_gram_schmidt
 
 !********
 
-subroutine qr_factor(a, diag_)
+subroutine qr_factor_f64(a, diag_)
 	! Replace `a` with its QR factorization using Householder transformations
 	double precision, intent(inout) :: a(:,:)
 
@@ -1341,7 +1367,7 @@ subroutine qr_factor(a, diag_)
 	!
 	! Results can be checked by verifying that q' * q == eye() or that a = q * r
 
-end subroutine qr_factor
+end subroutine qr_factor_f64
 
 function qr_mul(qr, diag_, x) result(qx)
 	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
@@ -1396,7 +1422,7 @@ function qr_mul_transpose_mat(qr, diag_, x) result(qx)
 			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
 		end do
 	end do
-	qx = qx(1:n, :)
+	qx = qx(1:n, :)  ! trim
 
 	!print *, "qx = "
 	!print "(5es15.5)", qx
@@ -1426,7 +1452,7 @@ function qr_mul_transpose_vec(qr, diag_, x) result(qx)
 		qx(j) = qx(j) - wq
 		qx(j+1:) = qx(j+1:) - qr(j+1:, j) * wq
 	end do
-	qx = qx(1:n)
+	qx = qx(1:n)  ! trim
 
 	!print *, "qx = "
 	!print "(5es15.5)", qx
@@ -1443,7 +1469,6 @@ function qr_get_q_expl(qr, diag_) result(q)
 	double precision, allocatable :: q(:,:)
 
 	q = qr_mul(qr, diag_, eye(size(qr,1)))
-	!q = qr_mul(qr, diag_, eye(min(size(qr,1), size(qr,2))))
 
 end function qr_get_q_expl
 
@@ -1695,6 +1720,7 @@ subroutine cholesky_solve(a, bx)
 	! Back substitution
 	do i = n, 1, -1
 		do j = i+1, n
+			! Note `a` indices are transposed because its symmetric
 			bx(i) = bx(i) - a(j, i) * bx(j)
 		end do
 		bx(i) = bx(i) / a (i, i)
@@ -1731,19 +1757,7 @@ subroutine lu_solve_c64(a, bx, pivot)
 	end do
 	!print *, "bx forward = ", bx
 
-	! Back substitution
-	do i = n, 1, -1
-		do j = i+1, n
-			bx    (pivot(i)) = &
-				bx(pivot(i)) - &
-				a (pivot(i), j) * &
-				bx(pivot(j))
-		end do
-		bx    (pivot(i)) = &
-			bx(pivot(i)) / &
-			a (pivot(i), i)
-	end do
-	!print *, "bx back = ", bx
+	call backsub(a, bx, pivot)
 
 	! Unpivot
 	bx = bx(pivot)
@@ -1753,7 +1767,7 @@ end subroutine lu_solve_c64
 
 !********
 
-subroutine lu_solve(a, bx, pivot)
+subroutine lu_solve_f64(a, bx, pivot)
 
 	double precision, intent(in) :: a(:,:)
 	double precision, intent(inout) :: bx(:)
@@ -1761,7 +1775,7 @@ subroutine lu_solve(a, bx, pivot)
 
 	integer :: i, j, n
 
-	!print *, "pivot lu_solve = ", pivot
+	!print *, "pivot lu_solve_f64 = ", pivot
 
 	n = size(a, 1)
 	!print *, "bx init = ", bx
@@ -1777,25 +1791,13 @@ subroutine lu_solve(a, bx, pivot)
 	end do
 	!print *, "bx forward = ", bx
 
-	! Back substitution
-	do i = n, 1, -1
-		do j = i+1, n
-			bx    (pivot(i)) = &
-				bx(pivot(i)) - &
-				a (pivot(i), j) * &
-				bx(pivot(j))
-		end do
-		bx    (pivot(i)) = &
-			bx(pivot(i)) / &
-			a (pivot(i), i)
-	end do
-	!print *, "bx back = ", bx
+	call backsub(a, bx, pivot)
 
 	! Unpivot
 	bx = bx(pivot)
 	!print *, "bx unpivot = ", bx
 
-end subroutine lu_solve
+end subroutine lu_solve_f64
 
 !===============================================================================
 
@@ -3758,7 +3760,7 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 		!
 		!     https://netlib.org/lapack/explore-html/d2/d98/group__trevc3_gaee05b7252c5a3b2b935d5a4a6101033d.html
 		!
-		eigvecs(1: i-1, i) = invmul_c64(ca(i,i) * eye(i-1) - ca(:i-1, :i-1) , ca(:i-1, i))
+		eigvecs(1: i-1, i) = invmul(ca(i,i) * eye(i-1) - ca(:i-1, :i-1) , ca(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
@@ -3845,7 +3847,7 @@ end subroutine real_schur_to_complex
 
 !===============================================================================
 
-function lu_kernel(a) result(kernel)
+function lu_kernel_f64(a) result(kernel)
 	! Find the kernel or null-space of `a` using LU decomposition.  This only
 	! returns 1 vector of the kernel, not the whole kernel basis
 	use numa__utils
@@ -3862,13 +3864,15 @@ function lu_kernel(a) result(kernel)
 
 	pivot = [(i, i = 1, size(a,1))]
 	call lu_factor(a, pivot, allow_singular = .true.)
+
+	! Partial backsub
 	kernel(n) = 1.d0
 	do i = n-1, 1, -1
 		kernel(i) = &
 			-dot_product(kernel(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
 	end do
 
-end function lu_kernel
+end function lu_kernel_f64
 
 !===============================================================================
 
@@ -3887,7 +3891,9 @@ function lu_kernel_c64(a) result(kernel)
 	! The kernel of `a` is the same as `u`
 
 	pivot = [(i, i = 1, size(a,1))]
-	call lu_factor_c64(a, pivot, allow_singular = .true.)
+	call lu_factor(a, pivot, allow_singular = .true.)
+
+	! Partial backsub
 	kernel(n) = 1.d0
 	do i = n-1, 1, -1
 		kernel(i) = &
@@ -4140,24 +4146,83 @@ end function polyfit
 
 !===============================================================================
 
-subroutine backsub(a, bx)
+subroutine backsub_f64(a, bx, pivot)
 	! Perform the back-substitution solve phase without pivoting.  This works as
 	! a full solve if matrix `a` is upper (right) triangular
 	double precision, intent(in) :: a(:,:)
 	double precision, intent(inout) :: bx(:)
+	integer, optional, intent(in) :: pivot(:)
 	!********
 	integer :: i, j, n
 
 	n = min(size(a,1), size(a,2))
-	do i = n, 1, -1
-		do j = i+1, n
-			bx(i) = bx(i) - a(i, j) * bx(j)
+	if (present(pivot)) then
+
+		do i = n, 1, -1
+			do j = i+1, n
+				bx    (pivot(i)) = &
+					bx(pivot(i)) - &
+					a (pivot(i), j) * &
+					bx(pivot(j))
+			end do
+			bx    (pivot(i)) = &
+				bx(pivot(i)) / &
+				a (pivot(i), i)
 		end do
-		bx(i) = bx(i) / a(i, i)
-	end do
+
+	else
+
+		do i = n, 1, -1
+			do j = i+1, n
+				bx(i) = bx(i) - a(i, j) * bx(j)
+			end do
+			bx(i) = bx(i) / a(i, i)
+		end do
+
+	end if
 	!print *, "bx back = ", bx
 
-end subroutine backsub
+end subroutine backsub_f64
+
+!===============================================================================
+
+subroutine backsub_c64(a, bx, pivot)
+	! Perform the back-substitution solve phase without pivoting.  This works as
+	! a full solve if matrix `a` is upper (right) triangular
+	double complex, intent(in) :: a(:,:)
+	double complex, intent(inout) :: bx(:)
+	integer, optional, intent(in) :: pivot(:)
+	!********
+	integer :: i, j, n
+
+	n = min(size(a,1), size(a,2))
+	if (present(pivot)) then
+
+		do i = n, 1, -1
+			do j = i+1, n
+				bx    (pivot(i)) = &
+					bx(pivot(i)) - &
+					a (pivot(i), j) * &
+					bx(pivot(j))
+			end do
+			bx    (pivot(i)) = &
+				bx(pivot(i)) / &
+				a (pivot(i), i)
+		end do
+
+	else
+
+		do i = n, 1, -1
+			do j = i+1, n
+				bx(i) = bx(i) - a(i, j) * bx(j)
+			end do
+			bx(i) = bx(i) / a(i, i)
+		end do
+
+	end if
+	!print *, "bx back = ", bx
+
+end subroutine backsub_c64
 
 !===============================================================================
 

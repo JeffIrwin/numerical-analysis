@@ -137,8 +137,8 @@ integer function test_bad_numa_usage() result(nfail)
 	!********
 	! Pivot not allocated
 
-	call lu_factor_c64(a, pivot, iostat = io)
-	call test_ne(io, 0, nfail, "lu_factor_c64 pivot unallocated")
+	call lu_factor(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor pivot unallocated")
 
 	!********
 	! Singular matrix `a`
@@ -146,15 +146,15 @@ integer function test_bad_numa_usage() result(nfail)
 	pivot = [1, 2, 3]
 	a = 0
 
-	call lu_factor_c64(a, pivot, iostat = io)
-	call test_ne(io, 0, nfail, "lu_factor_c64 singular matrix")
+	call lu_factor(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor singular matrix")
 
 	!********
 	! Non-square `a`
 	deallocate(a)
 	allocate(a(3, 2))
-	call lu_factor_c64(a, pivot, iostat = io)
-	call test_ne(io, 0, nfail, "lu_factor_c64 non-square matrix")
+	call lu_factor(a, pivot, iostat = io)
+	call test_ne(io, 0, nfail, "lu_factor non-square matrix")
 
 	end block b_lu_factor_c64
 	!-----------------------------------
@@ -805,7 +805,7 @@ integer function chapter_4_lu_c64() result(nfail)
 			!print "(a,6es15.5)", "x  = ", x
 			!print "(a,6es15.5)", "b  = ", bx
 
-			bx = invmul_c64(a, bx)
+			bx = invmul(a, bx)
 			!print "(a,6es15.5)", "bx = ", bx
 
 			! Rounding error grows with `n`
@@ -843,7 +843,7 @@ integer function chapter_4_lu_c64() result(nfail)
 
 			a0 = a
 
-			kernel = lu_kernel_c64(a)
+			kernel = lu_kernel(a)
 			!print *, "kernel = ", kernel
 			!print *, "a * kernel = ", matmul(a0, kernel)
 
@@ -2300,7 +2300,7 @@ integer function chapter_4_lls() result(nfail)
 	p = polyfit_lu(x, y, size(pk) - 1)
 	print *, "p = ", p
 
-	call test(norm2(p - pk), 0.d0, 1.d-1, nfail, "polyfit")
+	call test(norm2(p - pk), 0.d0, 1.d-1, nfail, "polyfit_lu")
 
 	deallocate(x, y)
 
@@ -2344,6 +2344,7 @@ integer function chapter_4_lls() result(nfail)
 	write(fid, "(2es18.6)") [(x(i), y(i), i = 1, size(x))]
 	close(fid)
 
+	!print *, "diff = ", norm2(p - pk)
 	call test(norm2(p - pk), 0.d0, 1.d-1, nfail, "polyfit")
 
 	!********
@@ -2378,7 +2379,7 @@ integer function chapter_4_qr_c64() result(nfail)
 	!print "("//to_str(2*n)//"es15.5)", a0
 
 	a = a0
-	call qr_factor_c64(a, diag_)
+	call qr_factor(a, diag_)
 
 	!print *, "qr(a) = "
 	!print "("//to_str(2*n)//"es15.5)", a
@@ -2411,7 +2412,7 @@ integer function chapter_4_qr_c64() result(nfail)
 	!print "("//to_str(2*n)//"es15.5)", a0
 
 	a = a0
-	call qr_factor_c64(a, diag_)
+	call qr_factor(a, diag_)
 	!stop
 
 	!print *, "qr(a) = "
@@ -2465,7 +2466,7 @@ integer function chapter_4_qr_c64() result(nfail)
 			!print "("//to_str(2*n)//"es15.5)", a0
 
 			a = a0
-			call qr_factor_c64(a, diag_)
+			call qr_factor(a, diag_)
 
 			!print *, "qr(a) = "
 			!print "("//to_str(2*n)//"es15.5)", a
