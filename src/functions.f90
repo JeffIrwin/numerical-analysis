@@ -148,6 +148,19 @@ function rate_dx_fn(x, beta) result(dy)
 
 end function rate_dx_fn
 
+!********
+
+double precision function rosenbrock_banana(x, beta) result(y)
+	double precision, intent(in) :: x, beta(:)
+	double precision, parameter :: a = 1.d0, b = 100.d0
+
+	y = x  ! suppress unused arg warning. no other effect
+
+	y = (a - beta(1))**2 + b * (beta(2) - beta(1))**2
+	y = -y
+
+end function rosenbrock_banana
+
 !===============================================================================
 
 end module numa__functions

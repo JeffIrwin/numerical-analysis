@@ -4343,8 +4343,7 @@ end function gauss_newton
 
 !===============================================================================
 
-!function nelder_mead(x, y, f, df, beta0, iters) result(beta)
-function nelder_mead(x, y, f, beta0) result(beta)
+function nelder_mead(x, y, f, beta0, beta_tol, iters) result(beta)
 	! Find beta to minimize norm2(y - f(x, beta))
 
 	use numa__utils
@@ -4352,19 +4351,26 @@ function nelder_mead(x, y, f, beta0) result(beta)
 	procedure(fn_f64_beta_to_f64) :: f
 	!procedure(fn_f64_beta_to_vec_f64) :: df
 	double precision, intent(in) :: beta0(:)
-	!integer, intent(in) :: iters
+	double precision, optional, intent(in) :: beta_tol
+	integer, optional, intent(in) :: iters
 
 	double precision, allocatable :: beta(:)
 	!********
 
-	double precision :: fr, fe, fc
+	double precision :: fr, fe, fc, beta_tol_
 	double precision, parameter :: alpha_ = 1, gamma_ = 2, rho_ = 0.5, sigma_ = 0.5
 	double precision, allocatable :: bs(:,:), fs(:), bo(:), br(:), &
 		be(:), bc(:)
 
-	integer :: i, nx, nb, nb1, iter
+	integer :: i, nx, nb, nb1, iter, iters_
 	integer, allocatable :: idx(:)
-	integer, parameter :: iters = 100
+
+	logical :: converged
+
+	beta_tol_ = 1.d-3
+	iters_ = 1000
+	if (present(beta_tol)) beta_tol_ = beta_tol
+	if (present(iters)) iters_ = iters
 
 	nx = size(x)
 	nb = size(beta0)
@@ -4385,7 +4391,8 @@ function nelder_mead(x, y, f, beta0) result(beta)
 	end do
 	!print *, "fs init = ", fs
 
-	do iter = 1, iters
+	converged = .false.
+	do iter = 1, iters_
 
 		! Sort
 		call sortidx_f64_1(fs, idx)
@@ -4398,13 +4405,17 @@ function nelder_mead(x, y, f, beta0) result(beta)
 		!print *, "bs = "
 		!print "(2es16.6)", bs
 
-		! TODO: add termination condition instead of fixed iters
+		if (norm2(bs(:,1) - bs(:,nb1)) < beta_tol_) then
+			!print *, "iter = ", iter
+			converged = .true.
+			exit
+		end if
 
 		! Centroid
 		bo = sum(bs(:, 1: nb), dim = 2) / nb
 		!print *, "bo = ", bo
 
-		! Reflect and evaluate
+		! Reflect
 		br = bo + alpha_ * (bo - bs(:,nb1))
 		fr = nm_eval_res(br)
 
@@ -4416,7 +4427,7 @@ function nelder_mead(x, y, f, beta0) result(beta)
 		end if
 
 		if (fr < fs(1)) then
-			! Expand and evaluate
+			! Expand
 			be = bo + gamma_ * (br - bo)
 			fe = nm_eval_res(be)
 
@@ -4430,9 +4441,7 @@ function nelder_mead(x, y, f, beta0) result(beta)
 			cycle
 		end if
 
-		! Contract and evaluate
 		if (fr < fs(nb1)) then
-
 			! Contract outward
 			bc = bo + rho_ * (br - bo)
 			fc = nm_eval_res(bc)
@@ -4464,6 +4473,10 @@ function nelder_mead(x, y, f, beta0) result(beta)
 
 	end do
 
+	if (.not. converged) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": nelder_mead() has not converged"
+	end if
 	beta = bs(:,1)
 
 	!--------------------------------
