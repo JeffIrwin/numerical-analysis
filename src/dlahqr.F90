@@ -29,12 +29,11 @@ contains
 	! iloz, ihiz, z, ldz, info )
 
 	! .. scalar arguments ..
-	! integer				ihi, ihiz, ilo, iloz, info, ldh, ldz, n
-	! logical				wantt, wantz
-	! ..
+	! integer   ihi, ihiz, ilo, iloz, info, ldh, ldz, n
+	! logical   wantt, wantz
+
 	! .. array arguments ..
-	! double precision	h( ldh, * ), wi( * ), wr( * ), z( ldz, * )
-	! ..
+	! double precision   h( ldh, * ), wi( * ), wr( * ), z( ldz, * )
 
 	!> \par purpose:
 	! =============
@@ -221,10 +220,9 @@ contains
 		! .. scalar arguments ..
 		integer ihi, ihiz, ilo, iloz, info, ldh, ldz, n
 		logical wantt, wantz
-		! ..
+
 		! .. array arguments ..
 		double precision h(ldh, *), wi(*), wr(*), z(ldz, *)
-		! ..
 
 		! =========================================================
 
@@ -245,25 +243,20 @@ contains
 		double precision v(3)
 		double precision :: p2(2, 2), p3(3, 3)
 
-		! .. intrinsic functions ..
-		intrinsic abs, dble, max, min, sqrt
-
 		! .. executable statements ..
 
 		info = 0
 
 		! quick return if possible
 
-		if (n == 0) &
-			return
+		if (n == 0) return
 		if (ilo == ihi) then
 			wr(ilo) = h(ilo, ilo)
 			wi(ilo) = 0
 			return
 		end if
 
-		if (ilo <= ihi - 2) &
-			h(ihi, ihi - 2) = 0
+		if (ilo <= ihi - 2) h(ihi, ihi - 2) = 0
 
 		nh = ihi - ilo + 1
 		nz = ihiz - iloz + 1
@@ -287,9 +280,6 @@ contains
 		! itmax is the total number of qr iterations allowed.
 		itmax = 30*max(10, nh)
 
-		! kdefl counts the number of iterations since a deflation
-		kdefl = 0
-
 		! the main loop begins here. i is the loop index and decreases from
 		! ihi to ilo in steps of 1 or 2. each iteration of the loop works
 		! with the active submatrix in rows and columns l to i.
@@ -298,6 +288,9 @@ contains
 		i = ihi
 		do while (i >= ilo)
 			l = ilo
+
+			! kdefl counts the number of iterations since a deflation
+			kdefl = 0
 
 			! perform qr iterations on rows and columns ilo to i until a
 			! submatrix of order 1 or 2 splits off at the bottom because a
@@ -327,7 +320,7 @@ contains
 									abs(h(k - 1, k - 1) - h(k, k)))
 						s = aa + ab
 						if (ba*(ab/s) <= max(smlnum, &
-													ulp*(bb*(aa/s)))) exit
+							ulp*(bb*(aa/s)))) exit
 					end if
 				end do
 				l = k
@@ -423,7 +416,7 @@ contains
 							 ((h(m, m) - rt2r)/s) - rt1i*(rt2i/s)
 					v(2) = h21s*(h(m, m) + h(m + 1, m + 1) - rt1r - rt2r)
 					v(3) = h21s*h(m + 2, m + 1)
-					s = abs(v(1)) + abs(v(2)) + abs(v(3))
+					s = sum(abs(v))
 					v = v / s
 					if (m == l) exit
 					if (abs(h(m, m - 1))*(abs(v(2)) + abs(v(3))) <= &
@@ -482,6 +475,7 @@ contains
 							! accumulate transformations in the matrix z
 							z(iloz:ihiz, k:k + 2) = matmul(z(iloz:ihiz, k:k + 2), p3)
 						end if
+
 					else if (nr == 2) then
 						!print *, "nr == 2"
 						p2 = eye(nr) - t1*outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
@@ -497,6 +491,7 @@ contains
 							! accumulate transformations in the matrix z
 							z(iloz:ihiz, k:k + 1) = matmul(z(iloz:ihiz, k:k + 1), p2)
 						end if
+
 					end if
 				end do
 			end do
@@ -537,8 +532,6 @@ contains
 					z(iloz:nz, i - 1:i) = matmul(z(iloz:nz, i - 1:i), transpose(p2))
 				end if
 			end if
-			! reset deflation counter
-			kdefl = 0
 
 			! return to start of the main loop with new value of i.
 			i = l - 1
@@ -569,7 +562,6 @@ contains
 
 	! .. scalar arguments ..
 	! double precision	a, b, c, cs, d, rt1i, rt1r, rt2i, rt2r, sn
-	! ..
 
 	!> \par purpose:
 	! =============
@@ -679,7 +671,6 @@ contains
 
 		! .. scalar arguments ..
 		double precision a, b, c, cs, d, rt1i, rt1r, rt2i, rt2r, sn
-		! ..
 
 		! =====================================================================
 
@@ -869,10 +860,9 @@ contains
 	! .. scalar arguments ..
 	! integer				incx, n
 	! double precision	alpha, tau
-	! ..
+
 	! .. array arguments ..
 	! double precision	x( * )
-	! ..
 
 	!> \par purpose:
 	! =============
@@ -956,17 +946,16 @@ contains
 		! .. scalar arguments ..
 		integer incx, n
 		double precision alpha, tau
-		! ..
+
 		! .. array arguments ..
 		double precision x(*)
-		! ..
 
 		! =====================================================================
 
 		! .. local scalars ..
 		integer j, knt
 		double precision beta, rsafmn, safmin, xnorm
-		! ..
+
 		! .. executable statements ..
 
 		if (n <= 1) then
@@ -975,9 +964,7 @@ contains
 		end if
 
 		xnorm = norm2(x(1:n - 1))
-
-		if (xnorm == 0) then
-
+		if (xnorm <= 0) then
 			! h  =  i
 			tau = 0
 		else
@@ -985,7 +972,7 @@ contains
 			! general case
 
 			beta = -sign(norm2([alpha, xnorm]), alpha)
-			safmin = tiny(safmin)/(epsilon(safmin)/radix(safmin))
+			safmin = tiny(safmin) / (epsilon(safmin) / radix(safmin))
 			knt = 0
 			if (abs(beta) < safmin) then
 
@@ -994,18 +981,18 @@ contains
 				do
 					knt = knt + 1
 
-					x(1:n - 1:incx) = rsafmn*x(1:n - 1:incx)
+					x(1: n - 1: incx) = rsafmn * x(1: n - 1: incx)
 					beta = beta*rsafmn
 					alpha = alpha*rsafmn
 					if (.not. ((abs(beta) < safmin) .and. (knt < 20))) exit
 				end do
 
 				! new beta is at most 1, at least safmin
-				xnorm = norm2(x(1:n - 1))
+				xnorm = norm2(x(1: n - 1))
 				beta = -sign(norm2([alpha, xnorm]), alpha)
 			end if
 			tau = (beta - alpha)/beta
-			x(1:n - 1:incx) = x(1:n - 1:incx)/(alpha - beta)
+			x(1: n - 1: incx) = x(1: n - 1: incx) / (alpha - beta)
 
 			! if alpha is subnormal, it may lose relative accuracy
 			do j = 1, knt
