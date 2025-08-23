@@ -1,13 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"namespacenuma____exercises.html#ad59bfcce56ca2fdb97a19344ee6e21f1":[1,0,2,4],
-"namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8":[1,0,2,19],
-"namespacenuma____exercises.html#adb5a199aa5fbfe26bfa876418b92371d":[1,0,2,7],
-"namespacenuma____exercises.html#ae7d6a62bbce0ce64938739cd99d4aaec":[1,0,2,22],
-"namespacenuma____exercises.html#ae99429cf231bf4e706fa4a50fff64449":[1,0,2,14],
-"namespacenuma____exercises.html#af1ed546c954694a90b527df7622b9101":[1,0,2,30],
-"namespacenuma____functions.html":[1,0,3],
-"namespacenuma____functions.html#a151bb9bc9e5257fd39b62122703d4fa7":[1,0,3,10],
 "namespacenuma____functions.html#a2d5c62e4aeb215e34a5fd0732e108144":[1,0,3,17],
 "namespacenuma____functions.html#a33689aff388bae206d49deae60f3d046":[1,0,3,15],
 "namespacenuma____functions.html#a37a29d42d99dbdc4edd15dd1c9ad38d0":[1,0,3,11],

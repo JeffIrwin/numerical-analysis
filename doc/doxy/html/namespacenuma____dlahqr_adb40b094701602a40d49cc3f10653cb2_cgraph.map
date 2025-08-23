@@ -1,19 +1,9 @@
 <map id="numa__dlahqr::dlanv2" name="numa__dlahqr::dlanv2">
-<area shape="rect" id="Node000001" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="5,65,172,91"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b" title="DLAMCH" alt="" coords="435,29,605,55"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,68,421,48,421,53,172,74"/>
-<area shape="rect" id="Node000004" href="$namespacenuma____dlahqr.html#ac3465e58507f5179841a5b01011c66b3" title="DLAPY2 returns sqrt(x2+y2)." alt="" coords="220,103,387,128"/>
-<area shape="poly" id="edge5_Node000001_Node000004" title=" " alt="" coords="163,88,217,98,216,103,162,93"/>
-<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="485,31,477,21,481,11,496,5,520,3,550,6,562,15,559,20,548,11,520,8,497,10,485,15,482,20,489,28"/>
-<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f" title="LSAME" alt="" coords="661,29,823,55"/>
-<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="606,39,647,39,647,45,606,45"/>
-<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="706,31,698,21,702,11,717,5,742,3,773,6,785,15,782,20,771,11,742,8,718,10,706,15,703,20,710,28"/>
-<area shape="poly" id="edge10_Node000004_Node000002" title=" " alt="" coords="337,100,434,65,461,56,462,61,436,70,339,105"/>
-<area shape="poly" id="edge11_Node000004_Node000004" title=" " alt="" coords="268,104,261,94,265,84,279,78,303,76,333,80,345,89,342,93,331,85,303,81,281,83,269,88,266,94,273,101"/>
-<area shape="rect" id="Node000005" href="$namespacenuma____dlahqr.html#acc1cf66ccb19e9a2800792448c764621" title="DISNAN tests input for NaN." alt="" coords="437,103,603,128"/>
-<area shape="poly" id="edge6_Node000004_Node000005" title=" " alt="" coords="387,113,423,113,423,118,387,118"/>
-<area shape="poly" id="edge7_Node000005_Node000005" title=" " alt="" coords="485,104,477,94,481,84,496,78,520,76,550,80,562,89,559,93,548,85,520,81,497,83,485,88,482,94,489,101"/>
-<area shape="rect" id="Node000006" href="$namespacenuma____dlahqr.html#ae1dfc0c7f9a95a9f6eea0cbbe1391c77" title="DLAISNAN tests input for NaN by comparing two arguments for inequality." alt="" coords="653,103,831,128"/>
-<area shape="poly" id="edge8_Node000005_Node000006" title=" " alt="" coords="603,113,639,113,639,118,603,118"/>
-<area shape="poly" id="edge9_Node000006_Node000006" title=" " alt="" coords="706,104,698,94,702,84,717,78,742,76,773,80,785,89,782,93,771,85,742,81,718,83,706,88,703,94,710,101"/>
+<area shape="rect" id="Node000001" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="5,29,172,55"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b" title="DLAMCH" alt="" coords="220,29,391,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,39,207,39,207,45,172,45"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="270,31,263,21,267,11,281,5,305,3,335,6,347,15,344,20,333,11,305,8,283,10,271,15,268,20,275,28"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f" title="LSAME" alt="" coords="439,29,601,55"/>
+<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="391,39,425,39,425,45,391,45"/>
+<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="485,31,478,21,481,11,496,5,520,3,550,6,561,15,558,20,548,11,520,8,497,10,485,15,483,20,489,28"/>
 </map>
