@@ -346,8 +346,8 @@ end function house
 !     .. Local Scalars ..
       DOUBLE PRECISION   AA, AB, BA, BB, CS, DET, H11, H12, H21, H21S, &
                          H22, RT1I, RT1R, RT2I, RT2R, RTDISC, S, SAFMAX, &
-                         SAFMIN, SMLNUM, SN, SUM, T1, T2, T3, TR, TST, &
-                         ULP, V2, V3
+                         SAFMIN, SMLNUM, SN, T1, T2, TR, TST, &
+                         ULP, V2
       INTEGER            I, I1, I2, i3, ITS, ITMAX, J, K, L, M, NH, NR, NZ, &
                          KDEFL 
 !     ..
@@ -593,17 +593,14 @@ end function house
                v(1: nr) = h(k: k+nr-1, k-1)
 
             !print *, "v       = ", v
-            p3 = house(v)
+
+            !! TODO: delete if unused
+            !p3 = house(v)
 
             CALL DLARFG( NR, V( 1 ), V( 2 ), 1, T1 )
             !print *, "v*tau   = ", v * t1
             !print *, "v       = ", v
             !print *, "t1 = ", t1
-
-            !pp = eye(n) - 2.d0 * outer_product(v, v)
-            p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
-
-            !stop
 
             IF( K.GT.M ) THEN
                H( K, K-1 ) = V( 1 )
@@ -620,82 +617,34 @@ end function house
             V2 = V( 2 )
             T2 = T1*V2
             IF( NR.EQ.3 ) THEN
-               V3 = V( 3 )
-               T3 = T1*V3
-!
+               p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
 !              Apply G from the left to transform the rows of the matrix
 !              in columns K to I2.
-!
-
                h(k:k+2, k:i2) = matmul(p3, h(k:k+2, k:i2))
 
-!               DO 70 J = K, I2
-!                  SUM = H( K, J ) + V2*H( K+1, J ) + V3*H( K+2, J )
-!                  H( K, J ) = H( K, J ) - SUM*T1
-!                  H( K+1, J ) = H( K+1, J ) - SUM*T2
-!                  H( K+2, J ) = H( K+2, J ) - SUM*T3
-!   70          CONTINUE
-!
 !              Apply G from the right to transform the columns of the
 !              matrix in rows I1 to min(K+3,I).
-!
-
                i3 = min(k+3, i)
                h(i1:i3, k:k+2) = matmul(h(i1:i3, k:k+2), p3)
-
-!               DO 80 J = I1, MIN( K+3, I )
-!                  SUM = H( J, K ) + V2*H( J, K+1 ) + V3*H( J, K+2 )
-!                  H( J, K ) = H( J, K ) - SUM*T1
-!                  H( J, K+1 ) = H( J, K+1 ) - SUM*T2
-!                  H( J, K+2 ) = H( J, K+2 ) - SUM*T3
-!   80          CONTINUE
 !
                IF( WANTZ ) THEN
-!
 !                 Accumulate transformations in the matrix Z
-!
-
-                  !pq(:, k+1: k+3) = matmul(pq(:, k+1: k+3), p3)
                   z(iloz:ihiz, k:k+2) = matmul(z(iloz:ihiz, k:k+2), p3)
-
-!                  DO 90 J = ILOZ, IHIZ
-!                     SUM = Z( J, K ) + V2*Z( J, K+1 ) + V3*Z( J, K+2 )
-!                     Z( J, K ) = Z( J, K ) - SUM*T1
-!                     Z( J, K+1 ) = Z( J, K+1 ) - SUM*T2
-!                     Z( J, K+2 ) = Z( J, K+2 ) - SUM*T3
-!   90             CONTINUE
-
                END IF
             ELSE IF( NR.EQ.2 ) THEN
 				!print *, "nr == 2"
-!
+               p2 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
+
 !              Apply G from the left to transform the rows of the matrix
 !              in columns K to I2.
-!
-               DO 100 J = K, I2
-                  SUM = H( K, J ) + V2*H( K+1, J )
-                  H( K, J ) = H( K, J ) - SUM*T1
-                  H( K+1, J ) = H( K+1, J ) - SUM*T2
-  100          CONTINUE
-!
+               h(k:k+1, k:i2) = matmul(p2, h(k:k+1, k:i2))
+
 !              Apply G from the right to transform the columns of the
 !              matrix in rows I1 to min(K+3,I).
-!
-               DO 110 J = I1, I
-                  SUM = H( J, K ) + V2*H( J, K+1 )
-                  H( J, K ) = H( J, K ) - SUM*T1
-                  H( J, K+1 ) = H( J, K+1 ) - SUM*T2
-  110          CONTINUE
-!
+               h(i1:i, k:k+1) = matmul(h(i1:i, k:k+1), p2)
                IF( WANTZ ) THEN
-!
 !                 Accumulate transformations in the matrix Z
-!
-                  DO 120 J = ILOZ, IHIZ
-                     SUM = Z( J, K ) + V2*Z( J, K+1 )
-                     Z( J, K ) = Z( J, K ) - SUM*T1
-                     Z( J, K+1 ) = Z( J, K+1 ) - SUM*T2
-  120             CONTINUE
+                  z(iloz:ihiz, k:k+1) = matmul(z(iloz:ihiz, k:k+1), p2)
                END IF
             END IF
   130    CONTINUE
@@ -732,19 +681,14 @@ end function house
          end if
 
          IF( WANTT ) THEN
-!
 !           Apply the transformation to the rest of H.
-!
             IF( I2.GT.I ) then
-               !h(i-1:i, i+1:n) = matmul(p2, h(i-1:i, i+1:n))
                h(i-1:i, i+1:i2) = matmul(p2, h(i-1:i, i+1:i2))
             end if
             h(i1: i-2, i-1:i) = matmul(h(i1: i-2, i-1:i), transpose(p2))
          END IF
          IF( WANTZ ) THEN
-!
 !           Apply the transformation to Z.
-!
             z(iloz:nz, i-1:i) = matmul(z(iloz:nz, i-1:i), transpose(p2))
          END IF
       END IF
@@ -757,7 +701,6 @@ end function house
       GO TO 20
 !
   160 CONTINUE
-      RETURN
 !
       END SUBROUTINE DLAHQR
 !> \brief \b DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
@@ -1064,8 +1007,6 @@ end function house
          RT1I = SQRT( ABS( B ) )*SQRT( ABS( C ) )
          RT2I = -RT1I
       END IF
-      RETURN
-!
       END SUBROUTINE DLANV2
 !> \brief \b DLARFG generates an elementary reflector (Householder matrix).
 !
@@ -1248,8 +1189,6 @@ end function house
  20      CONTINUE
          ALPHA = BETA
       END IF
-!
-      RETURN
 !
       END SUBROUTINE DLARFG
 !***********************************************************************
