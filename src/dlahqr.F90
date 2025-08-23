@@ -114,12 +114,12 @@ function house(x, iostat) result(pp)
 end function house
 
 !> \brief \b dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix, using the double-shift/single-shift qr algorithm.
-!
+
 !  =========== documentation ===========
-!
+
 ! online html documentation available at
 !            http://www.netlib.org/lapack/explore-html/
-!
+
 !> \htmlonly
 !> download dlahqr + dependencies
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlahqr.f">
@@ -129,13 +129,13 @@ end function house
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlahqr.f">
 !> [txt]</a>
 !> \endhtmlonly
-!
+
 !  definition:
 !  ===========
-!
+
 !       subroutine dlahqr( wantt, wantz, n, ilo, ihi, h, ldh, wr, wi,
 !                          iloz, ihiz, z, ldz, info )
-!
+
 !       .. scalar arguments ..
 !       integer            ihi, ihiz, ilo, iloz, info, ldh, ldz, n
 !       logical            wantt, wantz
@@ -143,8 +143,8 @@ end function house
 !       .. array arguments ..
 !       double precision   h( ldh, * ), wi( * ), wr( * ), z( ldz, * )
 !       ..
-!
-!
+
+
 !> \par purpose:
 !  =============
 !>
@@ -155,10 +155,10 @@ end function house
 !>    dealing with the hessenberg submatrix in rows and columns ilo to
 !>    ihi.
 !> \endverbatim
-!
+
 !  arguments:
 !  ==========
-!
+
 !> \param[in] wantt
 !> \verbatim
 !>          wantt is logical
@@ -289,17 +289,17 @@ end function house
 !>                  where u is the orthogonal matrix in (*)
 !>                  (regardless of the value of wantt.)
 !> \endverbatim
-!
+
 !  authors:
 !  ========
-!
+
 !> \author univ. of tennessee
 !> \author univ. of california berkeley
 !> \author univ. of colorado denver
 !> \author nag ltd.
-!
+
 !> \ingroup lahqr
-!
+
 !> \par further details:
 !  =====================
 !>
@@ -320,11 +320,11 @@ end function house
       subroutine dlahqr( wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
                          iloz, ihiz, z, ldz, info )
       implicit none
-!
+
 !  -- lapack auxiliary routine --
 !  -- lapack is a software package provided by univ. of tennessee,    --
 !  -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
-!
+
 !     .. scalar arguments ..
       integer            ihi, ihiz, ilo, iloz, info, ldh, ldz, n
       logical            wantt, wantz
@@ -332,20 +332,19 @@ end function house
 !     .. array arguments ..
       double precision   h( ldh, * ), wi( * ), wr( * ), z( ldz, * )
 !     ..
-!
+
 !  =========================================================
-!
+
 !     .. parameters ..
 	  double precision, parameter :: DAT1 = 3.0d0 / 4.0d0, DAT2 = -0.4375d0
       integer, parameter :: KEXSH = 10
 !     ..
 !     .. local scalars ..
-      double complex :: l1, l2
       double precision   aa, ab, ba, bb, cs, h11, h12, h21, h21s, &
                          h22, rt1i, rt1r, rt2i, rt2r, rtdisc, s, safmax, &
                          safmin, smlnum, sn, t1, tr, tst, &
-                         ulp, a, b, c, d, det_, rad
-      integer            i, i1, i2, i3, its, itmax, j, k, l, m, nh, nr, nz, &
+                         ulp, det_
+      integer            i, i1, i2, i3, its, itmax, k, l, m, nh, nr, nz, &
                          kdefl 
 !     ..
 !     .. local arrays ..
@@ -357,11 +356,11 @@ end function house
       intrinsic          abs, dble, max, min, sqrt
 !     ..
 !     .. executable statements ..
-!
+
       info = 0
-!
+
 !     quick return if possible
-!
+
       if( n == 0 ) &
          return
       if( ilo == ihi ) then
@@ -369,15 +368,10 @@ end function house
          wi( ilo ) = 0
          return
       end if
-!
-!     ==== clear out the trash ====
-      do 10 j = ilo, ihi - 3
-         h( j+2, j ) = 0
-         h( j+3, j ) = 0
-   10 continue
+
       if( ilo <= ihi-2 ) &
          h( ihi, ihi-2 ) = 0
-!
+
       nh = ihi - ilo + 1
       nz = ihiz - iloz + 1
 
@@ -387,44 +381,44 @@ end function house
       ulp = epsilon(ulp)
 
       smlnum = safmin*( dble( nh ) / ulp )
-!
+
 !     i1 and i2 are the indices of the first row and last column of h
 !     to which transformations must be applied. if eigenvalues only are
 !     being computed, i1 and i2 are set inside the main loop.
-!
+
       if( wantt ) then
          i1 = 1
          i2 = n
       end if
-!
+
 !     itmax is the total number of qr iterations allowed.
-!
+
       itmax = 30 * max( 10, nh )
-!
+
 !     kdefl counts the number of iterations since a deflation
-!
+
       kdefl = 0
-!
+
 !     the main loop begins here. i is the loop index and decreases from
 !     ihi to ilo in steps of 1 or 2. each iteration of the loop works
 !     with the active submatrix in rows and columns l to i.
 !     eigenvalues i+1 to ihi have already converged. either l = ilo or
 !     h(l,l-1) is negligible so that the matrix splits.
-!
+
       i = ihi
    20 continue
       l = ilo
       if( i < ilo ) &
          go to 160
-!
+
 !     perform qr iterations on rows and columns ilo to i until a
 !     submatrix of order 1 or 2 splits off at the bottom because a
 !     subdiagonal element has become negligible.
-!
+
       do 140 its = 0, itmax
-!
+
 !        look for a single small subdiagonal element.
-!
+
          do 30 k = i, l + 1, -1
             if( abs( h( k, k-1 ) ) <= smlnum ) &
                go to 40
@@ -454,27 +448,27 @@ end function house
    40    continue
          l = k
          if( l > ilo ) then
-!
+
 !           h(l,l-1) is negligible
-!
+
             h( l, l-1 ) = 0
          end if
-!
+
 !        exit from loop if a submatrix of order 1 or 2 has split off.
-!
+
          if( l >= i-1 ) &
             go to 150
          kdefl = kdefl + 1
-!
+
 !        now the active submatrix is in rows and columns l to i. if
 !        eigenvalues only are being computed, only the active submatrix
 !        need be transformed.
-!
+
          if( .not.wantt ) then
             i1 = l
             i2 = i
          end if
-!
+
          if( mod(kdefl,2*KEXSH) == 0 ) then
 !           exceptional shift.
             s = abs( h( i, i-1 ) ) + abs( h( i-1, i-2 ) )
@@ -512,17 +506,17 @@ end function house
             det_ = ( h11-tr )*( h22-tr ) - h12*h21
             rtdisc = sqrt( abs( det_ ) )
             if( det_ >= 0 ) then
-!
+
 !              ==== complex conjugate shifts ====
-!
+
                rt1r = tr*s
                rt2r = rt1r
                rt1i = rtdisc*s
                rt2i = -rt1i
             else
-!
+
 !              ==== real shifts (use only one of them)  ====
-!
+
                rt1r = tr + rtdisc
                rt2r = tr - rtdisc
                if( abs( rt1r-h22 ) <= abs( rt2r-h22 ) ) then
@@ -536,15 +530,15 @@ end function house
                rt2i = 0
             end if
          end if
-!
+
 !        look for two consecutive small subdiagonal elements.
-!
+
          do 50 m = i - 2, l, -1
 !           determine the effect of starting the double-shift qr
 !           iteration at row m, and see if this would make h(m,m-1)
 !           negligible.  (the following uses scaling to avoid
 !           overflows and most underflows.)
-!
+
             h21s = h( m+1, m )
             s = abs( h( m, m )-rt2r ) + abs( rt2i ) + abs( h21s )
             h21s = h( m+1, m ) / s
@@ -563,20 +557,20 @@ end function house
                 m ) )+abs( h( m+1, m+1 ) ) ) )go to 60
    50    continue
    60    continue
-!
+
 !        double-shift qr step
-!
+
          do 130 k = m, i - 1
-!
+
 !           the first iteration of this loop determines a reflection g
 !           from the vector v and applies it from left and right to h,
 !           thus creating a nonzero bulge below the subdiagonal.
-!
+
 !           each subsequent iteration determines a reflection g to
 !           restore the hessenberg form in the (k-1)th column, and thus
 !           chases the bulge one step toward the bottom of the active
 !           submatrix. nr is the order of g.
-!
+
             nr = min( 3, i-k+1 )
             !print *, "nr = ", nr
             if( k > m ) &
@@ -616,7 +610,7 @@ end function house
 !              matrix in rows i1 to min(k+3,i).
                i3 = min(k+3, i)
                h(i1:i3, k:k+2) = matmul(h(i1:i3, k:k+2), p3)
-!
+
                if( wantz ) then
 !                 accumulate transformations in the matrix z
                   z(iloz:ihiz, k:k+2) = matmul(z(iloz:ihiz, k:k+2), p3)
@@ -638,77 +632,32 @@ end function house
                end if
             end if
   130    continue
-!
+
   140 continue
-!
+
 !     failure to converge in remaining number of iterations
-!
+
       info = i
       return
-!
+
   150 continue
-!
+
       if( l == i ) then
-!
+
 !        h(i,i-1) is negligible: one eigenvalue has converged.
-!
+
          wr( i ) = h( i, i )
          wi( i ) = 0
       else if( l == i-1 ) then
 !        h(i-1,i-2) is negligible: a pair of eigenvalues have converged.
-!
+
 !        transform the 2-by-2 submatrix to standard schur form,
 !        and compute and store the eigenvalues.
 
          call dlanv2( h( i-1, i-1 ), h( i-1, i ), h( i, i-1 ), &
                       h( i, i ), wr( i-1 ), wi( i-1 ), wr( i ), wi( i ), &
                       cs, sn )
-!         print *, "wr = ", wr(i-1: i)
-!         print *, "wi = ", wi(i-1: i)
-!         print *, "cs = ", cs
-!         print *, "sn = ", sn
-!         stop
 
-!         ! 2x2 block around diagonal
-!         a = h(i-1, i-1)
-!         !b = h(i, i-1)
-!         !c = h(i-1, i)
-!         b = h(i-1, i)
-!         c = h(i, i-1)
-!         d = h(i, i)
-!
-!		 print *, "h 2x2 = "
-!		 print *, a, b
-!		 print *, c, d
-!
-!         
-!         !if (abs(b) <= eps * (abs(a) + abs(d))) cycle
-!         
-!         tr = a + d         ! trace
-!         det_ = a*d - b*c  ! determinant
-!         
-!         ! Eigenvalues of 2x2 block
-!         l1 = tr/2 + sqrt(dcmplx(tr**2/4 - det_))
-!         l2 = tr/2 - sqrt(dcmplx(tr**2/4 - det_))
-!
-!         wr(i-1) = l1%re
-!         wi(i-1) = l1%im
-!         wr(i-0) = l2%re
-!         wi(i-0) = l2%im
-!
-!         !rad = norm2([x, y])
-!         !ck =  x / rad
-!         !sk = -y / rad
-!         rad = norm2([a, c])
-!         cs =  a / rad
-!         sn = -c / rad
-!
-!         print *, "wr = ", wr(i-1: i)
-!         print *, "wi = ", wi(i-1: i)
-!         print *, "cs = ", cs
-!         print *, "sn = ", sn
-!         stop
-!
          if (wantt .or. wantz) then
             p2(1,:) = [ cs, sn]
             p2(2,:) = [-sn, cs]
@@ -728,22 +677,21 @@ end function house
       end if
 !     reset deflation counter
       kdefl = 0
-!
+
 !     return to start of the main loop with new value of i.
-!
       i = l - 1
       go to 20
-!
+
   160 continue
-!
+
       end subroutine dlahqr
 !> \brief \b dlanv2 computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
-!
+
 !  =========== documentation ===========
-!
+
 ! online html documentation available at
 !            http://www.netlib.org/lapack/explore-html/
-!
+
 !> \htmlonly
 !> download dlanv2 + dependencies
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlanv2.f">
@@ -753,17 +701,17 @@ end function house
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlanv2.f">
 !> [txt]</a>
 !> \endhtmlonly
-!
+
 !  definition:
 !  ===========
-!
+
 !       subroutine dlanv2( a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn )
-!
+
 !       .. scalar arguments ..
 !       double precision   a, b, c, cs, d, rt1i, rt1r, rt2i, rt2r, sn
 !       ..
-!
-!
+
+
 !> \par purpose:
 !  =============
 !>
@@ -780,10 +728,10 @@ end function house
 !> 2) aa = dd and bb*cc < 0, so that aa + or - sqrt(bb*cc) are complex
 !> conjugate eigenvalues.
 !> \endverbatim
-!
+
 !  arguments:
 !  ==========
-!
+
 !> \param[in,out] a
 !> \verbatim
 !>          a is double precision
@@ -839,17 +787,17 @@ end function house
 !>          sn is double precision
 !>          parameters of the rotation matrix.
 !> \endverbatim
-!
+
 !  authors:
 !  ========
-!
+
 !> \author univ. of tennessee
 !> \author univ. of california berkeley
 !> \author univ. of colorado denver
 !> \author nag ltd.
-!
+
 !> \ingroup lanv2
-!
+
 !> \par further details:
 !  =====================
 !>
@@ -863,17 +811,17 @@ end function house
 !>
 !  =====================================================================
       subroutine dlanv2( a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn )
-!
+
 !  -- lapack auxiliary routine --
 !  -- lapack is a software package provided by univ. of tennessee,    --
 !  -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
-!
+
 !     .. scalar arguments ..
       double precision   a, b, c, cs, d, rt1i, rt1r, rt2i, rt2r, sn
 !     ..
-!
+
 !  =====================================================================
-!
+
 !     .. parameters ..
       double precision   multpl
       parameter          ( multpl = 4.0d+0 )
@@ -885,7 +833,7 @@ end function house
       integer            count
 !     ..
 !     .. executable statements ..
-!
+
       safmin = tiny(safmin)
       eps = epsilon(eps)
       safmn2 = radix(safmn2)**int( log( safmin / eps ) / &
@@ -895,11 +843,11 @@ end function house
       if( c == 0 ) then
          cs = 1
          sn = 0
-!
+
       else if( b == 0 ) then
-!
+
 !        swap rows and columns
-!
+
          cs = 0
          sn = 1
          temp = d
@@ -907,45 +855,45 @@ end function house
          a = temp
          b = -c
          c = 0
-!
+
       else if( ( a-d ) == 0 .and. sign_( b ) /= sign_( c ) ) &
                 then
          cs = 1
          sn = 0
-!
+
       else
-!
+
          temp = a - d
          p = 0.5d0*temp
          bcmax = max( abs( b ), abs( c ) )
          bcmis = min( abs( b ), abs( c ) )*sign_( b )*sign_( c )
          scale = max( abs( p ), bcmax )
          z = ( p / scale )*p + ( bcmax / scale )*bcmis
-!
+
 !        if z is of the order of the machine accuracy, postpone the
 !        decision on the nature of eigenvalues
-!
+
          if( z >= multpl*eps ) then
-!
+
 !           real eigenvalues. compute a and d.
-!
+
             z = p + sign( sqrt( scale )*sqrt( z ), p )
             a = d + z
             d = d - ( bcmax / z )*bcmis
-!
+
 !           compute b and the rotation matrix
-!
+
             tau = norm2([c, z])
             cs = z / tau
             sn = c / tau
             b = b - c
             c = 0
-!
+
          else
-!
+
 !           complex eigenvalues, or real (almost) equal eigenvalues.
 !           make diagonal elements equal.
-!
+
             count = 0
             sigma = b + c
    10       continue
@@ -967,37 +915,37 @@ end function house
             tau = norm2([sigma, temp])
             cs = sqrt( 0.5d0*( 1+abs( sigma ) / tau ) )
             sn = -( p / ( tau*cs ) )*sign_( sigma )
-!
+
 !           compute [ aa  bb ] = [ a  b ] [ cs -sn ]
 !                   [ cc  dd ]   [ c  d ] [ sn  cs ]
-!
+
             aa = a*cs + b*sn
             bb = -a*sn + b*cs
             cc = c*cs + d*sn
             dd = -c*sn + d*cs
-!
+
 !           compute [ a  b ] = [ cs  sn ] [ aa  bb ]
 !                   [ c  d ]   [-sn  cs ] [ cc  dd ]
-!
+
 !           note: some of the multiplications are wrapped in parentheses to
 !                 prevent compilers from using fma instructions. see
 !                 https://github.com/reference-lapack/lapack/issues/1031.
-!
+
             a = aa*cs + cc*sn
             b = ( bb*cs ) + ( dd*sn )
             c = -( aa*sn ) + ( cc*cs )
             d = -bb*sn + dd*cs
-!
+
             temp = 0.5d0*( a+d )
             a = temp
             d = temp
-!
+
             if( c /= 0 ) then
                if( b /= 0 ) then
                   if( sign_( b ) == sign_( c ) ) then
-!
+
 !                    real eigenvalues: reduce to upper triangular form
-!
+
                      sab = sqrt( abs( b ) )
                      sac = sqrt( abs( c ) )
                      p = sign( sab*sac, c )
@@ -1021,11 +969,11 @@ end function house
                end if
             end if
          end if
-!
+
       end if
-!
+
 !     store eigenvalues in (rt1r,rt1i) and (rt2r,rt2i).
-!
+
       rt1r = a
       rt2r = d
       if( c == 0 ) then
@@ -1037,12 +985,12 @@ end function house
       end if
       end subroutine dlanv2
 !> \brief \b dlarfg generates an elementary reflector (householder matrix).
-!
+
 !  =========== documentation ===========
-!
+
 ! online html documentation available at
 !            http://www.netlib.org/lapack/explore-html/
-!
+
 !> \htmlonly
 !> download dlarfg + dependencies
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlarfg.f">
@@ -1052,12 +1000,12 @@ end function house
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlarfg.f">
 !> [txt]</a>
 !> \endhtmlonly
-!
+
 !  definition:
 !  ===========
-!
+
 !       subroutine dlarfg( n, alpha, x, incx, tau )
-!
+
 !       .. scalar arguments ..
 !       integer            incx, n
 !       double precision   alpha, tau
@@ -1065,8 +1013,8 @@ end function house
 !       .. array arguments ..
 !       double precision   x( * )
 !       ..
-!
-!
+
+
 !> \par purpose:
 !  =============
 !>
@@ -1092,10 +1040,10 @@ end function house
 !>
 !> otherwise  1 <= tau <= 2.
 !> \endverbatim
-!
+
 !  arguments:
 !  ==========
-!
+
 !> \param[in] n
 !> \verbatim
 !>          n is integer
@@ -1128,24 +1076,24 @@ end function house
 !>          tau is double precision
 !>          the value tau.
 !> \endverbatim
-!
+
 !  authors:
 !  ========
-!
+
 !> \author univ. of tennessee
 !> \author univ. of california berkeley
 !> \author univ. of colorado denver
 !> \author nag ltd.
-!
+
 !> \ingroup larfg
-!
+
 !  =====================================================================
       subroutine dlarfg( n, alpha, x, incx, tau )
-!
+
 !  -- lapack auxiliary routine --
 !  -- lapack is a software package provided by univ. of tennessee,    --
 !  -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
-!
+
 !     .. scalar arguments ..
       integer            incx, n
       double precision   alpha, tau
@@ -1153,38 +1101,38 @@ end function house
 !     .. array arguments ..
       double precision   x( * )
 !     ..
-!
+
 !  =====================================================================
-!
+
 !     .. local scalars ..
       integer            j, knt
       double precision   beta, rsafmn, safmin, xnorm
 !     ..
 !     .. executable statements ..
-!
+
       if( n <= 1 ) then
          tau = 0
          return
       end if
-!
+
       xnorm = norm2(x(1: n-1))
-!
+
       if( xnorm == 0 ) then
-!
+
 !        h  =  i
-!
+
          tau = 0
       else
-!
+
 !        general case
-!
+
          beta = -sign(norm2([alpha, xnorm]), alpha )
          safmin = tiny(safmin) / (epsilon(safmin) / radix(safmin))
          knt = 0
          if( abs( beta ) < safmin ) then
-!
+
 !           xnorm, beta may be inaccurate; scale x and recompute them
-!
+
             rsafmn = 1 / safmin
    10       continue
             knt = knt + 1
@@ -1194,23 +1142,23 @@ end function house
             alpha = alpha*rsafmn
             if( (abs( beta ) < safmin) .and. (knt  <  20) ) &
                go to 10
-!
+
 !           new beta is at most 1, at least safmin
-!
+
             xnorm = norm2(x(1: n-1))
             beta = -sign(norm2([alpha, xnorm]), alpha )
          end if
          tau = ( beta-alpha ) / beta
          x(1: n-1: incx) = x(1: n-1: incx) / (alpha - beta)
-!
+
 !        if alpha is subnormal, it may lose relative accuracy
-!
+
          do 20 j = 1, knt
             beta = beta*safmin
  20      continue
          alpha = beta
       end if
-!
+
       end subroutine dlarfg
 !***********************************************************************
 end module numa__dlahqr
