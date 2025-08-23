@@ -760,6 +760,147 @@ end function chapter_4_lu
 
 !===============================================================================
 
+integer function chapter_4_modify() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_4_modify"
+
+	double precision :: aij, aij0
+	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), &
+		y(:), z(:), u(:), v(:), b(:)
+	integer :: i, n, nrng, irep, p0, row, col
+	integer, allocatable :: pivot(:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Test a fixed case
+	n = 5
+	allocate(a(n, n))
+
+	a(:,1) = [-4.130000d+00, 6.000000d+00, 1.100000d+01, 1.600000d+01, 2.100000d+01]
+	a(:,2) = [ 2.000000d+00, 7.960000d+00, 1.200000d+01, 1.700000d+01, 2.200000d+01]
+	a(:,3) = [ 3.000000d+00, 8.000000d+00, 1.280000d+00, 1.800000d+01, 2.300000d+01]
+	a(:,4) = [ 4.000000d+00, 9.000000d+00, 1.400000d+01, 3.400000d+00, 2.400000d+01]
+	a(:,5) = [ 5.000000d+00, 1.000000d+01, 1.500000d+01, 2.000000d+01, 5.600000d+00]
+	a0 = a
+
+	x = [+4.0000d+00, +2.0000d+00, -1.0000d+00, +7.0000d+00, +1.8000d+01]
+
+	!! Print this to check that the solution is correct in the transpose sense
+	!print *, "a * x = ", matmul(a, x)
+
+	bx = [102.48d0, 274.92d0, 434.72d0, 463.8d0, 373.8d0]
+	b = bx
+
+	!print *, "a = "
+	!print "(5es18.6)", a
+
+	!call lu_invmul(a, bx)
+
+	pivot = [(i, i = 1, size(a,1))]
+	call lu_factor(a, pivot)
+	call lu_solve(a, bx, pivot)
+
+	!print "(a,5es18.6)", "bx = ", bx
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
+
+	! Test a rank-1 update.  Change the element of `a` at `row` and `col` to
+	! value `aij`.  Now with the modified version of `a`, solve a*x == b
+	! without refactoring `a` from scratch
+	row = 3
+	col = 2
+	aij0 = a0(row, col)
+	aij = 69.d0
+	a0(row, col) = aij
+
+	! Use the Sherman-Morisson-Woodbury formula
+	!
+	! Source:  https://leobouts.medium.com/rank-1-updates-in-linear-algebra-in-simple-terms-7b5032a11a3e
+	!
+	! Should this be a subroutine?  Idk what the interface should be
+
+	! Construct u and v such that modified a = a - u*v' (or plus?)
+	u = zeros(n)
+	v = zeros(n)
+	u(row) = aij0 - aij
+	!u(row) = aij - aij0
+	v(col) = 1.d0
+
+	! Solve a*z == u for z
+	!
+	! TODO: reduce temp arrays
+	z = u
+	call lu_solve(a, z, pivot)
+
+	! Solve a*y == b for y
+	y = b
+	call lu_solve(a, y, pivot)
+
+	! Compute x = y + ((v'*y) / (1 - v'z)) * z
+	!
+	! TODO: optimize dot prods.  u and v are sparse
+	x = y + (dot_product(v, y) / (1 - dot_product(v, z))) * z
+
+	!call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
+	call test(norm2(matmul(a0, x) - b), 0.d0, 1.d-11, nfail, "Sherman-Morisson() 5x5")
+
+	return ! TODO: fuzz
+
+	deallocate(a, x, bx)
+
+	!********
+	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
+	! creating a singular matrix
+	!
+	! TODO: add fuzz testing for some other problems, e.g. tridiagonal and
+	! banded solvers.  We will need special matmul() implementations to verify
+	! results
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	do n = 2, 90, 2
+
+		! LU decomposition is still fast for n >> 90, but maybe not fast enough
+		! for multiple reps in a unit test
+
+		allocate(a(n, n), x(n))
+
+		if (mod(n, 10) == 0) then
+			print *, "Testing lu_invmul() with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 6
+			call random_number(a)  ! random matrix
+			call random_number(x)  ! random expected answer
+
+			bx = matmul(a, x)      ! calculate rhs
+
+			!print *, "a = "
+			!print "(6es15.5)", a
+			!print "(a,6es15.5)", "x  = ", x
+			!print "(a,6es15.5)", "b  = ", bx
+
+			call lu_invmul(a, bx)
+			!print "(a,6es15.5)", "bx = ", bx
+
+			! Rounding error grows with `n`
+			call test(norm2(bx - x), 0.d0, 1.d-9 * n, nfail, "lu_invmul() fuzz n x n")
+
+		end do
+
+		deallocate(a, x, bx)
+	end do
+
+	!********
+	print *, ""
+
+end function chapter_4_modify
+
+!===============================================================================
+
 integer function chapter_4_lu_c64() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_lu_c64"
