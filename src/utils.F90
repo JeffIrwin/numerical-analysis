@@ -63,6 +63,13 @@ module numa__utils
 		procedure :: lte_lex_c64
 	end interface
 
+	! Maybe this doesn't belong in utils, but dlahqr uses it, so this is
+	! convenient
+	interface outer_product
+		procedure :: outer_product_c64
+		procedure :: outer_product_f64
+	end interface outer_product
+
 	integer, parameter :: &
 		COMPARE_LESS_ = -1, &
 		COMPARE_EQUAL_ = 0, &
@@ -541,6 +548,77 @@ subroutine panic_core(msg, present_iostat, file, line)
 	if (.not. present_iostat) error stop
 
 end subroutine panic_core
+
+!===============================================================================
+
+function outer_product_f64(a, b) result(c)
+	double precision, intent(in) :: a(:), b(:)
+	double precision, allocatable :: c(:,:)
+
+	integer :: i, j, na, nb
+	na = size(a)
+	nb = size(b)
+
+	allocate(c(na, nb))
+	do j = 1, nb
+	do i = 1, na
+		c(i,j) = a(i) * b(j)
+	end do
+	end do
+
+end function outer_product_f64
+
+function outer_product_c64(a, b) result(c)
+	double complex, intent(in) :: a(:), b(:)
+	double complex, allocatable :: c(:,:)
+
+	integer :: i, j, na, nb
+	na = size(a)
+	nb = size(b)
+
+	allocate(c(na, nb))
+	do j = 1, nb
+	do i = 1, na
+		!c(i,j) = a(i) * conjg(b(j))
+		c(i,j) = a(i) * b(j)
+	end do
+	end do
+
+end function outer_product_c64
+
+!********
+
+double precision function sign_(x)
+	double precision, intent(in) :: x
+	sign_ = sign(1.d0, x)
+end function sign_
+
+!********
+
+! If `eye` is defined here, it might make sense to move zeros() et al. here, or
+! better yet, in a new file.  Blas.F90?  Math.F90?
+
+function eye(n)
+	! n x n identity matrix
+
+	integer, intent(in) :: n
+	double precision, allocatable :: eye(:,:)
+
+	integer :: i, j
+	allocate(eye(n, n))
+	do i = 1, n
+		do j = 1, n
+			if (i == j) then
+				eye(i,j) = 1.d0
+			else
+				eye(i,j) = 0.d0
+			end if
+		end do
+	end do
+
+end function eye
+
+!********
 
 !===============================================================================
 

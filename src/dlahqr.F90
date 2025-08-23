@@ -3,61 +3,7 @@
 
 module numa__dlahqr
 	implicit none
-
-	! todo: dry
-
-	interface outer_product
-		!procedure :: outer_product_c64
-		procedure :: outer_product_f64
-	end interface outer_product
-
 contains
-
-function outer_product_f64(a, b) result(c)
-	double precision, intent(in) :: a(:), b(:)
-	double precision, allocatable :: c(:,:)
-
-	integer :: i, j, na, nb
-	na = size(a)
-	nb = size(b)
-
-	allocate(c(na, nb))
-	do j = 1, nb
-	do i = 1, na
-		c(i,j) = a(i) * b(j)
-	end do
-	end do
-
-end function outer_product_f64
-
-function eye(n)
-	! n x n identity matrix
-
-	integer, intent(in) :: n
-	double precision, allocatable :: eye(:,:)
-
-	integer :: i, j
-	allocate(eye(n, n))
-	do i = 1, n
-		do j = 1, n
-			if (i == j) then
-				eye(i,j) = 1.d0
-			else
-				eye(i,j) = 0.d0
-			end if
-		end do
-	end do
-
-end function eye
-
-!********
-
-double precision function sign_(x)
-	double precision, intent(in) :: x
-	sign_ = sign(1.d0, x)
-end function sign_
-
-!********
 
 !> \brief \b dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix, using the double-shift/single-shift qr algorithm.
 
@@ -265,6 +211,8 @@ end function sign_
 !  =====================================================================
       subroutine dlahqr( wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
                          iloz, ihiz, z, ldz, info )
+
+      use numa__utils
       implicit none
 
 !  -- lapack auxiliary routine --
@@ -746,6 +694,8 @@ end function sign_
 !>
 !  =====================================================================
       subroutine dlanv2( a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn )
+
+      use numa__utils
 
 !  -- lapack auxiliary routine --
 !  -- lapack is a software package provided by univ. of tennessee,    --

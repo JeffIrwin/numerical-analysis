@@ -144,11 +144,6 @@ module numa
 		! Needs c64 overloads
 	end interface qr_mul_transpose
 
-	interface outer_product
-		procedure :: outer_product_c64
-		procedure :: outer_product_f64
-	end interface outer_product
-
 	! If this file gets too long, it might be good to split it up roughly
 	! per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
 
@@ -1324,17 +1319,12 @@ subroutine cholesky_factor(a, allow_singular, iostat)
 end subroutine cholesky_factor
 
 !********
-double precision function sign_(x)
-	double precision, intent(in) :: x
-	sign_ = sign(1.d0, x)
-end function sign_
-
-!********
 
 subroutine hess(a, u)
 	! Apply the Householder Hessenberg reduction to `a`
 	!
 	! Source:  https://dspace.mit.edu/bitstream/handle/1721.1/75282/18-335j-fall-2006/contents/lecture-notes/lec14.pdf
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable, optional, intent(out) :: u(:,:)
 	!********
@@ -1588,6 +1578,7 @@ function qr_get_q_expl_f64(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
+	use numa__utils
 	double precision, intent(in) :: qr(:,:), diag_(:)
 	double precision, allocatable :: q(:,:)
 
@@ -1772,6 +1763,7 @@ function qr_get_q_expl_c64(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
+	use numa__utils
 	double complex, intent(in) :: qr(:,:), diag_(:)
 	double complex, allocatable :: q(:,:)
 
@@ -1792,43 +1784,6 @@ function triu_c64(a) result(r)
 	end do
 
 end function triu_c64
-
-!********
-
-function outer_product_f64(a, b) result(c)
-	double precision, intent(in) :: a(:), b(:)
-	double precision, allocatable :: c(:,:)
-
-	integer :: i, j, na, nb
-	na = size(a)
-	nb = size(b)
-
-	allocate(c(na, nb))
-	do j = 1, nb
-	do i = 1, na
-		c(i,j) = a(i) * b(j)
-	end do
-	end do
-
-end function outer_product_f64
-
-function outer_product_c64(a, b) result(c)
-	double complex, intent(in) :: a(:), b(:)
-	double complex, allocatable :: c(:,:)
-
-	integer :: i, j, na, nb
-	na = size(a)
-	nb = size(b)
-
-	allocate(c(na, nb))
-	do j = 1, nb
-	do i = 1, na
-		!c(i,j) = a(i) * conjg(b(j))
-		c(i,j) = a(i) * b(j)
-	end do
-	end do
-
-end function outer_product_c64
 
 !********
 
@@ -3387,28 +3342,6 @@ end function simpson_adaptive_integrator
 
 !===============================================================================
 
-function eye(n)
-	! n x n identity matrix
-
-	integer, intent(in) :: n
-	double precision, allocatable :: eye(:,:)
-
-	integer :: i, j
-	allocate(eye(n, n))
-	do i = 1, n
-		do j = 1, n
-			if (i == j) then
-				eye(i,j) = 1.d0
-			else
-				eye(i,j) = 0.d0
-			end if
-		end do
-	end do
-
-end function eye
-
-!********
-
 function zeros_mat(m, n) result(a)
 	! m x n matrix of 0
 	integer, intent(in) :: m, n
@@ -3717,7 +3650,7 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
 	! QR algorithm
 
-	use numa__utils, only:  sorted
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: eigvals(:)
 	integer, intent(in) :: iters
