@@ -346,8 +346,8 @@ end function house
 !     .. Local Scalars ..
       DOUBLE PRECISION   AA, AB, BA, BB, CS, DET, H11, H12, H21, H21S, &
                          H22, RT1I, RT1R, RT2I, RT2R, RTDISC, S, SAFMAX, &
-                         SAFMIN, SMLNUM, SN, T1, T2, TR, TST, &
-                         ULP, V2
+                         SAFMIN, SMLNUM, SN, T1, TR, TST, &
+                         ULP
       INTEGER            I, I1, I2, i3, ITS, ITMAX, J, K, L, M, NH, NR, NZ, &
                          KDEFL 
 !     ..
@@ -602,22 +602,9 @@ end function house
             !print *, "v       = ", v
             !print *, "t1 = ", t1
 
-            IF( K.GT.M ) THEN
-               H( K, K-1 ) = V( 1 )
-               H( K+1, K-1 ) = ZERO
-               IF( K.LT.I-1 ) &
-                  H( K+2, K-1 ) = ZERO
-            ELSE IF( M.GT.L ) THEN
-!               ==== Use the following instead of
-!               .    H( K, K-1 ) = -H( K, K-1 ) to
-!               .    avoid a bug when v(2) and v(3)
-!               .    underflow. ====
-               H( K, K-1 ) = H( K, K-1 )*( ONE-T1 )
-            END IF
-            V2 = V( 2 )
-            T2 = T1*V2
             IF( NR.EQ.3 ) THEN
                p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
+
 !              Apply G from the left to transform the rows of the matrix
 !              in columns K to I2.
                h(k:k+2, k:i2) = matmul(p3, h(k:k+2, k:i2))
