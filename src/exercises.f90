@@ -894,7 +894,7 @@ integer function chapter_2_tridiag_corner() result(nfail)
 	ad(:,4) = [ 0,  0,  8,  9,  4,  0]
 	ad(:,5) = [ 0,  0,  0,  7,  9,  5]
 	ad(:,6) = [12,  0,  0,  0,  7,  8]
-	ad = transpose(ad)  ! TODO: i think all my tridiag algos are transposed
+	ad = transpose(ad)  ! TODO: i think all my tridiag algos are transposed. Actually just change the assignment above
 	print *, "ad = "
 	print "(6es15.5)", transpose(ad)
 
@@ -990,7 +990,38 @@ integer function chapter_2_banded() result(nfail)
 	deallocate(a)
 
 	!********
+	! Test a small asymmetric band pattern so I can document the packed banded
+	! representation
 
+	nl = 2  ! number of lower bands
+	nu = 1  ! number of upper bands
+	n  = 5  ! size of x
+	allocate(a(nl+nu+1, n))
+	a(:,  1) = [0, 0, 5, 2]
+	a(:,  2) = [0, 3, 6, 2]
+	a(:,  3) = [2, 3, 7, 2]
+	a(:,  4) = [2, 3, 8, 2]
+	a(:,  5) = [2, 3, 3, 0]
+
+	bx = [1, 2, 3, 4, 2]
+
+	x = &
+	[   &
+		 1.1961722488038280d-01, &
+		 2.0095693779904303d-01, &
+		 2.1770334928229668d-01, &
+		 3.1698564593301437d-01, &
+		 2.0454545454545447d-01  &
+	]
+
+	call banded_invmul(a, bx, nl, nu)
+	print "(a)", "bx2 = "
+	print "(es28.16)", bx
+	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "banded_invmul() (3+2)x11")
+
+	deallocate(a)
+
+	!********
 	! Test an asymmetric band pattern
 
 	nl = 3  ! number of lower bands
@@ -1077,6 +1108,8 @@ integer function chapter_2_banded() result(nfail)
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "banded_invmul() (2+3)x11")
 
 	deallocate(a)
+
+	! TODO: Test a banded matrix with nl == 0 and another with nu == 0
 
 	print *, ""
 end function chapter_2_banded
@@ -1897,6 +1930,9 @@ integer function chapter_3_adaptive() result(nfail)
 	! Maybe there should be another gk15 integrator that takes a "user data"
 	! array of doubles (and ints).  This would need another fn interface, say
 	! fn_f64_to_f64_dble_data, which also takes the data
+	!
+	! Actually I have created exactly this in fn_f64_beta_to_f64.  A new
+	! gk15_adaptive_integrator() is still needed
 
 	area = gk15_adaptive_integrator(bessel_3_2p5, 0.d0, PI, 1.d-10)
 	expect = bessel_jn(3, 2.5d0)
@@ -2307,8 +2343,6 @@ integer function chapter_4_lls() result(nfail)
 	!********
 	! polyfit()
 
-	! TODO: seed
-
 	nx = 100
 	allocate(x(nx), y(nx))
 
@@ -2414,15 +2448,16 @@ integer function chapter_4_nelder_mead() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_4_nelder_mead"
 
-	!double precision :: xmin, xmax
+	double precision :: xmin, xmax
 	double precision, allocatable :: x(:), y(:), p(:), pk(:)!, xi(:), yi(:)
-	!integer :: i, ni, fid
+	integer :: i, nx
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
 	!********
+	! Do some data fitting, as in the gauss_newton() test driver
 
 	! Data to be fit
 	x = [   0.038,   0.194,   0.425,   0.626,    1.253,    2.5,      3.74  ]
@@ -2431,8 +2466,8 @@ integer function chapter_4_nelder_mead() result(nfail)
 	! Expected (known) parameters (beta)
 	pk = [0.362, 0.556]
 
-	p = nelder_mead(x, y, rate_fn, beta0 = [100.d0, 100.d0], beta_tol = 1.d-9)!, iters = 100)
-	print *, "p = ", p
+	p = nelder_mead_fit(x, y, rate_fn, beta0 = [100.d0, 100.d0], beta_tol = 1.d-9)!, iters = 100)
+	print "(a,*(es16.6))", " p = ", p
 
 	!! Number of interpolation points
 	!ni = 100
@@ -2455,28 +2490,82 @@ integer function chapter_4_nelder_mead() result(nfail)
 	!write(fid, "(2es18.6)") [(x(i), y(i), i = 1, size(x))]
 	!close(fid)
 
-	call test(norm2(p - pk), 0.d0, 1.d-3, nfail, "nelder_mead rate_fn")
+	call test(norm2(p - pk), 0.d0, 1.d-3, nfail, "nelder_mead_fit rate_fn")
 
 	!********
+	! Abuse the data fitting nelder_mead_fit() to find the minimum of the
+	! Rosenbrock banana fn
 
-	! Data to be fit
+	! Data to be fit (dummy for this rosenbrock_banana case)
 	x = [69.d0]
 	y = [420.d0]
 
 	! Expected (known) parameters (beta)
 	pk = [1.d0, 1.d0]
 
-	! I implemented nelder_mead() for data fitting, but it can also be used for
+	! I implemented nelder_mead_fit() for data fitting, but it can also be used for
 	! general optimization/min/max.  Here this is done with a function
-	! rosenbrock_banana() which has an unused dummy `x` argument.  Only the beta
+	! rosenbrock_banana_beta() which has an unused dummy `x` argument.  Only the beta
 	! arg is used, thus it searches for the optimal point in beta space
-	!
-	! Maybe there should be separate nelder_mead_fit() and general nelder_mead()
-	! fns for ergonomics
-	p = nelder_mead(x, y, rosenbrock_banana, beta0 = [100.d0, 100.d0], beta_tol = 1.d-9)
-	print *, "p = ", p
+	p = nelder_mead_fit(x, y, rosenbrock_banana_beta, beta0 = [100.d0, 100.d0], beta_tol = 1.d-9)
+	print "(a,*(es16.6))", " p = ", p
 
-	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana")
+	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead_fit rosenbrock_banana_beta")
+	deallocate(x, y)
+
+	!********
+	! Use nelder_mead(), not nelder_mead_fit(), to do optimization without the
+	! extra dummy args
+
+	! Expected (known) minimum
+	pk = [1.d0, 1.d0]
+
+	p = nelder_mead(rosenbrock_banana, [100.d0, 100.d0], beta_tol = 1.d-9)
+	print "(a,*(es16.6))", " p = ", p
+
+	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana 2D")
+
+	!********
+	! Optimize 4D Rosenbrock banana
+	!
+	! In higher dimensions, it's harder to converge for this fn if you start too far away for the minimum
+	pk = [1, 1, 1, 1]
+	p = nelder_mead(rosenbrock_banana_nd, [20.d0, 20.d0, 20.d0, 20.d0], beta_tol = 1.d-9, iters = 5000)
+	!p = nelder_mead(rosenbrock_banana_nd, [100.d0, 100.d0, 100.d0, 100.d0], beta_tol = 1.d-15, iters = 10000)
+	print "(a,*(es16.6))", " p = ", p
+	print *, "f(p) = ", rosenbrock_banana_nd(p)
+	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana 4D")
+
+	!********
+	! Optimize 6D Rosenbrock banana
+	pk = [1, 1, 1, 1, 1, 1]
+	p = nelder_mead(rosenbrock_banana_nd, [10.d0, 10.d0, 10.d0, 10.d0, 10.d0, 10.d0], beta_tol = 1.d-9, iters = 10000)
+	print "(a,*(es16.6))", " p = ", p
+	print *, "f(p) = ", rosenbrock_banana_nd(p)
+	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana 6D")
+
+	!********
+	! Fit a bimodal distribution
+
+	nx = 200
+	xmin = -10.d0
+	xmax =  10.d0
+	allocate(x(nx), y(nx))
+	x(:) = (xmax - xmin) / (nx-1) * [(i, i = 0, nx-1)] + xmin
+	! TODO: make a linspace() fn, overload with n version and dx version
+
+	pk = [1.4d0, 1.0d0, 2.0d0, 1.0d0, 0.2d0, -1.d0]
+	y = pk(1) * exp(-pk(2) * (x - pk(3))**2) &
+	  + pk(4) * exp(-pk(5) * (x - pk(6))**2)
+
+	! This doesn't converge depending on the initial guess
+
+	!p = nelder_mead_fit(x, y, rate_fn, beta0 = [100.d0, 100.d0], beta_tol = 1.d-9)!, iters = 100)
+	!p = nelder_mead_fit(x, y, bimodal_fn, beta0 = [0.1d0, 0.1d0, 0.1d0, 0.1d0, 0.1d0, 0.1d0], beta_tol = 1.d-9, iters = 10000)
+	p = nelder_mead_fit(x, y, bimodal_fn, beta0 = [1.0d0, 1.0d0, 3.0d0, 1.0d0, 1.0d0, -3.0d0], beta_tol = 1.d-9)
+	print "(a,*(es16.6))", " p = ", p
+
+	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead_fit bimodal")
 
 	!********
 	print *, ""
@@ -3069,7 +3158,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	do n = 5, 35
+	do n = 5, 75
 
 		allocate(a(n, n))
 
@@ -3078,7 +3167,8 @@ integer function chapter_6_francis_qr() result(nfail)
 			print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
 		end if
 
-		do irep = 1, 5
+		!do irep = 1, 5
+		do irep = 1, 1  ! TODO
 			!print *, "irep = ", irep
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,

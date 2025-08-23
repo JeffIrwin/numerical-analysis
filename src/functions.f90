@@ -148,18 +148,44 @@ function rate_dx_fn(x, beta) result(dy)
 
 end function rate_dx_fn
 
+double precision function bimodal_fn(x, pk) result(y)
+	double precision, intent(in) :: x, pk(:)
+	y = pk(1) * exp(-pk(2) * (x - pk(3))**2) &
+	  + pk(4) * exp(-pk(5) * (x - pk(6))**2)
+end function bimodal_fn
+
 !********
 
-double precision function rosenbrock_banana(x, beta) result(y)
-	double precision, intent(in) :: x, beta(:)
+double precision function rosenbrock_banana_beta(dummy, x) result(y)
+	! This is a hack for abusing the data-fitting optimizer as a general-purpose
+	! optimizer
+	double precision, intent(in) :: dummy, x(:)
 	double precision, parameter :: a = 1.d0, b = 100.d0
 
-	y = x  ! suppress unused arg warning. no other effect
+	y = dummy  ! suppress unused arg warning. no other effect
 
-	y = (a - beta(1))**2 + b * (beta(2) - beta(1))**2
+	y = (a - x(1))**2 + b * (x(2) - x(1))**2
 	y = -y
 
+end function rosenbrock_banana_beta
+
+double precision function rosenbrock_banana(x) result(y)
+	double precision, intent(in) :: x(:)
+	double precision, parameter :: a = 1.d0, b = 100.d0
+	y = (a - x(1))**2 + b * (x(2) - x(1))**2
 end function rosenbrock_banana
+
+double precision function rosenbrock_banana_nd(x) result(y)
+	! Note: this is only defined for even size(x)
+	double precision, intent(in) :: x(:)
+	!********
+	integer :: i, n
+	n = size(x)
+	y = 0
+	do i = 1, n/2
+		y = y + 100 * (x(2*i-1)**2 - x(2*i))**2 + (x(2*i-1) - 1)**2
+	end do
+end function rosenbrock_banana_nd
 
 !===============================================================================
 

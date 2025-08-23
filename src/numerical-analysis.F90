@@ -12,10 +12,6 @@
 
 !===============================================================================
 
-!! include is *not* pre-processed
-!include "panic.F90"
-
-! include *is* pre-processed
 #include "panic.F90"
 
 !> Main public-facing module for numerical analysis
@@ -56,8 +52,17 @@ module numa
 			double precision :: fx
 		end function
 
+		! Vector to scalar
+		function fn_vec_f64_to_f64(x) result(fx)
+			double precision, intent(in) :: x(:)
+			double precision :: fx
+		end function
+
 		! Scalar to scalar with additional parameters `beta`, e.g. for
 		! non-linear least squares in gauss_newton()
+		!
+		! TODO: rename?  maybe `fn_f64_params_to_f64`?  The `beta` is probably
+		! confusing
 		function fn_f64_beta_to_f64(x, beta) result(fx)
 			double precision, intent(in) :: x
 			double precision, intent(in) :: beta(:)
@@ -696,7 +701,7 @@ end subroutine tridiag_solve
 
 !********
 
-subroutine tridiag_invmul(a, bx)
+subroutine tridiag_invmul(a, bx, iostat)
 	! Solve the linear algebra problem for `x`:
 	!
 	!     a * x = b
@@ -706,8 +711,10 @@ subroutine tridiag_invmul(a, bx)
 	!
 	! See exercises.f90 for an example of how to pack the `a` matrix
 
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
+	integer, optional, intent(out) :: iostat
 
 	! I'm not sure if it's better for performance to use the current
 	! representation of `a` or its transpose instead.  Most expressions in
@@ -715,14 +722,24 @@ subroutine tridiag_invmul(a, bx)
 	! be better as-is, but not much of a difference
 
 	!********
+	character(len = :), allocatable :: msg
+	integer :: io
 
-	call tridiag_factor(a)
+	if (present(iostat)) iostat = 0
+	call tridiag_factor(a, io)
+	if (io /= 0) then
+		msg = "tridiag_factor() failed in tridiag_invmul()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
 	call tridiag_solve(a, bx)
 
 end subroutine tridiag_invmul
 
 !===============================================================================
-subroutine tridiag_corner_invmul(aa, bx)
+subroutine tridiag_corner_invmul(aa, bx, iostat)
 
 	! Solve an augmented tridiagonal system with off-diagonal opposite corner
 	! elements, AKA the cyclic Thomas algorithm
@@ -733,14 +750,18 @@ subroutine tridiag_corner_invmul(aa, bx)
 	!   - https://www.cfd-online.com/Wiki/Tridiagonal_matrix_algorithm_-_TDMA_(Thomas_algorithm)
 	!   - https://sachinashanbhag.blogspot.com/2014/03/cyclic-tridiagonal-matrices.html
 
+	use numa__utils
 	double precision, intent(inout) :: aa(:,:)
 	double precision, intent(inout) :: bx(:)
+	integer, optional, intent(out)  :: iostat
 
 	!********
+	character(len = :), allocatable :: msg
 	double precision :: a1, b1, cn, v1, vn
 	double precision, allocatable :: u(:)
+	integer :: i, n, io
 
-	integer :: i, n
+	if (present(iostat)) iostat = 0
 
 	! Make a modified tridiagonal system with no corners and modified first and
 	! last main diagonal elements
@@ -768,7 +789,15 @@ subroutine tridiag_corner_invmul(aa, bx)
 	!print "(3es16.6)", aa
 
 	! Solve two pure tridiag problems
-	call tridiag_factor(aa)
+
+	call tridiag_factor(aa, io)
+	if (io /= 0) then
+		msg = "tridiag_factor() failed in tridiag_corner_invmul()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
 	call tridiag_solve(aa, bx)
 	call tridiag_solve(aa, u)
 
@@ -784,7 +813,7 @@ end subroutine tridiag_corner_invmul
 
 !===============================================================================
 
-subroutine banded_factor(a, al, indx, nl, nu)
+subroutine banded_factor(a, al, indx, nl, nu, iostat)
 	! This is the factorization phase of banded_invmul(), with pivoting
 	!
 	! Compare the interface of lapack routines dgbtrf() (factor) and dgbtrs()
@@ -796,28 +825,42 @@ subroutine banded_factor(a, al, indx, nl, nu)
 	! perhaps it's better to leave as-is for consistency with banded_solve()
 	! args
 	double precision, intent(inout) :: a(:,:)
-	double precision, intent(out), allocatable :: al(:,:)
-	integer, intent(out), allocatable :: indx(:)
+	double precision, allocatable, intent(out) :: al(:,:)
+	integer, allocatable, intent(out) :: indx(:)
 	integer, intent(in) :: nl, nu
+	integer, optional, intent(out) :: iostat
 
 	!********
+	character(len = :), allocatable :: msg
 	double precision :: d, dum
 	integer :: i, j, k, l, n, mm
+
+	if (present(iostat)) iostat = 0
 
 	!print *, "nl, nu = ", nl, nu
 
 	n = size(a, 2)  ! *not* same as size 1
+	mm = nl + 1 + nu
 
 	if (nl + nu + 1 /= size(a, 1)) then
-		! TODO: return code?  This should probably be a fatal error
-		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
-			": bad size of matrix `a` in banded_factor()"
+		msg = "bad size of matrix `a` in banded_factor()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
 	end if
-
-	! l(1) = a(1,1) is 0, u(n) = a(3,n) is 0
-
-	! TODO: check a(1,1) == 0 and a(3,n) == 0?
-	mm = nl + 1 + nu
+	if (any(a(1: nl, 1) /= 0)) then
+		msg = "`a(1:nl, 1)` is not 0 in tridiag_factor()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+	!if (any(a(mm-nu+1: mm, n) /= 0)) then
+	if (any(a(nl+2: mm, n) /= 0)) then
+		msg = "`a(nl+2: mm, n)` is not 0 in tridiag_factor()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
 
 	! Left-shift the top nl rows by the number of zeros
 	do i = 1, nl
@@ -907,14 +950,38 @@ end subroutine banded_solve
 
 !********
 
+!> @brief  Solves a linear system `a*x == b` for `x` with a banded matrix `a`
+!>
+!> @details
+!> Banded matrix `a` is packed into a mostly sparse rectangular array.  For
+!> example, this data structure:
+!>
+!>     nl = 2  ! number of lower bands
+!>     nu = 1  ! number of upper bands
+!>     n  = 5  ! size of x
+!>     allocate(a(nl+nu+1, n))
+!>     a(:, 1) = [0, 0, 5, 2]
+!>     a(:, 2) = [0, 3, 6, 2]
+!>     a(:, 3) = [2, 3, 7, 2]
+!>     a(:, 4) = [2, 3, 8, 2]
+!>     a(:, 5) = [2, 3, 3, 0]
+!>
+!> represents this dense matrix in MATLAB/Scilab layout:
+!>
+!>     a = [
+!>         5 2 0 0 0
+!>         3 6 2 0 0
+!>         2 3 7 2 0
+!>         0 2 3 8 2
+!>         0 0 2 3 3
+!>     ]
+!>
+!> @param[in,out]  a   Banded matrix on input, factored on output
+!> @param[in,out]  bx  RHS `b` on input, `x` on output
+!> @param[in]      nl  Number of lower non-zero bands below diagonal
+!> @param[in]      nu  Number of upper non-zero bands above diagonal
 subroutine banded_invmul(a, bx, nl, nu)
-	! Solve the linear algebra problem for `x`:
-	!
-	!     a * x = b
-	!
-	! Banded matrix `a` is packed.  TODO: notes on packed representation
-	!
-	! TODO: should {a, nl, nu} be a struct?  One of the n*'s could be redundant
+	! Maybe should {a, nl, nu} be a struct?  One of the n*'s could be redundant
 
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
@@ -1278,36 +1345,43 @@ subroutine hess(a, u)
 	double precision, allocatable, optional, intent(out) :: u(:,:)
 	!********
 
-	integer :: k, m
-	double precision, allocatable :: x(:), v(:), vv(:,:)
+	integer :: i, j, k, n
+	double precision :: va
+	double precision, allocatable :: v(:), vv(:,:)
 
-	m = size(a,1)
-	if (present(u)) allocate(vv(m, m-2))
+	n = size(a,1)
+	if (present(u)) allocate(vv(n, n-2))
 
-	do k = 1, m-2
+	do k = 1, n-2
 
-		x = a(k+1:, k)
-		v = x
-		v(1) = v(1) + sign_(x(1)) * norm2(x)
+		v = a(k+1:, k)
+		v(1) = v(1) + sign_(v(1)) * norm2(v)
 		v = v / norm2(v)
 
-		! TODO: avoid outer_product() at least, and maybe `x` temp array.
-		! Avoiding `v` temp array might be a little more work than worthwhile
-
-		a(k+1:, k:) = a(k+1:, k:) - outer_product(2 * v, matmul(v, a(k+1:, k:)))
-		a(:, k+1:)  = a(:, k+1:)  - outer_product(matmul(a(:, k+1:), v), 2 * v)
+		! Avoiding `v` temp array might be a little more work than worthwhile,
+		! impossible if `u` is present
+		do j = k, n
+			va = 2 * dot_product(v, a(k+1:, j))
+			a(k+1:, j) = a(k+1:, j) - va * v
+		end do
+		do i = 1, n
+			va = 2 * dot_product(v, a(i, k+1:))
+			a(i, k+1:) = a(i, k+1:) - va * v
+		end do
 
 		if (present(u)) vv(1: size(v), k) = v
 
 	end do
 	if (.not. present(u)) return
 
-	u = eye(m)
-	do k = m-2, 1, -1
+	u = eye(n)
+	do k = n-2, 1, -1
 
-		v = vv(1: m-k, k)
-		u(k+1:, k+1:) = u(k+1:, k+1:) - &
-			outer_product(2 * v, matmul(v, u(k+1:, k+1:)))
+		v = vv(1: n-k, k)
+		do j = k+1, n
+			va = 2 * dot_product(v, u(k+1:, j))
+			u(k+1:, j) = u(k+1:, j) - va * v
+		end do
 
 	end do
 	!print *, "u = "
@@ -1356,32 +1430,48 @@ end subroutine qr_factor_gram_schmidt
 
 !********
 
-subroutine qr_factor_f64(a, diag_)
+subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, allocatable, intent(out) :: diag_(:)
+	logical, optional, intent(in) :: allow_rect
+	integer, optional, intent(out) :: iostat
 
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: s, normx, u1, wa
-
 	integer :: j, k, n
+	logical :: allow_rect_
 
-	!n = size(a, 1)
+	allow_rect_ = .false.
+	if (present(iostat)) iostat = 0
+	if (present(allow_rect)) allow_rect_ = allow_rect
+
 	n = min(size(a,1), size(a,2))
 
 	allocate(diag_(n))
 	diag_ = 0.d0
 
-	! TODO: panic if `a` not square, but add `allow_rect` arg for polyfit()
-	! least-squares
+	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
+		msg = "matrix is not square in qr_factor_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
 	do j = 1, n
 
 		normx = norm2(a(j:, j))
-		! TODO: panic if normx == 0
+		if (normx == 0) then
+			msg = "matrix is singular in qr_factor_f64()"
+			call PANIC(msg, present(iostat))
+			iostat = 2
+			return
+		end if
 
 		s = -sign_(a(j,j))
 		u1 = a(j,j) - s * normx
@@ -1389,7 +1479,6 @@ subroutine qr_factor_f64(a, diag_)
 		a(j,j) = s * normx
 		diag_(j) = -s * u1 / normx
 
-		!do k = j+1, size(a,2)
 		do k = j+1, n
 			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
 			a(j,k) = a(j,k) - wa
@@ -1440,7 +1529,7 @@ end function qr_mul_mat_f64
 function qr_mul_transpose_mat_f64(qr, diag_, x) result(qx)
 	! Implicitly multiply transpose(Q) * x with a previously computed QR factorization `qr`
 	!
-	! TODO: add c64 version
+	! TODO: add c64 version and c64 test
 	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double precision, allocatable :: qx(:,:)
 	!********
@@ -1529,7 +1618,7 @@ end function triu_f64
 
 !********
 
-subroutine house_c64(alpha, x, diag_)
+subroutine house_c64(alpha, x, diag_, iostat)
 	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
 	!
 	! This was adapted from reference LAPACK:  https://netlib.org/lapack/explore-html/d8/d0d/group__larfg_ga11ff37151d75113678103648c1a68c11.html
@@ -1543,15 +1632,18 @@ subroutine house_c64(alpha, x, diag_)
 	double complex, intent(inout) :: alpha
 	double complex, intent(inout) :: x(:)
 	double complex, intent(out) :: diag_
+	integer, optional, intent(out) :: iostat
 	!********
 
 	!double complex, allocatable :: pp(:,:)
 	!double complex :: alpha0
 	!double complex, allocatable :: v(:), x0(:)
 
+	character(len = :), allocatable :: msg
 	double precision :: xnorm, beta, alphr, alphi
-
 	integer :: n
+
+	if (present(iostat)) iostat = 0
 
 	n = size(x) !- 1
 
@@ -1563,8 +1655,10 @@ subroutine house_c64(alpha, x, diag_)
 	alphi = alpha%im
 
 	if (xnorm == 0 .and. alphi == 0) then
-		! TODO: panic
 		diag_ = 0
+		msg = "vector is singular in house_c64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
 		return
 	end if
 
@@ -1596,28 +1690,45 @@ subroutine house_c64(alpha, x, diag_)
 
 end subroutine house_c64
 
-subroutine qr_factor_c64(a, diag_)
+subroutine qr_factor_c64(a, diag_, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
-	!
-	! TODO: overload interface
+	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 
 	double complex, allocatable, intent(out) :: diag_(:)
+	integer, optional, intent(out) :: iostat
 
 	!********
 
-	!double complex, allocatable :: w(:)
+	character(len = :), allocatable :: msg
 	double complex :: wa
-	integer :: j, k, n
+	integer :: j, k, n, io
+
+	if (present(iostat)) iostat = 0
 
 	n = size(a, 1)
+
+	if (size(a, 2) /= n) then
+		! This could have an allow_rect override like qr_factor_f64()
+		msg = "matrix is not square in qr_factor_c64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
 	allocate(diag_(n))
 	diag_ = 0.d0
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
 	do j = 1, n
 
-		call house_c64(a(j,j), a(j+1:, j), diag_(j))
+		call house_c64(a(j,j), a(j+1:, j), diag_(j), io)
+		if (io /= 0) then
+			msg = "matrix is singular in qr_factor_c64()"
+			call PANIC(msg, present(iostat))
+			iostat = 2
+			return
+		end if
 
 		do k = j+1, n
 			! Note diag_ is conjugated here, unlike in qr_mul_c64()
@@ -1835,79 +1946,118 @@ end subroutine lu_solve_f64
 
 !===============================================================================
 
-function spline_no_curve(xi, yi, x) result(fx)
+function spline_no_curve(xi, yi, x, iostat) result(fx)
 	! This function finds the cubic spline with the "no curvature" boundary
 	! condition, i.e. the 2nd derivative is 0 at both endpoints, or case (a) in
 	! the text
 	!
 	! This is also known as the natural spline
 
-	double precision, intent(in)  :: xi(:)
-	double precision, intent(in)  :: yi(:)
-	double precision, intent(in)  :: x(:)
-	double precision, allocatable :: fx(:)
+	use numa__utils
+	double precision, intent(in)   :: xi(:)
+	double precision, intent(in)   :: yi(:)
+	double precision, intent(in)   :: x(:)
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable  :: fx(:)
+	!********
+	character(len = :), allocatable :: msg
+	integer :: io
 
-	fx = spline_general(xi, yi, x, SPLINE_CASE_NO_CURVE, 0.d0, 0.d0)
+	if (present(iostat)) iostat = 0
+	fx = spline_general(xi, yi, x, SPLINE_CASE_NO_CURVE, 0.d0, 0.d0, io)
+	if (io /= 0) then
+		msg = "spline_general() failed in spline_no_curve()"
+		call PANIC(msg, present(iostat))
+		iostat = io
+		return
+	end if
 
 end function spline_no_curve
 
 !********
 
-function spline_periodic(xi, yi, x) result(fx)
+function spline_periodic(xi, yi, x, iostat) result(fx)
 	! This function finds the cubic spline with periodic boundary conditions,
 	! i.e. the 1st and 2nd derivates match at the start and end points, case (b)
 	! in the text
 
-	double precision, intent(in)  :: xi(:)
-	double precision, intent(in)  :: yi(:)
-	double precision, intent(in)  :: x(:)
-	double precision, allocatable :: fx(:)
+	use numa__utils
+	double precision, intent(in)   :: xi(:)
+	double precision, intent(in)   :: yi(:)
+	double precision, intent(in)   :: x(:)
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable  :: fx(:)
+	!********
+	character(len = :), allocatable :: msg
+	integer :: io
 
-	fx = spline_general(xi, yi, x, SPLINE_CASE_PERIODIC, 0.d0, 0.d0)
+	if (present(iostat)) iostat = 0
+	fx = spline_general(xi, yi, x, SPLINE_CASE_PERIODIC, 0.d0, 0.d0, io)
+	if (io /= 0) then
+		msg = "spline_general() failed in spline_periodic()"
+		call PANIC(msg, present(iostat))
+		iostat = io
+		return
+	end if
 
 end function spline_periodic
 
 !********
 
-function spline_prescribed(xi, yi, x, dy_start, dy_end) result(fx)
+function spline_prescribed(xi, yi, x, dy_start, dy_end, iostat) result(fx)
 	! This function finds the cubic spline with prescribed first derivatives at
 	! the end points, i.e. case (c) in the text
 
-	double precision, intent(in)  :: xi(:)
-	double precision, intent(in)  :: yi(:)
-	double precision, intent(in)  :: x(:)
-	double precision, intent(in)  :: dy_start, dy_end
-	double precision, allocatable :: fx(:)
+	use numa__utils
+	double precision, intent(in)   :: xi(:)
+	double precision, intent(in)   :: yi(:)
+	double precision, intent(in)   :: x(:)
+	double precision, intent(in)   :: dy_start, dy_end
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable  :: fx(:)
+	!********
+	character(len = :), allocatable :: msg
+	integer :: io
 
-	fx = spline_general(xi, yi, x, SPLINE_CASE_PRESCRIBED, dy_start, dy_end)
+	if (present(iostat)) iostat = 0
+	fx = spline_general(xi, yi, x, SPLINE_CASE_PRESCRIBED, dy_start, dy_end, io)
+	if (io /= 0) then
+		msg = "spline_general() failed in spline_prescribed()"
+		call PANIC(msg, present(iostat))
+		iostat = io
+		return
+	end if
 
 end function spline_prescribed
 
 !===============================================================================
 
-function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
+function spline_general(xi, yi, x, case_, dy_start, dy_end, iostat) result(fx)
 
 	use numa__utils
-
 	double precision, intent(in)  :: xi(:)
 	double precision, intent(in)  :: yi(:)
 	double precision, intent(in)  :: x(:)
 
 	double precision, intent(in)  :: dy_start, dy_end
 	integer, intent(in) :: case_
+	integer, intent(out) :: iostat
 
 	double precision, allocatable :: fx(:)
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, allocatable :: h(:), lambda(:), mu(:), &
 		d(:), a(:,:), aj, bj
-	integer :: i, j, n
+	integer :: i, j, n, io
 
+	iostat = 0
 	if (.not. any(case_ == &
 		[SPLINE_CASE_NO_CURVE, SPLINE_CASE_PERIODIC, SPLINE_CASE_PRESCRIBED])) then
-		write(*,*) RED // "Error" // COLOR_RESET // &
-			": bad spline case in spline_general()"
-		call exit(1)
+		msg = "bad spline case in spline_general()"
+		call PANIC(msg, .true.)
+		iostat = 1
+		return
 	end if
 
 	n = size(xi)
@@ -1969,7 +2119,13 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 		!print *, "a = "
 		!print "(3es18.6)", a
 
-		call tridiag_corner_invmul(a, d)
+		call tridiag_corner_invmul(a, d, io)
+		if (io /= 0) then
+			msg = "tridiag_corner_invmul() failed in spline_general()"
+			call PANIC(msg, .true.)
+			iostat = 2
+			return
+		end if
 
 		! Untrim
 		d = [d(n-1), d]
@@ -1997,7 +2153,14 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 		!print *, "mu     = ", mu
 		!print *, "d       = ", d
 
-		call tridiag_invmul(a, d)
+		call tridiag_invmul(a, d, io)
+		if (io /= 0) then
+			msg = "tridiag_corner_invmul() failed in spline_general()"
+			call PANIC(msg, .true.)
+			iostat = 3
+			return
+		end if
+
 		!print *, "moments = ", d
 
 	end if
@@ -2005,13 +2168,16 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 	allocate(fx( size(x) ))
 
 	if (x(1) < xi(1)) then
-		! TODO: all these warnings should probably be fatal
-		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
-			": `x` underflows first spline control point"
+		msg = "`x` underflows first spline control point in spline_general()"
+		call PANIC(msg, .true.)
+		iostat = 4
+		return
 	end if
 	if (x(size(x)) > xi(size(xi))) then
-		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
-			": `x` overflows last spline control point"
+		msg = "`x` overflows last spline control point in spline_general()"
+		call PANIC(msg, .true.)
+		iostat = 5
+		return
 	end if
 
 	! Evaluate the spline
@@ -2022,8 +2188,10 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end) result(fx)
 
 		if (i > 1) then
 			if (x(i) <= x(i-1)) then
-				write(*,*) YELLOW // "Warning" // COLOR_RESET // &
-					": `x` is not sorted ascending in spline_general()"
+				msg = "`x` is not sorted ascending in spline_general()"
+				call PANIC(msg, .true.)
+				iostat = 6
+				return
 			end if
 		end if
 
@@ -2092,7 +2260,7 @@ end function bezier_curve
 
 !===============================================================================
 
-function cardinal_spline(xc, t, tension) result(x)
+function cardinal_spline(xc, t, tension, iostat) result(x)
 
 	! Interpolate a cubic cardinal spline through control points `xc` with
 	! interpolation parameters `t` in range [0, nc-1], where `nc` is the number
@@ -2116,20 +2284,29 @@ function cardinal_spline(xc, t, tension) result(x)
 	!
 	!     https://en.wikipedia.org/wiki/Cubic_Hermite_spline
 
+	use numa__utils
 	double precision, intent(in) :: xc(:,:)
 	double precision, intent(in) :: t(:)
 	double precision, intent(in) :: tension
+	integer, optional, intent(out) :: iostat
 
 	double precision, allocatable :: x(:,:)
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: t_, tmod
 	double precision, allocatable :: xcl(:,:)
 	double precision, allocatable :: v(:,:), v0(:,:)
-
 	integer :: i, j, it, nd, nc, nt, ncl, segment
 
-	! TODO: panic if tension <= 0
+	if (present(iostat)) iostat = 0
+
+	if (tension <= 0) then
+		msg = "tension is negative in cardinal_spline()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	nd = size(xc, 1)  ! number of dimensions
 	nc = size(xc, 2)  ! number of control points
@@ -2430,7 +2607,7 @@ double precision function romberg_integrator(f, xmin, xmax, tol, max_levels) &
 	! Integrate `f` from xmin to xmax using Romberg integration with tolerance
 	! `tol`
 	!
-	! TODO: make tol optional?
+	! tol could be optional with a default
 
 	use numa__utils
 	procedure(fn_f64_to_f64) :: f
@@ -2695,7 +2872,7 @@ end function gk15_aux
 
 recursive double precision function gk15_adaptive_integrator &
 	( &
-		f, xmin, xmax, tol, max_levels &
+		f, xmin, xmax, tol, max_levels, iostat &
 	) &
 	result(area)
 
@@ -2706,11 +2883,26 @@ recursive double precision function gk15_adaptive_integrator &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax, tol
 	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	integer :: n, neval
-
 	logical :: is_eps_underflow, is_max_level
+
+	if (present(iostat)) iostat = 0
+	if (xmax <= xmin) then
+		msg = "xmax is less than xmin in gk15_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	if (tol <= 0) then
+		msg = "tolerance is 0 in gk15_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
 
 	n = 16
 	if (present(max_levels)) n = max_levels
@@ -2804,7 +2996,7 @@ end function gk15i_aux
 
 recursive double precision function gk15i_adaptive_integrator &
 	( &
-		f, xmin, tol, max_levels &
+		f, xmin, tol, max_levels, iostat &
 	) &
 	result(area)
 
@@ -2827,13 +3019,22 @@ recursive double precision function gk15i_adaptive_integrator &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, tol
 	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, parameter :: split_ = 1.d0
-
 	integer :: n, neval
-
 	logical :: is_eps_underflow, is_max_level
+
+	if (present(iostat)) iostat = 0
+	if (tol <= 0) then
+		msg = "tolerance is 0 in gk15i_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		! iostat starts at 2 here for consistency with other integrators
+		iostat = 2
+		return
+	end if
 
 	n = 16
 	if (present(max_levels)) n = max_levels
@@ -2875,7 +3076,7 @@ end function gk15i_adaptive_integrator
 
 recursive double precision function gk15ii_adaptive_integrator &
 	( &
-		f, tol, max_levels &
+		f, tol, max_levels, iostat &
 	) &
 	result(area)
 
@@ -2886,13 +3087,21 @@ recursive double precision function gk15ii_adaptive_integrator &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: tol
 	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, parameter :: left = -1.d0, right = 1.d0
-
 	integer :: n, neval
-
 	logical :: is_eps_underflow, is_max_level
+
+	if (present(iostat)) iostat = 0
+	if (tol <= 0) then
+		msg = "tolerance is 0 in gk15ii_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
 
 	n = 16
 	if (present(max_levels)) n = max_levels
@@ -2927,7 +3136,7 @@ end function gk15ii_adaptive_integrator
 
 recursive double precision function gk15ni_adaptive_integrator &
 	( &
-		f, xmax, tol, max_levels &
+		f, xmax, tol, max_levels, iostat &
 	) &
 	result(area)
 
@@ -2938,13 +3147,21 @@ recursive double precision function gk15ni_adaptive_integrator &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmax, tol
 	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, parameter :: split_ = 1.d0
-
 	integer :: n, neval
-
 	logical :: is_eps_underflow, is_max_level
+
+	if (present(iostat)) iostat = 0
+	if (tol <= 0) then
+		msg = "tolerance is 0 in gk15ni_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
 
 	n = 16
 	if (present(max_levels)) n = max_levels
@@ -3106,7 +3323,7 @@ end function simpson_adapt_aux
 
 double precision function simpson_adaptive_integrator &
 	( &
-		f, xmin, xmax, tol, max_levels &
+		f, xmin, xmax, tol, max_levels, iostat &
 	) &
 	result(area)
 
@@ -3116,20 +3333,34 @@ double precision function simpson_adaptive_integrator &
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax, tol
 	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: h, s, fa, fb, fm
 	integer :: n, neval
 	logical :: is_eps_underflow, is_max_level
 
+	if (present(iostat)) iostat = 0
+
 	area = 0.d0
 	h = xmax - xmin
-	if (h == 0) return
+	if (h <= 0) then
+		msg = "xmax is less than xmin in simpson_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	n = 16
 	if (present(max_levels)) n = max_levels
 
-	! TODO: panic if tol == 0.  Same for gk15*_adaptive_integrator.  Recursive core will barf anyway
+	if (tol <= 0) then
+		msg = "tolerance is 0 in simpson_adaptive_integrator()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
 
 	! Bootstrap the first level then call the recursive core
 	fa = f(xmin)
@@ -3304,20 +3535,31 @@ end subroutine invert
 
 !===============================================================================
 
-subroutine gauss_jordan(a)
+subroutine gauss_jordan(a, iostat)
 	! Use the Gauss-Jordan method to replace matrix `a` with its inverse
+	use numa__utils
 	double precision, allocatable, intent(inout) :: a(:,:)
+	integer, optional, intent(out) :: iostat
 
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: max_, hr
-
-	integer, allocatable :: p(:)  ! pivot
+	integer, allocatable :: p(:)
 	integer :: i, j, k, n, r, r1(1)
+
+	if (present(iostat)) iostat = 0
 
 	n = size(a, 1)
 	!print *, "n = ", n
-	p = [(i, i = 1, n)]
+	p = [(i, i = 1, n)]  ! pivot
+
+	if (size(a, 2) /= n) then
+		msg = "matrix is not square in gauss_jordan()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	do j = 1, n
 
@@ -3334,9 +3576,11 @@ subroutine gauss_jordan(a)
 
 		r = r1(1)
 		max_ = abs(a(r, j))
-		if (max_ == 0) then
-			! TODO: panic
-			print *, "Error: singular matrix in gauss_jordan()"
+		if (max_ <= 0) then
+			msg = "matrix is singular in gauss_jordan()"
+			call PANIC(msg, present(iostat))
+			iostat = 2
+			return
 		end if
 
 		if (r > j) then
@@ -3424,21 +3668,28 @@ end function eig_basic_qr
 
 !===============================================================================
 
-function matmul_triu_ge(upper, ge) result(res)
+function matmul_triu_ge(upper, ge, iostat) result(res)
 	! Multiply an upper-triangular matrix by a general dense matrix
+	use numa__utils
 	double precision, intent(in) :: upper(:,:), ge(:,:)
 	double precision, allocatable :: res(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	integer :: i, j, k, ni, nj, nk
+
+	if (present(iostat)) iostat = 0
 
 	ni = size(upper, 1)
 	nj = size(upper, 2)
 	nk = size(ge, 2)
 
 	if (nj /= size(ge, 1)) then
-		! TODO: panic
-		print *, "Error: inner dimensions do not agree in matmul_triu_ge()"
+		msg = "inner dimensions do not agree in matmul_triu_ge()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
 	end if
 
 	res = zeros(ni, nk)
@@ -3496,8 +3747,6 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			givens(2,:) = [s(k),  c(k)]
 
 			! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
-
-			! TODO: is there overhead here such that I should avoid matmul on slices?
 			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
 
 		end do
@@ -3519,7 +3768,9 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 			givens(2,:) = [-s(k), c(k)]
 			a(1: k+1, k: k+1) = matmul(a(1: k+1, k: k+1), givens)
 
-			! Update Q product.  TODO: skip if eigvecs not present
+			if (.not. present(eigvecs)) cycle
+
+			! Update Q product
 			pq(:, k:k+1) = matmul(pq(:, k:k+1), givens)
 
 		end do
@@ -3550,7 +3801,8 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	! Find the eigenvectors of `r`
 	eigvecs = eye(n)
 	do i = 2, n
-		eigvecs(1: i-1, i) = invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1) , r(:i-1, i))
+		! scalar * eye could be optimized here to skip zeros
+		eigvecs(1: i-1, i) = invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i))
 	end do
 	!print *, "R eigvecs = "
 	!print "(4es15.5)", eigvecs
@@ -3566,29 +3818,47 @@ end function eig_hess_qr
 
 !===============================================================================
 
-function house(x) result(pp)
+function house(x, iostat) result(pp)
 	! Return the Householder reflector `pp` such that pp * x == [1, 0, 0, ...]
 	!
 	! Could just return `v` like house_c64(), but this fn is only used for 3x3
 	! matrices, whereas house_c64() runs on arbitrarily large matrices for QR
 	! factoring
 
+	use numa__utils
 	double precision, intent(in) :: x(:)
 	double precision, allocatable :: pp(:,:)
+	integer, optional, intent(out) :: iostat
+	!********
 
-	double precision :: alpha
+	character(len = :), allocatable :: msg
+	double precision :: alpha, normv
 	double precision, allocatable :: v(:)
 	integer :: n
 
+	if (present(iostat)) iostat = 0
+
 	n = size(x)
-	!allocate
 
 	alpha = -sign_(x(1)) * norm2(x)
 	v = x
 	v(1) = v(1) - alpha
 
-	! TODO: panic if norm2 v == 0
-	v = v / norm2(v)
+	normv = norm2(v)
+	if (normv <= 0) then
+		v = v * 1.d50
+		normv = norm2(v)
+		print *, "normv = ", normv
+		print *, "v/normv = ", v / normv
+
+		pp = eye(n)
+		print *, "v = ", v
+		msg = "vector is singular in house()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	v = v / normv
 
 	pp = eye(n) - 2.d0 * outer_product(v, v)
 
@@ -3598,33 +3868,39 @@ function house(x) result(pp)
 	!print "(3es15.5)", pp
 	!print *, "pp * x = ", matmul(pp, x)
 
-	!stop
-
 end function house
 
 !===============================================================================
 
-function eig_francis_qr(aa, eigvecs) result(eigvals)
+function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 	! Get the eigenvalues of `aa` using the Francis double step QR algorithm
 
-	use numa__utils, only:  sorted, to_str
+	use numa__utils
 	double precision, intent(inout) :: aa(:,:)
 	double complex, allocatable :: eigvals(:)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
+
+	character(len = :), allocatable :: msg
 
 	double complex :: l1, l2
 	double complex, allocatable :: ca(:,:), cq(:,:)
 
+	! I still have doubts about robustness here because this tolerance is
+	! extremely sensitive
 	double precision, parameter :: eps = 1.d-10  ! should eps and iters be args?
-	double precision :: rad, s, t, x, y, z, p2(2,2), p3(3,3), ck, sk, &
-		a, b, c, d, det_
+
+	double precision :: rad, s, tr, x, y, z, p2(2,2), p3(3,3), ck, sk, &
+		a, b, c, d, det_, v(3)
 	double precision, allocatable :: pq(:,:)
 
 	integer, parameter :: iters = 100
-	integer :: i, i1, k, n, j, k1, iter
+	integer :: i, i1, k, n, j, k1, iter, io
 
 	logical, allocatable :: is_real(:)
+
+	if (present(iostat)) iostat = 0
 
 	n = size(aa, 1)
 
@@ -3649,24 +3925,36 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 	do while (i > 2)
 		iter = iter + 1
 		if (iter > iters) then
-			print *, "Error: Francis failed to converge"
-			exit
+			msg = "convergence failed in eig_francis_qr()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
 		end if
 		!print *, "i = ", i
 
 		j = i - 1
-		s = aa(j,j) + aa(i,i)
-		t = aa(j,j) * aa(i,i) - aa(j,i) * aa(i,j)
+		tr = aa(j,j) + aa(i,i)  ! trace
+		det_ = aa(j,j) * aa(i,i) - aa(j,i) * aa(i,j)  ! det
 
 		! Compute first 3 elements of first column of M
-		x = aa(1,1)**2 + aa(1,2) * aa(2,1) - s * aa(1,1) + t
-		y = aa(2,1) * (aa(1,1) + aa(2,2) - s)
+		x = aa(1,1)**2 + aa(1,2) * aa(2,1) - tr * aa(1,1) + det_
+		y = aa(2,1) * (aa(1,1) + aa(2,2) - tr)
 		z = aa(2,1) * aa(3,2)
 
 		do k = 0, i-3
 
 			! Determine the Householder reflector `p3`
-			p3 = house([x, y, z])
+			v = [x, y, z]
+			s = sum(abs(v))
+			v = v / s
+			p3 = house(v, io)
+			if (io /= 0) then
+				print *, "x, y, z = ", x, y, z
+				msg = "house() failed in eig_francis_qr()"
+				call PANIC(msg, present(iostat))
+				iostat = 2
+				return
+			end if
 			!print *, "p3 = "
 			!print "(3es15.5)", p3
 
@@ -3689,8 +3977,18 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 		end do
 
 		! Determine the 2D Givens rotation `p2`
-		!
-		! TODO: panic if rad == 0
+
+		s = abs(x) + abs(y)
+		if (s <= 0) then
+			print *, "x, y = ", x, y
+			msg = "matrix is singular in eig_francis_qr()"
+			call PANIC(msg, present(iostat))
+			iostat = 3
+			return
+		end if
+		x = x / s
+		y = y / s
+
 		rad = norm2([x, y])
 		ck =  x / rad
 		sk = -y / rad
@@ -3714,7 +4012,11 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 			aa(i,j) = 0.d0
 			i = i - 1
 			iter = 0
-		else if (abs(aa(i-1, j-1)) < eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
+
+		! TODO: eps multiplier?
+		!else if (abs(aa(i-1, j-1)) < 1.d2 * eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
+		else if (abs(aa(i-1, j-1)) < 1.d0 * eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
+
 			!print *, "i -= 2"
 			aa(i-1, j-1) = 0.d0
 			i = i - 2
@@ -3743,12 +4045,12 @@ function eig_francis_qr(aa, eigvecs) result(eigvals)
 
 		if (abs(b) <= eps * (abs(a) + abs(d))) cycle
 
-		t = a + d         ! trace
+		tr = a + d         ! trace
 		det_ = a*d - b*c  ! determinant
 
 		! Eigenvalues of 2x2 block
-		l1 = t/2 + sqrt(dcmplx(t**2/4 - det_))
-		l2 = t/2 - sqrt(dcmplx(t**2/4 - det_))
+		l1 = tr/2 + sqrt(dcmplx(tr**2/4 - det_))
+		l2 = tr/2 - sqrt(dcmplx(tr**2/4 - det_))
 
 		!print *, "b  = ", b
 		!print *, "l1 = ", l1
@@ -3978,8 +4280,6 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 			givens(2,:) = [s(k),  c(k)]
 
 			! Ref:  https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf
-
-			! TODO: is there overhead here such that I should avoid matmul on slices?
 			a(k:k+1, k:) = matmul(givens, a(k:k+1, k:))
 
 		end do
@@ -4039,7 +4339,7 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 		!! A - eigval*eye is singular, so the last row of Q will be in its null space
 		!! and thus an eigenvector of A
 		!!
-		!! TODO: this probably won't work for eigenvalues with multiplicity.  In
+		!! This probably won't work for eigenvalues with multiplicity.  In
 		!! that case, you would need to get the last several rows and set
 		!! multiple rows in the output
 		!eigvec = q(:,n)
@@ -4063,8 +4363,6 @@ function polyfit_lu(x, y, n, iostat) result(p)
 	! Fit a polynomial using LU decomposition.  The function polyfit() should be
 	! used instead, which avoid unnecessary matmul's, using QR decomposition
 	! instead
-	!
-	! TODO: add test
 	!
 	! Polynomial coefficients `p` are in ascending powers, unlike MATLAB's polyfit()
 	use numa__utils
@@ -4166,9 +4464,10 @@ function polyfit(x, y, n, iostat) result(p)
 	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
 	! TODO: refactor the rest as a standalone least_squares() matrix solver,
-	! short as it is:  xx * p == y (but rename things sanely)
+	! short as it is:  xx * p == y (but rename things sanely).  Also used in
+	! gauss_newton()
 
-	call qr_factor(xx, diag_)
+	call qr_factor(xx, diag_, allow_rect = .true.)
 	!print *, "qr(xx) = "
 	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
@@ -4289,7 +4588,7 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 	!
 	! This requires knowledge of the analytic derivative of f.  If the
 	! derivative is not easily known, a derivative-free optimization algorithm
-	! could be used instead like nelder_mead()
+	! could be used instead like nelder_mead_fit()
 
 	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
@@ -4332,7 +4631,7 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 		!jtj = matmul(transpose(jac), jac)
 		!beta = beta - invmul(jtj, jtr)
 
-		call qr_factor(jac, diag_)
+		call qr_factor(jac, diag_, allow_rect = .true.)
 		delta = qr_mul_transpose(jac, diag_, res)
 		call backsub(jac, delta)
 		beta = beta - delta
@@ -4343,13 +4642,21 @@ end function gauss_newton
 
 !===============================================================================
 
-function nelder_mead(x, y, f, beta0, beta_tol, iters) result(beta)
-	! Find beta to minimize norm2(y - f(x, beta))
+function nelder_mead_fit(x, y, f, beta0, beta_tol, iters) result(beta)
+	! Fit data `x` and `y` by finding `beta` in order to minimize 
+	! norm2(y - f(x, beta))
+	!
+	! This is 1D in terms of `x` and `y` for now, i.e. `f` takes a scalar `x`
+	! and returns a scalar `y`, but it could probably be generalized to
+	! multidimensional fns, and more easily so than gauss_newton().  The
+	! parameters `beta` of course can have any size/dimension
+	!
+	! Maybe this should have an f_tol option instead of or in addition too
+	! beta_tol
 
 	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
 	procedure(fn_f64_beta_to_f64) :: f
-	!procedure(fn_f64_beta_to_vec_f64) :: df
 	double precision, intent(in) :: beta0(:)
 	double precision, optional, intent(in) :: beta_tol
 	integer, optional, intent(in) :: iters
@@ -4405,6 +4712,164 @@ function nelder_mead(x, y, f, beta0, beta_tol, iters) result(beta)
 		!print *, "bs = "
 		!print "(2es16.6)", bs
 
+		! Note: this is a bad criterion because 1 and nb1 may not be
+		! representative of the simplex size
+		if (norm2(bs(:,1) - bs(:,nb1)) < beta_tol_) then
+			!print *, "iter = ", iter
+			converged = .true.
+			exit
+		end if
+
+		! Centroid
+		bo = sum(bs(:, 1: nb), dim = 2) / nb
+		!print *, "bo = ", bo
+
+		! Reflect
+		br = bo + alpha_ * (bo - bs(:,nb1))
+		fr = nm_eval_res(br)
+
+		if (fs(1) <= fr .and. fr < fs(nb)) then
+			! Replace
+			fs(nb1) = fr
+			bs(:,nb1) = br
+			cycle
+		end if
+
+		if (fr < fs(1)) then
+			! Expand
+			be = bo + gamma_ * (br - bo)
+			fe = nm_eval_res(be)
+
+			if (fe < fr) then
+				fs(nb1) = fe
+				bs(:,nb1) = be
+			else
+				fs(nb1) = fr
+				bs(:,nb1) = br
+			end if
+			cycle
+		end if
+
+		if (fr < fs(nb1)) then
+			! Contract outward
+			bc = bo + rho_ * (br - bo)
+			fc = nm_eval_res(bc)
+
+			if (fc < fr) then
+				fs(nb1) = fc
+				bs(:,nb1) = bc
+				cycle
+			end if
+
+		else
+			! Contract inward
+			bc = bo + rho_ * (bs(:,nb1) - bo)
+			fc = nm_eval_res(bc)
+
+			if (fc < fs(nb1)) then
+				fs(nb1) = fc
+				bs(:,nb1) = bc
+				cycle
+			end if
+
+		end if
+
+		! Shrink
+		do i = 2, nb1
+			bs(:,i) = bs(:,1) + sigma_ * (bs(:,i) - bs(:,1))
+			fs(i) = nm_eval_res(bs(:,i))
+		end do
+
+	end do
+
+	if (.not. converged) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": nelder_mead_fit() has not converged"
+	end if
+	beta = bs(:,1)
+
+	!--------------------------------
+	contains
+
+		double precision function nm_eval_res(beta_) result(res)
+			! Evaluate the residual and sum its squares
+			double precision, intent(in) :: beta_(:)
+			integer :: k
+			res = 0
+			do k = 1, nx
+				res = res + (y(k) - f(x(k), beta_)) ** 2
+			end do
+		end function nm_eval_res
+
+end function nelder_mead_fit
+
+!===============================================================================
+
+function nelder_mead(f, beta0, beta_tol, iters) result(beta)
+	! Solve an optimization problem by finding `beta` in order to minimize 
+	! f(beta)
+	!
+	! TODO: rename `beta` to `x`. This is just a legacy of having written
+	! nelder_mead_fit() first
+
+	use numa__utils
+	!procedure(fn_f64_beta_to_f64) :: f
+	procedure(fn_vec_f64_to_f64) :: f
+	double precision, intent(in) :: beta0(:)
+	double precision, optional, intent(in) :: beta_tol
+	integer, optional, intent(in) :: iters
+
+	double precision, allocatable :: beta(:)
+	!********
+
+	double precision :: fr, fe, fc, beta_tol_
+	double precision, parameter :: alpha_ = 1, gamma_ = 2, rho_ = 0.5, sigma_ = 0.5
+	double precision, allocatable :: bs(:,:), fs(:), bo(:), br(:), &
+		be(:), bc(:)
+
+	integer :: i, nb, nb1, iter, iters_
+	integer, allocatable :: idx(:)
+
+	logical :: converged
+
+	beta_tol_ = 1.d-3
+	iters_ = 1000
+	if (present(beta_tol)) beta_tol_ = beta_tol
+	if (present(iters)) iters_ = iters
+	nb = size(beta0)
+	nb1 = nb + 1  ! number of simplex points
+
+	! Initial simplex
+	allocate(bs(nb, nb1))
+	do i = 1, nb
+		bs(:,i) = beta0
+		bs(i,i) = bs(i,i) + 1
+	end do
+	bs(:,nb1) = beta0
+
+	! Evaluate fn on initial simplex
+	allocate(fs(nb1))
+	do i = 1, nb1
+		fs(i) = nm_eval_res(bs(:,i))
+	end do
+	!print *, "fs init = ", fs
+
+	converged = .false.
+	do iter = 1, iters_
+
+		! Sort
+		call sortidx_f64_1(fs, idx)
+		!print *, "idx = ", idx
+
+		fs = fs(idx)
+		bs = bs(:, idx)
+		!print *, "fs = ", fs
+
+		!print *, "bs = "
+		!print "(2es16.6)", bs
+
+		! Note: this is a bad criterion because 1 and nb1 may not be
+		! representative of the simplex size
 		if (norm2(bs(:,1) - bs(:,nb1)) < beta_tol_) then
 			!print *, "iter = ", iter
 			converged = .true.
@@ -4485,11 +4950,8 @@ function nelder_mead(x, y, f, beta0, beta_tol, iters) result(beta)
 		double precision function nm_eval_res(beta_) result(res)
 			! Evaluate the residual and sum its squares
 			double precision, intent(in) :: beta_(:)
-			integer :: k
-			res = 0
-			do k = 1, nx
-				res = res + (y(k) - f(x(k), beta_)) ** 2
-			end do
+			! TODO: if it's just one line, this should be (manually) inlined
+			res = f(beta_)
 		end function nm_eval_res
 
 end function nelder_mead
