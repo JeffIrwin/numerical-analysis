@@ -3892,11 +3892,12 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 	double precision, parameter :: eps = 1.d-10  ! should eps and iters be args?
 
 	double precision :: rad, s, tr, x, y, z, p2(2,2), p3(3,3), ck, sk, &
-		a, b, c, d, det_, v(3)
+		a, b, c, d, det_, v(3), aii, aij, aji, ajj, rtdisc, &
+		rt1r, rt1i, rt2r, rt2i, h21s, a11, a12, a21, a22, a32
 	double precision, allocatable :: pq(:,:)
 
 	integer, parameter :: iters = 100
-	integer :: i, i1, k, n, j, k1, iter, io
+	integer :: i, i1, k, m, n, j, k1, iter, io
 
 	logical, allocatable :: is_real(:)
 
@@ -3933,21 +3934,91 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 		!print *, "i = ", i
 
 		j = i - 1
-		tr = aa(j,j) + aa(i,i)  ! trace
-		det_ = aa(j,j) * aa(i,i) - aa(j,i) * aa(i,j)  ! det
+		aii = aa(i,i)
+		aij = aa(i,j)
+		aji = aa(j,i)
+		ajj = aa(j,j)
+
+		s = sum(abs([aii, aij, aji, ajj]))
+		! TODO: check s not 0?
+		aii = aii / s
+		aij = aij / s
+		aji = aji / s
+		ajj = ajj / s
+
+		!tr = (aii + ajj) / 2          ! trace
+		tr = (aii + ajj) / 1          ! trace
+		det_ = ajj * aii - aji * aij  ! determinant
+		!det_ = (ajj-tr) * (aii-tr) - aij*aji  ! determinant
+
+		tr = tr * s
+		det_ = det_ * s**2
+
+		rtdisc = sqrt(abs(det_))
+
+		if (det_ > 0) then
+			! Complex conjugate shifts
+			rt1r = tr * s
+			rt2r = rt1r
+			rt1i = rtdisc * s
+			rt2i = -rt1i
+		else
+			! Real shifts (use only one of them)
+			rt1r = tr + rtdisc
+			rt2r = tr - rtdisc
+			if (abs(rt1r - aii) <= abs(rt2r - aii)) then
+				rt1r = rt1r * s
+				rt2r = rt1r
+			else
+				rt2r = rt2r * s
+				rt1r = rt2r
+			end if
+		end if
 
 		! Compute first 3 elements of first column of M
-		x = aa(1,1)**2 + aa(1,2) * aa(2,1) - tr * aa(1,1) + det_
-		y = aa(2,1) * (aa(1,1) + aa(2,2) - tr)
-		z = aa(2,1) * aa(3,2)
+		a11 = aa(1,1)
+		a21 = aa(2,1)
+		a12 = aa(1,2)
+		a22 = aa(2,2)
+		a32 = aa(3,2)
+
+		s = sum(abs([a11, a21, a12, a22, a32, tr]))!, det_]))
+		s = 1  ! TODO just delete
+		!print *, "s = ", s
+		a11 = a11 / s
+		a21 = a21 / s
+		a12 = a12 / s
+		a22 = a22 / s
+		a32 = a32 / s
+		tr  = tr  / s
+		det_ = det_ / s**2
+
+		x = a11**2 + a12 * a21 - tr * a11 + det_
+		y = a21 * (a11 + a22 - tr)
+		z = a21 * a32
+
+		x = x * s**2
+		y = y * s**2
+		z = z * s**2
 
 		do k = 0, i-3
 
-			! Determine the Householder reflector `p3`
+			m = k+1
+			h21s = aa(m+1, m)
+			s = abs(aa(m,m) - rt2r) + abs(rt2i) + abs(h21s)
+			s = 1
+			h21s = h21s / s
+			v(1) = h21s * aa(m, m+1) + (aa(m,m) - rt1r) * &
+				((aa(m,m) - rt2r) / s) - rt1i * (rt2i / s)
+			v(2) = h21s * (aa(m,m) + aa(m+1, m+1) - rt1r - rt2r)
+			v(3) = h21s * aa(m+2, m+1)
+
+			!! Determine the Householder reflector `p3`
 			v = [x, y, z]
 			s = sum(abs(v))
 			v = v / s
 			p3 = house(v, io)
+
 			if (io /= 0) then
 				print *, "x, y, z = ", x, y, z
 				msg = "house() failed in eig_francis_qr()"
