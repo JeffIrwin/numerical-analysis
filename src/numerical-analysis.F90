@@ -1460,7 +1460,7 @@ subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	do j = 1, n
 
 		normx = norm2(a(j:, j))
-		if (normx == 0) then
+		if (normx <= 0) then
 			msg = "matrix is singular in qr_factor_f64()"
 			call PANIC(msg, present(iostat))
 			iostat = 2
@@ -3610,7 +3610,7 @@ end subroutine gauss_jordan
 
 !===============================================================================
 
-function eig_basic_qr(a, iters) result(eigvals)
+function eig_basic_qr(a, iters, iostat) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the basic QR
 	! algorithm.  Many iterations may be required for good convergence with
 	! large sized `a`
@@ -3635,18 +3635,27 @@ function eig_basic_qr(a, iters) result(eigvals)
 	! algorithm as basic QR.  Rather, wait and do the good work on something
 	! better like Hessenberg QR, or better yet, a shifting algorithm
 
-	use numa__utils, only:  sorted
+	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: eigvals(:)
 	integer, intent(in) :: iters
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, allocatable :: diag_(:), q(:,:)
-	integer :: i
+	integer :: i, io
+
+	if (present(iostat)) iostat = 0
 
 	do i = 1, iters
-		call qr_factor(a, diag_)
-		! TODO: check iostat on all qr_factor() calls
+		call qr_factor(a, diag_, iostat = io)
+		if (io /= 0) then
+			msg = "qr_factor() failed in eig_basic_qr()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
+		end if
 
 		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
 		! but two transposes seems expensive
@@ -4443,7 +4452,7 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 
 		!********
 		!! Find null-space using QR decomposition.  This also works
-		!call qr_factor(a, diag_)
+		!call qr_factor(a, diag_, iostat = io)
 		!q = qr_get_q_expl(a, diag_)
 		!!print *, "q = "
 		!!print "(4es15.5)", q
@@ -4706,20 +4715,17 @@ function polyval(p, x) result(y)
 	double precision, intent(in) :: p(:), x(:)
 	double precision, allocatable :: y(:)
 	!********
-	double precision :: xpow
-	integer :: i, j, nx
+	double precision, allocatable :: xpow(:)
+	integer :: j, nx
 
 	nx = size(x)
 	allocate(y(nx))
 
-	! TODO: vectorize one of these loops?
-	do i = 1, nx
-		y(i) = p(1)
-		xpow = x(i)
-		do j = 2, size(p)
-			y(i) = y(i) + p(j) * xpow
-			xpow = xpow * x(i)
-		end do
+	y = p(1)
+	xpow = x
+	do j = 2, size(p)
+		y = y + p(j) * xpow
+		xpow = xpow * x
 	end do
 
 end function polyval
