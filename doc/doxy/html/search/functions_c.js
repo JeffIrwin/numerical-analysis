@@ -10,5 +10,5 @@ var searchData=
   ['newton_5finterpolator_7',['newton_interpolator',['../namespacenuma.html#aa5183ac9c05fd5b656a7f7640f0ab136',1,'numa']]],
   ['newton_5finterpolator_5fvals_8',['newton_interpolator_vals',['../namespacenuma.html#a5263eadb40a1a4d278c0294f51822b26',1,'numa']]],
   ['nm_5feval_5fres_9',['nm_eval_res',['../numerical-analysis_8F90.html#a8f90f929ef67498f005bdc5629cd123e',1,'numerical-analysis.F90']]],
-  ['norm2c_10',['norm2c',['../namespacenuma.html#a351c20c627b89277b5fdd724e96f0846',1,'numa']]]
+  ['norm2c_10',['norm2c',['../namespacenuma____utils.html#a0f9ebe1a83a52aa4878b186d000c2e87',1,'numa__utils']]]
 ];

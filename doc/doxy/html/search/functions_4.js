@@ -8,5 +8,5 @@ var searchData=
   ['eq_5flex_5',['eq_lex',['../namespacenuma____utils.html#a4d38097e08a87a7af3ab78cd2a45e005',1,'numa__utils']]],
   ['exp_5ffn_6',['exp_fn',['../namespacenuma____functions.html#ac4dcdf169859ba802b6676587994ad2a',1,'numa__functions']]],
   ['exp_5fnx2_7',['exp_nx2',['../namespacenuma____functions.html#a4290a84b12241fa2fdbb0981e7e15ac7',1,'numa__functions']]],
-  ['eye_8',['eye',['../namespacenuma.html#acc700dfd9710fae3362917b302e3bbf2',1,'numa']]]
+  ['eye_8',['eye',['../namespacenuma____utils.html#a7372cb13cd1311f368b3661ae69a112f',1,'numa__utils']]]
 ];

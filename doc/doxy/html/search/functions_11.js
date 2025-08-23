@@ -1,7 +1,7 @@
 var searchData=
 [
   ['select_5fmax_5fn_0',['select_max_n',['../namespacenuma____utils.html#a656d44b9d4efa4cb4be854515dfd3b2e',1,'numa__utils']]],
-  ['sign_5f_1',['sign_',['../namespacenuma.html#a64abe54a7ff752a18722999d0438667b',1,'numa']]],
+  ['sign_5f_1',['sign_',['../namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0',1,'numa__utils']]],
   ['simpson_5f13_5fintegrator_2',['simpson_13_integrator',['../namespacenuma.html#acba6f040e8f5b88701eb2c83d7be3902',1,'numa']]],
   ['simpson_5f38_5fintegrator_3',['simpson_38_integrator',['../namespacenuma.html#a4e34b3811a31d581fb218d7cc006d642',1,'numa']]],
   ['simpson_5fadaptive_5fintegrator_4',['simpson_adaptive_integrator',['../namespacenuma.html#a128ef40806b0daaa5612b2b70e40cc41',1,'numa']]],

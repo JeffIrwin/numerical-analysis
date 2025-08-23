@@ -21,6 +21,7 @@ var exercises_8f90 =
     [ "numa__exercises::chapter_4_lls", "namespacenuma____exercises.html#aa17eb6c1bd5524592a484b184773f052", null ],
     [ "numa__exercises::chapter_4_lu", "namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8", null ],
     [ "numa__exercises::chapter_4_lu_c64", "namespacenuma____exercises.html#a6e19080f83b0300f98894c21e88ae167", null ],
+    [ "numa__exercises::chapter_4_modify", "namespacenuma____exercises.html#abd8a791c530ba3d4643f98eb94546770", null ],
     [ "numa__exercises::chapter_4_nelder_mead", "namespacenuma____exercises.html#a20e35ad3980c97922336cd07fdd1f0c2", null ],
     [ "numa__exercises::chapter_4_qr", "namespacenuma____exercises.html#ae7d6a62bbce0ce64938739cd99d4aaec", null ],
     [ "numa__exercises::chapter_4_qr_c64", "namespacenuma____exercises.html#a0b08c55dbd9e7ea9d4ceb27bf8f9768c", null ],

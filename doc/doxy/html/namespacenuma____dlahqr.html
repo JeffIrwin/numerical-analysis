@@ -96,11 +96,9 @@ $(function(){initNavTree('namespacenuma____dlahqr.html','',''); });
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:aecb8ef69db9e59baa4ad569518519f40" id="r_aecb8ef69db9e59baa4ad569518519f40"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecb8ef69db9e59baa4ad569518519f40">dlahqr</a> (wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, iloz, ihiz, z, ldz, info)</td></tr>
-<tr class="memdesc:aecb8ef69db9e59baa4ad569518519f40"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>DLAHQR</b> computes the eigenvalues and Schur factorization of an upper Hessenberg matrix, using the double-shift/single-shift QR algorithm.  <br /></td></tr>
+<tr class="memdesc:aecb8ef69db9e59baa4ad569518519f40"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>dlahqr</b> computes the eigenvalues and schur factorization of an upper hessenberg matrix, using the double-shift/single-shift qr algorithm.  <br /></td></tr>
 <tr class="memitem:adb40b094701602a40d49cc3f10653cb2" id="r_adb40b094701602a40d49cc3f10653cb2"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adb40b094701602a40d49cc3f10653cb2">dlanv2</a> (a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn)</td></tr>
-<tr class="memdesc:adb40b094701602a40d49cc3f10653cb2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>DLANV2</b> computes the Schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.  <br /></td></tr>
-<tr class="memitem:ab5f992642860057d8eac26076e29ff07" id="r_ab5f992642860057d8eac26076e29ff07"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab5f992642860057d8eac26076e29ff07">dlarfg</a> (n, alpha, x, incx, tau)</td></tr>
-<tr class="memdesc:ab5f992642860057d8eac26076e29ff07"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>DLARFG</b> generates an elementary reflector (Householder matrix).  <br /></td></tr>
+<tr class="memdesc:adb40b094701602a40d49cc3f10653cb2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>dlanv2</b> computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.  <br /></td></tr>
 </table>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
 <a id="aecb8ef69db9e59baa4ad569518519f40" name="aecb8ef69db9e59baa4ad569518519f40"></a>
@@ -137,7 +135,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double precision, dimension( ldh, * )</td>          <td class="paramname"><span class="paramname"><em>h</em></span>, </td>
+          <td class="paramtype">double precision, dimension(ldh, *)</td>          <td class="paramname"><span class="paramname"><em>h</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -147,12 +145,12 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double precision, dimension( * )</td>          <td class="paramname"><span class="paramname"><em>wr</em></span>, </td>
+          <td class="paramtype">double precision, dimension(*)</td>          <td class="paramname"><span class="paramname"><em>wr</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double precision, dimension( * )</td>          <td class="paramname"><span class="paramname"><em>wi</em></span>, </td>
+          <td class="paramtype">double precision, dimension(*)</td>          <td class="paramname"><span class="paramname"><em>wi</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -167,7 +165,7 @@ Functions/Subroutines</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double precision, dimension( ldz, * )</td>          <td class="paramname"><span class="paramname"><em>z</em></span>, </td>
+          <td class="paramtype">double precision, dimension(ldz, *)</td>          <td class="paramname"><span class="paramname"><em>z</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -182,143 +180,150 @@ Functions/Subroutines</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p><b>DLAHQR</b> computes the eigenvalues and Schur factorization of an upper Hessenberg matrix, using the double-shift/single-shift QR algorithm. </p>
+<p><b>dlahqr</b> computes the eigenvalues and schur factorization of an upper hessenberg matrix, using the double-shift/single-shift qr algorithm. </p>
 <p> 
-    Download DLAHQR + dependencies
-    <a href=>
-    [TGZ]</a>
-    <a href=>
-    [ZIP]</a>
-    <a href=>
-    [TXT]</a>
-     </p><dl class="section user"><dt>Purpose:</dt><dd><pre class="fragment">!&gt;
-!&gt;    DLAHQR is an auxiliary routine called by DHSEQR to update the
-!&gt;    eigenvalues and Schur decomposition already computed by DHSEQR, by
-!&gt;    dealing with the Hessenberg submatrix in rows and columns ILO to
-!&gt;    IHI.
-!&gt; </pre> </dd></dl>
+        download dlahqr + dependencies
+        <a href=>
+        [tgz]</a>
+        <a href=>
+        [zip]</a>
+        <a href=>
+        [txt]</a>
+         </p><dl class="section user"><dt>purpose:</dt><dd><pre class="fragment">   !&gt;
+   !&gt;    dlahqr is an auxiliary routine called by dhseqr to update the
+   !&gt;    eigenvalues and schur decomposition already computed by dhseqr, by
+   !&gt;    dealing with the hessenberg submatrix in rows and columns ilo to
+   !&gt;    ihi.
+   !&gt; </pre> </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">WANTT</td><td><pre class="fragment">!&gt;          WANTT is LOGICAL
-!&gt;          = .TRUE. : the full Schur form T is required;
-!&gt;          = .FALSE.: only eigenvalues are required.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">WANTZ</td><td><pre class="fragment">!&gt;          WANTZ is LOGICAL
-!&gt;          = .TRUE. : the matrix of Schur vectors Z is required;
-!&gt;          = .FALSE.: Schur vectors are not required.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">N</td><td><pre class="fragment">!&gt;          N is INTEGER
-!&gt;          The order of the matrix H.  N &gt;= 0.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ILO</td><td><pre class="fragment">!&gt;          ILO is INTEGER
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">IHI</td><td><pre class="fragment">!&gt;          IHI is INTEGER
-!&gt;          It is assumed that H is already upper quasi-triangular in
-!&gt;          rows and columns IHI+1:N, and that H(ILO,ILO-1) = 0 (unless
-!&gt;          ILO = 1). DLAHQR works primarily with the Hessenberg
-!&gt;          submatrix in rows and columns ILO to IHI, but applies
-!&gt;          transformations to all of H if WANTT is .TRUE..
-!&gt;          1 &lt;= ILO &lt;= max(1,IHI); IHI &lt;= N.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">H</td><td><pre class="fragment">!&gt;          H is DOUBLE PRECISION array, dimension (LDH,N)
-!&gt;          On entry, the upper Hessenberg matrix H.
-!&gt;          On exit, if INFO is zero and if WANTT is .TRUE., H is upper
-!&gt;          quasi-triangular in rows and columns ILO:IHI, with any
-!&gt;          2-by-2 diagonal blocks in standard form. If INFO is zero
-!&gt;          and WANTT is .FALSE., the contents of H are unspecified on
-!&gt;          exit.  The output state of H if INFO is nonzero is given
-!&gt;          below under the description of INFO.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">LDH</td><td><pre class="fragment">!&gt;          LDH is INTEGER
-!&gt;          The leading dimension of the array H. LDH &gt;= max(1,N).
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">WR</td><td><pre class="fragment">!&gt;          WR is DOUBLE PRECISION array, dimension (N)
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">WI</td><td><pre class="fragment">!&gt;          WI is DOUBLE PRECISION array, dimension (N)
-!&gt;          The real and imaginary parts, respectively, of the computed
-!&gt;          eigenvalues ILO to IHI are stored in the corresponding
-!&gt;          elements of WR and WI. If two eigenvalues are computed as a
-!&gt;          complex conjugate pair, they are stored in consecutive
-!&gt;          elements of WR and WI, say the i-th and (i+1)th, with
-!&gt;          WI(i) &gt; 0 and WI(i+1) &lt; 0. If WANTT is .TRUE., the
-!&gt;          eigenvalues are stored in the same order as on the diagonal
-!&gt;          of the Schur form returned in H, with WR(i) = H(i,i), and, if
-!&gt;          H(i:i+1,i:i+1) is a 2-by-2 diagonal block,
-!&gt;          WI(i) = sqrt(H(i+1,i)*H(i,i+1)) and WI(i+1) = -WI(i).
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">ILOZ</td><td><pre class="fragment">!&gt;          ILOZ is INTEGER
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">IHIZ</td><td><pre class="fragment">!&gt;          IHIZ is INTEGER
-!&gt;          Specify the rows of Z to which transformations must be
-!&gt;          applied if WANTZ is .TRUE..
-!&gt;          1 &lt;= ILOZ &lt;= ILO; IHI &lt;= IHIZ &lt;= N.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">Z</td><td><pre class="fragment">!&gt;          Z is DOUBLE PRECISION array, dimension (LDZ,N)
-!&gt;          If WANTZ is .TRUE., on entry Z must contain the current
-!&gt;          matrix Z of transformations accumulated by DHSEQR, and on
-!&gt;          exit Z has been updated; transformations are applied only to
-!&gt;          the submatrix Z(ILOZ:IHIZ,ILO:IHI).
-!&gt;          If WANTZ is .FALSE., Z is not referenced.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">LDZ</td><td><pre class="fragment">!&gt;          LDZ is INTEGER
-!&gt;          The leading dimension of the array Z. LDZ &gt;= max(1,N).
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">INFO</td><td><pre class="fragment">!&gt;          INFO is INTEGER
-!&gt;           = 0:  successful exit
-!&gt;           &gt; 0:  If INFO = i, DLAHQR failed to compute all the
-!&gt;                  eigenvalues ILO to IHI in a total of 30 iterations
-!&gt;                  per eigenvalue; elements i+1:ihi of WR and WI
-!&gt;                  contain those eigenvalues which have been
-!&gt;                  successfully computed.
-!&gt;
-!&gt;                  If INFO &gt; 0 and WANTT is .FALSE., then on exit,
-!&gt;                  the remaining unconverged eigenvalues are the
-!&gt;                  eigenvalues of the upper Hessenberg matrix rows
-!&gt;                  and columns ILO through INFO of the final, output
-!&gt;                  value of H.
-!&gt;
-!&gt;                  If INFO &gt; 0 and WANTT is .TRUE., then on exit
-!&gt;          (*)       (initial value of H)*U  = U*(final value of H)
-!&gt;                  where U is an orthogonal matrix.    The final
-!&gt;                  value of H is upper Hessenberg and triangular in
-!&gt;                  rows and columns INFO+1 through IHI.
-!&gt;
-!&gt;                  If INFO &gt; 0 and WANTZ is .TRUE., then on exit
-!&gt;                      (final value of Z)  = (initial value of Z)*U
-!&gt;                  where U is the orthogonal matrix in (*)
-!&gt;                  (regardless of the value of WANTT.)
-!&gt; </pre> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wantt</td><td><pre class="fragment">   !&gt;            wantt is logical
+   !&gt;            = .true. : the full schur form t is required;
+   !&gt;            = .false.: only eigenvalues are required.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">wantz</td><td><pre class="fragment">   !&gt;            wantz is logical
+   !&gt;            = .true. : the matrix of schur vectors z is required;
+   !&gt;            = .false.: schur vectors are not required.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td><pre class="fragment">   !&gt;            n is integer
+   !&gt;            the order of the matrix h.  n &gt;= 0.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ilo</td><td><pre class="fragment">   !&gt;            ilo is integer
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ihi</td><td><pre class="fragment">   !&gt;            ihi is integer
+   !&gt;            it is assumed that h is already upper quasi-triangular in
+   !&gt;            rows and columns ihi+1:n, and that h(ilo,ilo-1) = 0 (unless
+   !&gt;            ilo = 1). dlahqr works primarily with the hessenberg
+   !&gt;            submatrix in rows and columns ilo to ihi, but applies
+   !&gt;            transformations to all of h if wantt is .true..
+   !&gt;            1 &lt;= ilo &lt;= max(1,ihi); ihi &lt;= n.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">h</td><td><pre class="fragment">   !&gt;            h is double precision array, dimension (ldh,n)
+   !&gt;            on entry, the upper hessenberg matrix h.
+   !&gt;            on exit, if info is zero and if wantt is .true., h is upper
+   !&gt;            quasi-triangular in rows and columns ilo:ihi, with any
+   !&gt;            2-by-2 diagonal blocks in standard form. if info is zero
+   !&gt;            and wantt is .false., the contents of h are unspecified on
+   !&gt;            exit.  the output state of h if info is nonzero is given
+   !&gt;            below under the description of info.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ldh</td><td><pre class="fragment">   !&gt;            ldh is integer
+   !&gt;            the leading dimension of the array h. ldh &gt;= max(1,n).
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">wr</td><td><pre class="fragment">   !&gt;            wr is double precision array, dimension (n)
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">wi</td><td><pre class="fragment">   !&gt;            wi is double precision array, dimension (n)
+   !&gt;            the real and imaginary parts, respectively, of the computed
+   !&gt;            eigenvalues ilo to ihi are stored in the corresponding
+   !&gt;            elements of wr and wi. if two eigenvalues are computed as a
+   !&gt;            complex conjugate pair, they are stored in consecutive
+   !&gt;            elements of wr and wi, say the i-th and (i+1)th, with
+   !&gt;            wi(i) &gt; 0 and wi(i+1) &lt; 0. if wantt is .true., the
+   !&gt;            eigenvalues are stored in the same order as on the diagonal
+   !&gt;            of the schur form returned in h, with wr(i) = h(i,i), and, if
+   !&gt;            h(i:i+1,i:i+1) is a 2-by-2 diagonal block,
+   !&gt;            wi(i) = sqrt(h(i+1,i)*h(i,i+1)) and wi(i+1) = -wi(i).
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">iloz</td><td><pre class="fragment">   !&gt;            iloz is integer
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ihiz</td><td><pre class="fragment">   !&gt;            ihiz is integer
+   !&gt;            specify the rows of z to which transformations must be
+   !&gt;            applied if wantz is .true..
+   !&gt;            1 &lt;= iloz &lt;= ilo; ihi &lt;= ihiz &lt;= n.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">z</td><td><pre class="fragment">   !&gt;            z is double precision array, dimension (ldz,n)
+   !&gt;            if wantz is .true., on entry z must contain the current
+   !&gt;            matrix z of transformations accumulated by dhseqr, and on
+   !&gt;            exit z has been updated; transformations are applied only to
+   !&gt;            the submatrix z(iloz:ihiz,ilo:ihi).
+   !&gt;            if wantz is .false., z is not referenced.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">ldz</td><td><pre class="fragment">   !&gt;            ldz is integer
+   !&gt;            the leading dimension of the array z. ldz &gt;= max(1,n).
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">info</td><td><pre class="fragment">   !&gt;            info is integer
+   !&gt;             = 0:  successful exit
+   !&gt;             &gt; 0:  if info = i, dlahqr failed to compute all the
+   !&gt;                       eigenvalues ilo to ihi in a total of 30 iterations
+   !&gt;                       per eigenvalue; elements i+1:ihi of wr and wi
+   !&gt;                       contain those eigenvalues which have been
+   !&gt;                       successfully computed.
+   !&gt;
+   !&gt;                       if info &gt; 0 and wantt is .false., then on exit,
+   !&gt;                       the remaining unconverged eigenvalues are the
+   !&gt;                       eigenvalues of the upper hessenberg matrix rows
+   !&gt;                       and columns ilo through info of the final, output
+   !&gt;                       value of h.
+   !&gt;
+   !&gt;                       if info &gt; 0 and wantt is .true., then on exit
+   !&gt;            (*)         (initial value of h)*u  = u*(final value of h)
+   !&gt;                       where u is an orthogonal matrix.     the final
+   !&gt;                       value of h is upper hessenberg and triangular in
+   !&gt;                       rows and columns info+1 through ihi.
+   !&gt;
+   !&gt;                       if info &gt; 0 and wantz is .true., then on exit
+   !&gt;                            (final value of z)  = (initial value of z)*u
+   !&gt;                       where u is the orthogonal matrix in (*)
+   !&gt;                       (regardless of the value of wantt.)
+   !&gt; </pre> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section author"><dt>Author</dt><dd>Univ. of Tennessee </dd>
+<dl class="section author"><dt>Author</dt><dd>univ. of tennessee </dd>
 <dd>
-Univ. of California Berkeley </dd>
+univ. of california berkeley </dd>
 <dd>
-Univ. of Colorado Denver </dd>
+univ. of colorado denver </dd>
 <dd>
-NAG Ltd. </dd></dl>
-<dl class="section user"><dt>Further Details:</dt><dd><pre class="fragment">!&gt;
-!&gt;     02-96 Based on modifications by
-!&gt;     David Day, Sandia National Laboratory, USA
-!&gt;
-!&gt;     12-04 Further modifications by
-!&gt;     Ralph Byers, University of Kansas, USA
-!&gt;     This is a modified version of DLAHQR from LAPACK version 3.0.
-!&gt;     It is (1) more robust against overflow and underflow and
-!&gt;     (2) adopts the more conservative Ahues &amp; Tisseur stopping
-!&gt;     criterion (LAWN 122, 1997).
-!&gt; </pre> </dd></dl>
+nag ltd. </dd></dl>
+<dl class="section user"><dt>further details:</dt><dd><pre class="fragment">   !&gt;
+   !&gt;     02-96 based on modifications by
+   !&gt;     david day, sandia national laboratory, usa
+   !&gt;
+   !&gt;     12-04 further modifications by
+   !&gt;     ralph byers, university of kansas, usa
+   !&gt;     this is a modified version of dlahqr from lapack version 3.0.
+   !&gt;     it is (1) more robust against overflow and underflow and
+   !&gt;     (2) adopts the more conservative ahues &amp; tisseur stopping
+   !&gt;     criterion (lawn 122, 1997).
+   !&gt; </pre> </dd></dl>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph.png" border="0" usemap="#anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph" id="anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph">
-<area shape="rect" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="5,31,168,56"/>
-<area shape="rect" href="namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="216,5,383,31"/>
-<area shape="poly" title=" " alt="" coords="168,31,202,27,203,32,169,36"/>
-<area shape="rect" href="namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="219,55,379,80"/>
-<area shape="poly" title=" " alt="" coords="169,50,206,54,205,59,168,55"/>
+<area shape="rect" title="dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix,..." alt="" coords="5,79,168,104"/>
+<area shape="rect" href="namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="dlanv2 computes the schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="221,5,387,31"/>
+<area shape="poly" title=" " alt="" coords="118,76,215,39,240,32,241,37,217,45,120,81"/>
+<area shape="rect" href="namespacenuma____utils.html#a7372cb13cd1311f368b3661ae69a112f" title=" " alt="" coords="237,79,371,104"/>
+<area shape="poly" title=" " alt="" coords="169,89,224,89,224,94,169,94"/>
+<area shape="rect" href="namespacenuma____utils.html#ab32c48097b1013bf8bb8d192ee412e49" title=" " alt="" coords="216,128,392,153"/>
+<area shape="poly" title=" " alt="" coords="144,101,235,122,233,128,143,107"/>
+<area shape="rect" href="namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="440,67,583,92"/>
+<area shape="poly" title=" " alt="" coords="353,28,393,39,459,60,457,65,391,45,352,33"/>
+<area shape="poly" title=" " alt="" coords="478,68,470,58,474,48,488,42,511,40,540,44,551,53,548,57,538,49,511,45,489,47,478,52,476,58,482,65"/>
+<area shape="poly" title=" " alt="" coords="270,80,263,70,267,60,281,54,304,52,333,56,344,65,341,69,330,61,304,57,282,59,271,64,268,70,274,77"/>
+<area shape="poly" title=" " alt="" coords="349,125,391,113,454,94,456,99,393,118,350,130"/>
 </map>
 </div>
 <div class="dynheader">
@@ -326,7 +331,7 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_icgraph.png" border="0" usemap="#anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_icgraph" id="anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_icgraph">
-<area shape="rect" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="191,5,353,31"/>
+<area shape="rect" title="dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix,..." alt="" coords="191,5,353,31"/>
 <area shape="rect" href="namespacenuma.html#abfed19944d6ffc80dc809c03331d8457" title=" " alt="" coords="5,5,143,31"/>
 <area shape="poly" title=" " alt="" coords="177,21,143,21,143,15,177,15"/>
 </map>
@@ -393,188 +398,90 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p><b>DLANV2</b> computes the Schur factorization of a real 2-by-2 nonsymmetric matrix in standard form. </p>
+<p><b>dlanv2</b> computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form. </p>
 <p> 
-    Download DLANV2 + dependencies
-    <a href=>
-    [TGZ]</a>
-    <a href=>
-    [ZIP]</a>
-    <a href=>
-    [TXT]</a>
-     </p><dl class="section user"><dt>Purpose:</dt><dd><pre class="fragment">!&gt;
-!&gt; DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric
-!&gt; matrix in standard form:
-!&gt;
-!&gt;      [ A  B ] = [ CS -SN ] [ AA  BB ] [ CS  SN ]
-!&gt;      [ C  D ]   [ SN  CS ] [ CC  DD ] [-SN  CS ]
-!&gt;
-!&gt; where either
-!&gt; 1) CC = 0 so that AA and DD are real eigenvalues of the matrix, or
-!&gt; 2) AA = DD and BB*CC &lt; 0, so that AA + or - sqrt(BB*CC) are complex
-!&gt; conjugate eigenvalues.
-!&gt; </pre> </dd></dl>
+        download dlanv2 + dependencies
+        <a href=>
+        [tgz]</a>
+        <a href=>
+        [zip]</a>
+        <a href=>
+        [txt]</a>
+         </p><dl class="section user"><dt>purpose:</dt><dd><pre class="fragment">   !&gt;
+   !&gt; dlanv2 computes the schur factorization of a real 2-by-2 nonsymmetric
+   !&gt; matrix in standard form:
+   !&gt;
+   !&gt;       [ a  b ] = [ cs -sn ] [ aa  bb ] [ cs  sn ]
+   !&gt;       [ c  d ]   [ sn  cs ] [ cc  dd ] [-sn  cs ]
+   !&gt;
+   !&gt; where either
+   !&gt; 1) cc = 0 so that aa and dd are real eigenvalues of the matrix, or
+   !&gt; 2) aa = dd and bb*cc &lt; 0, so that aa + or - sqrt(bb*cc) are complex
+   !&gt; conjugate eigenvalues.
+   !&gt; </pre> </dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">A</td><td><pre class="fragment">!&gt;          A is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">B</td><td><pre class="fragment">!&gt;          B is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">C</td><td><pre class="fragment">!&gt;          C is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">D</td><td><pre class="fragment">!&gt;          D is DOUBLE PRECISION
-!&gt;          On entry, the elements of the input matrix.
-!&gt;          On exit, they are overwritten by the elements of the
-!&gt;          standardised Schur form.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">RT1R</td><td><pre class="fragment">!&gt;          RT1R is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">RT1I</td><td><pre class="fragment">!&gt;          RT1I is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">RT2R</td><td><pre class="fragment">!&gt;          RT2R is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">RT2I</td><td><pre class="fragment">!&gt;          RT2I is DOUBLE PRECISION
-!&gt;          The real and imaginary parts of the eigenvalues. If the
-!&gt;          eigenvalues are a complex conjugate pair, RT1I &gt; 0.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">CS</td><td><pre class="fragment">!&gt;          CS is DOUBLE PRECISION
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">SN</td><td><pre class="fragment">!&gt;          SN is DOUBLE PRECISION
-!&gt;          Parameters of the rotation matrix.
-!&gt; </pre> </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">a</td><td><pre class="fragment">   !&gt;            a is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">b</td><td><pre class="fragment">   !&gt;            b is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">c</td><td><pre class="fragment">   !&gt;            c is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">d</td><td><pre class="fragment">   !&gt;            d is double precision
+   !&gt;            on entry, the elements of the input matrix.
+   !&gt;            on exit, they are overwritten by the elements of the
+   !&gt;            standardised schur form.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">rt1r</td><td><pre class="fragment">   !&gt;            rt1r is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">rt1i</td><td><pre class="fragment">   !&gt;            rt1i is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">rt2r</td><td><pre class="fragment">   !&gt;            rt2r is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">rt2i</td><td><pre class="fragment">   !&gt;            rt2i is double precision
+   !&gt;            the real and imaginary parts of the eigenvalues. if the
+   !&gt;            eigenvalues are a complex conjugate pair, rt1i &gt; 0.
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">cs</td><td><pre class="fragment">   !&gt;            cs is double precision
+   !&gt; </pre></td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">sn</td><td><pre class="fragment">   !&gt;            sn is double precision
+   !&gt;            parameters of the rotation matrix.
+   !&gt; </pre> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section author"><dt>Author</dt><dd>Univ. of Tennessee </dd>
+<dl class="section author"><dt>Author</dt><dd>univ. of tennessee </dd>
 <dd>
-Univ. of California Berkeley </dd>
+univ. of california berkeley </dd>
 <dd>
-Univ. of Colorado Denver </dd>
+univ. of colorado denver </dd>
 <dd>
-NAG Ltd. </dd></dl>
-<dl class="section user"><dt>Further Details:</dt><dd><pre class="fragment">!&gt;
-!&gt;  Modified by V. Sima, Research Institute for Informatics, Bucharest,
-!&gt;  Romania, to reduce the risk of cancellation errors,
-!&gt;  when computing real eigenvalues, and to ensure, if possible, that
-!&gt;  abs(RT1R) &gt;= abs(RT2R).
-!&gt; </pre> </dd></dl>
+nag ltd. </dd></dl>
+<dl class="section user"><dt>further details:</dt><dd><pre class="fragment">   !&gt;
+   !&gt;  modified by v. sima, research institute for informatics, bucharest,
+   !&gt;  romania, to reduce the risk of cancellation errors,
+   !&gt;  when computing real eigenvalues, and to ensure, if possible, that
+   !&gt;  abs(rt1r) &gt;= abs(rt2r).
+   !&gt; </pre> </dd></dl>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_cgraph.png" border="0" usemap="#anamespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_cgraph" id="anamespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_cgraph">
+<area shape="rect" title="dlanv2 computes the schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="5,29,172,55"/>
+<area shape="rect" href="namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="220,29,363,55"/>
+<area shape="poly" title=" " alt="" coords="173,39,206,39,206,45,173,45"/>
+<area shape="poly" title=" " alt="" coords="258,31,251,21,255,11,268,5,291,3,320,6,331,16,327,20,317,11,291,8,270,10,258,15,256,20,262,28"/>
+</map>
+</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_icgraph.png" border="0" usemap="#anamespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_icgraph" id="anamespacenuma____dlahqr_adb40b094701602a40d49cc3f10653cb2_icgraph">
-<area shape="rect" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="401,5,568,31"/>
-<area shape="rect" href="namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="191,5,353,31"/>
+<area shape="rect" title="dlanv2 computes the schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="401,5,568,31"/>
+<area shape="rect" href="namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40" title="dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix,..." alt="" coords="191,5,353,31"/>
 <area shape="poly" title=" " alt="" coords="387,21,353,21,353,15,387,15"/>
-<area shape="rect" href="namespacenuma.html#abfed19944d6ffc80dc809c03331d8457" title=" " alt="" coords="5,5,143,31"/>
-<area shape="poly" title=" " alt="" coords="177,21,143,21,143,15,177,15"/>
-</map>
-</div>
-
-</div>
-</div>
-<a id="ab5f992642860057d8eac26076e29ff07" name="ab5f992642860057d8eac26076e29ff07"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5f992642860057d8eac26076e29ff07">&#9670;&#160;</a></span>dlarfg()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">subroutine numa__dlahqr::dlarfg </td>
-          <td>(</td>
-          <td class="paramtype">integer</td>          <td class="paramname"><span class="paramname"><em>n</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double precision</td>          <td class="paramname"><span class="paramname"><em>alpha</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double precision, dimension( * )</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">integer</td>          <td class="paramname"><span class="paramname"><em>incx</em></span>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double precision</td>          <td class="paramname"><span class="paramname"><em>tau</em></span>&#160;)</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p><b>DLARFG</b> generates an elementary reflector (Householder matrix). </p>
-<p> 
-    Download DLARFG + dependencies
-    <a href=>
-    [TGZ]</a>
-    <a href=>
-    [ZIP]</a>
-    <a href=>
-    [TXT]</a>
-     </p><dl class="section user"><dt>Purpose:</dt><dd><pre class="fragment">!&gt;
-!&gt; DLARFG generates a real elementary reflector H of order n, such
-!&gt; that
-!&gt;
-!&gt;       H * ( alpha ) = ( beta ),   H**T * H = I.
-!&gt;           (   x   )   (   0  )
-!&gt;
-!&gt; where alpha and beta are scalars, and x is an (n-1)-element real
-!&gt; vector. H is represented in the form
-!&gt;
-!&gt;       H = I - tau * ( 1 ) * ( 1 v**T ) ,
-!&gt;                     ( v )
-!&gt;
-!&gt; where tau is a real scalar and v is a real (n-1)-element
-!&gt; vector.
-!&gt;
-!&gt; If the elements of x are all zero, then tau = 0 and H is taken to be
-!&gt; the unit matrix.
-!&gt;
-!&gt; Otherwise  1 &lt;= tau &lt;= 2.
-!&gt; </pre> </dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">N</td><td><pre class="fragment">!&gt;          N is INTEGER
-!&gt;          The order of the elementary reflector.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">ALPHA</td><td><pre class="fragment">!&gt;          ALPHA is DOUBLE PRECISION
-!&gt;          On entry, the value alpha.
-!&gt;          On exit, it is overwritten with the value beta.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">X</td><td><pre class="fragment">!&gt;          X is DOUBLE PRECISION array, dimension
-!&gt;                         (1+(N-2)*abs(INCX))
-!&gt;          On entry, the vector x.
-!&gt;          On exit, it is overwritten with the vector v.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">INCX</td><td><pre class="fragment">!&gt;          INCX is INTEGER
-!&gt;          The increment between elements of X. INCX &gt; 0.
-!&gt; </pre></td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">TAU</td><td><pre class="fragment">!&gt;          TAU is DOUBLE PRECISION
-!&gt;          The value tau.
-!&gt; </pre> </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section author"><dt>Author</dt><dd>Univ. of Tennessee </dd>
-<dd>
-Univ. of California Berkeley </dd>
-<dd>
-Univ. of Colorado Denver </dd>
-<dd>
-NAG Ltd. </dd></dl>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="namespacenuma____dlahqr_ab5f992642860057d8eac26076e29ff07_icgraph.png" border="0" usemap="#anamespacenuma____dlahqr_ab5f992642860057d8eac26076e29ff07_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacenuma____dlahqr_ab5f992642860057d8eac26076e29ff07_icgraph" id="anamespacenuma____dlahqr_ab5f992642860057d8eac26076e29ff07_icgraph">
-<area shape="rect" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="401,5,561,31"/>
-<area shape="rect" href="namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="191,5,353,31"/>
-<area shape="poly" title=" " alt="" coords="388,21,354,21,354,15,388,15"/>
 <area shape="rect" href="namespacenuma.html#abfed19944d6ffc80dc809c03331d8457" title=" " alt="" coords="5,5,143,31"/>
 <area shape="poly" title=" " alt="" coords="177,21,143,21,143,15,177,15"/>
 </map>

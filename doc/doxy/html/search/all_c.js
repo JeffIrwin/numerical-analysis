@@ -12,7 +12,7 @@ var searchData=
   ['ng_5fgk15_9',['ng_gk15',['../namespacenuma.html#a1b328d11958bf8658b74af4c1cdb1601',1,'numa']]],
   ['nk_5fgk15_10',['nk_gk15',['../namespacenuma.html#a996232147b68a68fa65cde704bf9a629',1,'numa']]],
   ['nm_5feval_5fres_11',['nm_eval_res',['../numerical-analysis_8F90.html#a8f90f929ef67498f005bdc5629cd123e',1,'numerical-analysis.F90']]],
-  ['norm2c_12',['norm2c',['../namespacenuma.html#a351c20c627b89277b5fdd724e96f0846',1,'numa']]],
+  ['norm2c_12',['norm2c',['../namespacenuma____utils.html#a0f9ebe1a83a52aa4878b186d000c2e87',1,'numa__utils']]],
   ['null_5fchar_13',['null_char',['../namespacenuma____utils.html#a897664e53266178f6f222f2c680abedc',1,'numa__utils']]],
   ['numa_14',['numa',['../namespacenuma.html',1,'']]],
   ['numa_5f_5fdlahqr_15',['numa__dlahqr',['../namespacenuma____dlahqr.html',1,'']]],

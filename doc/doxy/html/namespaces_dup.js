@@ -3,8 +3,7 @@ var namespaces_dup =
     [ "numa", "namespacenuma.html", "namespacenuma" ],
     [ "numa__dlahqr", "namespacenuma____dlahqr.html", [
       [ "dlahqr", "namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40", null ],
-      [ "dlanv2", "namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2", null ],
-      [ "dlarfg", "namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07", null ]
+      [ "dlanv2", "namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2", null ]
     ] ],
     [ "numa__exercises", "namespacenuma____exercises.html", [
       [ "assert", "namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec", null ],
@@ -28,6 +27,7 @@ var namespaces_dup =
       [ "chapter_4_lls", "namespacenuma____exercises.html#aa17eb6c1bd5524592a484b184773f052", null ],
       [ "chapter_4_lu", "namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8", null ],
       [ "chapter_4_lu_c64", "namespacenuma____exercises.html#a6e19080f83b0300f98894c21e88ae167", null ],
+      [ "chapter_4_modify", "namespacenuma____exercises.html#abd8a791c530ba3d4643f98eb94546770", null ],
       [ "chapter_4_nelder_mead", "namespacenuma____exercises.html#a20e35ad3980c97922336cd07fdd1f0c2", null ],
       [ "chapter_4_qr", "namespacenuma____exercises.html#ae7d6a62bbce0ce64938739cd99d4aaec", null ],
       [ "chapter_4_qr_c64", "namespacenuma____exercises.html#a0b08c55dbd9e7ea9d4ceb27bf8f9768c", null ],

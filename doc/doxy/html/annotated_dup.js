@@ -18,8 +18,7 @@ var annotated_dup =
       [ "qr_factor", "interfacenuma_1_1qr__factor.html", null ],
       [ "qr_get_q_expl", "interfacenuma_1_1qr__get__q__expl.html", null ],
       [ "qr_mul", "interfacenuma_1_1qr__mul.html", null ],
-      [ "qr_mul_transpose", "interfacenuma_1_1qr__mul__transpose.html", null ],
-      [ "outer_product", "interfacenuma_1_1outer__product.html", null ]
+      [ "qr_mul_transpose", "interfacenuma_1_1qr__mul__transpose.html", null ]
     ] ],
     [ "numa__utils", "namespacenuma____utils.html", [
       [ "to_str", "interfacenuma____utils_1_1to__str.html", null ],
@@ -27,6 +26,7 @@ var annotated_dup =
       [ "sort", "interfacenuma____utils_1_1sort.html", null ],
       [ "compare_lex", "interfacenuma____utils_1_1compare__lex.html", null ],
       [ "lt_lex", "interfacenuma____utils_1_1lt__lex.html", null ],
-      [ "lte_lex", "interfacenuma____utils_1_1lte__lex.html", null ]
+      [ "lte_lex", "interfacenuma____utils_1_1lte__lex.html", null ],
+      [ "outer_product", "interfacenuma____utils_1_1outer__product.html", null ]
     ] ]
 ];
