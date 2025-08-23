@@ -10,8 +10,9 @@ var searchData=
   ['bezier_5fcurve_7',['bezier_curve',['../namespacenuma.html#af9b54ccf11366d68f401999e49727f77',1,'numa']]],
   ['bimodal_5ffn_8',['bimodal_fn',['../namespacenuma____functions.html#a845c2aec2e11a1c7d7df9b71444bd2ca',1,'numa__functions']]],
   ['bit_5freverse_9',['bit_reverse',['../namespacenuma.html#a04c0d9ea83deb23d3911b0747e2fabe6',1,'numa']]],
-  ['blue_10',['blue',['../namespacenuma____utils.html#ad37c6b9a8259c5d2166038551e47804c',1,'numa__utils']]],
-  ['bold_11',['bold',['../namespacenuma____utils.html#a39b4cad4e51375b70d4145025146e12b',1,'numa__utils']]],
-  ['bold_5fbright_5fyellow_12',['bold_bright_yellow',['../namespacenuma____utils.html#a828f9baf1dabc6245e5ff5e6f67f9b3f',1,'numa__utils']]],
-  ['bright_5fyellow_13',['bright_yellow',['../namespacenuma____utils.html#a54812b8d7816f4aa121b3cf1b6aefd8c',1,'numa__utils']]]
+  ['blas_2ef90_10',['blas.F90',['../blas_8F90.html',1,'']]],
+  ['blue_11',['blue',['../namespacenuma____utils.html#ad37c6b9a8259c5d2166038551e47804c',1,'numa__utils']]],
+  ['bold_12',['bold',['../namespacenuma____utils.html#a39b4cad4e51375b70d4145025146e12b',1,'numa__utils']]],
+  ['bold_5fbright_5fyellow_13',['bold_bright_yellow',['../namespacenuma____utils.html#a828f9baf1dabc6245e5ff5e6f67f9b3f',1,'numa__utils']]],
+  ['bright_5fyellow_14',['bright_yellow',['../namespacenuma____utils.html#a54812b8d7816f4aa121b3cf1b6aefd8c',1,'numa__utils']]]
 ];

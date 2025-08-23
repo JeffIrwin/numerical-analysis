@@ -20,13 +20,15 @@ var annotated_dup =
       [ "qr_mul", "interfacenuma_1_1qr__mul.html", null ],
       [ "qr_mul_transpose", "interfacenuma_1_1qr__mul__transpose.html", null ]
     ] ],
+    [ "numa__blas", "namespacenuma____blas.html", [
+      [ "outer_product", "interfacenuma____blas_1_1outer__product.html", null ]
+    ] ],
     [ "numa__utils", "namespacenuma____utils.html", [
       [ "to_str", "interfacenuma____utils_1_1to__str.html", null ],
       [ "sorted", "interfacenuma____utils_1_1sorted.html", null ],
       [ "sort", "interfacenuma____utils_1_1sort.html", null ],
       [ "compare_lex", "interfacenuma____utils_1_1compare__lex.html", null ],
       [ "lt_lex", "interfacenuma____utils_1_1lt__lex.html", null ],
-      [ "lte_lex", "interfacenuma____utils_1_1lte__lex.html", null ],
-      [ "outer_product", "interfacenuma____utils_1_1outer__product.html", null ]
+      [ "lte_lex", "interfacenuma____utils_1_1lte__lex.html", null ]
     ] ]
 ];

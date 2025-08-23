@@ -1,9 +1,11 @@
 <map id="src/panic.F90" name="src/panic.F90">
-<area shape="rect" id="Node000001" title=" " alt="" coords="188,5,296,31"/>
-<area shape="rect" id="Node000002" href="$dlahqr_8F90.html" title=" " alt="" coords="5,79,119,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="202,38,92,81,90,76,200,33"/>
-<area shape="rect" id="Node000003" href="$numerical-analysis_8F90.html" title=" " alt="" coords="143,79,341,104"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="245,44,245,79,239,79,239,44"/>
-<area shape="rect" id="Node000004" href="$utils_8F90.html" title=" " alt="" coords="365,79,466,104"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="283,33,388,76,386,81,281,38"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="221,5,329,31"/>
+<area shape="rect" id="Node000002" href="$blas_8F90.html" title=" " alt="" coords="5,79,105,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="228,37,92,81,90,76,226,32"/>
+<area shape="rect" id="Node000003" href="$dlahqr_8F90.html" title=" " alt="" coords="129,79,243,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="252,41,202,81,199,76,249,37"/>
+<area shape="rect" id="Node000004" href="$numerical-analysis_8F90.html" title=" " alt="" coords="267,79,465,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="302,37,353,76,350,81,299,41"/>
+<area shape="rect" id="Node000005" href="$utils_8F90.html" title=" " alt="" coords="489,79,590,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="332,32,497,76,496,81,330,37"/>
 </map>

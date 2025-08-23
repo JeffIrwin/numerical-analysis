@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['rand_5ff64_0',['rand_f64',['../namespacenuma____utils.html#a5abdd6c52b31f30aaf374d1009ff16c3',1,'numa__utils']]],
+  ['rand_5ff64_0',['rand_f64',['../namespacenuma____blas.html#aadc89cd7c8a94bddae67886167d6bba2',1,'numa__blas']]],
   ['rate_5fdx_5ffn_1',['rate_dx_fn',['../namespacenuma____functions.html#ae563121b3e881b11584701179a60cd31',1,'numa__functions']]],
   ['rate_5ffn_2',['rate_fn',['../namespacenuma____functions.html#aa47e209f97bf805626cb92e36810c576',1,'numa__functions']]],
   ['real_5fschur_5fto_5fcomplex_3',['real_schur_to_complex',['../namespacenuma.html#aa0f4b045f98598577271c0268bdb561f',1,'numa']]],

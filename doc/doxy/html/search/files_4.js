@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['panic_2ef90_0',['panic.F90',['../panic_8F90.html',1,'']]]
+  ['numerical_2danalysis_2ef90_0',['numerical-analysis.F90',['../numerical-analysis_8F90.html',1,'']]]
 ];

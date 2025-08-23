@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['dlahqr_2ef90_0',['dlahqr.F90',['../dlahqr_8F90.html',1,'']]]
+  ['blas_2ef90_0',['blas.F90',['../blas_8F90.html',1,'']]]
 ];

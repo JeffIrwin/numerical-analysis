@@ -1,6 +1,7 @@
 var namespaces_dup =
 [
     [ "numa", "namespacenuma.html", "namespacenuma" ],
+    [ "numa__blas", "namespacenuma____blas.html", "namespacenuma____blas" ],
     [ "numa__dlahqr", "namespacenuma____dlahqr.html", [
       [ "dlahqr", "namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40", null ],
       [ "dlanv2", "namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2", null ]

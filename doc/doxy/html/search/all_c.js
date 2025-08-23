@@ -12,14 +12,15 @@ var searchData=
   ['ng_5fgk15_9',['ng_gk15',['../namespacenuma.html#a1b328d11958bf8658b74af4c1cdb1601',1,'numa']]],
   ['nk_5fgk15_10',['nk_gk15',['../namespacenuma.html#a996232147b68a68fa65cde704bf9a629',1,'numa']]],
   ['nm_5feval_5fres_11',['nm_eval_res',['../numerical-analysis_8F90.html#a8f90f929ef67498f005bdc5629cd123e',1,'numerical-analysis.F90']]],
-  ['norm2c_12',['norm2c',['../namespacenuma____utils.html#a0f9ebe1a83a52aa4878b186d000c2e87',1,'numa__utils']]],
+  ['norm2c_12',['norm2c',['../namespacenuma____blas.html#a5be406caa1e3e4ead02184f196511f96',1,'numa__blas']]],
   ['null_5fchar_13',['null_char',['../namespacenuma____utils.html#a897664e53266178f6f222f2c680abedc',1,'numa__utils']]],
   ['numa_14',['numa',['../namespacenuma.html',1,'']]],
-  ['numa_5f_5fdlahqr_15',['numa__dlahqr',['../namespacenuma____dlahqr.html',1,'']]],
-  ['numa_5f_5fexercises_16',['numa__exercises',['../namespacenuma____exercises.html',1,'']]],
-  ['numa_5f_5ffunctions_17',['numa__functions',['../namespacenuma____functions.html',1,'']]],
-  ['numa_5f_5ftest_18',['numa__test',['../namespacenuma____test.html',1,'']]],
-  ['numa_5f_5futils_19',['numa__utils',['../namespacenuma____utils.html',1,'']]],
-  ['numerical_20analysis_20main_20page_20',['Numerical analysis main page',['../index.html',1,'']]],
-  ['numerical_2danalysis_2ef90_21',['numerical-analysis.F90',['../numerical-analysis_8F90.html',1,'']]]
+  ['numa_5f_5fblas_15',['numa__blas',['../namespacenuma____blas.html',1,'']]],
+  ['numa_5f_5fdlahqr_16',['numa__dlahqr',['../namespacenuma____dlahqr.html',1,'']]],
+  ['numa_5f_5fexercises_17',['numa__exercises',['../namespacenuma____exercises.html',1,'']]],
+  ['numa_5f_5ffunctions_18',['numa__functions',['../namespacenuma____functions.html',1,'']]],
+  ['numa_5f_5ftest_19',['numa__test',['../namespacenuma____test.html',1,'']]],
+  ['numa_5f_5futils_20',['numa__utils',['../namespacenuma____utils.html',1,'']]],
+  ['numerical_20analysis_20main_20page_21',['Numerical analysis main page',['../index.html',1,'']]],
+  ['numerical_2danalysis_2ef90_22',['numerical-analysis.F90',['../numerical-analysis_8F90.html',1,'']]]
 ];

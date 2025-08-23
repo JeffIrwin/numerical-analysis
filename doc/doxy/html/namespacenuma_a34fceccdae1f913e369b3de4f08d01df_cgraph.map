@@ -1,6 +1,6 @@
 <map id="numa::qr_get_q_expl_c64" name="numa::qr_get_q_expl_c64">
 <area shape="rect" id="Node000001" title=" " alt="" coords="5,29,193,55"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____utils.html#a7372cb13cd1311f368b3661ae69a112f" title=" " alt="" coords="241,29,375,55"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="193,39,228,39,228,45,193,45"/>
-<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="274,31,267,21,270,11,285,5,308,3,337,6,348,15,345,20,335,11,308,8,286,10,274,15,272,20,278,28"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____blas.html#a23e42442f8707b8535602524ca8da6e1" title=" " alt="" coords="241,29,373,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="194,39,227,39,227,45,194,45"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="273,31,266,21,270,11,284,5,307,3,336,6,348,15,344,20,334,11,307,8,285,10,273,15,271,20,277,28"/>
 </map>
