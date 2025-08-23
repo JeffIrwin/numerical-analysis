@@ -3872,6 +3872,80 @@ end function house
 
 !===============================================================================
 
+function eig_lapack(aa, eigvecs, iostat) result(eigvals)
+	! Get the eigenvalues of `aa` using the Francis double step QR algorithm,
+	! using LAPACK's dlahqr() routine (but still my home-made hess() routine)
+
+	use numa__utils
+	use numa__dlahqr
+	double precision, intent(inout) :: aa(:,:)
+	double complex, allocatable :: eigvals(:)
+	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
+	integer, optional, intent(out) :: iostat
+	!********
+
+	!character(len = :), allocatable :: msg
+	double precision, allocatable :: pq(:,:)
+	integer :: n
+
+	if (present(iostat)) iostat = 0
+
+	n = size(aa, 1)
+
+	if (present(eigvecs)) then
+		! The matrix `pq` is the product of Q from each step.  Unlike basic QR, we
+		! can't initialize pq to eye here.  Instead, we need an initial
+		! transformation from the Hessenberg reduction
+		call hess(aa, pq)
+	else
+		call hess(aa)
+	end if
+	!print *, "aa = "
+	!print "("//to_str(n)//"es19.9)", aa
+
+	block
+		double precision, allocatable :: wr(:), wi(:)
+		integer :: ilo, ihi, ldh, iloz, ihiz, ldz, info
+		logical :: wantt, wantz
+
+		! Set indices to factorize all of `aa`, not just a slice
+		ilo = 1
+		ihi = n
+		ldh = n
+		iloz = 1
+		ihiz = n
+		ldz = n
+
+		! Eigval real/imag components
+		allocate(wr(n), wi(n))
+
+		!wantt = .false.
+		!wantz = .false.
+		wantt = .true.  ! want full schur form, not just eigvals
+		wantz = .true.
+
+		call DLAHQR( WANTT, WANTZ, N, ILO, IHI, aa, LDH, WR, WI, &
+			ILOZ, IHIZ, pq, LDZ, INFO )
+
+		! TODO: copy eigvecs out.  I think I still have to do
+		! real_schur_to_complex() and all that jazz
+
+		! Copy eigvals out
+		eigvals = dcmplx(wr, wi)
+		!eigvals = wr + IMAG_ * wi
+
+		print *, "aa = "
+		print "("//to_str(n)//"es16.6)", aa
+
+		print *, "pq = "
+		print "("//to_str(n)//"es16.6)", pq
+
+	end block
+
+end function eig_lapack
+
+!===============================================================================
+
 function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 	! Get the eigenvalues of `aa` using the Francis double step QR algorithm
 
