@@ -366,7 +366,7 @@ contains
 					h12 = h(i - 1, i)
 					h22 = h(i, i)
 				end if
-				s = abs(h11) + abs(h12) + abs(h21) + abs(h22)
+				s = sum(abs([h11, h12, h21, h22]))
 				if (s <= 0) then
 					rt1r = 0
 					rt1i = 0

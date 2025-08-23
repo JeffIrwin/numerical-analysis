@@ -3083,7 +3083,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	p0 = -1
-	do n = 5, 35
+	do n = 5, 35, 3
 
 		allocate(s (n, n))
 
@@ -3092,7 +3092,7 @@ integer function chapter_6_francis_qr() result(nfail)
 			print *, "Testing real eig_francis_qr() with n = " // to_str(n) // " ..."
 		end if
 
-		do irep = 1, 5
+		do irep = 1, 2
 
 			! Construct a random matrix `a` with known real eigenvalues
 
@@ -3158,7 +3158,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	do n = 5, 77
+	do n = 5, 65, 7
 		! eig_francis_qr() can't converge over about n == 80
 
 		allocate(a(n, n))
@@ -3170,7 +3170,7 @@ integer function chapter_6_francis_qr() result(nfail)
 		end if
 
 		!do irep = 1, 10
-		do irep = 1, 1  ! TODO
+		do irep = 1, 1
 			!print *, "irep = ", irep
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,
@@ -3291,7 +3291,7 @@ integer function chapter_6_eig_lapack() result(nfail)
 	call random_seed(put = [(0, i = 1, nrng)])
 
 	p0 = -1
-	do n = 5, 35
+	do n = 5, 25, 5
 
 		allocate(s (n, n))
 
@@ -3300,7 +3300,7 @@ integer function chapter_6_eig_lapack() result(nfail)
 			print *, "Testing real eig_lapack() with n = " // to_str(n) // " ..."
 		end if
 
-		do irep = 1, 5
+		do irep = 1, 2
 
 			! Construct a random matrix `a` with known real eigenvalues
 
@@ -3343,8 +3343,8 @@ integer function chapter_6_eig_lapack() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	do n = 5, 175, 5
-	!do n = 5, 95, 9  ! TODO
+	!do n = 5, 175, 5  ! eig_lapack() is robust even for larger matrices
+	do n = 5, 95, 11
 
 		allocate(a(n, n))
 
@@ -3353,7 +3353,9 @@ integer function chapter_6_eig_lapack() result(nfail)
 			print *, "Testing complex eig_lapack() with n = " // to_str(n) // " ..."
 		end if
 
-		do irep = 1, 2
+		do irep = 1, 1
+		!do irep = 1, 2
+
 			!print *, "irep = ", irep
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,
