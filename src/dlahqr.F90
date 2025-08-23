@@ -346,7 +346,7 @@ end function house
                          ulp, det_
       integer            i, i1, i2, i3, its, itmax, k, l, m, nh, nr, nz, &
                          kdefl
-      !logical :: has_converged
+      logical :: has_converged
 !     ..
 !     .. local arrays ..
       double precision   v( 3 )
@@ -413,6 +413,7 @@ end function house
 !     submatrix of order 1 or 2 splits off at the bottom because a
 !     subdiagonal element has become negligible.
 
+      has_converged = .false.
       do its = 0, itmax
 
 !        look for a single small subdiagonal element.
@@ -452,15 +453,15 @@ end function house
          end if
 
 !        exit from loop if a submatrix of order 1 or 2 has split off.
-
-         if( l >= i-1 ) &
-            go to 150
+         if( l >= i-1 ) then
+            has_converged = .true.
+            exit
+         end if
          kdefl = kdefl + 1
 
 !        now the active submatrix is in rows and columns l to i. if
 !        eigenvalues only are being computed, only the active submatrix
 !        need be transformed.
-
          if( .not.wantt ) then
             i1 = l
             i2 = i
@@ -630,11 +631,10 @@ end function house
       end do
 
 !     failure to converge in remaining number of iterations
-
-      info = i
-      return
-
-  150 continue
+      if (.not. has_converged) then
+         info = i
+         return
+      end if
 
       if( l == i ) then
 
