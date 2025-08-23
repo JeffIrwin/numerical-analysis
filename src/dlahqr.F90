@@ -345,7 +345,8 @@ end function house
                          safmin, smlnum, sn, t1, tr, tst, &
                          ulp, det_
       integer            i, i1, i2, i3, its, itmax, k, l, m, nh, nr, nz, &
-                         kdefl 
+                         kdefl
+      !logical :: has_converged
 !     ..
 !     .. local arrays ..
       double precision   v( 3 )
@@ -404,24 +405,21 @@ end function house
 !     with the active submatrix in rows and columns l to i.
 !     eigenvalues i+1 to ihi have already converged. either l = ilo or
 !     h(l,l-1) is negligible so that the matrix splits.
-
       i = ihi
-   20 continue
+      do while (i >= ilo)
       l = ilo
-      if( i < ilo ) &
-         go to 160
 
 !     perform qr iterations on rows and columns ilo to i until a
 !     submatrix of order 1 or 2 splits off at the bottom because a
 !     subdiagonal element has become negligible.
 
-      do 140 its = 0, itmax
+      do its = 0, itmax
 
 !        look for a single small subdiagonal element.
 
-         do 30 k = i, l + 1, -1
+         do k = i, l + 1, -1
             if( abs( h( k, k-1 ) ) <= smlnum ) &
-               go to 40
+               exit
             tst = abs( h( k-1, k-1 ) ) + abs( h( k, k ) )
             if( tst == 0 ) then
                if( k-2 >= ilo ) &
@@ -442,10 +440,9 @@ end function house
                     abs( h( k-1, k-1 )-h( k, k ) ) )
                s = aa + ab
                if( ba*( ab / s ) <= max( smlnum, &
-                   ulp*( bb*( aa / s ) ) ) )go to 40
+                   ulp*( bb*( aa / s ) ) ) ) exit
             end if
-   30    continue
-   40    continue
+		 end do
          l = k
          if( l > ilo ) then
 
@@ -533,7 +530,7 @@ end function house
 
 !        look for two consecutive small subdiagonal elements.
 
-         do 50 m = i - 2, l, -1
+         do m = i - 2, l, -1
 !           determine the effect of starting the double-shift qr
 !           iteration at row m, and see if this would make h(m,m-1)
 !           negligible.  (the following uses scaling to avoid
@@ -551,16 +548,14 @@ end function house
             v( 2 ) = v( 2 ) / s
             v( 3 ) = v( 3 ) / s
             if( m == l ) &
-               go to 60
+               exit
             if( abs( h( m, m-1 ) )*( abs( v( 2 ) )+abs( v( 3 ) ) ) <=  &
                 ulp*abs( v( 1 ) )*( abs( h( m-1, m-1 ) )+abs( h( m, &
-                m ) )+abs( h( m+1, m+1 ) ) ) )go to 60
-   50    continue
-   60    continue
+                m ) )+abs( h( m+1, m+1 ) ) ) ) exit
+         end do
 
 !        double-shift qr step
-
-         do 130 k = m, i - 1
+         do k = m, i - 1
 
 !           the first iteration of this loop determines a reflection g
 !           from the vector v and applies it from left and right to h,
@@ -631,9 +626,8 @@ end function house
                   z(iloz:ihiz, k:k+1) = matmul(z(iloz:ihiz, k:k+1), p2)
                end if
             end if
-  130    continue
-
-  140 continue
+         end do
+      end do
 
 !     failure to converge in remaining number of iterations
 
@@ -680,9 +674,7 @@ end function house
 
 !     return to start of the main loop with new value of i.
       i = l - 1
-      go to 20
-
-  160 continue
+      end do
 
       end subroutine dlahqr
 !> \brief \b dlanv2 computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
@@ -831,6 +823,7 @@ end function house
                          sac, scale, sigma, sn1, tau, temp, z, safmin, &
                          safmn2, safmx2
       integer            count
+      logical :: keep_scaling
 !     ..
 !     .. executable statements ..
 
@@ -896,21 +889,24 @@ end function house
 
             count = 0
             sigma = b + c
-   10       continue
-            count = count + 1
-            scale = max( abs(temp), abs(sigma) )
-            if( scale >= safmx2 ) then
-               sigma = sigma * safmn2
-               temp = temp * safmn2
-               if (count  <=  20) &
-                  goto 10
-            end if
-            if( scale <= safmn2 ) then
-               sigma = sigma * safmx2
-               temp = temp * safmx2
-               if (count  <=  20) &
-                  goto 10
-            end if
+            keep_scaling = .true.
+            do while (keep_scaling)
+               keep_scaling = .false.
+               count = count + 1
+               scale = max( abs(temp), abs(sigma) )
+               if( scale >= safmx2 ) then
+                  sigma = sigma * safmn2
+                  temp = temp * safmn2
+                  if (count  <=  20) &
+                     keep_scaling = .true.
+               end if
+               if( scale <= safmn2 ) then
+                  sigma = sigma * safmx2
+                  temp = temp * safmx2
+                  if (count  <=  20) &
+                     keep_scaling = .true.
+               end if
+            end do
             p = 0.5d0*temp
             tau = norm2([sigma, temp])
             cs = sqrt( 0.5d0*( 1+abs( sigma ) / tau ) )
@@ -1132,19 +1128,17 @@ end function house
          if( abs( beta ) < safmin ) then
 
 !           xnorm, beta may be inaccurate; scale x and recompute them
-
             rsafmn = 1 / safmin
-   10       continue
-            knt = knt + 1
+            do
+               knt = knt + 1
 
-            x(1: n-1: incx) = rsafmn * x(1: n-1: incx)
-            beta = beta*rsafmn
-            alpha = alpha*rsafmn
-            if( (abs( beta ) < safmin) .and. (knt  <  20) ) &
-               go to 10
+               x(1: n-1: incx) = rsafmn * x(1: n-1: incx)
+               beta = beta*rsafmn
+               alpha = alpha*rsafmn
+               if( .not. ((abs( beta ) < safmin) .and. (knt  <  20) )) exit
+            end do
 
 !           new beta is at most 1, at least safmin
-
             xnorm = norm2(x(1: n-1))
             beta = -sign(norm2([alpha, xnorm]), alpha )
          end if
@@ -1152,10 +1146,9 @@ end function house
          x(1: n-1: incx) = x(1: n-1: incx) / (alpha - beta)
 
 !        if alpha is subnormal, it may lose relative accuracy
-
-         do 20 j = 1, knt
+         do j = 1, knt
             beta = beta*safmin
- 20      continue
+         end do
          alpha = beta
       end if
 
