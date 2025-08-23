@@ -3,10 +3,8 @@ var namespaces_dup =
     [ "numa", "namespacenuma.html", "namespacenuma" ],
     [ "numa__dlahqr", "namespacenuma____dlahqr.html", [
       [ "dlahqr", "namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40", null ],
-      [ "dlamch", "namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b", null ],
       [ "dlanv2", "namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2", null ],
-      [ "dlarfg", "namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07", null ],
-      [ "lsame", "namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f", null ]
+      [ "dlarfg", "namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07", null ]
     ] ],
     [ "numa__exercises", "namespacenuma____exercises.html", [
       [ "assert", "namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec", null ],

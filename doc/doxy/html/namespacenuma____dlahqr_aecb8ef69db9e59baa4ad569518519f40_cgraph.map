@@ -1,15 +1,7 @@
 <map id="numa__dlahqr::dlahqr" name="numa__dlahqr::dlahqr">
-<area shape="rect" id="Node000001" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="5,29,168,55"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b" title="DLAMCH" alt="" coords="431,29,601,55"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="140,27,216,14,299,9,383,14,448,24,447,29,382,19,299,14,216,19,140,32"/>
-<area shape="rect" id="Node000004" href="$namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="216,29,383,55"/>
-<area shape="poly" id="edge5_Node000001_Node000004" title=" " alt="" coords="169,39,202,39,202,45,169,45"/>
-<area shape="rect" id="Node000005" href="$namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="219,79,379,104"/>
-<area shape="poly" id="edge7_Node000001_Node000005" title=" " alt="" coords="143,52,231,73,230,78,141,57"/>
-<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="481,31,474,21,477,11,492,5,516,3,546,6,557,15,554,20,544,11,516,8,493,10,481,15,479,20,485,28"/>
-<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f" title="LSAME" alt="" coords="649,29,812,55"/>
-<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="602,39,635,39,635,45,602,45"/>
-<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="696,31,688,21,692,11,707,5,731,3,760,6,772,15,769,20,758,11,731,8,708,10,696,15,693,20,700,28"/>
-<area shape="poly" id="edge6_Node000004_Node000002" title=" " alt="" coords="383,39,417,39,417,45,383,45"/>
-<area shape="poly" id="edge8_Node000005_Node000002" title=" " alt="" coords="355,76,446,55,447,60,356,81"/>
+<area shape="rect" id="Node000001" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="5,31,168,56"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="216,5,383,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="168,31,202,27,203,32,169,36"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="219,55,379,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="169,50,206,54,205,59,168,55"/>
 </map>

@@ -1,7 +1,5 @@
 var NAVTREEINDEX1 =
 {
-"namespacenuma____functions.html#a2d5c62e4aeb215e34a5fd0732e108144":[1,0,3,17],
-"namespacenuma____functions.html#a33689aff388bae206d49deae60f3d046":[1,0,3,15],
 "namespacenuma____functions.html#a37a29d42d99dbdc4edd15dd1c9ad38d0":[1,0,3,11],
 "namespacenuma____functions.html#a4290a84b12241fa2fdbb0981e7e15ac7":[1,0,3,4],
 "namespacenuma____functions.html#a4d8ddfd3480b04c865bbd769483537e9":[1,0,3,18],

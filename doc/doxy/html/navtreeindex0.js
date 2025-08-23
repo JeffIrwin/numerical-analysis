@@ -209,10 +209,8 @@ var NAVTREEINDEX0 =
 "namespacenuma.html#afe896c658d8e8700366f429a03172195":[1,0,0,50],
 "namespacenuma.html#aff3295684d06e44e8f4ea19b0db4364c":[1,0,0,76],
 "namespacenuma____dlahqr.html":[1,0,1],
-"namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b":[1,0,1,1],
-"namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07":[1,0,1,3],
-"namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f":[1,0,1,4],
-"namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2":[1,0,1,2],
+"namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07":[1,0,1,2],
+"namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2":[1,0,1,1],
 "namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40":[1,0,1,0],
 "namespacenuma____exercises.html":[1,0,2],
 "namespacenuma____exercises.html#a08413164d188386dda3946d5bec50fd4":[1,0,2,2],
@@ -249,5 +247,7 @@ var NAVTREEINDEX0 =
 "namespacenuma____exercises.html#ae99429cf231bf4e706fa4a50fff64449":[1,0,2,14],
 "namespacenuma____exercises.html#af1ed546c954694a90b527df7622b9101":[1,0,2,30],
 "namespacenuma____functions.html":[1,0,3],
-"namespacenuma____functions.html#a151bb9bc9e5257fd39b62122703d4fa7":[1,0,3,10]
+"namespacenuma____functions.html#a151bb9bc9e5257fd39b62122703d4fa7":[1,0,3,10],
+"namespacenuma____functions.html#a2d5c62e4aeb215e34a5fd0732e108144":[1,0,3,17],
+"namespacenuma____functions.html#a33689aff388bae206d49deae60f3d046":[1,0,3,15]
 };
