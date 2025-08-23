@@ -1,0 +1,8 @@
+<map id="numa::gauss_jordan" name="numa::gauss_jordan">
+<area shape="rect" id="Node000001" title=" " alt="" coords="159,55,312,80"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#ac61632c270e90da5163ec8260d13d6a2" title=" " alt="" coords="15,29,101,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="145,57,101,51,102,45,145,52"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#a462c36b5ed960dcac5d6268da550bb7e" title=" " alt="" coords="5,79,111,104"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="146,82,111,87,111,82,145,77"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="89,19,80,11,58,8,39,10,30,15,28,20,33,28,29,31,23,21,26,11,38,5,58,3,82,6,92,15"/>
+</map>

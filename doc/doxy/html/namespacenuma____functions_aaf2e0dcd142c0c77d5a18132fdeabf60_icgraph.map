@@ -1,6 +1,4 @@
 <map id="numa__functions::inv_1px1p5" name="numa__functions::inv_1px1p5">
-<area shape="rect" id="Node000001" title=" " alt="" coords="244,29,405,69"/>
-<area shape="poly" id="edge2_Node000001_Node000001" title=" " alt="" coords="363,18,349,11,325,8,303,10,290,15,285,21,288,28,283,30,280,20,287,10,302,5,325,3,351,6,365,13"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,167,69"/>
+<area shape="poly" id="edge1_Node000001_Node000001" title=" " alt="" coords="112,17,103,11,86,8,71,10,62,14,59,21,60,28,55,29,53,20,58,11,69,5,86,3,105,6,116,13"/>
 </map>

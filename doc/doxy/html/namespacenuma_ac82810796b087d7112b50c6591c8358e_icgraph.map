@@ -1,0 +1,5 @@
+<map id="numa::house" name="numa::house">
+<area shape="rect" id="Node000001" title=" " alt="" coords="212,5,319,31"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#a2df0fddcd1210a8fce8a9f6f9c327f87" title=" " alt="" coords="5,5,164,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="198,21,164,21,164,15,198,15"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="numa__dlahqr::dlanv2" name="numa__dlahqr::dlanv2">
+<area shape="rect" id="Node000001" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="401,5,568,31"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="191,5,353,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="387,21,353,21,353,15,387,15"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#abfed19944d6ffc80dc809c03331d8457" title=" " alt="" coords="5,5,143,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="177,21,143,21,143,15,177,15"/>
+</map>

@@ -1,7 +1,5 @@
 <map id="numa::lagrange_interpolator_vals" name="numa::lagrange_interpolator_vals">
-<area shape="rect" id="Node000001" title=" " alt="" coords="499,13,740,38"/>
-<area shape="rect" id="Node000002" href="$namespacenuma.html#aaee1bce5c4f073af2bf9b42802f8f10a" title="Interpolates a function at given points using Lagrange interpolation." alt="" coords="244,13,451,38"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="485,28,451,28,451,23,485,23"/>
-<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#a810a12e9585d95da65507723ae4cba74" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="231,28,196,28,196,23,231,23"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="260,5,501,31"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#aaee1bce5c4f073af2bf9b42802f8f10a" title="Interpolates a function at given points using Lagrange interpolation." alt="" coords="5,5,212,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="246,21,212,21,212,15,246,15"/>
 </map>

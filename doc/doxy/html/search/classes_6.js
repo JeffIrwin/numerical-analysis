@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['to_5fstr_0',['to_str',['../interfacenuma____utils_1_1to__str.html',1,'numa__utils']]]
+  ['outer_5fproduct_0',['outer_product',['../interfacenuma_1_1outer__product.html',1,'numa']]]
 ];

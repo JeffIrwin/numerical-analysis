@@ -1,6 +1,6 @@
 <map id="numa::banded_invmul" name="numa::banded_invmul">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,31,172,56"/>
-<area shape="rect" id="Node000002" href="$namespacenuma.html#a609167b10ec7538892b56a3beba9149c" title=" " alt="" coords="220,5,380,31"/>
+<area shape="rect" id="Node000001" title="Solves a linear system a*x == b for x with a banded matrix a." alt="" coords="5,31,172,56"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#ab4c4c7da3e2cdcee29a048d4ed61d994" title=" " alt="" coords="220,5,380,31"/>
 <area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,31,206,27,207,32,173,36"/>
 <area shape="rect" id="Node000003" href="$namespacenuma.html#a5787e6c17cb170e9f2b035c3f3f2bf88" title=" " alt="" coords="221,55,379,80"/>
 <area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="173,50,208,54,207,60,172,55"/>

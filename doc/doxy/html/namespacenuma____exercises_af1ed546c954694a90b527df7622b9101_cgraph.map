@@ -1,0 +1,8 @@
+<map id="numa__exercises::test_bad_numa_usage" name="numa__exercises::test_bad_numa_usage">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,22,172,62"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#abd3a9dfaf528728a53a01750d6d15c04" title=" " alt="" coords="220,29,411,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,39,206,39,206,45,172,45"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec" title=" " alt="" coords="459,29,641,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="411,39,445,39,445,45,411,45"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="512,31,504,21,508,11,524,5,550,3,583,7,596,16,592,20,581,11,550,8,525,10,511,15,509,20,516,27"/>
+</map>

@@ -1,24 +1,8 @@
 <map id="numa__exercises::chapter_2_cubic_splines" name="numa__exercises::chapter_2_cubic_splines">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,73,196,113"/>
-<area shape="rect" id="Node000002" href="$namespacenuma.html#ab027fd81d1cff38531287180234d19ce" title=" " alt="" coords="249,5,421,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="154,70,243,39,269,32,270,37,245,45,156,75"/>
-<area shape="rect" id="Node000003" href="$namespacenuma.html#a385afd7c9a2216d0c91e5dbce55d940d" title=" " alt="" coords="252,55,417,80"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="196,80,238,75,239,80,196,85"/>
-<area shape="rect" id="Node000004" href="$namespacenuma.html#a0acf2a3f7dab2c3ed7855c7cb3a5dd2e" title=" " alt="" coords="244,104,425,129"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="196,100,231,103,230,109,196,105"/>
-<area shape="rect" id="Node000009" href="$namespacenuma____exercises.html#ab8d02bd30223c4930913d3f1afc39626" title=" " alt="" coords="251,165,418,191"/>
-<area shape="poly" id="edge10_Node000001_Node000009" title=" " alt="" coords="157,110,287,158,285,163,155,115"/>
-<area shape="rect" id="Node000005" href="$namespacenuma.html#a24466cee1dc1e751770c8f51fa800642" title=" " alt="" coords="486,39,643,79"/>
-<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="386,101,472,80,473,85,387,107"/>
-<area shape="rect" id="Node000008" href="$namespacenuma.html#a6e76fcf01062a3d604ffd06e7e4f0a1e" title=" " alt="" coords="484,104,645,129"/>
-<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="426,114,470,114,470,119,426,119"/>
-<area shape="rect" id="Node000006" href="$namespacenuma.html#a0a8f4f5e6350df27dae2a6539d1d1f38" title=" " alt="" coords="704,49,859,75"/>
-<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="644,58,691,58,690,64,644,63"/>
-<area shape="rect" id="Node000007" href="$namespacenuma.html#a4ca722516e8d0db62b7826e1e526f97a" title=" " alt="" coords="706,100,857,125"/>
-<area shape="poly" id="edge6_Node000005_Node000007" title=" " alt="" coords="645,76,716,94,714,99,643,81"/>
-<area shape="poly" id="edge8_Node000008_Node000006" title=" " alt="" coords="615,101,717,75,718,81,616,107"/>
-<area shape="poly" id="edge9_Node000008_Node000007" title=" " alt="" coords="646,113,692,112,693,117,646,118"/>
-<area shape="rect" id="Node000010" href="$namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec" title=" " alt="" coords="473,177,656,203"/>
-<area shape="poly" id="edge11_Node000009_Node000010" title=" " alt="" coords="418,180,460,182,460,187,418,185"/>
-<area shape="poly" id="edge12_Node000010_Node000010" title=" " alt="" coords="529,179,522,169,526,159,540,153,565,151,595,154,607,163,603,168,593,159,565,156,542,158,529,163,527,168,533,176"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,22,196,62"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#ab8d02bd30223c4930913d3f1afc39626" title=" " alt="" coords="244,29,411,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="196,39,230,39,230,45,196,45"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec" title=" " alt="" coords="459,29,641,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="411,39,445,39,445,45,411,45"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="514,31,506,21,510,11,525,5,550,3,581,6,593,15,590,20,579,11,550,8,526,10,514,15,511,20,518,28"/>
 </map>

@@ -130,6 +130,7 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a361d6677057b5989ce0ac3d716dc2908" id="r_a361d6677057b5989ce0ac3d716dc2908"><td class="memItemLeft" align="right" valign="top">recursive subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a361d6677057b5989ce0ac3d716dc2908">sortidx_c64_1</a> (a, idx, lo_in, hi_in)</td></tr>
 <tr class="memitem:aa743df57005f55647002a6dbe4f7253b" id="r_aa743df57005f55647002a6dbe4f7253b"><td class="memItemLeft" align="right" valign="top">integer function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa743df57005f55647002a6dbe4f7253b">partition_f64_1</a> (a, idx, lo, hi)</td></tr>
 <tr class="memitem:a1163ebf47b9a403655ba5934edf78e43" id="r_a1163ebf47b9a403655ba5934edf78e43"><td class="memItemLeft" align="right" valign="top">integer function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1163ebf47b9a403655ba5934edf78e43">partition_c64_1</a> (a, idx, lo, hi)</td></tr>
+<tr class="memitem:a567d459dbf5deaece7b27b41c4179ddd" id="r_a567d459dbf5deaece7b27b41c4179ddd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a567d459dbf5deaece7b27b41c4179ddd">panic_core</a> (msg, present_iostat, file, line)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
@@ -326,6 +327,37 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a567d459dbf5deaece7b27b41c4179ddd" name="a567d459dbf5deaece7b27b41c4179ddd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a567d459dbf5deaece7b27b41c4179ddd">&#9670;&#160;</a></span>panic_core()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__utils::panic_core </td>
+          <td>(</td>
+          <td class="paramtype">character(len = *), intent(in)</td>          <td class="paramname"><span class="paramname"><em>msg</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)</td>          <td class="paramname"><span class="paramname"><em>present_iostat</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">character(len = *), intent(in)</td>          <td class="paramname"><span class="paramname"><em>file</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>line</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a1163ebf47b9a403655ba5934edf78e43" name="a1163ebf47b9a403655ba5934edf78e43"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1163ebf47b9a403655ba5934edf78e43">&#9670;&#160;</a></span>partition_c64_1()</h2>
 
@@ -405,14 +437,18 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____utils_aa743df57005f55647002a6dbe4f7253b_icgraph.png" border="0" usemap="#anamespacenuma____utils_aa743df57005f55647002a6dbe4f7253b_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____utils_aa743df57005f55647002a6dbe4f7253b_icgraph" id="anamespacenuma____utils_aa743df57005f55647002a6dbe4f7253b_icgraph">
-<area shape="rect" title=" " alt="" coords="645,29,809,69"/>
-<area shape="rect" href="namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="443,29,597,69"/>
-<area shape="poly" title=" " alt="" coords="631,52,598,52,598,47,631,47"/>
-<area shape="poly" title=" " alt="" coords="555,18,542,11,520,8,500,10,489,15,484,21,486,28,481,30,479,20,485,11,499,5,520,3,544,6,557,13"/>
-<area shape="rect" href="namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="232,37,395,62"/>
-<area shape="poly" title=" " alt="" coords="429,52,395,52,395,47,429,47"/>
-<area shape="rect" href="namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e" title=" " alt="" coords="5,37,184,62"/>
-<area shape="poly" title=" " alt="" coords="218,52,184,52,184,47,218,47"/>
+<area shape="rect" title=" " alt="" coords="655,47,819,87"/>
+<area shape="rect" href="namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="452,47,607,87"/>
+<area shape="poly" title=" " alt="" coords="641,70,607,70,607,65,641,65"/>
+<area shape="poly" title=" " alt="" coords="564,36,552,29,529,26,510,28,498,33,494,39,496,46,491,48,488,38,495,29,508,23,529,21,553,24,567,31"/>
+<area shape="rect" href="namespacenuma.html#a9327bfef59383f5e8c3132f9d3d392fa" title=" " alt="" coords="242,5,394,31"/>
+<area shape="poly" title=" " alt="" coords="438,49,372,33,374,28,439,44"/>
+<area shape="rect" href="namespacenuma.html#aae0af1b69aaaeeb785063c3765b56577" title=" " alt="" coords="232,55,404,80"/>
+<area shape="poly" title=" " alt="" coords="438,70,404,70,404,65,438,65"/>
+<area shape="rect" href="namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="237,104,399,129"/>
+<area shape="poly" title=" " alt="" coords="439,91,374,107,372,101,438,86"/>
+<area shape="rect" href="namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e" title=" " alt="" coords="5,104,184,129"/>
+<area shape="poly" title=" " alt="" coords="223,119,184,119,184,114,223,114"/>
 </map>
 </div>
 
@@ -478,16 +514,6 @@ Here is the caller graph for this function:</div>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="namespacenuma____utils_a656d44b9d4efa4cb4be854515dfd3b2e_icgraph.png" border="0" usemap="#anamespacenuma____utils_a656d44b9d4efa4cb4be854515dfd3b2e_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacenuma____utils_a656d44b9d4efa4cb4be854515dfd3b2e_icgraph" id="anamespacenuma____utils_a656d44b9d4efa4cb4be854515dfd3b2e_icgraph">
-<area shape="rect" title=" " alt="" coords="244,5,392,45"/>
-<area shape="rect" href="namespacenuma____exercises.html#adb5a199aa5fbfe26bfa876418b92371d" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" title=" " alt="" coords="230,28,196,28,196,23,230,23"/>
-</map>
-</div>
 
 </div>
 </div>
@@ -734,12 +760,16 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____utils_a3189455e849acdddba23c4944975e4e0_icgraph.png" border="0" usemap="#anamespacenuma____utils_a3189455e849acdddba23c4944975e4e0_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____utils_a3189455e849acdddba23c4944975e4e0_icgraph" id="anamespacenuma____utils_a3189455e849acdddba23c4944975e4e0_icgraph">
-<area shape="rect" title=" " alt="" coords="443,29,597,69"/>
-<area shape="poly" title=" " alt="" coords="555,18,542,11,520,8,500,10,489,15,484,21,486,28,481,30,479,20,485,11,499,5,520,3,544,6,557,13"/>
-<area shape="rect" href="namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="232,37,395,62"/>
-<area shape="poly" title=" " alt="" coords="429,52,395,52,395,47,429,47"/>
-<area shape="rect" href="namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e" title=" " alt="" coords="5,37,184,62"/>
-<area shape="poly" title=" " alt="" coords="218,52,184,52,184,47,218,47"/>
+<area shape="rect" title=" " alt="" coords="452,47,607,87"/>
+<area shape="poly" title=" " alt="" coords="565,36,552,29,529,26,509,28,497,33,493,39,495,46,490,48,487,38,494,28,508,23,529,21,554,24,567,31"/>
+<area shape="rect" href="namespacenuma.html#a9327bfef59383f5e8c3132f9d3d392fa" title=" " alt="" coords="242,5,394,31"/>
+<area shape="poly" title=" " alt="" coords="438,49,372,33,374,28,439,44"/>
+<area shape="rect" href="namespacenuma.html#aae0af1b69aaaeeb785063c3765b56577" title=" " alt="" coords="232,55,404,80"/>
+<area shape="poly" title=" " alt="" coords="438,70,404,70,404,65,438,65"/>
+<area shape="rect" href="namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="237,104,399,129"/>
+<area shape="poly" title=" " alt="" coords="439,91,374,107,372,101,438,86"/>
+<area shape="rect" href="namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e" title=" " alt="" coords="5,104,184,129"/>
+<area shape="poly" title=" " alt="" coords="223,119,184,119,184,114,223,114"/>
 </map>
 </div>
 

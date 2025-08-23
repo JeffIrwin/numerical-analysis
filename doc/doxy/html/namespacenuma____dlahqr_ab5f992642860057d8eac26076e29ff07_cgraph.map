@@ -1,0 +1,24 @@
+<map id="numa__dlahqr::dlarfg" name="numa__dlahqr::dlarfg">
+<area shape="rect" id="Node000001" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="5,140,165,165"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b" title="DLAMCH" alt="" coords="428,29,599,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="99,138,146,100,178,80,212,65,263,51,315,42,414,35,414,41,316,47,264,56,214,70,181,85,150,104,102,142"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____dlahqr.html#ac3465e58507f5179841a5b01011c66b3" title="DLAPY2 returns sqrt(x2+y2)." alt="" coords="213,103,380,128"/>
+<area shape="poly" id="edge5_Node000001_Node000004" title=" " alt="" coords="157,137,211,128,212,133,158,143"/>
+<area shape="rect" id="Node000007" href="$namespacenuma____dlahqr.html#a738bddc79c9c5904742fb28c8c3bcb60" title="DNRM2" alt="" coords="215,176,379,201"/>
+<area shape="poly" id="edge12_Node000001_Node000007" title=" " alt="" coords="161,163,209,171,208,176,160,168"/>
+<area shape="rect" id="Node000008" href="$namespacenuma____dlahqr.html#ac94174d48eba3673986e4dba502b707c" title="DSCAL" alt="" coords="219,225,375,251"/>
+<area shape="poly" id="edge14_Node000001_Node000008" title=" " alt="" coords="111,163,158,187,214,212,234,219,233,224,212,216,156,192,109,168"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="478,31,470,21,474,11,489,5,513,3,543,6,555,15,552,20,541,11,513,8,490,10,478,15,476,20,482,28"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f" title="LSAME" alt="" coords="654,29,817,55"/>
+<area shape="poly" id="edge3_Node000002_Node000003" title=" " alt="" coords="599,39,640,39,640,45,599,45"/>
+<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="699,31,691,21,695,11,710,5,735,3,766,6,778,15,775,20,764,11,735,8,712,10,699,15,697,20,703,28"/>
+<area shape="poly" id="edge10_Node000004_Node000002" title=" " alt="" coords="330,100,427,65,454,56,456,61,429,70,332,105"/>
+<area shape="poly" id="edge11_Node000004_Node000004" title=" " alt="" coords="262,104,255,94,259,84,273,78,297,76,326,80,338,89,334,93,324,85,297,81,274,83,262,88,260,94,266,101"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____dlahqr.html#acc1cf66ccb19e9a2800792448c764621" title="DISNAN tests input for NaN." alt="" coords="431,103,596,128"/>
+<area shape="poly" id="edge6_Node000004_Node000005" title=" " alt="" coords="380,113,417,113,417,118,380,118"/>
+<area shape="poly" id="edge7_Node000005_Node000005" title=" " alt="" coords="478,104,470,94,474,84,489,78,513,76,543,80,555,89,552,93,541,85,513,81,490,83,478,88,476,94,482,101"/>
+<area shape="rect" id="Node000006" href="$namespacenuma____dlahqr.html#ae1dfc0c7f9a95a9f6eea0cbbe1391c77" title="DLAISNAN tests input for NaN by comparing two arguments for inequality." alt="" coords="647,103,824,128"/>
+<area shape="poly" id="edge8_Node000005_Node000006" title=" " alt="" coords="596,113,633,113,633,118,596,118"/>
+<area shape="poly" id="edge9_Node000006_Node000006" title=" " alt="" coords="699,104,691,94,695,84,710,78,735,76,766,80,778,89,775,93,764,85,735,81,712,83,699,88,697,94,703,101"/>
+<area shape="poly" id="edge13_Node000007_Node000007" title=" " alt="" coords="262,178,255,168,259,158,273,152,297,149,326,153,338,162,334,166,324,158,297,155,274,157,262,161,260,167,266,174"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="numa::house" name="numa::house">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,67,112,92"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#acc700dfd9710fae3362917b302e3bbf2" title=" " alt="" coords="165,29,256,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="110,64,151,54,153,59,112,69"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#a64abe54a7ff752a18722999d0438667b" title=" " alt="" coords="160,103,261,128"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="113,89,147,98,146,103,112,95"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="185,31,180,21,182,11,193,5,211,3,232,6,241,15,237,19,229,11,211,8,195,10,187,15,185,20,190,28"/>
+<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="185,104,180,94,182,85,193,78,211,76,232,79,241,88,237,92,229,84,211,81,195,83,187,88,185,94,190,101"/>
+</map>

@@ -1,12 +1,4 @@
 <map id="numa__functions::sin_fn" name="numa__functions::sin_fn">
-<area shape="rect" id="Node000001" title=" " alt="" coords="244,109,424,134"/>
-<area shape="poly" id="edge5_Node000001_Node000001" title=" " alt="" coords="376,100,365,91,334,87,309,89,296,94,293,100,300,107,296,110,288,100,292,90,308,84,334,82,367,86,379,95"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="294,105,195,60,163,48,165,43,197,55,296,100"/>
-<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#acf06656fe2b434f1ffbbf0ba4e3b54d3" title=" " alt="" coords="5,69,196,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="230,110,196,105,197,100,230,104"/>
-<area shape="rect" id="Node000004" href="$namespacenuma____exercises.html#a73968566bd91091b3b473c73cc78ad6a" title=" " alt="" coords="5,133,196,173"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="230,138,197,143,196,138,230,133"/>
-<area shape="rect" id="Node000005" href="$namespacenuma____exercises.html#aad35ac7830061b6a189dd112a43b70c3" title=" " alt="" coords="5,197,196,237"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="296,143,197,188,165,200,163,195,195,183,294,138"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,185,55"/>
+<area shape="poly" id="edge1_Node000001_Node000001" title=" " alt="" coords="127,19,118,11,95,8,76,10,67,15,65,20,70,28,66,31,59,21,63,11,75,5,95,3,120,6,130,15"/>
 </map>

@@ -1,0 +1,35 @@
+<map id="numa__dlahqr::dlahqr" name="numa__dlahqr::dlahqr">
+<area shape="rect" id="Node000001" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="5,157,168,183"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#a6064eae025eb49f78960e29eff32a81f" title="DCOPY" alt="" coords="219,5,380,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="97,155,145,104,178,74,215,48,242,33,245,38,217,52,181,79,148,108,101,159"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b" title="DLAMCH" alt="" coords="645,108,816,133"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="147,155,216,142,323,125,431,115,514,113,597,115,632,116,632,121,597,121,514,119,431,121,323,130,216,147,148,160"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="DLANV2 computes the Schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="216,157,383,183"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="169,167,202,167,202,173,169,173"/>
+<area shape="rect" id="Node000009" href="$namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="219,207,379,232"/>
+<area shape="poly" id="edge15_Node000001_Node000009" title=" " alt="" coords="143,180,231,201,230,206,141,185"/>
+<area shape="rect" id="Node000012" href="$namespacenuma____dlahqr.html#a7185b315178d5d07e31663c68ad1bc33" title="DROT" alt="" coords="225,256,373,281"/>
+<area shape="poly" id="edge21_Node000001_Node000012" title=" " alt="" coords="109,181,157,210,217,241,238,249,236,254,215,246,154,215,106,185"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="695,110,688,100,692,90,706,84,731,81,761,85,773,94,769,98,759,90,731,87,708,89,695,94,693,99,699,106"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____dlahqr.html#acfbe5372eb0c806f9454ef4da2f14c0f" title="LSAME" alt="" coords="871,108,1034,133"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="816,118,857,118,857,123,816,123"/>
+<area shape="poly" id="edge5_Node000004_Node000004" title=" " alt="" coords="917,110,909,100,913,90,928,84,953,81,983,85,996,94,992,98,981,90,953,87,929,89,916,94,914,99,921,106"/>
+<area shape="poly" id="edge7_Node000005_Node000003" title=" " alt="" coords="358,155,430,142,534,131,631,123,632,128,534,136,431,147,359,160"/>
+<area shape="rect" id="Node000006" href="$namespacenuma____dlahqr.html#ac3465e58507f5179841a5b01011c66b3" title="DLAPY2 returns sqrt(x2+y2)." alt="" coords="431,181,597,207"/>
+<area shape="poly" id="edge8_Node000005_Node000006" title=" " alt="" coords="384,177,417,180,416,186,383,182"/>
+<area shape="poly" id="edge13_Node000006_Node000003" title=" " alt="" coords="546,179,644,142,668,135,670,140,646,147,548,184"/>
+<area shape="poly" id="edge14_Node000006_Node000006" title=" " alt="" coords="479,183,472,173,475,163,490,157,514,155,544,158,555,167,552,172,542,163,514,160,491,162,479,167,477,172,483,180"/>
+<area shape="rect" id="Node000007" href="$namespacenuma____dlahqr.html#acc1cf66ccb19e9a2800792448c764621" title="DISNAN tests input for NaN." alt="" coords="648,181,813,207"/>
+<area shape="poly" id="edge9_Node000006_Node000007" title=" " alt="" coords="597,191,634,191,634,197,597,197"/>
+<area shape="poly" id="edge10_Node000007_Node000007" title=" " alt="" coords="695,183,688,173,692,163,706,157,731,155,761,158,773,167,769,172,759,163,731,160,708,162,695,167,693,172,699,180"/>
+<area shape="rect" id="Node000008" href="$namespacenuma____dlahqr.html#ae1dfc0c7f9a95a9f6eea0cbbe1391c77" title="DLAISNAN tests input for NaN by comparing two arguments for inequality." alt="" coords="864,181,1041,207"/>
+<area shape="poly" id="edge11_Node000007_Node000008" title=" " alt="" coords="814,191,850,191,850,197,814,197"/>
+<area shape="poly" id="edge12_Node000008_Node000008" title=" " alt="" coords="917,183,909,173,913,163,928,157,953,155,983,158,996,167,992,172,981,163,953,160,929,162,916,167,914,172,921,180"/>
+<area shape="poly" id="edge16_Node000009_Node000003" title=" " alt="" coords="348,229,402,239,466,244,533,238,566,229,596,216,613,200,620,182,627,162,644,143,653,137,655,141,647,147,632,165,625,184,617,203,599,220,567,234,534,243,466,249,401,244,347,235"/>
+<area shape="poly" id="edge17_Node000009_Node000006" title=" " alt="" coords="379,207,417,203,417,208,380,213"/>
+<area shape="rect" id="Node000010" href="$namespacenuma____dlahqr.html#a738bddc79c9c5904742fb28c8c3bcb60" title="DNRM2" alt="" coords="432,307,596,332"/>
+<area shape="poly" id="edge18_Node000009_Node000010" title=" " alt="" coords="352,230,384,241,438,268,484,297,481,301,435,273,382,246,350,235"/>
+<area shape="rect" id="Node000011" href="$namespacenuma____dlahqr.html#ac94174d48eba3673986e4dba502b707c" title="DSCAL" alt="" coords="436,356,592,381"/>
+<area shape="poly" id="edge20_Node000009_Node000011" title=" " alt="" coords="366,230,384,241,396,254,403,267,409,293,415,318,422,330,432,341,441,347,437,352,429,345,417,333,410,320,404,294,398,269,392,257,381,245,363,234"/>
+<area shape="poly" id="edge19_Node000010_Node000010" title=" " alt="" coords="479,308,472,298,475,288,490,282,514,280,544,284,555,293,552,297,542,289,514,285,491,287,479,292,477,298,483,305"/>
+</map>

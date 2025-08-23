@@ -10,7 +10,7 @@ var searchData=
   ['inv_5fsquare_5ffn_7',['inv_square_fn',['../namespacenuma____functions.html#a151bb9bc9e5257fd39b62122703d4fa7',1,'numa__functions']]],
   ['invert_8',['invert',['../namespacenuma.html#a462c36b5ed960dcac5d6268da550bb7e',1,'numa']]],
   ['invmul_9',['invmul',['../interfacenuma_1_1invmul.html',1,'numa']]],
-  ['invmul_5fc64_10',['invmul_c64',['../namespacenuma.html#a97d2134c03a9f75fdc915df91b028d57',1,'numa']]],
-  ['invmul_5fmat_11',['invmul_mat',['../namespacenuma.html#aa93d16d249bd735ee2b6d5737e8356f2',1,'numa']]],
-  ['invmul_5fvec_12',['invmul_vec',['../namespacenuma.html#abba75c617ad8683091f0c9b2819cac92',1,'numa']]]
+  ['invmul_5fmat_5ff64_10',['invmul_mat_f64',['../namespacenuma.html#a5733cb26b1750c67ee97291419514499',1,'numa']]],
+  ['invmul_5fvec_5fc64_11',['invmul_vec_c64',['../namespacenuma.html#a214500079a3b31ad3af3da0dd50f4bf7',1,'numa']]],
+  ['invmul_5fvec_5ff64_12',['invmul_vec_f64',['../namespacenuma.html#a5aba4725f96dbc82d9c2997ec5428e5a',1,'numa']]]
 ];

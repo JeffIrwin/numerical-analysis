@@ -112,6 +112,12 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a4290a84b12241fa2fdbb0981e7e15ac7" id="r_a4290a84b12241fa2fdbb0981e7e15ac7"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4290a84b12241fa2fdbb0981e7e15ac7">exp_nx2</a> (x)</td></tr>
 <tr class="memitem:aca6599e6e70608dbd75c5c5b51f20ea8" id="r_aca6599e6e70608dbd75c5c5b51f20ea8"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aca6599e6e70608dbd75c5c5b51f20ea8">fn_example_pg171</a> (x)</td></tr>
 <tr class="memitem:ad4325c7d3487a3136d6d0d7b5d5512f2" id="r_ad4325c7d3487a3136d6d0d7b5d5512f2"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad4325c7d3487a3136d6d0d7b5d5512f2">bessel_3_2p5</a> (tau)</td></tr>
+<tr class="memitem:aa47e209f97bf805626cb92e36810c576" id="r_aa47e209f97bf805626cb92e36810c576"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa47e209f97bf805626cb92e36810c576">rate_fn</a> (x, beta)</td></tr>
+<tr class="memitem:ae563121b3e881b11584701179a60cd31" id="r_ae563121b3e881b11584701179a60cd31"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae563121b3e881b11584701179a60cd31">rate_dx_fn</a> (x, beta)</td></tr>
+<tr class="memitem:a845c2aec2e11a1c7d7df9b71444bd2ca" id="r_a845c2aec2e11a1c7d7df9b71444bd2ca"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a845c2aec2e11a1c7d7df9b71444bd2ca">bimodal_fn</a> (x, pk)</td></tr>
+<tr class="memitem:a33689aff388bae206d49deae60f3d046" id="r_a33689aff388bae206d49deae60f3d046"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a33689aff388bae206d49deae60f3d046">rosenbrock_banana_beta</a> (dummy, x)</td></tr>
+<tr class="memitem:ab8a5817f988b9c2656314cf7925e8042" id="r_ab8a5817f988b9c2656314cf7925e8042"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab8a5817f988b9c2656314cf7925e8042">rosenbrock_banana</a> (x)</td></tr>
+<tr class="memitem:a76e08204f398e8b972d78393e659fa74" id="r_a76e08204f398e8b972d78393e659fa74"><td class="memItemLeft" align="right" valign="top">double precision function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a76e08204f398e8b972d78393e659fa74">rosenbrock_banana_nd</a> (x)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Function callback definitions for testing interpolators, integrators, etc. </p>
@@ -144,12 +150,31 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_ad4325c7d3487a3136d6d0d7b5d5512f2_icgraph.png" border="0" usemap="#anamespacenuma____functions_ad4325c7d3487a3136d6d0d7b5d5512f2_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_ad4325c7d3487a3136d6d0d7b5d5512f2_icgraph" id="anamespacenuma____functions_ad4325c7d3487a3136d6d0d7b5d5512f2_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,427,69"/>
-<area shape="poly" title=" " alt="" coords="375,18,361,11,335,8,313,10,299,15,294,21,297,28,292,30,289,20,296,10,312,5,335,3,363,6,378,13"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" title=" " alt="" coords="5,29,188,69"/>
+<area shape="poly" title=" " alt="" coords="127,17,116,11,97,8,79,10,69,15,65,21,67,28,62,30,60,20,66,11,78,5,97,3,118,6,130,13"/>
 </map>
 </div>
+
+</div>
+</div>
+<a id="a845c2aec2e11a1c7d7df9b71444bd2ca" name="a845c2aec2e11a1c7d7df9b71444bd2ca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a845c2aec2e11a1c7d7df9b71444bd2ca">&#9670;&#160;</a></span>bimodal_fn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function numa__functions::bimodal_fn </td>
+          <td>(</td>
+          <td class="paramtype">double precision, intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pk</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -181,10 +206,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_ab7bca4ece6893c6125bae18b3a8ae2d2_icgraph.png" border="0" usemap="#anamespacenuma____functions_ab7bca4ece6893c6125bae18b3a8ae2d2_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_ab7bca4ece6893c6125bae18b3a8ae2d2_icgraph" id="anamespacenuma____functions_ab7bca4ece6893c6125bae18b3a8ae2d2_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,433,55"/>
-<area shape="poly" title=" " alt="" coords="381,20,370,11,339,8,313,10,300,15,297,20,304,27,300,31,292,21,296,11,312,5,339,3,372,7,385,16"/>
-<area shape="rect" href="namespacenuma____exercises.html#ad59bfcce56ca2fdb97a19344ee6e21f1" title=" " alt="" coords="5,22,196,62"/>
-<area shape="poly" title=" " alt="" coords="231,45,196,45,196,39,231,39"/>
+<area shape="rect" title=" " alt="" coords="5,29,195,55"/>
+<area shape="poly" title=" " alt="" coords="134,19,124,11,100,8,80,10,69,15,67,20,73,28,69,31,62,21,66,11,79,5,100,3,126,6,137,15"/>
 </map>
 </div>
 
@@ -235,10 +258,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_a4290a84b12241fa2fdbb0981e7e15ac7_icgraph.png" border="0" usemap="#anamespacenuma____functions_a4290a84b12241fa2fdbb0981e7e15ac7_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_a4290a84b12241fa2fdbb0981e7e15ac7_icgraph" id="anamespacenuma____functions_a4290a84b12241fa2fdbb0981e7e15ac7_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,440,55"/>
-<area shape="poly" title=" " alt="" coords="385,20,374,11,342,8,316,10,303,15,300,20,307,27,303,31,295,21,299,11,315,5,342,3,376,7,389,16"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,22,196,62"/>
-<area shape="poly" title=" " alt="" coords="231,45,196,45,196,39,231,39"/>
+<area shape="rect" title=" " alt="" coords="5,29,201,55"/>
+<area shape="poly" title=" " alt="" coords="138,19,128,11,103,8,83,10,72,15,70,20,75,28,71,31,64,21,68,11,81,5,103,3,130,6,141,15"/>
 </map>
 </div>
 
@@ -272,10 +293,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_aca6599e6e70608dbd75c5c5b51f20ea8_icgraph.png" border="0" usemap="#anamespacenuma____functions_aca6599e6e70608dbd75c5c5b51f20ea8_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_aca6599e6e70608dbd75c5c5b51f20ea8_icgraph" id="anamespacenuma____functions_aca6599e6e70608dbd75c5c5b51f20ea8_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,399,69"/>
-<area shape="poly" title=" " alt="" coords="358,18,345,11,321,8,300,10,288,15,283,21,285,28,280,30,278,20,284,10,299,5,321,3,347,6,361,13"/>
-<area shape="rect" href="namespacenuma____exercises.html#aad35ac7830061b6a189dd112a43b70c3" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" title=" " alt="" coords="5,29,160,69"/>
+<area shape="poly" title=" " alt="" coords="108,17,99,11,83,8,68,10,60,14,57,21,59,28,53,29,52,20,56,11,67,5,83,3,101,6,111,13"/>
 </map>
 </div>
 
@@ -309,10 +328,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_aaf2e0dcd142c0c77d5a18132fdeabf60_icgraph.png" border="0" usemap="#anamespacenuma____functions_aaf2e0dcd142c0c77d5a18132fdeabf60_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_aaf2e0dcd142c0c77d5a18132fdeabf60_icgraph" id="anamespacenuma____functions_aaf2e0dcd142c0c77d5a18132fdeabf60_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,405,69"/>
-<area shape="poly" title=" " alt="" coords="363,18,349,11,325,8,303,10,290,15,285,21,288,28,283,30,280,20,287,10,302,5,325,3,351,6,365,13"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" title=" " alt="" coords="5,29,167,69"/>
+<area shape="poly" title=" " alt="" coords="112,17,103,11,86,8,71,10,62,14,59,21,60,28,55,29,53,20,58,11,69,5,86,3,105,6,116,13"/>
 </map>
 </div>
 
@@ -346,10 +363,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_ac927a32505a69965486ef2f8fda50ff2_icgraph.png" border="0" usemap="#anamespacenuma____functions_ac927a32505a69965486ef2f8fda50ff2_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_ac927a32505a69965486ef2f8fda50ff2_icgraph" id="anamespacenuma____functions_ac927a32505a69965486ef2f8fda50ff2_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,444,55"/>
-<area shape="poly" title=" " alt="" coords="387,20,384,15,377,12,344,8,318,10,304,15,301,20,309,27,305,31,296,21,301,11,317,5,344,3,378,7,388,11,392,17"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,22,196,62"/>
-<area shape="poly" title=" " alt="" coords="230,45,196,45,196,39,230,39"/>
+<area shape="rect" title=" " alt="" coords="5,29,205,55"/>
+<area shape="poly" title=" " alt="" coords="140,19,130,11,105,8,84,10,73,15,71,20,77,28,73,31,66,21,69,11,83,5,105,3,132,6,144,15"/>
 </map>
 </div>
 
@@ -383,10 +398,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_a68900373173c02cb58040cabb62337ea_icgraph.png" border="0" usemap="#anamespacenuma____functions_a68900373173c02cb58040cabb62337ea_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_a68900373173c02cb58040cabb62337ea_icgraph" id="anamespacenuma____functions_a68900373173c02cb58040cabb62337ea_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,444,55"/>
-<area shape="poly" title=" " alt="" coords="387,20,384,15,377,12,344,8,318,10,304,15,301,20,309,27,305,31,296,21,301,11,317,5,344,3,378,7,388,11,392,17"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,22,196,62"/>
-<area shape="poly" title=" " alt="" coords="230,45,196,45,196,39,230,39"/>
+<area shape="rect" title=" " alt="" coords="5,29,205,55"/>
+<area shape="poly" title=" " alt="" coords="140,19,130,11,105,8,84,10,73,15,71,20,77,28,73,31,66,21,69,11,83,5,105,3,132,6,144,15"/>
 </map>
 </div>
 
@@ -420,10 +433,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_adbeb5e714f26440dfdf0a4770369fc4f_icgraph.png" border="0" usemap="#anamespacenuma____functions_adbeb5e714f26440dfdf0a4770369fc4f_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_adbeb5e714f26440dfdf0a4770369fc4f_icgraph" id="anamespacenuma____functions_adbeb5e714f26440dfdf0a4770369fc4f_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,405,69"/>
-<area shape="poly" title=" " alt="" coords="363,18,349,11,325,8,303,10,290,15,285,21,288,28,283,30,280,20,287,10,302,5,325,3,351,6,365,13"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" title=" " alt="" coords="5,29,167,69"/>
+<area shape="poly" title=" " alt="" coords="112,17,103,11,86,8,71,10,62,14,59,21,60,28,55,29,53,20,58,11,69,5,86,3,105,6,116,13"/>
 </map>
 </div>
 
@@ -457,10 +468,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_a151bb9bc9e5257fd39b62122703d4fa7_icgraph.png" border="0" usemap="#anamespacenuma____functions_a151bb9bc9e5257fd39b62122703d4fa7_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_a151bb9bc9e5257fd39b62122703d4fa7_icgraph" id="anamespacenuma____functions_a151bb9bc9e5257fd39b62122703d4fa7_icgraph">
-<area shape="rect" title=" " alt="" coords="244,29,405,69"/>
-<area shape="poly" title=" " alt="" coords="363,18,349,11,325,8,303,10,290,15,285,21,288,28,283,30,280,20,287,10,302,5,325,3,351,6,365,13"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" title=" " alt="" coords="5,29,167,69"/>
+<area shape="poly" title=" " alt="" coords="112,17,103,11,86,8,71,10,62,14,59,21,60,28,55,29,53,20,58,11,69,5,86,3,105,6,116,13"/>
 </map>
 </div>
 
@@ -480,20 +489,103 @@ Here is the caller graph for this function:</div>
         </tr>
       </table>
 </div><div class="memdoc">
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="namespacenuma____functions_a37a29d42d99dbdc4edd15dd1c9ad38d0_icgraph.png" border="0" usemap="#anamespacenuma____functions_a37a29d42d99dbdc4edd15dd1c9ad38d0_icgraph" loading="lazy" alt=""/></div>
-<map name="anamespacenuma____functions_a37a29d42d99dbdc4edd15dd1c9ad38d0_icgraph" id="anamespacenuma____functions_a37a29d42d99dbdc4edd15dd1c9ad38d0_icgraph">
-<area shape="rect" title=" " alt="" coords="244,77,425,102"/>
-<area shape="rect" href="namespacenuma____exercises.html#ad59bfcce56ca2fdb97a19344ee6e21f1" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" title=" " alt="" coords="273,76,174,48,175,43,275,70"/>
-<area shape="rect" href="namespacenuma____exercises.html#a810a12e9585d95da65507723ae4cba74" title=" " alt="" coords="5,69,196,109"/>
-<area shape="poly" title=" " alt="" coords="230,92,196,92,196,87,230,87"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,133,196,173"/>
-<area shape="poly" title=" " alt="" coords="275,108,175,136,174,131,273,103"/>
-</map>
+
 </div>
+</div>
+<a id="ae563121b3e881b11584701179a60cd31" name="ae563121b3e881b11584701179a60cd31"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae563121b3e881b11584701179a60cd31">&#9670;&#160;</a></span>rate_dx_fn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:), allocatable numa__functions::rate_dx_fn </td>
+          <td>(</td>
+          <td class="paramtype">double precision, intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>beta</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aa47e209f97bf805626cb92e36810c576" name="aa47e209f97bf805626cb92e36810c576"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa47e209f97bf805626cb92e36810c576">&#9670;&#160;</a></span>rate_fn()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function numa__functions::rate_fn </td>
+          <td>(</td>
+          <td class="paramtype">double precision, intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>beta</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ab8a5817f988b9c2656314cf7925e8042" name="ab8a5817f988b9c2656314cf7925e8042"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8a5817f988b9c2656314cf7925e8042">&#9670;&#160;</a></span>rosenbrock_banana()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function numa__functions::rosenbrock_banana </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a33689aff388bae206d49deae60f3d046" name="a33689aff388bae206d49deae60f3d046"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33689aff388bae206d49deae60f3d046">&#9670;&#160;</a></span>rosenbrock_banana_beta()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function numa__functions::rosenbrock_banana_beta </td>
+          <td>(</td>
+          <td class="paramtype">double precision, intent(in)</td>          <td class="paramname"><span class="paramname"><em>dummy</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a76e08204f398e8b972d78393e659fa74" name="a76e08204f398e8b972d78393e659fa74"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76e08204f398e8b972d78393e659fa74">&#9670;&#160;</a></span>rosenbrock_banana_nd()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function numa__functions::rosenbrock_banana_nd </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -525,16 +617,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_a2d5c62e4aeb215e34a5fd0732e108144_icgraph.png" border="0" usemap="#anamespacenuma____functions_a2d5c62e4aeb215e34a5fd0732e108144_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_a2d5c62e4aeb215e34a5fd0732e108144_icgraph" id="anamespacenuma____functions_a2d5c62e4aeb215e34a5fd0732e108144_icgraph">
-<area shape="rect" title=" " alt="" coords="244,109,424,134"/>
-<area shape="poly" title=" " alt="" coords="376,100,365,91,334,87,309,89,296,94,293,100,300,107,296,110,288,100,292,90,308,84,334,82,367,86,379,95"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" title=" " alt="" coords="294,105,195,60,163,48,165,43,197,55,296,100"/>
-<area shape="rect" href="namespacenuma____exercises.html#acf06656fe2b434f1ffbbf0ba4e3b54d3" title=" " alt="" coords="5,69,196,109"/>
-<area shape="poly" title=" " alt="" coords="230,110,196,105,197,100,230,104"/>
-<area shape="rect" href="namespacenuma____exercises.html#a73968566bd91091b3b473c73cc78ad6a" title=" " alt="" coords="5,133,196,173"/>
-<area shape="poly" title=" " alt="" coords="230,138,197,143,196,138,230,133"/>
-<area shape="rect" href="namespacenuma____exercises.html#aad35ac7830061b6a189dd112a43b70c3" title=" " alt="" coords="5,197,196,237"/>
-<area shape="poly" title=" " alt="" coords="296,143,197,188,165,200,163,195,195,183,294,138"/>
+<area shape="rect" title=" " alt="" coords="5,29,185,55"/>
+<area shape="poly" title=" " alt="" coords="127,19,118,11,95,8,76,10,67,15,65,20,70,28,66,31,59,21,63,11,75,5,95,3,120,6,130,15"/>
 </map>
 </div>
 
@@ -568,12 +652,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_a4d8ddfd3480b04c865bbd769483537e9_icgraph.png" border="0" usemap="#anamespacenuma____functions_a4d8ddfd3480b04c865bbd769483537e9_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_a4d8ddfd3480b04c865bbd769483537e9_icgraph" id="anamespacenuma____functions_a4d8ddfd3480b04c865bbd769483537e9_icgraph">
-<area shape="rect" title=" " alt="" coords="244,45,427,70"/>
-<area shape="poly" title=" " alt="" coords="378,36,366,27,335,23,310,25,297,30,294,36,301,43,297,46,289,36,293,26,309,20,335,18,368,22,381,31"/>
-<area shape="rect" href="namespacenuma____exercises.html#a73968566bd91091b3b473c73cc78ad6a" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" title=" " alt="" coords="230,46,196,41,197,36,231,40"/>
-<area shape="rect" href="namespacenuma____exercises.html#aad35ac7830061b6a189dd112a43b70c3" title=" " alt="" coords="5,69,196,109"/>
-<area shape="poly" title=" " alt="" coords="231,74,197,79,196,74,230,69"/>
+<area shape="rect" title=" " alt="" coords="5,29,188,55"/>
+<area shape="poly" title=" " alt="" coords="129,19,119,11,97,8,78,10,68,15,65,20,71,28,67,31,60,21,64,11,76,5,97,3,122,6,132,15"/>
 </map>
 </div>
 
@@ -607,12 +687,8 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="namespacenuma____functions_a749164d5a22f001078f51556c0a0cec2_icgraph.png" border="0" usemap="#anamespacenuma____functions_a749164d5a22f001078f51556c0a0cec2_icgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____functions_a749164d5a22f001078f51556c0a0cec2_icgraph" id="anamespacenuma____functions_a749164d5a22f001078f51556c0a0cec2_icgraph">
-<area shape="rect" title=" " alt="" coords="244,45,431,70"/>
-<area shape="poly" title=" " alt="" coords="380,36,368,27,337,23,312,25,299,30,296,36,303,43,299,46,291,36,295,26,311,20,337,18,370,22,383,31"/>
-<area shape="rect" href="namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" title=" " alt="" coords="230,46,196,41,197,36,231,40"/>
-<area shape="rect" href="namespacenuma____exercises.html#acf06656fe2b434f1ffbbf0ba4e3b54d3" title=" " alt="" coords="5,69,196,109"/>
-<area shape="poly" title=" " alt="" coords="231,74,197,79,196,74,230,69"/>
+<area shape="rect" title=" " alt="" coords="5,29,192,55"/>
+<area shape="poly" title=" " alt="" coords="132,19,122,11,99,8,79,10,69,15,66,20,72,28,68,31,61,21,65,11,77,5,99,3,124,6,135,15"/>
 </map>
 </div>
 

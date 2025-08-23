@@ -1,16 +1,12 @@
 <map id="numa::eig_hess_qr" name="numa::eig_hess_qr">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,80,149,105"/>
-<area shape="rect" id="Node000002" href="$namespacenuma.html#acc700dfd9710fae3362917b302e3bbf2" title=" " alt="" coords="433,29,524,55"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="131,77,197,65,316,51,419,43,420,48,316,56,198,70,132,83"/>
-<area shape="rect" id="Node000003" href="$namespacenuma.html#ae9ffddb64b05eda1a19dd7e5b93c9f45" title=" " alt="" coords="226,80,323,105"/>
-<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="149,90,213,90,213,95,149,95"/>
-<area shape="rect" id="Node000006" href="$namespacenuma.html#a2d4392f090a5fe8246988627df668530" title=" " alt="" coords="197,129,352,155"/>
-<area shape="poly" id="edge8_Node000001_Node000006" title=" " alt="" coords="129,103,211,123,209,129,128,108"/>
-<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="445,31,438,21,442,11,456,5,479,3,507,6,518,16,515,20,505,11,479,8,457,10,446,15,443,20,450,28"/>
-<area shape="poly" id="edge4_Node000003_Node000002" title=" " alt="" coords="323,78,419,54,421,59,324,83"/>
-<area shape="rect" id="Node000004" href="$namespacenuma.html#ae45c00471fbc73ab66e2b473d392ec17" title=" " alt="" coords="400,79,557,104"/>
-<area shape="poly" id="edge5_Node000003_Node000004" title=" " alt="" coords="324,90,386,89,386,95,324,95"/>
-<area shape="rect" id="Node000005" href="$namespacenuma.html#a64abe54a7ff752a18722999d0438667b" title=" " alt="" coords="428,152,529,177"/>
-<area shape="poly" id="edge6_Node000003_Node000005" title=" " alt="" coords="319,103,353,114,434,144,432,149,351,119,317,108"/>
-<area shape="poly" id="edge7_Node000005_Node000005" title=" " alt="" coords="445,154,438,144,442,134,456,128,479,125,507,129,518,138,515,142,505,134,479,131,457,133,446,137,443,143,450,150"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,55,149,80"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#acc700dfd9710fae3362917b302e3bbf2" title=" " alt="" coords="348,29,439,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="149,59,334,44,335,49,150,64"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#ae9ffddb64b05eda1a19dd7e5b93c9f45" title=" " alt="" coords="197,80,295,105"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="150,76,184,81,183,86,149,81"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="368,31,363,21,366,11,376,5,393,3,414,6,422,15,419,18,411,11,393,8,378,10,370,15,369,20,373,28"/>
+<area shape="poly" id="edge4_Node000003_Node000002" title=" " alt="" coords="283,77,342,57,344,62,285,82"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#a64abe54a7ff752a18722999d0438667b" title=" " alt="" coords="343,103,444,128"/>
+<area shape="poly" id="edge5_Node000003_Node000004" title=" " alt="" coords="295,97,330,103,329,108,294,103"/>
+<area shape="poly" id="edge6_Node000004_Node000004" title=" " alt="" coords="368,104,363,94,366,85,376,78,393,76,414,80,422,88,419,92,411,84,393,81,378,83,370,88,369,94,373,101"/>
 </map>

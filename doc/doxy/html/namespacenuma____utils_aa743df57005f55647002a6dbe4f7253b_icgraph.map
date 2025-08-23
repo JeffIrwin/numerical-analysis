@@ -1,10 +1,14 @@
 <map id="numa__utils::partition_f64_1" name="numa__utils::partition_f64_1">
-<area shape="rect" id="Node000001" title=" " alt="" coords="645,29,809,69"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="443,29,597,69"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="631,52,598,52,598,47,631,47"/>
-<area shape="poly" id="edge4_Node000002_Node000002" title=" " alt="" coords="555,18,542,11,520,8,500,10,489,15,484,21,486,28,481,30,479,20,485,11,499,5,520,3,544,6,557,13"/>
-<area shape="rect" id="Node000003" href="$namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="232,37,395,62"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="429,52,395,52,395,47,429,47"/>
-<area shape="rect" id="Node000004" href="$namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e" title=" " alt="" coords="5,37,184,62"/>
-<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="218,52,184,52,184,47,218,47"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="655,47,819,87"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="452,47,607,87"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="641,70,607,70,607,65,641,65"/>
+<area shape="poly" id="edge6_Node000002_Node000002" title=" " alt="" coords="564,36,552,29,529,26,510,28,498,33,494,39,496,46,491,48,488,38,495,29,508,23,529,21,553,24,567,31"/>
+<area shape="rect" id="Node000003" href="$namespacenuma.html#a9327bfef59383f5e8c3132f9d3d392fa" title=" " alt="" coords="242,5,394,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="438,49,372,33,374,28,439,44"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#aae0af1b69aaaeeb785063c3765b56577" title=" " alt="" coords="232,55,404,80"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="438,70,404,70,404,65,438,65"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f" title=" " alt="" coords="237,104,399,129"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="439,91,374,107,372,101,438,86"/>
+<area shape="rect" id="Node000006" href="$namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e" title=" " alt="" coords="5,104,184,129"/>
+<area shape="poly" id="edge5_Node000005_Node000006" title=" " alt="" coords="223,119,184,119,184,114,223,114"/>
 </map>

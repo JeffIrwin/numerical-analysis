@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['diag_0',['diag',['../interfacenuma_1_1diag.html',1,'numa']]]
+  ['compare_5flex_0',['compare_lex',['../interfacenuma____utils_1_1compare__lex.html',1,'numa__utils']]]
 ];

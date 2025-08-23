@@ -1,6 +1,4 @@
 <map id="numa__functions::bessel_3_2p5" name="numa__functions::bessel_3_2p5">
-<area shape="rect" id="Node000001" title=" " alt="" coords="244,29,427,69"/>
-<area shape="poly" id="edge1_Node000001_Node000001" title=" " alt="" coords="375,18,361,11,335,8,313,10,299,15,294,21,297,28,292,30,289,20,296,10,312,5,335,3,363,6,378,13"/>
-<area shape="rect" id="Node000002" href="$namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540" title=" " alt="" coords="5,29,196,69"/>
-<area shape="poly" id="edge2_Node000001_Node000002" title=" " alt="" coords="230,52,196,52,196,47,230,47"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,188,69"/>
+<area shape="poly" id="edge1_Node000001_Node000001" title=" " alt="" coords="127,17,116,11,97,8,79,10,69,15,65,21,67,28,62,30,60,20,66,11,78,5,97,3,118,6,130,13"/>
 </map>

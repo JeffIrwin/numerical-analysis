@@ -1,0 +1,10 @@
+<map id="numa__dlahqr::dnrm2" name="numa__dlahqr::dnrm2">
+<area shape="rect" id="Node000001" title="DNRM2" alt="" coords="609,29,773,55"/>
+<area shape="poly" id="edge4_Node000001_Node000001" title=" " alt="" coords="728,20,718,11,691,8,669,10,657,15,655,20,661,28,657,31,650,21,654,11,668,5,691,3,720,6,732,15"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07" title="DLARFG generates an elementary reflector (Householder matrix)." alt="" coords="401,29,561,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="596,45,561,45,561,39,596,39"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40" title="DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix,..." alt="" coords="191,29,353,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="388,45,354,45,354,39,388,39"/>
+<area shape="rect" id="Node000004" href="$namespacenuma.html#abfed19944d6ffc80dc809c03331d8457" title=" " alt="" coords="5,29,143,55"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="177,45,143,45,143,39,177,39"/>
+</map>

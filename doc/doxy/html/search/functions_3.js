@@ -1,7 +1,19 @@
 var searchData=
 [
-  ['diag_5fget_0',['diag_get',['../namespacenuma.html#a42260d732b8d759702c05bfdc56421d5',1,'numa']]],
-  ['diag_5fget_5fc64_1',['diag_get_c64',['../namespacenuma.html#aa86b09117856badf5ff4ca9dc66c7b50',1,'numa']]],
-  ['diag_5fset_2',['diag_set',['../namespacenuma.html#a30a5d959b6f0dd047e747d8980a66e83',1,'numa']]],
-  ['diff_5fcomplex_5fvecs_3',['diff_complex_vecs',['../namespacenuma____exercises.html#a8a75bb95dea98eb112c9e0ca121a49f3',1,'numa__exercises']]]
+  ['dcopy_0',['dcopy',['../namespacenuma____dlahqr.html#a6064eae025eb49f78960e29eff32a81f',1,'numa__dlahqr']]],
+  ['diag_5fget_1',['diag_get',['../namespacenuma.html#a42260d732b8d759702c05bfdc56421d5',1,'numa']]],
+  ['diag_5fget_5fc64_2',['diag_get_c64',['../namespacenuma.html#aa86b09117856badf5ff4ca9dc66c7b50',1,'numa']]],
+  ['diag_5fset_3',['diag_set',['../namespacenuma.html#a30a5d959b6f0dd047e747d8980a66e83',1,'numa']]],
+  ['diff_5fcomplex_5fvecs_4',['diff_complex_vecs',['../namespacenuma____exercises.html#a8a75bb95dea98eb112c9e0ca121a49f3',1,'numa__exercises']]],
+  ['disnan_5',['disnan',['../namespacenuma____dlahqr.html#acc1cf66ccb19e9a2800792448c764621',1,'numa__dlahqr']]],
+  ['dlahqr_6',['dlahqr',['../namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40',1,'numa__dlahqr']]],
+  ['dlaisnan_7',['dlaisnan',['../namespacenuma____dlahqr.html#ae1dfc0c7f9a95a9f6eea0cbbe1391c77',1,'numa__dlahqr']]],
+  ['dlamc3_8',['dlamc3',['../namespacenuma____dlahqr.html#a8eacd22558468f907fb4fb1d64d29299',1,'numa__dlahqr']]],
+  ['dlamch_9',['dlamch',['../namespacenuma____dlahqr.html#a4db05ea8dfaf77511c44725677e0d91b',1,'numa__dlahqr']]],
+  ['dlanv2_10',['dlanv2',['../namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2',1,'numa__dlahqr']]],
+  ['dlapy2_11',['dlapy2',['../namespacenuma____dlahqr.html#ac3465e58507f5179841a5b01011c66b3',1,'numa__dlahqr']]],
+  ['dlarfg_12',['dlarfg',['../namespacenuma____dlahqr.html#ab5f992642860057d8eac26076e29ff07',1,'numa__dlahqr']]],
+  ['dnrm2_13',['dnrm2',['../namespacenuma____dlahqr.html#a738bddc79c9c5904742fb28c8c3bcb60',1,'numa__dlahqr']]],
+  ['drot_14',['drot',['../namespacenuma____dlahqr.html#a7185b315178d5d07e31663c68ad1bc33',1,'numa__dlahqr']]],
+  ['dscal_15',['dscal',['../namespacenuma____dlahqr.html#ac94174d48eba3673986e4dba502b707c',1,'numa__dlahqr']]]
 ];

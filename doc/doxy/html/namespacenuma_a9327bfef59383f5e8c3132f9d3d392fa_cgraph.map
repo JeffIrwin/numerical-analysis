@@ -1,0 +1,8 @@
+<map id="numa::nelder_mead" name="numa::nelder_mead">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,37,157,62"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="205,29,360,69"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="158,47,191,47,191,52,158,52"/>
+<area shape="poly" id="edge3_Node000002_Node000002" title=" " alt="" coords="245,30,243,20,249,11,262,5,283,3,306,6,319,13,316,18,304,11,283,8,264,10,252,15,248,21,250,28"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____utils.html#aa743df57005f55647002a6dbe4f7253b" title=" " alt="" coords="408,29,572,69"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="360,47,395,47,395,52,360,52"/>
+</map>

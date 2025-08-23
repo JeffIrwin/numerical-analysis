@@ -1,9 +1,5 @@
 <map id="numa::neville_interpolator_vals" name="numa::neville_interpolator_vals">
-<area shape="rect" id="Node000001" title=" " alt="" coords="487,45,715,70"/>
-<area shape="rect" id="Node000002" href="$namespacenuma.html#aff3295684d06e44e8f4ea19b0db4364c" title=" " alt="" coords="244,45,439,70"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="473,60,439,60,439,55,473,55"/>
-<area shape="rect" id="Node000003" href="$namespacenuma____exercises.html#ad59bfcce56ca2fdb97a19344ee6e21f1" title=" " alt="" coords="5,5,196,45"/>
-<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="232,45,196,41,197,35,233,40"/>
-<area shape="rect" id="Node000004" href="$namespacenuma____exercises.html#a810a12e9585d95da65507723ae4cba74" title=" " alt="" coords="5,69,196,109"/>
-<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="233,74,197,79,196,74,232,69"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="248,5,476,31"/>
+<area shape="rect" id="Node000002" href="$namespacenuma.html#aff3295684d06e44e8f4ea19b0db4364c" title=" " alt="" coords="5,5,200,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="234,21,200,21,200,15,234,15"/>
 </map>
