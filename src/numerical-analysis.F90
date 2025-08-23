@@ -4170,6 +4170,8 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 		det_ = a*d - b*c  ! determinant
 
 		! Eigenvalues of 2x2 block
+		!
+		! Source:  https://people.math.harvard.edu/~knill/teaching/math21b2004/exhibits/2dmatrices/index.html
 		l1 = tr/2 + sqrt(dcmplx(tr**2/4 - det_))
 		l2 = tr/2 - sqrt(dcmplx(tr**2/4 - det_))
 
@@ -4281,6 +4283,8 @@ subroutine real_schur_to_complex(r, q, cr, cq, eps)
 
 		mu(1) = mu(1) - cr(i,i)
 
+		! Maybe this could work as a replacement for dlanv2(), but cc and sc are
+		! complex, not real
 		rad = norm2c([mu(1), cr(i, i-1)])
 		cc = mu(1) / rad
 		sc = cr(i, i-1) / rad

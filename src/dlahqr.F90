@@ -340,10 +340,11 @@ end function house
       integer, parameter :: KEXSH = 10
 !     ..
 !     .. local scalars ..
-      double precision   aa, ab, ba, bb, cs, det, h11, h12, h21, h21s, &
+      double complex :: l1, l2
+      double precision   aa, ab, ba, bb, cs, h11, h12, h21, h21s, &
                          h22, rt1i, rt1r, rt2i, rt2r, rtdisc, s, safmax, &
                          safmin, smlnum, sn, t1, tr, tst, &
-                         ulp
+                         ulp, a, b, c, d, det_, rad
       integer            i, i1, i2, i3, its, itmax, j, k, l, m, nh, nr, nz, &
                          kdefl 
 !     ..
@@ -508,9 +509,9 @@ end function house
             h12 = h12 / s
             h22 = h22 / s
             tr = ( h11+h22 ) / 2
-            det = ( h11-tr )*( h22-tr ) - h12*h21
-            rtdisc = sqrt( abs( det ) )
-            if( det >= 0 ) then
+            det_ = ( h11-tr )*( h22-tr ) - h12*h21
+            rtdisc = sqrt( abs( det_ ) )
+            if( det_ >= 0 ) then
 !
 !              ==== complex conjugate shifts ====
 !
@@ -654,15 +655,59 @@ end function house
          wr( i ) = h( i, i )
          wi( i ) = 0
       else if( l == i-1 ) then
-!
 !        h(i-1,i-2) is negligible: a pair of eigenvalues have converged.
 !
 !        transform the 2-by-2 submatrix to standard schur form,
 !        and compute and store the eigenvalues.
-!
+
          call dlanv2( h( i-1, i-1 ), h( i-1, i ), h( i, i-1 ), &
                       h( i, i ), wr( i-1 ), wi( i-1 ), wr( i ), wi( i ), &
                       cs, sn )
+!         print *, "wr = ", wr(i-1: i)
+!         print *, "wi = ", wi(i-1: i)
+!         print *, "cs = ", cs
+!         print *, "sn = ", sn
+!         stop
+
+!         ! 2x2 block around diagonal
+!         a = h(i-1, i-1)
+!         !b = h(i, i-1)
+!         !c = h(i-1, i)
+!         b = h(i-1, i)
+!         c = h(i, i-1)
+!         d = h(i, i)
+!
+!		 print *, "h 2x2 = "
+!		 print *, a, b
+!		 print *, c, d
+!
+!         
+!         !if (abs(b) <= eps * (abs(a) + abs(d))) cycle
+!         
+!         tr = a + d         ! trace
+!         det_ = a*d - b*c  ! determinant
+!         
+!         ! Eigenvalues of 2x2 block
+!         l1 = tr/2 + sqrt(dcmplx(tr**2/4 - det_))
+!         l2 = tr/2 - sqrt(dcmplx(tr**2/4 - det_))
+!
+!         wr(i-1) = l1%re
+!         wi(i-1) = l1%im
+!         wr(i-0) = l2%re
+!         wi(i-0) = l2%im
+!
+!         !rad = norm2([x, y])
+!         !ck =  x / rad
+!         !sk = -y / rad
+!         rad = norm2([a, c])
+!         cs =  a / rad
+!         sn = -c / rad
+!
+!         print *, "wr = ", wr(i-1: i)
+!         print *, "wi = ", wi(i-1: i)
+!         print *, "cs = ", cs
+!         print *, "sn = ", sn
+!         stop
 !
          if (wantt .or. wantz) then
             p2(1,:) = [ cs, sn]
