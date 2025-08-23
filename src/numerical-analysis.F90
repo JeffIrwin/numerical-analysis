@@ -486,22 +486,7 @@ integer function bit_reverse(j, n) result(k)
 end function bit_reverse
 
 !===============================================================================
-double precision function norm2c(v)
 
-	double complex, intent(in) :: v(:)
-
-	! It's weird that Fortran's intrinsic norm2() can't handle complex args.
-	! Intel MKL has dznrm2() which is equivalent
-	!
-	! Note that dot_product() already conjugates one of the arguments, so there
-	! is no need for additional conjugation
-
-	!print *, "v = ", v
-	norm2c = dble(sqrt(dot_product(v, v)))
-
-end function norm2c
-
-!===============================================================================
 function fft(x) result(xx)
 	! Forward fast Fourier transform
 	double complex, intent(in) :: x(:)
@@ -1602,78 +1587,6 @@ function triu_f64(a) result(r)
 end function triu_f64
 
 !********
-
-subroutine house_c64(alpha, x, diag_, iostat)
-	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
-	!
-	! This was adapted from reference LAPACK:  https://netlib.org/lapack/explore-html/d8/d0d/group__larfg_ga11ff37151d75113678103648c1a68c11.html
-	!
-	! The diagonal "tau" factor would've been impossible to figure out
-	! otherwise.  I had an unpacked version working which exploded Q and R into
-	! separate arrays, but keeping them both in the A matrix (and diagonal
-	! vector) was too hard without looking at LAPACK
-
-	use numa__utils
-	double complex, intent(inout) :: alpha
-	double complex, intent(inout) :: x(:)
-	double complex, intent(out) :: diag_
-	integer, optional, intent(out) :: iostat
-	!********
-
-	!double complex, allocatable :: pp(:,:)
-	!double complex :: alpha0
-	!double complex, allocatable :: v(:), x0(:)
-
-	character(len = :), allocatable :: msg
-	double precision :: xnorm, beta, alphr, alphi
-	integer :: n
-
-	if (present(iostat)) iostat = 0
-
-	n = size(x) !- 1
-
-	!alpha0 = alpha  ! testing only
-	!x0 = x
-
-	xnorm = norm2c(x)
-	alphr = alpha%re
-	alphi = alpha%im
-
-	if (xnorm == 0 .and. alphi == 0) then
-		diag_ = 0
-		msg = "vector is singular in house_c64()"
-		call PANIC(msg, present(iostat))
-		iostat = 1
-		return
-	end if
-
-	!beta = -sign(norm2([alphr, alphi, xnorm]), alphr)
-	beta = -sign_(alphr) * norm2([alphr, alphi, xnorm])
-
-	! Skip checking if abs(beta) < machine_precision
-
-	diag_ = dcmplx((beta - alphr) / beta, -alphi / beta)
-	alpha = 1.d0 / (alpha - beta)
-	x = x * alpha
-
-	alpha = beta
-
-	!v = [dcmplx(1.d0, 0.d0), x]
-
-	!pp = eye(n+1) - conjg(diag_) * outer_product_c64(v, conjg(v))  ! Note conjg convention here
-
-	!!print *, "in house_c64():"
-	!!print *, "n = ", n
-	!!print *, "v = ", v
-	!!print *, "x0 = ", x0
-	!!print *, "pp = "
-	!!print "("//to_str(2*(n+1))//"es15.5)", pp
-	!!print *, "pp * x = ", matmul(pp, [alpha0, x0])  ! Note conjg convention here too
-
-	!! Note that if the conjugation conventions are not followed, then we do not
-	!! get the expected result of pp*x == [beta, 0, 0, 0, ...]
-
-end subroutine house_c64
 
 subroutine qr_factor_c64(a, diag_, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
@@ -4172,6 +4085,7 @@ subroutine real_schur_to_complex(r, q, cr, cq, eps)
 	!
 	! Matrix `r` is quasi-triangular and `q` is unitary
 
+	use numa__utils
 	double precision, intent(in) :: r(:,:), q(:,:)
 	double complex, allocatable, intent(out) :: cr(:,:), cq(:,:)
 	double precision, intent(in) :: eps

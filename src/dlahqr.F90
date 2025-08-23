@@ -436,15 +436,13 @@ contains
 					! submatrix. nr is the order of g.
 
 					nr = min(3, i - k + 1)
-					!print *, "nr = ", nr
 					if (k > m) v(1:nr) = h(k:k + nr - 1, k - 1)
 
-					!print *, "v		 = ", v
-
-					call dlarfg(nr, v(1), v(2), 1, t1)
-					!print *, "v*tau	= ", v * t1
-					!print *, "v		 = ", v
-					!print *, "t1 = ", t1
+					call house_f64(v(1), v(2:nr), t1)!, io)
+					!if (io /= 0) then
+					!	info = 1
+					!	return
+					!end if
 
 					if (k > m) then
 						h(k, k - 1) = v(1)
@@ -834,172 +832,5 @@ contains
 			rt2i = -rt1i
 		end if
 	end subroutine dlanv2
-	!> \brief \b dlarfg generates an elementary reflector (householder matrix).
-
-	! =========== documentation ===========
-
-	! online html documentation available at
-	! http://www.netlib.org/lapack/explore-html/
-
-	!> \htmlonly
-	!> download dlarfg + dependencies
-	!> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlarfg.f">
-	!> [tgz]</a>
-	!> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlarfg.f">
-	!> [zip]</a>
-	!> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlarfg.f">
-	!> [txt]</a>
-	!> \endhtmlonly
-
-	! definition:
-	! ===========
-
-	! subroutine dlarfg( n, alpha, x, incx, tau )
-
-	! .. scalar arguments ..
-	! integer				incx, n
-	! double precision	alpha, tau
-
-	! .. array arguments ..
-	! double precision	x( * )
-
-	!> \par purpose:
-	! =============
-	!>
-	!> \verbatim
-	!>
-	!> dlarfg generates a real elementary reflector h of order n, such
-	!> that
-	!>
-	!>		 h * ( alpha ) = ( beta ),   h**t * h = i.
-	!>		     (   x   )   (   0  )
-	!>
-	!> where alpha and beta are scalars, and x is an (n-1)-element real
-	!> vector. h is represented in the form
-	!>
-	!>		 h = i - tau * ( 1 ) * ( 1 v**t ) ,
-	!>		               ( v )
-	!>
-	!> where tau is a real scalar and v is a real (n-1)-element
-	!> vector.
-	!>
-	!> if the elements of x are all zero, then tau = 0 and h is taken to be
-	!> the unit matrix.
-	!>
-	!> otherwise  1 <= tau <= 2.
-	!> \endverbatim
-
-	! arguments:
-	! ==========
-
-	!> \param[in] n
-	!> \verbatim
-	!>			 n is integer
-	!>			 the order of the elementary reflector.
-	!> \endverbatim
-	!>
-	!> \param[in,out] alpha
-	!> \verbatim
-	!>			 alpha is double precision
-	!>			 on entry, the value alpha.
-	!>			 on exit, it is overwritten with the value beta.
-	!> \endverbatim
-	!>
-	!> \param[in,out] x
-	!> \verbatim
-	!>			 x is double precision array, dimension
-	!>								 (1+(n-2)*abs(incx))
-	!>			 on entry, the vector x.
-	!>			 on exit, it is overwritten with the vector v.
-	!> \endverbatim
-	!>
-	!> \param[in] incx
-	!> \verbatim
-	!>			 incx is integer
-	!>			 the increment between elements of x. incx > 0.
-	!> \endverbatim
-	!>
-	!> \param[out] tau
-	!> \verbatim
-	!>			 tau is double precision
-	!>			 the value tau.
-	!> \endverbatim
-
-	! authors:
-	! ========
-
-	!> \author univ. of tennessee
-	!> \author univ. of california berkeley
-	!> \author univ. of colorado denver
-	!> \author nag ltd.
-
-	!> \ingroup larfg
-
-	! =====================================================================
-	subroutine dlarfg(n, alpha, x, incx, tau)
-
-		! -- lapack auxiliary routine --
-		! -- lapack is a software package provided by univ. of tennessee,        --
-		! -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
-
-		! .. scalar arguments ..
-		integer incx, n
-		double precision alpha, tau
-
-		! .. array arguments ..
-		double precision x(*)
-
-		! =====================================================================
-
-		! .. local scalars ..
-		integer j, knt
-		double precision beta, rsafmn, safmin, xnorm
-
-		! .. executable statements ..
-
-		if (n <= 1) then
-			tau = 0
-			return
-		end if
-
-		xnorm = norm2(x(1:n - 1))
-		if (xnorm <= 0) then
-			! h  =  i
-			tau = 0
-		else
-
-			! general case
-
-			beta = -sign(norm2([alpha, xnorm]), alpha)
-			safmin = tiny(safmin) / (epsilon(safmin) / radix(safmin))
-			knt = 0
-			if (abs(beta) < safmin) then
-
-				! xnorm, beta may be inaccurate; scale x and recompute them
-				rsafmn = 1/safmin
-				do
-					knt = knt + 1
-
-					x(1: n - 1: incx) = rsafmn * x(1: n - 1: incx)
-					beta = beta*rsafmn
-					alpha = alpha*rsafmn
-					if (.not. ((abs(beta) < safmin) .and. (knt < 20))) exit
-				end do
-
-				! new beta is at most 1, at least safmin
-				xnorm = norm2(x(1: n - 1))
-				beta = -sign(norm2([alpha, xnorm]), alpha)
-			end if
-			tau = (beta - alpha)/beta
-			x(1: n - 1: incx) = x(1: n - 1: incx) / (alpha - beta)
-
-			! if alpha is subnormal, it may lose relative accuracy
-			do j = 1, knt
-				beta = beta*safmin
-			end do
-			alpha = beta
-		end if
-
-	end subroutine dlarfg
 	! ***********************************************************************
 end module numa__dlahqr

@@ -624,6 +624,125 @@ double precision function rand_f64()
 	call random_number(rand_f64)
 end function rand_f64
 
+!********
+
+subroutine house_c64(alpha, x, diag_, iostat)
+	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
+	!
+	! This was adapted from reference LAPACK:  https://netlib.org/lapack/explore-html/d8/d0d/group__larfg_ga11ff37151d75113678103648c1a68c11.html
+	!
+	! The diagonal "tau" factor would've been impossible to figure out
+	! otherwise.  I had an unpacked version working which exploded Q and R into
+	! separate arrays, but keeping them both in the A matrix (and diagonal
+	! vector) was too hard without looking at LAPACK
+
+	double complex, intent(inout) :: alpha
+	double complex, intent(inout) :: x(:)
+	double complex, intent(out) :: diag_
+	integer, optional, intent(out) :: iostat
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: xnorm, beta, alphr, alphi
+	integer :: n
+
+	if (present(iostat)) iostat = 0
+
+	n = size(x)
+
+	xnorm = norm2c(x)
+	alphr = alpha%re
+	alphi = alpha%im
+
+	if (xnorm == 0 .and. alphi == 0) then
+		! For eig_lapack(), it's very important that house_f64() does not panic
+		! here.  Maybe house_c64() should do the same
+		diag_ = 0
+		msg = "vector is singular in house_c64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	beta = -sign_(alphr) * norm2([alphr, alphi, xnorm])
+
+	! Skip checking if abs(beta) < machine_precision
+	diag_ = dcmplx((beta - alphr) / beta, -alphi / beta)
+	alpha = 1.d0 / (alpha - beta)
+	x = x * alpha
+
+	alpha = beta
+
+end subroutine house_c64
+
+!********
+
+subroutine house_f64(alpha, x, diag_, iostat)
+	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
+	!
+	! This was adapted from reference LAPACK:  https://netlib.org/lapack/explore-html/d8/d0d/group__larfg_ga11ff37151d75113678103648c1a68c11.html
+	!
+	! The diagonal "tau" factor would've been impossible to figure out
+	! otherwise.  I had an unpacked version working which exploded Q and R into
+	! separate arrays, but keeping them both in the A matrix (and diagonal
+	! vector) was too hard without looking at LAPACK
+
+	double precision, intent(inout) :: alpha
+	double precision, intent(inout) :: x(:)
+	double precision, intent(out) :: diag_
+	integer, optional, intent(out) :: iostat
+	!********
+
+	!character(len = :), allocatable :: msg
+	double precision :: xnorm, beta
+	integer :: n
+
+	if (present(iostat)) iostat = 0
+
+	n = size(x)
+
+	xnorm = norm2(x)
+
+	if (xnorm <= 0) then
+		! It's important for eig_lapack() to not panic here
+		diag_ = 0
+		return
+
+		!diag_ = 0
+		!msg = "vector is singular in house_f64()"
+		!print *, "x = ", x
+		!call PANIC(msg, present(iostat))
+		!iostat = 1
+		!return
+	end if
+	beta = -sign_(alpha) * norm2([alpha, xnorm])
+
+	! Skip checking if abs(beta) < machine_precision
+	diag_ = (beta - alpha) / beta
+
+	alpha = 1.d0 / (alpha - beta)
+	x = x * alpha
+
+	alpha = beta
+
+end subroutine house_f64
+
+!===============================================================================
+
+double precision function norm2c(v)
+
+	double complex, intent(in) :: v(:)
+
+	! It's weird that Fortran's intrinsic norm2() can't handle complex args.
+	! Intel MKL has dznrm2() which is equivalent
+	!
+	! Note that dot_product() already conjugates one of the arguments, so there
+	! is no need for additional conjugation
+
+	!print *, "v = ", v
+	norm2c = dble(sqrt(dot_product(v, v)))
+
+end function norm2c
+
 !===============================================================================
 
 end module numa__utils

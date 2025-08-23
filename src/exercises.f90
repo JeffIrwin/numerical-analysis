@@ -880,7 +880,6 @@ integer function chapter_4_modify() result(nfail)
 			x = b + (b(col) / (1 - u(col))) * u
 
 			call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-11, nfail, "Sherman-Morrison nxn")
-			!call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-7, nfail, "Sherman-Morrison nxn")
 
 		end do
 
@@ -3477,8 +3476,8 @@ integer function chapter_6_eig_lapack() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	!do n = 5, 175, 5  ! eig_lapack() is robust even for larger matrices
-	do n = 5, 95, 11
+	do n = 5, 175, 5  ! eig_lapack() is robust even for larger matrices
+	!do n = 5, 95, 11
 
 		allocate(a(n, n))
 
