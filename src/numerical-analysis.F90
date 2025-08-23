@@ -119,6 +119,10 @@ module numa
 		procedure :: triu_f64
 	end interface triu
 
+	interface qr_solve
+		!procedure :: qr_solve_c64
+		procedure :: qr_solve_f64
+	end interface qr_solve
 	interface qr_factor
 		procedure :: qr_factor_c64
 		procedure :: qr_factor_f64
@@ -3642,6 +3646,7 @@ function eig_basic_qr(a, iters) result(eigvals)
 
 	do i = 1, iters
 		call qr_factor(a, diag_)
+		! TODO: check iostat on all qr_factor() calls
 
 		! Could also do a = transpose(qr_mul_transpose(), transpose(r)),
 		! but two transposes seems expensive
@@ -3874,7 +3879,7 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 	integer, optional, intent(out) :: iostat
 	!********
 
-	!character(len = :), allocatable :: msg
+	character(len = :), allocatable :: msg
 	double complex, allocatable :: ca(:,:), cq(:,:)
 	double precision, parameter :: eps = 1.d-10
 	double precision, allocatable :: pq(:,:)
@@ -3922,7 +3927,12 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 
 		call dlahqr(wantt, wantz, n, ilo, ihi, aa, ldh, wr, wi, &
 			iloz, ihiz, pq, ldz, info)
-		! TODO: check info
+		if (info /= 0) then
+			msg = "dlahqr() failed in eig_lapack()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
+		end if
 
 		! Copy eigvals out
 		eigvals = dcmplx(wr, wi)
@@ -3979,12 +3989,11 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 	double precision, parameter :: eps = 1.d-10  ! should eps and iters be args?
 
 	double precision :: rad, s, tr, x, y, z, p2(2,2), p3(3,3), ck, sk, &
-		a, b, c, d, det_, v(3), aii, aij, aji, ajj, rtdisc, &
-		rt1r, rt1i, rt2r, rt2i, h21s, a11, a12, a21, a22, a32
+		a, b, c, d, det_, v(3), aii, aij, aji, ajj, a11, a12, a21, a22, a32
 	double precision, allocatable :: pq(:,:)
 
 	integer, parameter :: iters = 100
-	integer :: i, i1, k, m, n, j, k1, iter, io
+	integer :: i, i1, k, n, j, k1, iter, io
 
 	logical, allocatable :: is_real(:)
 
@@ -4026,41 +4035,8 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 		aji = aa(j,i)
 		ajj = aa(j,j)
 
-		s = sum(abs([aii, aij, aji, ajj]))
-		! TODO: check s not 0?
-		aii = aii / s
-		aij = aij / s
-		aji = aji / s
-		ajj = ajj / s
-
-		!tr = (aii + ajj) / 2          ! trace
 		tr = (aii + ajj) / 1          ! trace
 		det_ = ajj * aii - aji * aij  ! determinant
-		!det_ = (ajj-tr) * (aii-tr) - aij*aji  ! determinant
-
-		tr = tr * s
-		det_ = det_ * s**2
-
-		rtdisc = sqrt(abs(det_))
-
-		if (det_ > 0) then
-			! Complex conjugate shifts
-			rt1r = tr * s
-			rt2r = rt1r
-			rt1i = rtdisc * s
-			rt2i = -rt1i
-		else
-			! Real shifts (use only one of them)
-			rt1r = tr + rtdisc
-			rt2r = tr - rtdisc
-			if (abs(rt1r - aii) <= abs(rt2r - aii)) then
-				rt1r = rt1r * s
-				rt2r = rt1r
-			else
-				rt2r = rt2r * s
-				rt1r = rt2r
-			end if
-		end if
 
 		! Compute first 3 elements of first column of M
 
@@ -4070,38 +4046,19 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 		a22 = aa(2,2)
 		a32 = aa(3,2)
 
-		s = sum(abs([a11, a21, a12, a22, a32, tr]))!, det_]))
-		s = 1  ! TODO just delete
-		!print *, "s = ", s
-		a11 = a11 / s
-		a21 = a21 / s
-		a12 = a12 / s
-		a22 = a22 / s
-		a32 = a32 / s
-		tr  = tr  / s
-		det_ = det_ / s**2
-
 		x = a11**2 + a12 * a21 - tr * a11 + det_
 		y = a21 * (a11 + a22 - tr)
 		z = a21 * a32
 
-		x = x * s**2
-		y = y * s**2
-		z = z * s**2
+		x = x
+		y = y
+		z = z
 
 		do k = 0, i-3
 
-			m = k+1
-			h21s = aa(m+1, m)
-			s = abs(aa(m,m) - rt2r) + abs(rt2i) + abs(h21s)
-			s = 1
-			h21s = h21s / s
-			v(1) = h21s * aa(m, m+1) + (aa(m,m) - rt1r) * &
-				((aa(m,m) - rt2r) / s) - rt1i * (rt2i / s)
-			v(2) = h21s * (aa(m,m) + aa(m+1, m+1) - rt1r - rt2r)
-			v(3) = h21s * aa(m+2, m+1)
-
-			!! Determine the Householder reflector `p3`
+			! Determine the Householder reflector `p3`.  Using a scalar `s`
+			! here, and for the Givens rotation below, effectively aids
+			! convergence for n >~ 40
 			v = [x, y, z]
 			s = sum(abs(v))
 			v = v / s
@@ -4583,8 +4540,8 @@ function polyfit(x, y, n, iostat) result(p)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision, allocatable :: xx(:,:), diag_(:)
-	integer :: i, nx
+	double precision, allocatable :: xx(:,:)
+	integer :: i, nx, io
 
 	if (present(iostat)) iostat = 0
 
@@ -4618,19 +4575,50 @@ function polyfit(x, y, n, iostat) result(p)
 	!!print "("//to_str(nx)//"es16.6)", xx
 	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
 
-	! TODO: refactor the rest as a standalone least_squares() matrix solver,
-	! short as it is:  xx * p == y (but rename things sanely).  Also used in
-	! gauss_newton()
-
-	call qr_factor(xx, diag_, allow_rect = .true.)
-	!print *, "qr(xx) = "
-	!print "("//to_str(n+1)//"es16.6)", transpose(xx)
-
-	p = qr_mul_transpose(xx, diag_, y)
-	!print *, "qty = ", p
-	call backsub(xx, p)
+	p = qr_solve(xx, y, allow_rect = .true., iostat = io)
+	if (io /= 0) then
+		msg = "qr_solve() failed in polyfit()"
+		call PANIC(msg, present(iostat))
+		iostat = 4
+		return
+	end if
 
 end function polyfit
+
+!===============================================================================
+
+function qr_solve_f64(a, b, allow_rect, iostat) result(x)
+	! This can be a regular linear system solver, or with allow_rect, a
+	! least-squares solver
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+	double precision, intent(in) :: b(:)
+	logical, intent(in) :: allow_rect
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable :: x(:)
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision, allocatable :: diag_(:)
+	integer :: io
+
+	if (present(iostat)) iostat = 0
+
+	call qr_factor(a, diag_, allow_rect, io)
+	if (io /= 0) then
+		msg = "qr_factor() failed in qr_solve_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 4
+		return
+	end if
+	!print *, "qr(a) = "
+	!print "("//to_str(n+1)//"es16.6)", transpose(a)
+
+	x = qr_mul_transpose(a, diag_, b)
+	!print *, "qty = ", x
+	call backsub(a, x)
+
+end function qr_solve_f64
 
 !===============================================================================
 
@@ -4723,6 +4711,8 @@ function polyval(p, x) result(y)
 
 	nx = size(x)
 	allocate(y(nx))
+
+	! TODO: vectorize one of these loops?
 	do i = 1, nx
 		y(i) = p(1)
 		xpow = x(i)
@@ -4736,7 +4726,7 @@ end function polyval
 
 !===============================================================================
 
-function gauss_newton(x, y, f, df, beta0, iters) result(beta)
+function gauss_newton(x, y, f, df, beta0, iters, iostat) result(beta)
 	! Use the Gauss-Newton algorithm to find parameters `beta` to fit a function
 	! `f` to data `x` and `y` with an initial guess `beta0`.  The function has a
 	! gradient `df` == df/dx
@@ -4751,14 +4741,16 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 	procedure(fn_f64_params_to_vec_f64) :: df
 	double precision, intent(in) :: beta0(:)
 	integer, intent(in) :: iters
+	integer, optional, intent(out) :: iostat
 
 	double precision, allocatable :: beta(:)
 	!********
 
-	double precision, allocatable :: res(:), jac(:,:), &!jtj(:,:), jtr(:), &
-		delta(:), diag_(:)
+	character(len = :), allocatable :: msg
+	double precision, allocatable :: res(:), jac(:,:), delta(:)
+	integer :: i, nx, nb, iter, io
 
-	integer :: i, nx, nb, iter
+	if (present(iostat)) iostat = 0
 
 	nx = size(x)
 	nb = size(beta0)
@@ -4781,14 +4773,14 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 		!print *, "jac = "
 		!print "(2es16.6)", transpose(jac)
 
-		!! It's better to use QR here instead of full LU with extra matmul's
-		!jtr = matmul(transpose(jac), res)
-		!jtj = matmul(transpose(jac), jac)
-		!beta = beta - invmul(jtj, jtr)
+		delta = qr_solve(jac, res, allow_rect = .true., iostat = io)
+		if (io /= 0) then
+			msg = "qr_solve() failed in gauss_newton()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
+		end if
 
-		call qr_factor(jac, diag_, allow_rect = .true.)
-		delta = qr_mul_transpose(jac, diag_, res)
-		call backsub(jac, delta)
 		beta = beta - delta
 
 	end do

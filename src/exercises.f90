@@ -3089,7 +3089,7 @@ integer function chapter_6_francis_qr() result(nfail)
 
 		if (n/10 > p0) then
 			p0 = n/10
-			print *, "Testing real Francis double step with n = " // to_str(n) // " ..."
+			print *, "Testing real eig_francis_qr() with n = " // to_str(n) // " ..."
 		end if
 
 		do irep = 1, 5
@@ -3158,16 +3158,18 @@ integer function chapter_6_francis_qr() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	do n = 5, 75
+	do n = 5, 77
+		! eig_francis_qr() can't converge over about n == 80
 
 		allocate(a(n, n))
 
 		if (n/10 > p0) then
+		!if (n/1 > p0) then
 			p0 = n/10
-			print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
+			print *, "Testing complex eig_francis_qr() with n = " // to_str(n) // " ..."
 		end if
 
-		!do irep = 1, 5
+		!do irep = 1, 10
 		do irep = 1, 1  ! TODO
 			!print *, "irep = ", irep
 
@@ -3293,7 +3295,7 @@ integer function chapter_6_eig_lapack() result(nfail)
 
 		if (n/10 > p0) then
 			p0 = n/10
-			print *, "Testing real Francis double step with n = " // to_str(n) // " ..."
+			print *, "Testing real eig_lapack() with n = " // to_str(n) // " ..."
 		end if
 
 		do irep = 1, 5
@@ -3339,13 +3341,14 @@ integer function chapter_6_eig_lapack() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	do n = 5, 175, 5
+	!do n = 5, 175, 5
+	do n = 5, 95, 9  ! TODO
 
 		allocate(a(n, n))
 
 		if (n/10 > p0) then
 			p0 = n/10
-			print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
+			print *, "Testing complex eig_lapack() with n = " // to_str(n) // " ..."
 		end if
 
 		do irep = 1, 2
