@@ -3277,6 +3277,8 @@ integer function chapter_6_eig_lapack() result(nfail)
 	print *, "diff = ", diff
 	call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack vec 1")
 
+	!stop
+
 	!! Some components of some eigenvectors are 0, so dividing like this is
 	!! ill-conditioned.  Need to multiply instead
 	!diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))

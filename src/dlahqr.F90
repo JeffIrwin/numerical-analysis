@@ -1,5 +1,118 @@
+
+#include "panic.F90"
+
 module numa__dlahqr
+	implicit none
+
+	! TODO: DRY
+
+	interface outer_product
+		!procedure :: outer_product_c64
+		procedure :: outer_product_f64
+	end interface outer_product
+
 contains
+
+function outer_product_f64(a, b) result(c)
+	double precision, intent(in) :: a(:), b(:)
+	double precision, allocatable :: c(:,:)
+
+	integer :: i, j, na, nb
+	na = size(a)
+	nb = size(b)
+
+	allocate(c(na, nb))
+	do j = 1, nb
+	do i = 1, na
+		c(i,j) = a(i) * b(j)
+	end do
+	end do
+
+end function outer_product_f64
+
+function eye(n)
+	! n x n identity matrix
+
+	integer, intent(in) :: n
+	double precision, allocatable :: eye(:,:)
+
+	integer :: i, j
+	allocate(eye(n, n))
+	do i = 1, n
+		do j = 1, n
+			if (i == j) then
+				eye(i,j) = 1.d0
+			else
+				eye(i,j) = 0.d0
+			end if
+		end do
+	end do
+
+end function eye
+
+!********
+
+double precision function sign_(x)
+	double precision, intent(in) :: x
+	sign_ = sign(1.d0, x)
+end function sign_
+
+!********
+
+function house(x, iostat) result(pp)
+	! Return the Householder reflector `pp` such that pp * x == [1, 0, 0, ...]
+	!
+	! Could just return `v` like house_c64(), but this fn is only used for 3x3
+	! matrices, whereas house_c64() runs on arbitrarily large matrices for QR
+	! factoring
+
+	use numa__utils
+	double precision, intent(in) :: x(:)
+	double precision, allocatable :: pp(:,:)
+	integer, optional, intent(out) :: iostat
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: alpha, normv
+	double precision, allocatable :: v(:)
+	integer :: n
+
+	if (present(iostat)) iostat = 0
+
+	n = size(x)
+
+	alpha = -sign_(x(1)) * norm2(x)
+	v = x
+	v(1) = v(1) - alpha
+
+	normv = norm2(v)
+	if (normv <= 0) then
+		v = v * 1.d50
+		normv = norm2(v)
+		print *, "normv = ", normv
+		print *, "v/normv = ", v / normv
+
+		pp = eye(n)
+		print *, "v = ", v
+		msg = "vector is singular in house()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	v = v / normv
+
+	!print *, "v house = ", v
+
+	pp = eye(n) - 2.d0 * outer_product(v, v)
+
+	!print *, "in house():"
+	!print *, "x = ", x
+	!print *, "pp = "
+	!print "(3es15.5)", pp
+	!print *, "pp * x = ", matmul(pp, x)
+
+end function house
+
 !> \brief \b DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix, using the double-shift/single-shift QR algorithm.
 !
 !  =========== DOCUMENTATION ===========
@@ -235,12 +348,12 @@ contains
                          H22, RT1I, RT1R, RT2I, RT2R, RTDISC, S, SAFMAX, &
                          SAFMIN, SMLNUM, SN, SUM, T1, T2, T3, TR, TST, &
                          ULP, V2, V3
-      INTEGER            I, I1, I2, ITS, ITMAX, J, K, L, M, NH, NR, NZ, &
+      INTEGER            I, I1, I2, i3, ITS, ITMAX, J, K, L, M, NH, NR, NZ, &
                          KDEFL 
 !     ..
 !     .. Local Arrays ..
       DOUBLE PRECISION   V( 3 )
-	  double precision :: p2(2,2)
+	  double precision :: p2(2,2), p3(3,3)
 !     ..
 !     ..
 !     .. Intrinsic Functions ..
@@ -475,9 +588,23 @@ contains
 !           submatrix. NR is the order of G.
 !
             NR = MIN( 3, I-K+1 )
+            !print *, "nr = ", nr
             IF( K.GT.M ) &
                v(1: nr) = h(k: k+nr-1, k-1)
+
+            !print *, "v       = ", v
+            p3 = house(v)
+
             CALL DLARFG( NR, V( 1 ), V( 2 ), 1, T1 )
+            !print *, "v*tau   = ", v * t1
+            !print *, "v       = ", v
+            !print *, "t1 = ", t1
+
+            !pp = eye(n) - 2.d0 * outer_product(v, v)
+            p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
+
+            !stop
+
             IF( K.GT.M ) THEN
                H( K, K-1 ) = V( 1 )
                H( K+1, K-1 ) = ZERO
@@ -499,35 +626,48 @@ contains
 !              Apply G from the left to transform the rows of the matrix
 !              in columns K to I2.
 !
-               DO 70 J = K, I2
-                  SUM = H( K, J ) + V2*H( K+1, J ) + V3*H( K+2, J )
-                  H( K, J ) = H( K, J ) - SUM*T1
-                  H( K+1, J ) = H( K+1, J ) - SUM*T2
-                  H( K+2, J ) = H( K+2, J ) - SUM*T3
-   70          CONTINUE
+
+               h(k:k+2, k:i2) = matmul(p3, h(k:k+2, k:i2))
+
+!               DO 70 J = K, I2
+!                  SUM = H( K, J ) + V2*H( K+1, J ) + V3*H( K+2, J )
+!                  H( K, J ) = H( K, J ) - SUM*T1
+!                  H( K+1, J ) = H( K+1, J ) - SUM*T2
+!                  H( K+2, J ) = H( K+2, J ) - SUM*T3
+!   70          CONTINUE
 !
 !              Apply G from the right to transform the columns of the
 !              matrix in rows I1 to min(K+3,I).
 !
-               DO 80 J = I1, MIN( K+3, I )
-                  SUM = H( J, K ) + V2*H( J, K+1 ) + V3*H( J, K+2 )
-                  H( J, K ) = H( J, K ) - SUM*T1
-                  H( J, K+1 ) = H( J, K+1 ) - SUM*T2
-                  H( J, K+2 ) = H( J, K+2 ) - SUM*T3
-   80          CONTINUE
+
+               i3 = min(k+3, i)
+               h(i1:i3, k:k+2) = matmul(h(i1:i3, k:k+2), p3)
+
+!               DO 80 J = I1, MIN( K+3, I )
+!                  SUM = H( J, K ) + V2*H( J, K+1 ) + V3*H( J, K+2 )
+!                  H( J, K ) = H( J, K ) - SUM*T1
+!                  H( J, K+1 ) = H( J, K+1 ) - SUM*T2
+!                  H( J, K+2 ) = H( J, K+2 ) - SUM*T3
+!   80          CONTINUE
 !
                IF( WANTZ ) THEN
 !
 !                 Accumulate transformations in the matrix Z
 !
-                  DO 90 J = ILOZ, IHIZ
-                     SUM = Z( J, K ) + V2*Z( J, K+1 ) + V3*Z( J, K+2 )
-                     Z( J, K ) = Z( J, K ) - SUM*T1
-                     Z( J, K+1 ) = Z( J, K+1 ) - SUM*T2
-                     Z( J, K+2 ) = Z( J, K+2 ) - SUM*T3
-   90             CONTINUE
+
+                  !pq(:, k+1: k+3) = matmul(pq(:, k+1: k+3), p3)
+                  z(iloz:ihiz, k:k+2) = matmul(z(iloz:ihiz, k:k+2), p3)
+
+!                  DO 90 J = ILOZ, IHIZ
+!                     SUM = Z( J, K ) + V2*Z( J, K+1 ) + V3*Z( J, K+2 )
+!                     Z( J, K ) = Z( J, K ) - SUM*T1
+!                     Z( J, K+1 ) = Z( J, K+1 ) - SUM*T2
+!                     Z( J, K+2 ) = Z( J, K+2 ) - SUM*T3
+!   90             CONTINUE
+
                END IF
             ELSE IF( NR.EQ.2 ) THEN
+				!print *, "nr == 2"
 !
 !              Apply G from the left to transform the rows of the matrix
 !              in columns K to I2.
