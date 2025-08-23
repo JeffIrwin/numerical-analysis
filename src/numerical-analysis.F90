@@ -3921,11 +3921,14 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 		! Eigval real/imag components
 		allocate(wr(n), wi(n))
 
-		! TODO: set false if eigvecs not present, test
-		!wantt = .false.
-		!wantz = .false.
-		wantt = .true.  ! want full schur form, not just eigvals
-		wantz = .true.
+		if (present(eigvecs)) then
+			wantt = .true.  ! want full schur form, not just eigvals
+			wantz = .true.
+		else
+			! `pq` doesn't need to be allocated
+			wantt = .false.
+			wantz = .false.
+		end if
 
 		call dlahqr(wantt, wantz, n, ilo, ihi, aa, ldh, wr, wi, &
 			iloz, ihiz, pq, ldz, info)
@@ -3934,22 +3937,20 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 		! Copy eigvals out
 		eigvals = dcmplx(wr, wi)
 
-		print *, "aa = "
-		print "("//to_str(n)//"es16.6)", aa
-
-		print *, "pq = "
-		print "("//to_str(n)//"es16.6)", pq
-
 	end block
+
+	!print *, "aa = "
+	!print "("//to_str(n)//"es16.6)", aa
+	!print *, "pq = "
+	!print "("//to_str(n)//"es16.6)", pq
 
 	if (.not. present(eigvecs)) return
 
 	! Zero the remaining below-diagonal non-zeros
 	call real_schur_to_complex(aa, pq, ca, cq, eps)
 
-	! Some of the eigenvalues get swapped around in real_schur_to_complex().
-	! TODO: is this true for LAPACK?  Need more fuzz testing
-	eigvals = diag(ca)
+	! No eigval swapping happens with LAPACK
+	!eigvals = diag(ca)
 
 	!print *, "ca = "
 	!print "("//to_str(2*n)//"es19.9)", ca

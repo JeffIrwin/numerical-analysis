@@ -65,6 +65,7 @@ program main
 	nfail = nfail + chapter_6_basic_qr()
 	nfail = nfail + chapter_6_hessenberg_qr()
 	nfail = nfail + chapter_6_francis_qr()
+	nfail = nfail + chapter_6_eig_lapack()
 
 	!-------------------------------------------------------
 	! Chapter 4: Systems of Linear Equations

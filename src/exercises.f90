@@ -3071,28 +3071,10 @@ integer function chapter_6_francis_qr() result(nfail)
 	print *, "diff = ", diff
 	call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_francis_qr vec 1")
 
-	!! TODO: some components of some eigenvectors are 0, so dividing like this is
-	!! ill-conditioned.  Need to multiply instead.  The fuzz tests are fine for
-	!! now because the probability of getting a 0 eigvec component is almost 0
-
+	!! Some components of some eigenvectors are 0, so dividing like this is
+	!! ill-conditioned.  Need to multiply instead
 	!diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
 	!call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_francis_qr vec 2")
-
-	a = a0
-	print *, "a = "
-	print "("//to_str(n)//"es19.9)", a
-	eigvals = eig_lapack(a, eigvecs)
-
-	print *, "eigvals = [real, imag]"
-	print "(2es15.5)", sorted(eigvals)
-
-	!print *, "eigvecs = "
-	!print "("//to_str(2*n)//"es15.5)", eigvecs
-
-	diff = norm2(abs( &
-		matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
-	print *, "diff = ", diff
-	call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack vec 1")
 
 	!********
 	! Fuzz test
@@ -3236,6 +3218,165 @@ integer function chapter_6_francis_qr() result(nfail)
 	print *, ""
 
 end function chapter_6_francis_qr
+
+!===============================================================================
+
+integer function chapter_6_eig_lapack() result(nfail)
+
+	character(len = *), parameter :: label = "chapter_6_eig_lapack"
+
+	double precision :: diff
+	double precision, allocatable :: a(:,:), d(:,:), s(:,:), &
+		expect(:), a0(:,:)!, ar(:,:), ai(:,:)
+	double complex, allocatable :: eigvals(:), eigvals2(:), eigvecs(:,:)
+
+	integer :: i, n, nrng, irep, p0
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	! Matrix from literature with complex eigenvalues
+
+	n = 6
+	allocate(a(n,n))
+	a(:,1) = [ 7,  3,  4, -11, -9, -2]
+	a(:,2) = [-6,  4, -5,   7,  1, 12]
+	a(:,3) = [-1, -9,  2,   2,  9,  1]
+	a(:,4) = [-8,  0, -1,   5,  0,  8]
+	a(:,5) = [-4,  3, -5,   7,  2, 10]
+	a(:,6) = [ 6,  1,  4, -11, -7, -1]
+	print *, "a = "
+	print "("//to_str(n)//"es19.9)", a
+	a0 = a
+	!    --> spec(a')
+	!     ans  =
+	!
+	!       5. + 6.i
+	!       5. - 6.i
+	!       1. + 2.i
+	!       1. - 2.i
+	!       3. + 0.i
+	!       4. + 0.i
+
+	eigvals = eig_lapack(a, eigvecs)
+	print *, "eigvals = [real, imag]"
+	print "(2es15.5)", sorted(eigvals)
+
+	! Eigenvectors are optional to save work.  Beware, rounding and ordering may be different
+	a = a0
+	eigvals2 = eig_lapack(a)
+	diff = diff_complex_vecs(eigvals, eigvals2)
+	print *, "diff eigvals2 = ", diff
+	call test(diff, 0.d0, 1.d-8, nfail, "eig_lapack no vecs")
+
+	diff = norm2(abs( &
+		matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
+	print *, "diff = ", diff
+	call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack vec 1")
+
+	!! Some components of some eigenvectors are 0, so dividing like this is
+	!! ill-conditioned.  Need to multiply instead
+	!diff = norm2(abs(matmul(a0, eigvecs) / eigvecs - spread(eigvals, 1, n)))
+	!call test(diff, 0.d0, 1.d-3 * n, nfail, "eig_lapack vec 2")
+
+	!********
+	! Fuzz test
+
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+
+	p0 = -1
+	do n = 5, 35
+
+		allocate(s (n, n))
+
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing real Francis double step with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 5
+
+			! Construct a random matrix `a` with known real eigenvalues
+
+			! Known eigenvalues
+			expect = zeros(n)
+			call random_number(expect)
+
+			d = diag(expect)
+			call sort(expect)
+
+			call random_number(s)  ! random matrix
+			a = matmul(matmul(s, d), inv(s))
+			!print *, "a = "
+			!print "("//to_str(n)//"es19.9)", a
+			a0 = a
+
+			!********
+
+			eigvals = eig_lapack(a, eigvecs)
+
+			! Check the eigenvalues
+			diff = norm2(sorted(dble(eigvals)) - expect)
+			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack val 1")
+			!********
+
+			! Check the eigenvectors: A * eigvecs = eigvals * eigvecs
+			!
+			! idk if norm2(abs( [complex_matrix] )) is a good norm but i don't feel like making my
+			! own matrix norm rn.  need to figure out what built-in norm2() is
+			! doing on matrices, whether it just reshapes them to vec or does
+			! some more involved matrix norm
+			diff = norm2(abs( &
+				matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
+			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack vec 3")
+
+		end do
+
+		deallocate(s)
+	end do
+	deallocate(a)
+
+	p0 = -1
+	do n = 5, 175, 5
+
+		allocate(a(n, n))
+
+		if (n/10 > p0) then
+			p0 = n/10
+			print *, "Testing complex Francis double step with n = " // to_str(n) // " ..."
+		end if
+
+		do irep = 1, 2
+			!print *, "irep = ", irep
+
+			! Construct a random matrix `a`.  It can have complex eigenvalues,
+			! most likely a mixture of real and complex eigenvalues
+			call random_number(a)
+			!print *, "a = "
+			!print "("//to_str(n)//"es19.9)", a
+			a0 = a
+			!********
+
+			eigvals = eig_lapack(a, eigvecs)
+
+			! Eigenvalues cannot be verified by themselves because we don't know
+			! what they should be a priori
+			!
+			! We can still verify that `a0 * eigvecs == eigvals * eigvecs`
+			diff = norm2(abs( &
+				matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
+			call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack vec 4")
+
+		end do
+
+		deallocate(a)
+	end do
+	!********
+	print *, ""
+
+end function chapter_6_eig_lapack
 
 !===============================================================================
 
