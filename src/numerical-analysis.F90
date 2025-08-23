@@ -793,7 +793,7 @@ subroutine tridiag_corner_invmul(aa, bx, iostat)
 	!print *, "bx = ", bx
 	!print *, "u = ", u
 
-	! Solution to cylcic problem
+	! Solution to cylcic problem using the Sherman-Morrison formula
 	bx = bx - ((v1*bx(1) + vn*bx(n)) / (1.d0 + (v1*u(1) + vn*u(n)))) * u
 
 	!print *, "solution = ", bx

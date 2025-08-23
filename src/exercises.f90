@@ -766,8 +766,8 @@ integer function chapter_4_modify() result(nfail)
 
 	double precision :: aij, aij0
 	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), &
-		y(:), z(:), u(:), v(:), b(:)
-	integer :: i, n, nrng, irep, p0, row, col
+		u(:), b(:), b0(:)
+	integer :: i, n, nrng, irep, row, col
 	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -793,6 +793,7 @@ integer function chapter_4_modify() result(nfail)
 
 	bx = [102.48d0, 274.92d0, 434.72d0, 463.8d0, 373.8d0]
 	b = bx
+	b0 = b
 
 	!print *, "a = "
 	!print "(5es18.6)", a
@@ -814,6 +815,7 @@ integer function chapter_4_modify() result(nfail)
 	aij0 = a0(row, col)
 	aij = 69.d0
 	a0(row, col) = aij
+	print *, "a["//to_str(row)//","//to_str(col)//"]: ", aij0, " -> ", aij
 
 	! Use the Sherman-Morisson-Woodbury formula
 	!
@@ -823,28 +825,18 @@ integer function chapter_4_modify() result(nfail)
 
 	! Construct u and v such that modified a = a - u*v' (or plus?)
 	u = zeros(n)
-	v = zeros(n)
 	u(row) = aij0 - aij
-	!u(row) = aij - aij0
-	v(col) = 1.d0
 
-	! Solve a*z == u for z
-	!
-	! TODO: reduce temp arrays
-	z = u
-	call lu_solve(a, z, pivot)
+	! Solve a*z == u for z, overwrite to u
+	call lu_solve(a, u, pivot)
 
-	! Solve a*y == b for y
-	y = b
-	call lu_solve(a, y, pivot)
+	! Solve a*y == b for y, overwrite to b
+	call lu_solve(a, b, pivot)
 
 	! Compute x = y + ((v'*y) / (1 - v'z)) * z
-	!
-	! TODO: optimize dot prods.  u and v are sparse
-	x = y + (dot_product(v, y) / (1 - dot_product(v, z))) * z
+	x = b + (b(col) / (1 - u(col))) * u
 
-	!call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
-	call test(norm2(matmul(a0, x) - b), 0.d0, 1.d-11, nfail, "Sherman-Morisson() 5x5")
+	call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-11, nfail, "Sherman-Morisson() 5x5")
 
 	return ! TODO: fuzz
 
