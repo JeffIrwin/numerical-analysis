@@ -95,7 +95,7 @@ function house(x, iostat) result(pp)
 		pp = eye(n)
 		print *, "v = ", v
 		msg = "vector is singular in house()"
-		call panic(msg, present(iostat))
+		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
@@ -365,9 +365,9 @@ end function house
 !
 !     quick return if possible
 !
-      if( n.eq.0 ) &
+      if( n == 0 ) &
          return
-      if( ilo.eq.ihi ) then
+      if( ilo == ihi ) then
          wr( ilo ) = h( ilo, ilo )
          wi( ilo ) = zero
          return
@@ -378,14 +378,13 @@ end function house
          h( j+2, j ) = zero
          h( j+3, j ) = zero
    10 continue
-      if( ilo.le.ihi-2 ) &
+      if( ilo <= ihi-2 ) &
          h( ihi, ihi-2 ) = zero
 !
       nh = ihi - ilo + 1
       nz = ihiz - iloz + 1
-!
+
 !     set machine-dependent constants for the stopping criterion.
-!
       safmin = tiny(safmin)
       safmax = one / safmin
       ulp = epsilon(ulp)
@@ -418,7 +417,7 @@ end function house
       i = ihi
    20 continue
       l = ilo
-      if( i.lt.ilo ) &
+      if( i < ilo ) &
          go to 160
 !
 !     perform qr iterations on rows and columns ilo to i until a
@@ -430,20 +429,20 @@ end function house
 !        look for a single small subdiagonal element.
 !
          do 30 k = i, l + 1, -1
-            if( abs( h( k, k-1 ) ).le.smlnum ) &
+            if( abs( h( k, k-1 ) ) <= smlnum ) &
                go to 40
             tst = abs( h( k-1, k-1 ) ) + abs( h( k, k ) )
-            if( tst.eq.zero ) then
-               if( k-2.ge.ilo ) &
+            if( tst == zero ) then
+               if( k-2 >= ilo ) &
                   tst = tst + abs( h( k-1, k-2 ) )
-               if( k+1.le.ihi ) &
+               if( k+1 <= ihi ) &
                   tst = tst + abs( h( k+1, k ) )
             end if
 !           ==== the following is a conservative small subdiagonal
 !           .    deflation  criterion due to ahues & tisseur (lawn 122,
 !           .    1997). it has better mathematical foundation and
 !           .    improves accuracy in some cases.  ====
-            if( abs( h( k, k-1 ) ).le.ulp*tst ) then
+            if( abs( h( k, k-1 ) ) <= ulp*tst ) then
                ab = max( abs( h( k, k-1 ) ), abs( h( k-1, k ) ) )
                ba = min( abs( h( k, k-1 ) ), abs( h( k-1, k ) ) )
                aa = max( abs( h( k, k ) ), &
@@ -451,13 +450,13 @@ end function house
                bb = min( abs( h( k, k ) ), &
                     abs( h( k-1, k-1 )-h( k, k ) ) )
                s = aa + ab
-               if( ba*( ab / s ).le.max( smlnum, &
+               if( ba*( ab / s ) <= max( smlnum, &
                    ulp*( bb*( aa / s ) ) ) )go to 40
             end if
    30    continue
    40    continue
          l = k
-         if( l.gt.ilo ) then
+         if( l > ilo ) then
 !
 !           h(l,l-1) is negligible
 !
@@ -466,7 +465,7 @@ end function house
 !
 !        exit from loop if a submatrix of order 1 or 2 has split off.
 !
-         if( l.ge.i-1 ) &
+         if( l >= i-1 ) &
             go to 150
          kdefl = kdefl + 1
 !
@@ -479,7 +478,7 @@ end function house
             i2 = i
          end if
 !
-         if( mod(kdefl,2*kexsh).eq.0 ) then
+         if( mod(kdefl,2*kexsh) == 0 ) then
 !
 !           exceptional shift.
 !
@@ -488,7 +487,7 @@ end function house
             h12 = dat2*s
             h21 = s
             h22 = h11
-         else if( mod(kdefl,kexsh).eq.0 ) then
+         else if( mod(kdefl,kexsh) == 0 ) then
 !
 !           exceptional shift.
 !
@@ -508,7 +507,7 @@ end function house
             h22 = h( i, i )
          end if
          s = abs( h11 ) + abs( h12 ) + abs( h21 ) + abs( h22 )
-         if( s.eq.zero ) then
+         if( s == zero ) then
             rt1r = zero
             rt1i = zero
             rt2r = zero
@@ -521,7 +520,7 @@ end function house
             tr = ( h11+h22 ) / two
             det = ( h11-tr )*( h22-tr ) - h12*h21
             rtdisc = sqrt( abs( det ) )
-            if( det.ge.zero ) then
+            if( det >= zero ) then
 !
 !              ==== complex conjugate shifts ====
 !
@@ -535,7 +534,7 @@ end function house
 !
                rt1r = tr + rtdisc
                rt2r = tr - rtdisc
-               if( abs( rt1r-h22 ).le.abs( rt2r-h22 ) ) then
+               if( abs( rt1r-h22 ) <= abs( rt2r-h22 ) ) then
                   rt1r = rt1r*s
                   rt2r = rt1r
                else
@@ -566,9 +565,9 @@ end function house
             v( 1 ) = v( 1 ) / s
             v( 2 ) = v( 2 ) / s
             v( 3 ) = v( 3 ) / s
-            if( m.eq.l ) &
+            if( m == l ) &
                go to 60
-            if( abs( h( m, m-1 ) )*( abs( v( 2 ) )+abs( v( 3 ) ) ).le. &
+            if( abs( h( m, m-1 ) )*( abs( v( 2 ) )+abs( v( 3 ) ) ) <=  &
                 ulp*abs( v( 1 ) )*( abs( h( m-1, m-1 ) )+abs( h( m, &
                 m ) )+abs( h( m+1, m+1 ) ) ) )go to 60
    50    continue
@@ -589,7 +588,7 @@ end function house
 !
             nr = min( 3, i-k+1 )
             !print *, "nr = ", nr
-            if( k.gt.m ) &
+            if( k > m ) &
                v(1: nr) = h(k: k+nr-1, k-1)
 
             !print *, "v       = ", v
@@ -602,7 +601,7 @@ end function house
             !print *, "v       = ", v
             !print *, "t1 = ", t1
 
-            if( nr.eq.3 ) then
+            if( nr == 3 ) then
                p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
 
 !              apply g from the left to transform the rows of the matrix
@@ -618,7 +617,7 @@ end function house
 !                 accumulate transformations in the matrix z
                   z(iloz:ihiz, k:k+2) = matmul(z(iloz:ihiz, k:k+2), p3)
                end if
-            else if( nr.eq.2 ) then
+            else if( nr == 2 ) then
 				!print *, "nr == 2"
                p2 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
 
@@ -645,13 +644,13 @@ end function house
 !
   150 continue
 !
-      if( l.eq.i ) then
+      if( l == i ) then
 !
 !        h(i,i-1) is negligible: one eigenvalue has converged.
 !
          wr( i ) = h( i, i )
          wi( i ) = zero
-      else if( l.eq.i-1 ) then
+      else if( l == i-1 ) then
 !
 !        h(i-1,i-2) is negligible: a pair of eigenvalues have converged.
 !
@@ -669,7 +668,7 @@ end function house
 
          if( wantt ) then
 !           apply the transformation to the rest of h.
-            if( i2.gt.i ) then
+            if( i2 > i ) then
                h(i-1:i, i+1:i2) = matmul(p2, h(i-1:i, i+1:i2))
             end if
             h(i1: i-2, i-1:i) = matmul(h(i1: i-2, i-1:i), transpose(p2))
@@ -851,11 +850,11 @@ end function house
                   log( dble(radix(safmn2)) ) / two )
 
       safmx2 = one / safmn2
-      if( c.eq.zero ) then
+      if( c == zero ) then
          cs = one
          sn = zero
 !
-      else if( b.eq.zero ) then
+      else if( b == zero ) then
 !
 !        swap rows and columns
 !
@@ -867,7 +866,7 @@ end function house
          b = -c
          c = zero
 !
-      else if( ( a-d ).eq.zero .and. sign( one, b ).ne.sign( one, c ) ) &
+      else if( ( a-d ) == zero .and. sign( one, b ) /= sign( one, c ) ) &
                 then
          cs = one
          sn = zero
@@ -884,7 +883,7 @@ end function house
 !        if z is of the order of the machine accuracy, postpone the
 !        decision on the nature of eigenvalues
 !
-         if( z.ge.multpl*eps ) then
+         if( z >= multpl*eps ) then
 !
 !           real eigenvalues. compute a and d.
 !
@@ -910,16 +909,16 @@ end function house
    10       continue
             count = count + 1
             scale = max( abs(temp), abs(sigma) )
-            if( scale.ge.safmx2 ) then
+            if( scale >= safmx2 ) then
                sigma = sigma * safmn2
                temp = temp * safmn2
-               if (count .le. 20) &
+               if (count  <=  20) &
                   goto 10
             end if
-            if( scale.le.safmn2 ) then
+            if( scale <= safmn2 ) then
                sigma = sigma * safmx2
                temp = temp * safmx2
-               if (count .le. 20) &
+               if (count  <=  20) &
                   goto 10
             end if
             p = half*temp
@@ -951,9 +950,9 @@ end function house
             a = temp
             d = temp
 !
-            if( c.ne.zero ) then
-               if( b.ne.zero ) then
-                  if( sign( one, b ).eq.sign( one, c ) ) then
+            if( c /= zero ) then
+               if( b /= zero ) then
+                  if( sign( one, b ) == sign( one, c ) ) then
 !
 !                    real eigenvalues: reduce to upper triangular form
 !
@@ -987,7 +986,7 @@ end function house
 !
       rt1r = a
       rt2r = d
-      if( c.eq.zero ) then
+      if( c == zero ) then
          rt1i = zero
          rt2i = zero
       else
@@ -1128,14 +1127,14 @@ end function house
 !     ..
 !     .. executable statements ..
 !
-      if( n.le.1 ) then
+      if( n <= 1 ) then
          tau = zero
          return
       end if
 !
       xnorm = norm2(x(1: n-1))
 !
-      if( xnorm.eq.zero ) then
+      if( xnorm == zero ) then
 !
 !        h  =  i
 !
@@ -1147,7 +1146,7 @@ end function house
          beta = -sign(norm2([alpha, xnorm]), alpha )
          safmin = tiny(safmin) / (epsilon(safmin) / radix(safmin))
          knt = 0
-         if( abs( beta ).lt.safmin ) then
+         if( abs( beta ) < safmin ) then
 !
 !           xnorm, beta may be inaccurate; scale x and recompute them
 !
@@ -1158,7 +1157,7 @@ end function house
             x(1: n-1: incx) = rsafmn * x(1: n-1: incx)
             beta = beta*rsafmn
             alpha = alpha*rsafmn
-            if( (abs( beta ).lt.safmin) .and. (knt .lt. 20) ) &
+            if( (abs( beta ) < safmin) .and. (knt  <  20) ) &
                go to 10
 !
 !           new beta is at most 1, at least safmin
