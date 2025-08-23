@@ -59,60 +59,6 @@ end function sign_
 
 !********
 
-function house(x, iostat) result(pp)
-	! return the householder reflector `pp` such that pp * x == [1, 0, 0, ...]
-	!
-	! could just return `v` like house_c64(), but this fn is only used for 3x3
-	! matrices, whereas house_c64() runs on arbitrarily large matrices for qr
-	! factoring
-
-	use numa__utils
-	double precision, intent(in) :: x(:)
-	double precision, allocatable :: pp(:,:)
-	integer, optional, intent(out) :: iostat
-	!********
-
-	character(len = :), allocatable :: msg
-	double precision :: alpha, normv
-	double precision, allocatable :: v(:)
-	integer :: n
-
-	if (present(iostat)) iostat = 0
-
-	n = size(x)
-
-	alpha = -sign_(x(1)) * norm2(x)
-	v = x
-	v(1) = v(1) - alpha
-
-	normv = norm2(v)
-	if (normv <= 0) then
-		v = v * 1.d50
-		normv = norm2(v)
-		print *, "normv = ", normv
-		print *, "v/normv = ", v / normv
-
-		pp = eye(n)
-		print *, "v = ", v
-		msg = "vector is singular in house()"
-		call PANIC(msg, present(iostat))
-		iostat = 1
-		return
-	end if
-	v = v / normv
-
-	!print *, "v house = ", v
-
-	pp = eye(n) - 2.d0 * outer_product(v, v)
-
-	!print *, "in house():"
-	!print *, "x = ", x
-	!print *, "pp = "
-	!print "(3es15.5)", pp
-	!print *, "pp * x = ", matmul(pp, x)
-
-end function house
-
 !> \brief \b dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix, using the double-shift/single-shift qr algorithm.
 
 !  =========== documentation ===========
@@ -573,9 +519,6 @@ end function house
                v(1: nr) = h(k: k+nr-1, k-1)
 
             !print *, "v       = ", v
-
-            !! todo: delete if unused
-            !p3 = house(v)
 
             call dlarfg( nr, v( 1 ), v( 2 ), 1, t1 )
             !print *, "v*tau   = ", v * t1
