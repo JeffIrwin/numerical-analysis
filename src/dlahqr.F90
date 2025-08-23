@@ -4,7 +4,7 @@
 module numa__dlahqr
 	implicit none
 
-	! TODO: DRY
+	! todo: dry
 
 	interface outer_product
 		!procedure :: outer_product_c64
@@ -60,10 +60,10 @@ end function sign_
 !********
 
 function house(x, iostat) result(pp)
-	! Return the Householder reflector `pp` such that pp * x == [1, 0, 0, ...]
+	! return the householder reflector `pp` such that pp * x == [1, 0, 0, ...]
 	!
-	! Could just return `v` like house_c64(), but this fn is only used for 3x3
-	! matrices, whereas house_c64() runs on arbitrarily large matrices for QR
+	! could just return `v` like house_c64(), but this fn is only used for 3x3
+	! matrices, whereas house_c64() runs on arbitrarily large matrices for qr
 	! factoring
 
 	use numa__utils
@@ -95,7 +95,7 @@ function house(x, iostat) result(pp)
 		pp = eye(n)
 		print *, "v = ", v
 		msg = "vector is singular in house()"
-		call PANIC(msg, present(iostat))
+		call panic(msg, present(iostat))
 		iostat = 1
 		return
 	end if
@@ -113,1070 +113,1070 @@ function house(x, iostat) result(pp)
 
 end function house
 
-!> \brief \b DLAHQR computes the eigenvalues and Schur factorization of an upper Hessenberg matrix, using the double-shift/single-shift QR algorithm.
+!> \brief \b dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix, using the double-shift/single-shift qr algorithm.
 !
-!  =========== DOCUMENTATION ===========
+!  =========== documentation ===========
 !
-! Online html documentation available at
+! online html documentation available at
 !            http://www.netlib.org/lapack/explore-html/
 !
 !> \htmlonly
-!> Download DLAHQR + dependencies
+!> download dlahqr + dependencies
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlahqr.f">
-!> [TGZ]</a>
+!> [tgz]</a>
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlahqr.f">
-!> [ZIP]</a>
+!> [zip]</a>
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlahqr.f">
-!> [TXT]</a>
+!> [txt]</a>
 !> \endhtmlonly
 !
-!  Definition:
+!  definition:
 !  ===========
 !
-!       SUBROUTINE DLAHQR( WANTT, WANTZ, N, ILO, IHI, H, LDH, WR, WI,
-!                          ILOZ, IHIZ, Z, LDZ, INFO )
+!       subroutine dlahqr( wantt, wantz, n, ilo, ihi, h, ldh, wr, wi,
+!                          iloz, ihiz, z, ldz, info )
 !
-!       .. Scalar Arguments ..
-!       INTEGER            IHI, IHIZ, ILO, ILOZ, INFO, LDH, LDZ, N
-!       LOGICAL            WANTT, WANTZ
+!       .. scalar arguments ..
+!       integer            ihi, ihiz, ilo, iloz, info, ldh, ldz, n
+!       logical            wantt, wantz
 !       ..
-!       .. Array Arguments ..
-!       DOUBLE PRECISION   H( LDH, * ), WI( * ), WR( * ), Z( LDZ, * )
+!       .. array arguments ..
+!       double precision   h( ldh, * ), wi( * ), wr( * ), z( ldz, * )
 !       ..
 !
 !
-!> \par Purpose:
+!> \par purpose:
 !  =============
 !>
 !> \verbatim
 !>
-!>    DLAHQR is an auxiliary routine called by DHSEQR to update the
-!>    eigenvalues and Schur decomposition already computed by DHSEQR, by
-!>    dealing with the Hessenberg submatrix in rows and columns ILO to
-!>    IHI.
+!>    dlahqr is an auxiliary routine called by dhseqr to update the
+!>    eigenvalues and schur decomposition already computed by dhseqr, by
+!>    dealing with the hessenberg submatrix in rows and columns ilo to
+!>    ihi.
 !> \endverbatim
 !
-!  Arguments:
+!  arguments:
 !  ==========
 !
-!> \param[in] WANTT
+!> \param[in] wantt
 !> \verbatim
-!>          WANTT is LOGICAL
-!>          = .TRUE. : the full Schur form T is required;
-!>          = .FALSE.: only eigenvalues are required.
+!>          wantt is logical
+!>          = .true. : the full schur form t is required;
+!>          = .false.: only eigenvalues are required.
 !> \endverbatim
 !>
-!> \param[in] WANTZ
+!> \param[in] wantz
 !> \verbatim
-!>          WANTZ is LOGICAL
-!>          = .TRUE. : the matrix of Schur vectors Z is required;
-!>          = .FALSE.: Schur vectors are not required.
+!>          wantz is logical
+!>          = .true. : the matrix of schur vectors z is required;
+!>          = .false.: schur vectors are not required.
 !> \endverbatim
 !>
-!> \param[in] N
+!> \param[in] n
 !> \verbatim
-!>          N is INTEGER
-!>          The order of the matrix H.  N >= 0.
+!>          n is integer
+!>          the order of the matrix h.  n >= 0.
 !> \endverbatim
 !>
-!> \param[in] ILO
+!> \param[in] ilo
 !> \verbatim
-!>          ILO is INTEGER
+!>          ilo is integer
 !> \endverbatim
 !>
-!> \param[in] IHI
+!> \param[in] ihi
 !> \verbatim
-!>          IHI is INTEGER
-!>          It is assumed that H is already upper quasi-triangular in
-!>          rows and columns IHI+1:N, and that H(ILO,ILO-1) = 0 (unless
-!>          ILO = 1). DLAHQR works primarily with the Hessenberg
-!>          submatrix in rows and columns ILO to IHI, but applies
-!>          transformations to all of H if WANTT is .TRUE..
-!>          1 <= ILO <= max(1,IHI); IHI <= N.
+!>          ihi is integer
+!>          it is assumed that h is already upper quasi-triangular in
+!>          rows and columns ihi+1:n, and that h(ilo,ilo-1) = 0 (unless
+!>          ilo = 1). dlahqr works primarily with the hessenberg
+!>          submatrix in rows and columns ilo to ihi, but applies
+!>          transformations to all of h if wantt is .true..
+!>          1 <= ilo <= max(1,ihi); ihi <= n.
 !> \endverbatim
 !>
-!> \param[in,out] H
+!> \param[in,out] h
 !> \verbatim
-!>          H is DOUBLE PRECISION array, dimension (LDH,N)
-!>          On entry, the upper Hessenberg matrix H.
-!>          On exit, if INFO is zero and if WANTT is .TRUE., H is upper
-!>          quasi-triangular in rows and columns ILO:IHI, with any
-!>          2-by-2 diagonal blocks in standard form. If INFO is zero
-!>          and WANTT is .FALSE., the contents of H are unspecified on
-!>          exit.  The output state of H if INFO is nonzero is given
-!>          below under the description of INFO.
+!>          h is double precision array, dimension (ldh,n)
+!>          on entry, the upper hessenberg matrix h.
+!>          on exit, if info is zero and if wantt is .true., h is upper
+!>          quasi-triangular in rows and columns ilo:ihi, with any
+!>          2-by-2 diagonal blocks in standard form. if info is zero
+!>          and wantt is .false., the contents of h are unspecified on
+!>          exit.  the output state of h if info is nonzero is given
+!>          below under the description of info.
 !> \endverbatim
 !>
-!> \param[in] LDH
+!> \param[in] ldh
 !> \verbatim
-!>          LDH is INTEGER
-!>          The leading dimension of the array H. LDH >= max(1,N).
+!>          ldh is integer
+!>          the leading dimension of the array h. ldh >= max(1,n).
 !> \endverbatim
 !>
-!> \param[out] WR
+!> \param[out] wr
 !> \verbatim
-!>          WR is DOUBLE PRECISION array, dimension (N)
+!>          wr is double precision array, dimension (n)
 !> \endverbatim
 !>
-!> \param[out] WI
+!> \param[out] wi
 !> \verbatim
-!>          WI is DOUBLE PRECISION array, dimension (N)
-!>          The real and imaginary parts, respectively, of the computed
-!>          eigenvalues ILO to IHI are stored in the corresponding
-!>          elements of WR and WI. If two eigenvalues are computed as a
+!>          wi is double precision array, dimension (n)
+!>          the real and imaginary parts, respectively, of the computed
+!>          eigenvalues ilo to ihi are stored in the corresponding
+!>          elements of wr and wi. if two eigenvalues are computed as a
 !>          complex conjugate pair, they are stored in consecutive
-!>          elements of WR and WI, say the i-th and (i+1)th, with
-!>          WI(i) > 0 and WI(i+1) < 0. If WANTT is .TRUE., the
+!>          elements of wr and wi, say the i-th and (i+1)th, with
+!>          wi(i) > 0 and wi(i+1) < 0. if wantt is .true., the
 !>          eigenvalues are stored in the same order as on the diagonal
-!>          of the Schur form returned in H, with WR(i) = H(i,i), and, if
-!>          H(i:i+1,i:i+1) is a 2-by-2 diagonal block,
-!>          WI(i) = sqrt(H(i+1,i)*H(i,i+1)) and WI(i+1) = -WI(i).
+!>          of the schur form returned in h, with wr(i) = h(i,i), and, if
+!>          h(i:i+1,i:i+1) is a 2-by-2 diagonal block,
+!>          wi(i) = sqrt(h(i+1,i)*h(i,i+1)) and wi(i+1) = -wi(i).
 !> \endverbatim
 !>
-!> \param[in] ILOZ
+!> \param[in] iloz
 !> \verbatim
-!>          ILOZ is INTEGER
+!>          iloz is integer
 !> \endverbatim
 !>
-!> \param[in] IHIZ
+!> \param[in] ihiz
 !> \verbatim
-!>          IHIZ is INTEGER
-!>          Specify the rows of Z to which transformations must be
-!>          applied if WANTZ is .TRUE..
-!>          1 <= ILOZ <= ILO; IHI <= IHIZ <= N.
+!>          ihiz is integer
+!>          specify the rows of z to which transformations must be
+!>          applied if wantz is .true..
+!>          1 <= iloz <= ilo; ihi <= ihiz <= n.
 !> \endverbatim
 !>
-!> \param[in,out] Z
+!> \param[in,out] z
 !> \verbatim
-!>          Z is DOUBLE PRECISION array, dimension (LDZ,N)
-!>          If WANTZ is .TRUE., on entry Z must contain the current
-!>          matrix Z of transformations accumulated by DHSEQR, and on
-!>          exit Z has been updated; transformations are applied only to
-!>          the submatrix Z(ILOZ:IHIZ,ILO:IHI).
-!>          If WANTZ is .FALSE., Z is not referenced.
+!>          z is double precision array, dimension (ldz,n)
+!>          if wantz is .true., on entry z must contain the current
+!>          matrix z of transformations accumulated by dhseqr, and on
+!>          exit z has been updated; transformations are applied only to
+!>          the submatrix z(iloz:ihiz,ilo:ihi).
+!>          if wantz is .false., z is not referenced.
 !> \endverbatim
 !>
-!> \param[in] LDZ
+!> \param[in] ldz
 !> \verbatim
-!>          LDZ is INTEGER
-!>          The leading dimension of the array Z. LDZ >= max(1,N).
+!>          ldz is integer
+!>          the leading dimension of the array z. ldz >= max(1,n).
 !> \endverbatim
 !>
-!> \param[out] INFO
+!> \param[out] info
 !> \verbatim
-!>          INFO is INTEGER
+!>          info is integer
 !>           = 0:  successful exit
-!>           > 0:  If INFO = i, DLAHQR failed to compute all the
-!>                  eigenvalues ILO to IHI in a total of 30 iterations
-!>                  per eigenvalue; elements i+1:ihi of WR and WI
+!>           > 0:  if info = i, dlahqr failed to compute all the
+!>                  eigenvalues ilo to ihi in a total of 30 iterations
+!>                  per eigenvalue; elements i+1:ihi of wr and wi
 !>                  contain those eigenvalues which have been
 !>                  successfully computed.
 !>
-!>                  If INFO > 0 and WANTT is .FALSE., then on exit,
+!>                  if info > 0 and wantt is .false., then on exit,
 !>                  the remaining unconverged eigenvalues are the
-!>                  eigenvalues of the upper Hessenberg matrix rows
-!>                  and columns ILO through INFO of the final, output
-!>                  value of H.
+!>                  eigenvalues of the upper hessenberg matrix rows
+!>                  and columns ilo through info of the final, output
+!>                  value of h.
 !>
-!>                  If INFO > 0 and WANTT is .TRUE., then on exit
-!>          (*)       (initial value of H)*U  = U*(final value of H)
-!>                  where U is an orthogonal matrix.    The final
-!>                  value of H is upper Hessenberg and triangular in
-!>                  rows and columns INFO+1 through IHI.
+!>                  if info > 0 and wantt is .true., then on exit
+!>          (*)       (initial value of h)*u  = u*(final value of h)
+!>                  where u is an orthogonal matrix.    the final
+!>                  value of h is upper hessenberg and triangular in
+!>                  rows and columns info+1 through ihi.
 !>
-!>                  If INFO > 0 and WANTZ is .TRUE., then on exit
-!>                      (final value of Z)  = (initial value of Z)*U
-!>                  where U is the orthogonal matrix in (*)
-!>                  (regardless of the value of WANTT.)
+!>                  if info > 0 and wantz is .true., then on exit
+!>                      (final value of z)  = (initial value of z)*u
+!>                  where u is the orthogonal matrix in (*)
+!>                  (regardless of the value of wantt.)
 !> \endverbatim
 !
-!  Authors:
+!  authors:
 !  ========
 !
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
+!> \author univ. of tennessee
+!> \author univ. of california berkeley
+!> \author univ. of colorado denver
+!> \author nag ltd.
 !
 !> \ingroup lahqr
 !
-!> \par Further Details:
+!> \par further details:
 !  =====================
 !>
 !> \verbatim
 !>
-!>     02-96 Based on modifications by
-!>     David Day, Sandia National Laboratory, USA
+!>     02-96 based on modifications by
+!>     david day, sandia national laboratory, usa
 !>
-!>     12-04 Further modifications by
-!>     Ralph Byers, University of Kansas, USA
-!>     This is a modified version of DLAHQR from LAPACK version 3.0.
-!>     It is (1) more robust against overflow and underflow and
-!>     (2) adopts the more conservative Ahues & Tisseur stopping
-!>     criterion (LAWN 122, 1997).
+!>     12-04 further modifications by
+!>     ralph byers, university of kansas, usa
+!>     this is a modified version of dlahqr from lapack version 3.0.
+!>     it is (1) more robust against overflow and underflow and
+!>     (2) adopts the more conservative ahues & tisseur stopping
+!>     criterion (lawn 122, 1997).
 !> \endverbatim
 !>
 !  =====================================================================
-      SUBROUTINE DLAHQR( WANTT, WANTZ, N, ILO, IHI, H, LDH, WR, WI, &
-                         ILOZ, IHIZ, Z, LDZ, INFO )
-      IMPLICIT NONE
+      subroutine dlahqr( wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
+                         iloz, ihiz, z, ldz, info )
+      implicit none
 !
-!  -- LAPACK auxiliary routine --
-!  -- LAPACK is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
+!  -- lapack auxiliary routine --
+!  -- lapack is a software package provided by univ. of tennessee,    --
+!  -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
 !
-!     .. Scalar Arguments ..
-      INTEGER            IHI, IHIZ, ILO, ILOZ, INFO, LDH, LDZ, N
-      LOGICAL            WANTT, WANTZ
+!     .. scalar arguments ..
+      integer            ihi, ihiz, ilo, iloz, info, ldh, ldz, n
+      logical            wantt, wantz
 !     ..
-!     .. Array Arguments ..
-      DOUBLE PRECISION   H( LDH, * ), WI( * ), WR( * ), Z( LDZ, * )
+!     .. array arguments ..
+      double precision   h( ldh, * ), wi( * ), wr( * ), z( ldz, * )
 !     ..
 !
 !  =========================================================
 !
-!     .. Parameters ..
-      DOUBLE PRECISION   ZERO, ONE, TWO
-      PARAMETER          ( ZERO = 0.0d0, ONE = 1.0d0, TWO = 2.0d0 )
-      DOUBLE PRECISION   DAT1, DAT2
-      PARAMETER          ( DAT1 = 3.0d0 / 4.0d0, DAT2 = -0.4375d0 )
-      INTEGER            KEXSH
-      PARAMETER          ( KEXSH = 10 )
+!     .. parameters ..
+      double precision   zero, one, two
+      parameter          ( zero = 0.0d0, one = 1.0d0, two = 2.0d0 )
+      double precision   dat1, dat2
+      parameter          ( dat1 = 3.0d0 / 4.0d0, dat2 = -0.4375d0 )
+      integer            kexsh
+      parameter          ( kexsh = 10 )
 !     ..
-!     .. Local Scalars ..
-      DOUBLE PRECISION   AA, AB, BA, BB, CS, DET, H11, H12, H21, H21S, &
-                         H22, RT1I, RT1R, RT2I, RT2R, RTDISC, S, SAFMAX, &
-                         SAFMIN, SMLNUM, SN, T1, TR, TST, &
-                         ULP
-      INTEGER            I, I1, I2, i3, ITS, ITMAX, J, K, L, M, NH, NR, NZ, &
-                         KDEFL 
+!     .. local scalars ..
+      double precision   aa, ab, ba, bb, cs, det, h11, h12, h21, h21s, &
+                         h22, rt1i, rt1r, rt2i, rt2r, rtdisc, s, safmax, &
+                         safmin, smlnum, sn, t1, tr, tst, &
+                         ulp
+      integer            i, i1, i2, i3, its, itmax, j, k, l, m, nh, nr, nz, &
+                         kdefl 
 !     ..
-!     .. Local Arrays ..
-      DOUBLE PRECISION   V( 3 )
+!     .. local arrays ..
+      double precision   v( 3 )
 	  double precision :: p2(2,2), p3(3,3)
 !     ..
 !     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC          ABS, DBLE, MAX, MIN, SQRT
+!     .. intrinsic functions ..
+      intrinsic          abs, dble, max, min, sqrt
 !     ..
-!     .. Executable Statements ..
+!     .. executable statements ..
 !
-      INFO = 0
+      info = 0
 !
-!     Quick return if possible
+!     quick return if possible
 !
-      IF( N.EQ.0 ) &
-         RETURN
-      IF( ILO.EQ.IHI ) THEN
-         WR( ILO ) = H( ILO, ILO )
-         WI( ILO ) = ZERO
-         RETURN
-      END IF
+      if( n.eq.0 ) &
+         return
+      if( ilo.eq.ihi ) then
+         wr( ilo ) = h( ilo, ilo )
+         wi( ilo ) = zero
+         return
+      end if
 !
 !     ==== clear out the trash ====
-      DO 10 J = ILO, IHI - 3
-         H( J+2, J ) = ZERO
-         H( J+3, J ) = ZERO
-   10 CONTINUE
-      IF( ILO.LE.IHI-2 ) &
-         H( IHI, IHI-2 ) = ZERO
+      do 10 j = ilo, ihi - 3
+         h( j+2, j ) = zero
+         h( j+3, j ) = zero
+   10 continue
+      if( ilo.le.ihi-2 ) &
+         h( ihi, ihi-2 ) = zero
 !
-      NH = IHI - ILO + 1
-      NZ = IHIZ - ILOZ + 1
+      nh = ihi - ilo + 1
+      nz = ihiz - iloz + 1
 !
-!     Set machine-dependent constants for the stopping criterion.
+!     set machine-dependent constants for the stopping criterion.
 !
-      SAFMIN = tiny(safmin)
-      SAFMAX = ONE / SAFMIN
+      safmin = tiny(safmin)
+      safmax = one / safmin
       ulp = epsilon(ulp)
 
-      SMLNUM = SAFMIN*( DBLE( NH ) / ULP )
+      smlnum = safmin*( dble( nh ) / ulp )
 !
-!     I1 and I2 are the indices of the first row and last column of H
-!     to which transformations must be applied. If eigenvalues only are
-!     being computed, I1 and I2 are set inside the main loop.
+!     i1 and i2 are the indices of the first row and last column of h
+!     to which transformations must be applied. if eigenvalues only are
+!     being computed, i1 and i2 are set inside the main loop.
 !
-      IF( WANTT ) THEN
-         I1 = 1
-         I2 = N
-      END IF
+      if( wantt ) then
+         i1 = 1
+         i2 = n
+      end if
 !
-!     ITMAX is the total number of QR iterations allowed.
+!     itmax is the total number of qr iterations allowed.
 !
-      ITMAX = 30 * MAX( 10, NH )
+      itmax = 30 * max( 10, nh )
 !
-!     KDEFL counts the number of iterations since a deflation
+!     kdefl counts the number of iterations since a deflation
 !
-      KDEFL = 0
+      kdefl = 0
 !
-!     The main loop begins here. I is the loop index and decreases from
-!     IHI to ILO in steps of 1 or 2. Each iteration of the loop works
-!     with the active submatrix in rows and columns L to I.
-!     Eigenvalues I+1 to IHI have already converged. Either L = ILO or
-!     H(L,L-1) is negligible so that the matrix splits.
+!     the main loop begins here. i is the loop index and decreases from
+!     ihi to ilo in steps of 1 or 2. each iteration of the loop works
+!     with the active submatrix in rows and columns l to i.
+!     eigenvalues i+1 to ihi have already converged. either l = ilo or
+!     h(l,l-1) is negligible so that the matrix splits.
 !
-      I = IHI
-   20 CONTINUE
-      L = ILO
-      IF( I.LT.ILO ) &
-         GO TO 160
+      i = ihi
+   20 continue
+      l = ilo
+      if( i.lt.ilo ) &
+         go to 160
 !
-!     Perform QR iterations on rows and columns ILO to I until a
+!     perform qr iterations on rows and columns ilo to i until a
 !     submatrix of order 1 or 2 splits off at the bottom because a
 !     subdiagonal element has become negligible.
 !
-      DO 140 ITS = 0, ITMAX
+      do 140 its = 0, itmax
 !
-!        Look for a single small subdiagonal element.
+!        look for a single small subdiagonal element.
 !
-         DO 30 K = I, L + 1, -1
-            IF( ABS( H( K, K-1 ) ).LE.SMLNUM ) &
-               GO TO 40
-            TST = ABS( H( K-1, K-1 ) ) + ABS( H( K, K ) )
-            IF( TST.EQ.ZERO ) THEN
-               IF( K-2.GE.ILO ) &
-                  TST = TST + ABS( H( K-1, K-2 ) )
-               IF( K+1.LE.IHI ) &
-                  TST = TST + ABS( H( K+1, K ) )
-            END IF
-!           ==== The following is a conservative small subdiagonal
-!           .    deflation  criterion due to Ahues & Tisseur (LAWN 122,
-!           .    1997). It has better mathematical foundation and
+         do 30 k = i, l + 1, -1
+            if( abs( h( k, k-1 ) ).le.smlnum ) &
+               go to 40
+            tst = abs( h( k-1, k-1 ) ) + abs( h( k, k ) )
+            if( tst.eq.zero ) then
+               if( k-2.ge.ilo ) &
+                  tst = tst + abs( h( k-1, k-2 ) )
+               if( k+1.le.ihi ) &
+                  tst = tst + abs( h( k+1, k ) )
+            end if
+!           ==== the following is a conservative small subdiagonal
+!           .    deflation  criterion due to ahues & tisseur (lawn 122,
+!           .    1997). it has better mathematical foundation and
 !           .    improves accuracy in some cases.  ====
-            IF( ABS( H( K, K-1 ) ).LE.ULP*TST ) THEN
-               AB = MAX( ABS( H( K, K-1 ) ), ABS( H( K-1, K ) ) )
-               BA = MIN( ABS( H( K, K-1 ) ), ABS( H( K-1, K ) ) )
-               AA = MAX( ABS( H( K, K ) ), &
-                    ABS( H( K-1, K-1 )-H( K, K ) ) )
-               BB = MIN( ABS( H( K, K ) ), &
-                    ABS( H( K-1, K-1 )-H( K, K ) ) )
-               S = AA + AB
-               IF( BA*( AB / S ).LE.MAX( SMLNUM, &
-                   ULP*( BB*( AA / S ) ) ) )GO TO 40
-            END IF
-   30    CONTINUE
-   40    CONTINUE
-         L = K
-         IF( L.GT.ILO ) THEN
+            if( abs( h( k, k-1 ) ).le.ulp*tst ) then
+               ab = max( abs( h( k, k-1 ) ), abs( h( k-1, k ) ) )
+               ba = min( abs( h( k, k-1 ) ), abs( h( k-1, k ) ) )
+               aa = max( abs( h( k, k ) ), &
+                    abs( h( k-1, k-1 )-h( k, k ) ) )
+               bb = min( abs( h( k, k ) ), &
+                    abs( h( k-1, k-1 )-h( k, k ) ) )
+               s = aa + ab
+               if( ba*( ab / s ).le.max( smlnum, &
+                   ulp*( bb*( aa / s ) ) ) )go to 40
+            end if
+   30    continue
+   40    continue
+         l = k
+         if( l.gt.ilo ) then
 !
-!           H(L,L-1) is negligible
+!           h(l,l-1) is negligible
 !
-            H( L, L-1 ) = ZERO
-         END IF
+            h( l, l-1 ) = zero
+         end if
 !
-!        Exit from loop if a submatrix of order 1 or 2 has split off.
+!        exit from loop if a submatrix of order 1 or 2 has split off.
 !
-         IF( L.GE.I-1 ) &
-            GO TO 150
-         KDEFL = KDEFL + 1
+         if( l.ge.i-1 ) &
+            go to 150
+         kdefl = kdefl + 1
 !
-!        Now the active submatrix is in rows and columns L to I. If
+!        now the active submatrix is in rows and columns l to i. if
 !        eigenvalues only are being computed, only the active submatrix
 !        need be transformed.
 !
-         IF( .NOT.WANTT ) THEN
-            I1 = L
-            I2 = I
-         END IF
+         if( .not.wantt ) then
+            i1 = l
+            i2 = i
+         end if
 !
-         IF( MOD(KDEFL,2*KEXSH).EQ.0 ) THEN
+         if( mod(kdefl,2*kexsh).eq.0 ) then
 !
-!           Exceptional shift.
+!           exceptional shift.
 !
-            S = ABS( H( I, I-1 ) ) + ABS( H( I-1, I-2 ) )
-            H11 = DAT1*S + H( I, I )
-            H12 = DAT2*S
-            H21 = S
-            H22 = H11
-         ELSE IF( MOD(KDEFL,KEXSH).EQ.0 ) THEN
+            s = abs( h( i, i-1 ) ) + abs( h( i-1, i-2 ) )
+            h11 = dat1*s + h( i, i )
+            h12 = dat2*s
+            h21 = s
+            h22 = h11
+         else if( mod(kdefl,kexsh).eq.0 ) then
 !
-!           Exceptional shift.
+!           exceptional shift.
 !
-            S = ABS( H( L+1, L ) ) + ABS( H( L+2, L+1 ) )
-            H11 = DAT1*S + H( L, L )
-            H12 = DAT2*S
-            H21 = S
-            H22 = H11
-         ELSE
+            s = abs( h( l+1, l ) ) + abs( h( l+2, l+1 ) )
+            h11 = dat1*s + h( l, l )
+            h12 = dat2*s
+            h21 = s
+            h22 = h11
+         else
 !
-!           Prepare to use Francis' double shift
-!           (i.e. 2nd degree generalized Rayleigh quotient)
+!           prepare to use francis' double shift
+!           (i.e. 2nd degree generalized rayleigh quotient)
 !
-            H11 = H( I-1, I-1 )
-            H21 = H( I, I-1 )
-            H12 = H( I-1, I )
-            H22 = H( I, I )
-         END IF
-         S = ABS( H11 ) + ABS( H12 ) + ABS( H21 ) + ABS( H22 )
-         IF( S.EQ.ZERO ) THEN
-            RT1R = ZERO
-            RT1I = ZERO
-            RT2R = ZERO
-            RT2I = ZERO
-         ELSE
-            H11 = H11 / S
-            H21 = H21 / S
-            H12 = H12 / S
-            H22 = H22 / S
-            TR = ( H11+H22 ) / TWO
-            DET = ( H11-TR )*( H22-TR ) - H12*H21
-            RTDISC = SQRT( ABS( DET ) )
-            IF( DET.GE.ZERO ) THEN
+            h11 = h( i-1, i-1 )
+            h21 = h( i, i-1 )
+            h12 = h( i-1, i )
+            h22 = h( i, i )
+         end if
+         s = abs( h11 ) + abs( h12 ) + abs( h21 ) + abs( h22 )
+         if( s.eq.zero ) then
+            rt1r = zero
+            rt1i = zero
+            rt2r = zero
+            rt2i = zero
+         else
+            h11 = h11 / s
+            h21 = h21 / s
+            h12 = h12 / s
+            h22 = h22 / s
+            tr = ( h11+h22 ) / two
+            det = ( h11-tr )*( h22-tr ) - h12*h21
+            rtdisc = sqrt( abs( det ) )
+            if( det.ge.zero ) then
 !
 !              ==== complex conjugate shifts ====
 !
-               RT1R = TR*S
-               RT2R = RT1R
-               RT1I = RTDISC*S
-               RT2I = -RT1I
-            ELSE
+               rt1r = tr*s
+               rt2r = rt1r
+               rt1i = rtdisc*s
+               rt2i = -rt1i
+            else
 !
 !              ==== real shifts (use only one of them)  ====
 !
-               RT1R = TR + RTDISC
-               RT2R = TR - RTDISC
-               IF( ABS( RT1R-H22 ).LE.ABS( RT2R-H22 ) ) THEN
-                  RT1R = RT1R*S
-                  RT2R = RT1R
-               ELSE
-                  RT2R = RT2R*S
-                  RT1R = RT2R
-               END IF
-               RT1I = ZERO
-               RT2I = ZERO
-            END IF
-         END IF
+               rt1r = tr + rtdisc
+               rt2r = tr - rtdisc
+               if( abs( rt1r-h22 ).le.abs( rt2r-h22 ) ) then
+                  rt1r = rt1r*s
+                  rt2r = rt1r
+               else
+                  rt2r = rt2r*s
+                  rt1r = rt2r
+               end if
+               rt1i = zero
+               rt2i = zero
+            end if
+         end if
 !
-!        Look for two consecutive small subdiagonal elements.
+!        look for two consecutive small subdiagonal elements.
 !
-         DO 50 M = I - 2, L, -1
-!           Determine the effect of starting the double-shift QR
-!           iteration at row M, and see if this would make H(M,M-1)
-!           negligible.  (The following uses scaling to avoid
+         do 50 m = i - 2, l, -1
+!           determine the effect of starting the double-shift qr
+!           iteration at row m, and see if this would make h(m,m-1)
+!           negligible.  (the following uses scaling to avoid
 !           overflows and most underflows.)
 !
-            H21S = H( M+1, M )
-            S = ABS( H( M, M )-RT2R ) + ABS( RT2I ) + ABS( H21S )
-            H21S = H( M+1, M ) / S
-            V( 1 ) = H21S*H( M, M+1 ) + ( H( M, M )-RT1R )* &
-                     ( ( H( M, M )-RT2R ) / S ) - RT1I*( RT2I / S )
-            V( 2 ) = H21S*( H( M, M )+H( M+1, M+1 )-RT1R-RT2R )
-            V( 3 ) = H21S*H( M+2, M+1 )
-            S = ABS( V( 1 ) ) + ABS( V( 2 ) ) + ABS( V( 3 ) )
-            V( 1 ) = V( 1 ) / S
-            V( 2 ) = V( 2 ) / S
-            V( 3 ) = V( 3 ) / S
-            IF( M.EQ.L ) &
-               GO TO 60
-            IF( ABS( H( M, M-1 ) )*( ABS( V( 2 ) )+ABS( V( 3 ) ) ).LE. &
-                ULP*ABS( V( 1 ) )*( ABS( H( M-1, M-1 ) )+ABS( H( M, &
-                M ) )+ABS( H( M+1, M+1 ) ) ) )GO TO 60
-   50    CONTINUE
-   60    CONTINUE
+            h21s = h( m+1, m )
+            s = abs( h( m, m )-rt2r ) + abs( rt2i ) + abs( h21s )
+            h21s = h( m+1, m ) / s
+            v( 1 ) = h21s*h( m, m+1 ) + ( h( m, m )-rt1r )* &
+                     ( ( h( m, m )-rt2r ) / s ) - rt1i*( rt2i / s )
+            v( 2 ) = h21s*( h( m, m )+h( m+1, m+1 )-rt1r-rt2r )
+            v( 3 ) = h21s*h( m+2, m+1 )
+            s = abs( v( 1 ) ) + abs( v( 2 ) ) + abs( v( 3 ) )
+            v( 1 ) = v( 1 ) / s
+            v( 2 ) = v( 2 ) / s
+            v( 3 ) = v( 3 ) / s
+            if( m.eq.l ) &
+               go to 60
+            if( abs( h( m, m-1 ) )*( abs( v( 2 ) )+abs( v( 3 ) ) ).le. &
+                ulp*abs( v( 1 ) )*( abs( h( m-1, m-1 ) )+abs( h( m, &
+                m ) )+abs( h( m+1, m+1 ) ) ) )go to 60
+   50    continue
+   60    continue
 !
-!        Double-shift QR step
+!        double-shift qr step
 !
-         DO 130 K = M, I - 1
+         do 130 k = m, i - 1
 !
-!           The first iteration of this loop determines a reflection G
-!           from the vector V and applies it from left and right to H,
+!           the first iteration of this loop determines a reflection g
+!           from the vector v and applies it from left and right to h,
 !           thus creating a nonzero bulge below the subdiagonal.
 !
-!           Each subsequent iteration determines a reflection G to
-!           restore the Hessenberg form in the (K-1)th column, and thus
+!           each subsequent iteration determines a reflection g to
+!           restore the hessenberg form in the (k-1)th column, and thus
 !           chases the bulge one step toward the bottom of the active
-!           submatrix. NR is the order of G.
+!           submatrix. nr is the order of g.
 !
-            NR = MIN( 3, I-K+1 )
+            nr = min( 3, i-k+1 )
             !print *, "nr = ", nr
-            IF( K.GT.M ) &
+            if( k.gt.m ) &
                v(1: nr) = h(k: k+nr-1, k-1)
 
             !print *, "v       = ", v
 
-            !! TODO: delete if unused
+            !! todo: delete if unused
             !p3 = house(v)
 
-            CALL DLARFG( NR, V( 1 ), V( 2 ), 1, T1 )
+            call dlarfg( nr, v( 1 ), v( 2 ), 1, t1 )
             !print *, "v*tau   = ", v * t1
             !print *, "v       = ", v
             !print *, "t1 = ", t1
 
-            IF( NR.EQ.3 ) THEN
+            if( nr.eq.3 ) then
                p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
 
-!              Apply G from the left to transform the rows of the matrix
-!              in columns K to I2.
+!              apply g from the left to transform the rows of the matrix
+!              in columns k to i2.
                h(k:k+2, k:i2) = matmul(p3, h(k:k+2, k:i2))
 
-!              Apply G from the right to transform the columns of the
-!              matrix in rows I1 to min(K+3,I).
+!              apply g from the right to transform the columns of the
+!              matrix in rows i1 to min(k+3,i).
                i3 = min(k+3, i)
                h(i1:i3, k:k+2) = matmul(h(i1:i3, k:k+2), p3)
 !
-               IF( WANTZ ) THEN
-!                 Accumulate transformations in the matrix Z
+               if( wantz ) then
+!                 accumulate transformations in the matrix z
                   z(iloz:ihiz, k:k+2) = matmul(z(iloz:ihiz, k:k+2), p3)
-               END IF
-            ELSE IF( NR.EQ.2 ) THEN
+               end if
+            else if( nr.eq.2 ) then
 				!print *, "nr == 2"
                p2 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
 
-!              Apply G from the left to transform the rows of the matrix
-!              in columns K to I2.
+!              apply g from the left to transform the rows of the matrix
+!              in columns k to i2.
                h(k:k+1, k:i2) = matmul(p2, h(k:k+1, k:i2))
 
-!              Apply G from the right to transform the columns of the
-!              matrix in rows I1 to min(K+3,I).
+!              apply g from the right to transform the columns of the
+!              matrix in rows i1 to min(k+3,i).
                h(i1:i, k:k+1) = matmul(h(i1:i, k:k+1), p2)
-               IF( WANTZ ) THEN
-!                 Accumulate transformations in the matrix Z
+               if( wantz ) then
+!                 accumulate transformations in the matrix z
                   z(iloz:ihiz, k:k+1) = matmul(z(iloz:ihiz, k:k+1), p2)
-               END IF
-            END IF
-  130    CONTINUE
+               end if
+            end if
+  130    continue
 !
-  140 CONTINUE
+  140 continue
 !
-!     Failure to converge in remaining number of iterations
+!     failure to converge in remaining number of iterations
 !
-      INFO = I
-      RETURN
+      info = i
+      return
 !
-  150 CONTINUE
+  150 continue
 !
-      IF( L.EQ.I ) THEN
+      if( l.eq.i ) then
 !
-!        H(I,I-1) is negligible: one eigenvalue has converged.
+!        h(i,i-1) is negligible: one eigenvalue has converged.
 !
-         WR( I ) = H( I, I )
-         WI( I ) = ZERO
-      ELSE IF( L.EQ.I-1 ) THEN
+         wr( i ) = h( i, i )
+         wi( i ) = zero
+      else if( l.eq.i-1 ) then
 !
-!        H(I-1,I-2) is negligible: a pair of eigenvalues have converged.
+!        h(i-1,i-2) is negligible: a pair of eigenvalues have converged.
 !
-!        Transform the 2-by-2 submatrix to standard Schur form,
+!        transform the 2-by-2 submatrix to standard schur form,
 !        and compute and store the eigenvalues.
 !
-         CALL DLANV2( H( I-1, I-1 ), H( I-1, I ), H( I, I-1 ), &
-                      H( I, I ), WR( I-1 ), WI( I-1 ), WR( I ), WI( I ), &
-                      CS, SN )
+         call dlanv2( h( i-1, i-1 ), h( i-1, i ), h( i, i-1 ), &
+                      h( i, i ), wr( i-1 ), wi( i-1 ), wr( i ), wi( i ), &
+                      cs, sn )
 !
          if (wantt .or. wantz) then
             p2(1,:) = [ cs, sn]
             p2(2,:) = [-sn, cs]
          end if
 
-         IF( WANTT ) THEN
-!           Apply the transformation to the rest of H.
-            IF( I2.GT.I ) then
+         if( wantt ) then
+!           apply the transformation to the rest of h.
+            if( i2.gt.i ) then
                h(i-1:i, i+1:i2) = matmul(p2, h(i-1:i, i+1:i2))
             end if
             h(i1: i-2, i-1:i) = matmul(h(i1: i-2, i-1:i), transpose(p2))
-         END IF
-         IF( WANTZ ) THEN
-!           Apply the transformation to Z.
+         end if
+         if( wantz ) then
+!           apply the transformation to z.
             z(iloz:nz, i-1:i) = matmul(z(iloz:nz, i-1:i), transpose(p2))
-         END IF
-      END IF
+         end if
+      end if
 !     reset deflation counter
-      KDEFL = 0
+      kdefl = 0
 !
-!     return to start of the main loop with new value of I.
+!     return to start of the main loop with new value of i.
 !
-      I = L - 1
-      GO TO 20
+      i = l - 1
+      go to 20
 !
-  160 CONTINUE
+  160 continue
 !
-      END SUBROUTINE DLAHQR
-!> \brief \b DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
+      end subroutine dlahqr
+!> \brief \b dlanv2 computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
 !
-!  =========== DOCUMENTATION ===========
+!  =========== documentation ===========
 !
-! Online html documentation available at
+! online html documentation available at
 !            http://www.netlib.org/lapack/explore-html/
 !
 !> \htmlonly
-!> Download DLANV2 + dependencies
+!> download dlanv2 + dependencies
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlanv2.f">
-!> [TGZ]</a>
+!> [tgz]</a>
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlanv2.f">
-!> [ZIP]</a>
+!> [zip]</a>
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlanv2.f">
-!> [TXT]</a>
+!> [txt]</a>
 !> \endhtmlonly
 !
-!  Definition:
+!  definition:
 !  ===========
 !
-!       SUBROUTINE DLANV2( A, B, C, D, RT1R, RT1I, RT2R, RT2I, CS, SN )
+!       subroutine dlanv2( a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn )
 !
-!       .. Scalar Arguments ..
-!       DOUBLE PRECISION   A, B, C, CS, D, RT1I, RT1R, RT2I, RT2R, SN
+!       .. scalar arguments ..
+!       double precision   a, b, c, cs, d, rt1i, rt1r, rt2i, rt2r, sn
 !       ..
 !
 !
-!> \par Purpose:
+!> \par purpose:
 !  =============
 !>
 !> \verbatim
 !>
-!> DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric
+!> dlanv2 computes the schur factorization of a real 2-by-2 nonsymmetric
 !> matrix in standard form:
 !>
-!>      [ A  B ] = [ CS -SN ] [ AA  BB ] [ CS  SN ]
-!>      [ C  D ]   [ SN  CS ] [ CC  DD ] [-SN  CS ]
+!>      [ a  b ] = [ cs -sn ] [ aa  bb ] [ cs  sn ]
+!>      [ c  d ]   [ sn  cs ] [ cc  dd ] [-sn  cs ]
 !>
 !> where either
-!> 1) CC = 0 so that AA and DD are real eigenvalues of the matrix, or
-!> 2) AA = DD and BB*CC < 0, so that AA + or - sqrt(BB*CC) are complex
+!> 1) cc = 0 so that aa and dd are real eigenvalues of the matrix, or
+!> 2) aa = dd and bb*cc < 0, so that aa + or - sqrt(bb*cc) are complex
 !> conjugate eigenvalues.
 !> \endverbatim
 !
-!  Arguments:
+!  arguments:
 !  ==========
 !
-!> \param[in,out] A
+!> \param[in,out] a
 !> \verbatim
-!>          A is DOUBLE PRECISION
+!>          a is double precision
 !> \endverbatim
 !>
-!> \param[in,out] B
+!> \param[in,out] b
 !> \verbatim
-!>          B is DOUBLE PRECISION
+!>          b is double precision
 !> \endverbatim
 !>
-!> \param[in,out] C
+!> \param[in,out] c
 !> \verbatim
-!>          C is DOUBLE PRECISION
+!>          c is double precision
 !> \endverbatim
 !>
-!> \param[in,out] D
+!> \param[in,out] d
 !> \verbatim
-!>          D is DOUBLE PRECISION
-!>          On entry, the elements of the input matrix.
-!>          On exit, they are overwritten by the elements of the
-!>          standardised Schur form.
+!>          d is double precision
+!>          on entry, the elements of the input matrix.
+!>          on exit, they are overwritten by the elements of the
+!>          standardised schur form.
 !> \endverbatim
 !>
-!> \param[out] RT1R
+!> \param[out] rt1r
 !> \verbatim
-!>          RT1R is DOUBLE PRECISION
+!>          rt1r is double precision
 !> \endverbatim
 !>
-!> \param[out] RT1I
+!> \param[out] rt1i
 !> \verbatim
-!>          RT1I is DOUBLE PRECISION
+!>          rt1i is double precision
 !> \endverbatim
 !>
-!> \param[out] RT2R
+!> \param[out] rt2r
 !> \verbatim
-!>          RT2R is DOUBLE PRECISION
+!>          rt2r is double precision
 !> \endverbatim
 !>
-!> \param[out] RT2I
+!> \param[out] rt2i
 !> \verbatim
-!>          RT2I is DOUBLE PRECISION
-!>          The real and imaginary parts of the eigenvalues. If the
-!>          eigenvalues are a complex conjugate pair, RT1I > 0.
+!>          rt2i is double precision
+!>          the real and imaginary parts of the eigenvalues. if the
+!>          eigenvalues are a complex conjugate pair, rt1i > 0.
 !> \endverbatim
 !>
-!> \param[out] CS
+!> \param[out] cs
 !> \verbatim
-!>          CS is DOUBLE PRECISION
+!>          cs is double precision
 !> \endverbatim
 !>
-!> \param[out] SN
+!> \param[out] sn
 !> \verbatim
-!>          SN is DOUBLE PRECISION
-!>          Parameters of the rotation matrix.
+!>          sn is double precision
+!>          parameters of the rotation matrix.
 !> \endverbatim
 !
-!  Authors:
+!  authors:
 !  ========
 !
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
+!> \author univ. of tennessee
+!> \author univ. of california berkeley
+!> \author univ. of colorado denver
+!> \author nag ltd.
 !
 !> \ingroup lanv2
 !
-!> \par Further Details:
+!> \par further details:
 !  =====================
 !>
 !> \verbatim
 !>
-!>  Modified by V. Sima, Research Institute for Informatics, Bucharest,
-!>  Romania, to reduce the risk of cancellation errors,
+!>  modified by v. sima, research institute for informatics, bucharest,
+!>  romania, to reduce the risk of cancellation errors,
 !>  when computing real eigenvalues, and to ensure, if possible, that
-!>  abs(RT1R) >= abs(RT2R).
+!>  abs(rt1r) >= abs(rt2r).
 !> \endverbatim
 !>
 !  =====================================================================
-      SUBROUTINE DLANV2( A, B, C, D, RT1R, RT1I, RT2R, RT2I, CS, SN )
+      subroutine dlanv2( a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn )
 !
-!  -- LAPACK auxiliary routine --
-!  -- LAPACK is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
+!  -- lapack auxiliary routine --
+!  -- lapack is a software package provided by univ. of tennessee,    --
+!  -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
 !
-!     .. Scalar Arguments ..
-      DOUBLE PRECISION   A, B, C, CS, D, RT1I, RT1R, RT2I, RT2R, SN
+!     .. scalar arguments ..
+      double precision   a, b, c, cs, d, rt1i, rt1r, rt2i, rt2r, sn
 !     ..
 !
 !  =====================================================================
 !
-!     .. Parameters ..
-      DOUBLE PRECISION   ZERO, HALF, ONE, TWO
-      PARAMETER          ( ZERO = 0.0D+0, HALF = 0.5D+0, ONE = 1.0D+0, &
-                           TWO = 2.0D0 )
-      DOUBLE PRECISION   MULTPL
-      PARAMETER          ( MULTPL = 4.0D+0 )
+!     .. parameters ..
+      double precision   zero, half, one, two
+      parameter          ( zero = 0.0d+0, half = 0.5d+0, one = 1.0d+0, &
+                           two = 2.0d0 )
+      double precision   multpl
+      parameter          ( multpl = 4.0d+0 )
 !     ..
-!     .. Local Scalars ..
-      DOUBLE PRECISION   AA, BB, BCMAX, BCMIS, CC, CS1, DD, EPS, P, SAB, &
-                         SAC, SCALE, SIGMA, SN1, TAU, TEMP, Z, SAFMIN, &
-                         SAFMN2, SAFMX2
-      INTEGER            COUNT
+!     .. local scalars ..
+      double precision   aa, bb, bcmax, bcmis, cc, cs1, dd, eps, p, sab, &
+                         sac, scale, sigma, sn1, tau, temp, z, safmin, &
+                         safmn2, safmx2
+      integer            count
 !     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC          ABS, MAX, MIN, SIGN, SQRT
+!     .. intrinsic functions ..
+      intrinsic          abs, max, min, sign, sqrt
 !     ..
-!     .. Executable Statements ..
+!     .. executable statements ..
 !
-      SAFMIN = tiny(safmin)
+      safmin = tiny(safmin)
       eps = epsilon(eps)
-      SAFMN2 = radix(safmn2)**INT( LOG( SAFMIN / EPS ) / &
-                  LOG( dble(radix(safmn2)) ) / TWO )
+      safmn2 = radix(safmn2)**int( log( safmin / eps ) / &
+                  log( dble(radix(safmn2)) ) / two )
 
-      SAFMX2 = ONE / SAFMN2
-      IF( C.EQ.ZERO ) THEN
-         CS = ONE
-         SN = ZERO
+      safmx2 = one / safmn2
+      if( c.eq.zero ) then
+         cs = one
+         sn = zero
 !
-      ELSE IF( B.EQ.ZERO ) THEN
+      else if( b.eq.zero ) then
 !
-!        Swap rows and columns
+!        swap rows and columns
 !
-         CS = ZERO
-         SN = ONE
-         TEMP = D
-         D = A
-         A = TEMP
-         B = -C
-         C = ZERO
+         cs = zero
+         sn = one
+         temp = d
+         d = a
+         a = temp
+         b = -c
+         c = zero
 !
-      ELSE IF( ( A-D ).EQ.ZERO .AND. SIGN( ONE, B ).NE.SIGN( ONE, C ) ) &
-                THEN
-         CS = ONE
-         SN = ZERO
+      else if( ( a-d ).eq.zero .and. sign( one, b ).ne.sign( one, c ) ) &
+                then
+         cs = one
+         sn = zero
 !
-      ELSE
+      else
 !
-         TEMP = A - D
-         P = HALF*TEMP
-         BCMAX = MAX( ABS( B ), ABS( C ) )
-         BCMIS = MIN( ABS( B ), ABS( C ) )*SIGN( ONE, B )*SIGN( ONE, C )
-         SCALE = MAX( ABS( P ), BCMAX )
-         Z = ( P / SCALE )*P + ( BCMAX / SCALE )*BCMIS
+         temp = a - d
+         p = half*temp
+         bcmax = max( abs( b ), abs( c ) )
+         bcmis = min( abs( b ), abs( c ) )*sign( one, b )*sign( one, c )
+         scale = max( abs( p ), bcmax )
+         z = ( p / scale )*p + ( bcmax / scale )*bcmis
 !
-!        If Z is of the order of the machine accuracy, postpone the
+!        if z is of the order of the machine accuracy, postpone the
 !        decision on the nature of eigenvalues
 !
-         IF( Z.GE.MULTPL*EPS ) THEN
+         if( z.ge.multpl*eps ) then
 !
-!           Real eigenvalues. Compute A and D.
+!           real eigenvalues. compute a and d.
 !
-            Z = P + SIGN( SQRT( SCALE )*SQRT( Z ), P )
-            A = D + Z
-            D = D - ( BCMAX / Z )*BCMIS
+            z = p + sign( sqrt( scale )*sqrt( z ), p )
+            a = d + z
+            d = d - ( bcmax / z )*bcmis
 !
-!           Compute B and the rotation matrix
+!           compute b and the rotation matrix
 !
-            TAU = norm2([C, Z])
-            CS = Z / TAU
-            SN = C / TAU
-            B = B - C
-            C = ZERO
+            tau = norm2([c, z])
+            cs = z / tau
+            sn = c / tau
+            b = b - c
+            c = zero
 !
-         ELSE
+         else
 !
-!           Complex eigenvalues, or real (almost) equal eigenvalues.
-!           Make diagonal elements equal.
+!           complex eigenvalues, or real (almost) equal eigenvalues.
+!           make diagonal elements equal.
 !
-            COUNT = 0
-            SIGMA = B + C
-   10       CONTINUE
-            COUNT = COUNT + 1
-            SCALE = MAX( ABS(TEMP), ABS(SIGMA) )
-            IF( SCALE.GE.SAFMX2 ) THEN
-               SIGMA = SIGMA * SAFMN2
-               TEMP = TEMP * SAFMN2
-               IF (COUNT .LE. 20) &
-                  GOTO 10
-            END IF
-            IF( SCALE.LE.SAFMN2 ) THEN
-               SIGMA = SIGMA * SAFMX2
-               TEMP = TEMP * SAFMX2
-               IF (COUNT .LE. 20) &
-                  GOTO 10
-            END IF
-            P = HALF*TEMP
-            TAU = norm2([SIGMA, TEMP])
-            CS = SQRT( HALF*( ONE+ABS( SIGMA ) / TAU ) )
-            SN = -( P / ( TAU*CS ) )*SIGN( ONE, SIGMA )
+            count = 0
+            sigma = b + c
+   10       continue
+            count = count + 1
+            scale = max( abs(temp), abs(sigma) )
+            if( scale.ge.safmx2 ) then
+               sigma = sigma * safmn2
+               temp = temp * safmn2
+               if (count .le. 20) &
+                  goto 10
+            end if
+            if( scale.le.safmn2 ) then
+               sigma = sigma * safmx2
+               temp = temp * safmx2
+               if (count .le. 20) &
+                  goto 10
+            end if
+            p = half*temp
+            tau = norm2([sigma, temp])
+            cs = sqrt( half*( one+abs( sigma ) / tau ) )
+            sn = -( p / ( tau*cs ) )*sign( one, sigma )
 !
-!           Compute [ AA  BB ] = [ A  B ] [ CS -SN ]
-!                   [ CC  DD ]   [ C  D ] [ SN  CS ]
+!           compute [ aa  bb ] = [ a  b ] [ cs -sn ]
+!                   [ cc  dd ]   [ c  d ] [ sn  cs ]
 !
-            AA = A*CS + B*SN
-            BB = -A*SN + B*CS
-            CC = C*CS + D*SN
-            DD = -C*SN + D*CS
+            aa = a*cs + b*sn
+            bb = -a*sn + b*cs
+            cc = c*cs + d*sn
+            dd = -c*sn + d*cs
 !
-!           Compute [ A  B ] = [ CS  SN ] [ AA  BB ]
-!                   [ C  D ]   [-SN  CS ] [ CC  DD ]
+!           compute [ a  b ] = [ cs  sn ] [ aa  bb ]
+!                   [ c  d ]   [-sn  cs ] [ cc  dd ]
 !
-!           Note: Some of the multiplications are wrapped in parentheses to
-!                 prevent compilers from using FMA instructions. See
-!                 https://github.com/Reference-LAPACK/lapack/issues/1031.
+!           note: some of the multiplications are wrapped in parentheses to
+!                 prevent compilers from using fma instructions. see
+!                 https://github.com/reference-lapack/lapack/issues/1031.
 !
-            A = AA*CS + CC*SN
-            B = ( BB*CS ) + ( DD*SN )
-            C = -( AA*SN ) + ( CC*CS )
-            D = -BB*SN + DD*CS
+            a = aa*cs + cc*sn
+            b = ( bb*cs ) + ( dd*sn )
+            c = -( aa*sn ) + ( cc*cs )
+            d = -bb*sn + dd*cs
 !
-            TEMP = HALF*( A+D )
-            A = TEMP
-            D = TEMP
+            temp = half*( a+d )
+            a = temp
+            d = temp
 !
-            IF( C.NE.ZERO ) THEN
-               IF( B.NE.ZERO ) THEN
-                  IF( SIGN( ONE, B ).EQ.SIGN( ONE, C ) ) THEN
+            if( c.ne.zero ) then
+               if( b.ne.zero ) then
+                  if( sign( one, b ).eq.sign( one, c ) ) then
 !
-!                    Real eigenvalues: reduce to upper triangular form
+!                    real eigenvalues: reduce to upper triangular form
 !
-                     SAB = SQRT( ABS( B ) )
-                     SAC = SQRT( ABS( C ) )
-                     P = SIGN( SAB*SAC, C )
-                     TAU = ONE / SQRT( ABS( B+C ) )
-                     A = TEMP + P
-                     D = TEMP - P
-                     B = B - C
-                     C = ZERO
-                     CS1 = SAB*TAU
-                     SN1 = SAC*TAU
-                     TEMP = CS*CS1 - SN*SN1
-                     SN = CS*SN1 + SN*CS1
-                     CS = TEMP
-                  END IF
-               ELSE
-                  B = -C
-                  C = ZERO
-                  TEMP = CS
-                  CS = -SN
-                  SN = TEMP
-               END IF
-            END IF
-         END IF
+                     sab = sqrt( abs( b ) )
+                     sac = sqrt( abs( c ) )
+                     p = sign( sab*sac, c )
+                     tau = one / sqrt( abs( b+c ) )
+                     a = temp + p
+                     d = temp - p
+                     b = b - c
+                     c = zero
+                     cs1 = sab*tau
+                     sn1 = sac*tau
+                     temp = cs*cs1 - sn*sn1
+                     sn = cs*sn1 + sn*cs1
+                     cs = temp
+                  end if
+               else
+                  b = -c
+                  c = zero
+                  temp = cs
+                  cs = -sn
+                  sn = temp
+               end if
+            end if
+         end if
 !
-      END IF
+      end if
 !
-!     Store eigenvalues in (RT1R,RT1I) and (RT2R,RT2I).
+!     store eigenvalues in (rt1r,rt1i) and (rt2r,rt2i).
 !
-      RT1R = A
-      RT2R = D
-      IF( C.EQ.ZERO ) THEN
-         RT1I = ZERO
-         RT2I = ZERO
-      ELSE
-         RT1I = SQRT( ABS( B ) )*SQRT( ABS( C ) )
-         RT2I = -RT1I
-      END IF
-      END SUBROUTINE DLANV2
-!> \brief \b DLARFG generates an elementary reflector (Householder matrix).
+      rt1r = a
+      rt2r = d
+      if( c.eq.zero ) then
+         rt1i = zero
+         rt2i = zero
+      else
+         rt1i = sqrt( abs( b ) )*sqrt( abs( c ) )
+         rt2i = -rt1i
+      end if
+      end subroutine dlanv2
+!> \brief \b dlarfg generates an elementary reflector (householder matrix).
 !
-!  =========== DOCUMENTATION ===========
+!  =========== documentation ===========
 !
-! Online html documentation available at
+! online html documentation available at
 !            http://www.netlib.org/lapack/explore-html/
 !
 !> \htmlonly
-!> Download DLARFG + dependencies
+!> download dlarfg + dependencies
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlarfg.f">
-!> [TGZ]</a>
+!> [tgz]</a>
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlarfg.f">
-!> [ZIP]</a>
+!> [zip]</a>
 !> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlarfg.f">
-!> [TXT]</a>
+!> [txt]</a>
 !> \endhtmlonly
 !
-!  Definition:
+!  definition:
 !  ===========
 !
-!       SUBROUTINE DLARFG( N, ALPHA, X, INCX, TAU )
+!       subroutine dlarfg( n, alpha, x, incx, tau )
 !
-!       .. Scalar Arguments ..
-!       INTEGER            INCX, N
-!       DOUBLE PRECISION   ALPHA, TAU
+!       .. scalar arguments ..
+!       integer            incx, n
+!       double precision   alpha, tau
 !       ..
-!       .. Array Arguments ..
-!       DOUBLE PRECISION   X( * )
+!       .. array arguments ..
+!       double precision   x( * )
 !       ..
 !
 !
-!> \par Purpose:
+!> \par purpose:
 !  =============
 !>
 !> \verbatim
 !>
-!> DLARFG generates a real elementary reflector H of order n, such
+!> dlarfg generates a real elementary reflector h of order n, such
 !> that
 !>
-!>       H * ( alpha ) = ( beta ),   H**T * H = I.
+!>       h * ( alpha ) = ( beta ),   h**t * h = i.
 !>           (   x   )   (   0  )
 !>
 !> where alpha and beta are scalars, and x is an (n-1)-element real
-!> vector. H is represented in the form
+!> vector. h is represented in the form
 !>
-!>       H = I - tau * ( 1 ) * ( 1 v**T ) ,
+!>       h = i - tau * ( 1 ) * ( 1 v**t ) ,
 !>                     ( v )
 !>
 !> where tau is a real scalar and v is a real (n-1)-element
 !> vector.
 !>
-!> If the elements of x are all zero, then tau = 0 and H is taken to be
+!> if the elements of x are all zero, then tau = 0 and h is taken to be
 !> the unit matrix.
 !>
-!> Otherwise  1 <= tau <= 2.
+!> otherwise  1 <= tau <= 2.
 !> \endverbatim
 !
-!  Arguments:
+!  arguments:
 !  ==========
 !
-!> \param[in] N
+!> \param[in] n
 !> \verbatim
-!>          N is INTEGER
-!>          The order of the elementary reflector.
+!>          n is integer
+!>          the order of the elementary reflector.
 !> \endverbatim
 !>
-!> \param[in,out] ALPHA
+!> \param[in,out] alpha
 !> \verbatim
-!>          ALPHA is DOUBLE PRECISION
-!>          On entry, the value alpha.
-!>          On exit, it is overwritten with the value beta.
+!>          alpha is double precision
+!>          on entry, the value alpha.
+!>          on exit, it is overwritten with the value beta.
 !> \endverbatim
 !>
-!> \param[in,out] X
+!> \param[in,out] x
 !> \verbatim
-!>          X is DOUBLE PRECISION array, dimension
-!>                         (1+(N-2)*abs(INCX))
-!>          On entry, the vector x.
-!>          On exit, it is overwritten with the vector v.
+!>          x is double precision array, dimension
+!>                         (1+(n-2)*abs(incx))
+!>          on entry, the vector x.
+!>          on exit, it is overwritten with the vector v.
 !> \endverbatim
 !>
-!> \param[in] INCX
+!> \param[in] incx
 !> \verbatim
-!>          INCX is INTEGER
-!>          The increment between elements of X. INCX > 0.
+!>          incx is integer
+!>          the increment between elements of x. incx > 0.
 !> \endverbatim
 !>
-!> \param[out] TAU
+!> \param[out] tau
 !> \verbatim
-!>          TAU is DOUBLE PRECISION
-!>          The value tau.
+!>          tau is double precision
+!>          the value tau.
 !> \endverbatim
 !
-!  Authors:
+!  authors:
 !  ========
 !
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
+!> \author univ. of tennessee
+!> \author univ. of california berkeley
+!> \author univ. of colorado denver
+!> \author nag ltd.
 !
 !> \ingroup larfg
 !
 !  =====================================================================
-      SUBROUTINE DLARFG( N, ALPHA, X, INCX, TAU )
+      subroutine dlarfg( n, alpha, x, incx, tau )
 !
-!  -- LAPACK auxiliary routine --
-!  -- LAPACK is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
+!  -- lapack auxiliary routine --
+!  -- lapack is a software package provided by univ. of tennessee,    --
+!  -- univ. of california berkeley, univ. of colorado denver and nag ltd..--
 !
-!     .. Scalar Arguments ..
-      INTEGER            INCX, N
-      DOUBLE PRECISION   ALPHA, TAU
+!     .. scalar arguments ..
+      integer            incx, n
+      double precision   alpha, tau
 !     ..
-!     .. Array Arguments ..
-      DOUBLE PRECISION   X( * )
+!     .. array arguments ..
+      double precision   x( * )
 !     ..
 !
 !  =====================================================================
 !
-!     .. Parameters ..
-      DOUBLE PRECISION   ONE, ZERO
-      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+!     .. parameters ..
+      double precision   one, zero
+      parameter          ( one = 1.0d+0, zero = 0.0d+0 )
 !     ..
-!     .. Local Scalars ..
-      INTEGER            J, KNT
-      DOUBLE PRECISION   BETA, RSAFMN, SAFMIN, XNORM
+!     .. local scalars ..
+      integer            j, knt
+      double precision   beta, rsafmn, safmin, xnorm
 !     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC          ABS, SIGN
+!     .. intrinsic functions ..
+      intrinsic          abs, sign
 !     ..
-!     .. Executable Statements ..
+!     .. executable statements ..
 !
-      IF( N.LE.1 ) THEN
-         TAU = ZERO
-         RETURN
-      END IF
+      if( n.le.1 ) then
+         tau = zero
+         return
+      end if
 !
-      XNORM = norm2(x(1: n-1))
+      xnorm = norm2(x(1: n-1))
 !
-      IF( XNORM.EQ.ZERO ) THEN
+      if( xnorm.eq.zero ) then
 !
-!        H  =  I
+!        h  =  i
 !
-         TAU = ZERO
-      ELSE
+         tau = zero
+      else
 !
 !        general case
 !
-         BETA = -SIGN(norm2([ALPHA, XNORM]), ALPHA )
-         SAFMIN = tiny(safmin) / (epsilon(safmin) / radix(safmin))
-         KNT = 0
-         IF( ABS( BETA ).LT.SAFMIN ) THEN
+         beta = -sign(norm2([alpha, xnorm]), alpha )
+         safmin = tiny(safmin) / (epsilon(safmin) / radix(safmin))
+         knt = 0
+         if( abs( beta ).lt.safmin ) then
 !
-!           XNORM, BETA may be inaccurate; scale X and recompute them
+!           xnorm, beta may be inaccurate; scale x and recompute them
 !
-            RSAFMN = ONE / SAFMIN
-   10       CONTINUE
-            KNT = KNT + 1
+            rsafmn = one / safmin
+   10       continue
+            knt = knt + 1
 
             x(1: n-1: incx) = rsafmn * x(1: n-1: incx)
-            BETA = BETA*RSAFMN
-            ALPHA = ALPHA*RSAFMN
-            IF( (ABS( BETA ).LT.SAFMIN) .AND. (KNT .LT. 20) ) &
-               GO TO 10
+            beta = beta*rsafmn
+            alpha = alpha*rsafmn
+            if( (abs( beta ).lt.safmin) .and. (knt .lt. 20) ) &
+               go to 10
 !
-!           New BETA is at most 1, at least SAFMIN
+!           new beta is at most 1, at least safmin
 !
-            XNORM = norm2(x(1: n-1))
-            BETA = -SIGN(norm2([ALPHA, XNORM]), ALPHA )
-         END IF
-         TAU = ( BETA-ALPHA ) / BETA
+            xnorm = norm2(x(1: n-1))
+            beta = -sign(norm2([alpha, xnorm]), alpha )
+         end if
+         tau = ( beta-alpha ) / beta
          x(1: n-1: incx) = x(1: n-1: incx) / (alpha - beta)
 !
-!        If ALPHA is subnormal, it may lose relative accuracy
+!        if alpha is subnormal, it may lose relative accuracy
 !
-         DO 20 J = 1, KNT
-            BETA = BETA*SAFMIN
- 20      CONTINUE
-         ALPHA = BETA
-      END IF
+         do 20 j = 1, knt
+            beta = beta*safmin
+ 20      continue
+         alpha = beta
+      end if
 !
-      END SUBROUTINE DLARFG
+      end subroutine dlarfg
 !***********************************************************************
 end module numa__dlahqr
