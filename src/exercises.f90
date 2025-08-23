@@ -788,17 +788,12 @@ integer function chapter_4_modify() result(nfail)
 
 	x = [+4.0000d+00, +2.0000d+00, -1.0000d+00, +7.0000d+00, +1.8000d+01]
 
-	!! Print this to check that the solution is correct in the transpose sense
-	!print *, "a * x = ", matmul(a, x)
-
 	bx = [102.48d0, 274.92d0, 434.72d0, 463.8d0, 373.8d0]
 	b = bx
 	b0 = b
 
 	!print *, "a = "
 	!print "(5es18.6)", a
-
-	!call lu_invmul(a, bx)
 
 	pivot = [(i, i = 1, size(a,1))]
 	call lu_factor(a, pivot)
@@ -817,7 +812,7 @@ integer function chapter_4_modify() result(nfail)
 	a0(row, col) = aij
 	print *, "a["//to_str(row)//","//to_str(col)//"]: ", aij0, " -> ", aij
 
-	! Use the Sherman-Morisson-Woodbury formula
+	! Use the Sherman-Morrison-Woodbury formula
 	!
 	! Source:  https://leobouts.medium.com/rank-1-updates-in-linear-algebra-in-simple-terms-7b5032a11a3e
 	!
@@ -836,54 +831,60 @@ integer function chapter_4_modify() result(nfail)
 	! Compute x = y + ((v'*y) / (1 - v'z)) * z
 	x = b + (b(col) / (1 - u(col))) * u
 
-	call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-11, nfail, "Sherman-Morisson() 5x5")
-
-	return ! TODO: fuzz
+	call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-11, nfail, "Sherman-Morrison 5x5")
 
 	deallocate(a, x, bx)
 
 	!********
-	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
-	! creating a singular matrix
-	!
-	! TODO: add fuzz testing for some other problems, e.g. tridiagonal and
-	! banded solvers.  We will need special matmul() implementations to verify
-	! results
+	! Fuzz
 
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
 
-	do n = 2, 90, 2
+	do n = 2, 30, 3
 
 		! LU decomposition is still fast for n >> 90, but maybe not fast enough
 		! for multiple reps in a unit test
 
 		allocate(a(n, n), x(n))
 
-		if (mod(n, 10) == 0) then
-			print *, "Testing lu_invmul() with n = " // to_str(n) // " ..."
-		end if
+		!if (mod(n, 10) == 0) then
+		!	print *, "Testing Sherman-Morrison with n = " // to_str(n) // " ..."
+		!end if
 
-		do irep = 1, 6
+		do irep = 1, 1
 			call random_number(a)  ! random matrix
-			call random_number(x)  ! random expected answer
+			call random_number(x)  ! random expected answer (not used for Sherman-Morrison)
+			a0 = a
 
-			bx = matmul(a, x)      ! calculate rhs
+			b = matmul(a, x)      ! calculate rhs
+			b0 = b
 
-			!print *, "a = "
-			!print "(6es15.5)", a
-			!print "(a,6es15.5)", "x  = ", x
-			!print "(a,6es15.5)", "b  = ", bx
+			!********
 
-			call lu_invmul(a, bx)
-			!print "(a,6es15.5)", "bx = ", bx
+			pivot = [(i, i = 1, size(a,1))]
+			call lu_factor(a, pivot)
 
-			! Rounding error grows with `n`
-			call test(norm2(bx - x), 0.d0, 1.d-9 * n, nfail, "lu_invmul() fuzz n x n")
+			row = ceiling(rand_f64() * n)
+			col = ceiling(rand_f64() * n)
+			aij0 = a0(row, col)
+			call random_number(aij)
+			a0(row, col) = aij
+			print *, "a["//to_str(row)//","//to_str(col)//"]: ", &
+				aij0, " -> ", aij, "(n = "//to_str(n)//")"
+
+			u = zeros(n)
+			u(row) = aij0 - aij
+			call lu_solve(a, u, pivot)
+			call lu_solve(a, b, pivot)
+			x = b + (b(col) / (1 - u(col))) * u
+
+			call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-11, nfail, "Sherman-Morrison nxn")
+			!call test(norm2(matmul(a0, x) - b0), 0.d0, 1.d-7, nfail, "Sherman-Morrison nxn")
 
 		end do
 
-		deallocate(a, x, bx)
+		deallocate(a, x)
 	end do
 
 	!********

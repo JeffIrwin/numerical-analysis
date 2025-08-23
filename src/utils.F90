@@ -620,6 +620,10 @@ end function eye
 
 !********
 
+double precision function rand_f64()
+	call random_number(rand_f64)
+end function rand_f64
+
 !===============================================================================
 
 end module numa__utils

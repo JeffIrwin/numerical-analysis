@@ -271,7 +271,6 @@ contains
 		! i1 and i2 are the indices of the first row and last column of h
 		! to which transformations must be applied. if eigenvalues only are
 		! being computed, i1 and i2 are set inside the main loop.
-
 		if (wantt) then
 			i1 = 1
 			i2 = n
