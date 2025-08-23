@@ -273,9 +273,10 @@ contains
 !
 !     Set machine-dependent constants for the stopping criterion.
 !
-      SAFMIN = DLAMCH( 'SAFE MINIMUM' )
+      SAFMIN = tiny(safmin)
       SAFMAX = ONE / SAFMIN
-      ULP = DLAMCH( 'PRECISION' )
+      ulp = epsilon(ulp)
+
       SMLNUM = SAFMIN*( DBLE( NH ) / ULP )
 !
 !     I1 and I2 are the indices of the first row and last column of H
@@ -618,9 +619,7 @@ contains
   160 CONTINUE
       RETURN
 !
-!     End of DLAHQR
-!
-      END
+      END SUBROUTINE DLAHQR
 !> \brief \b DLANV2 computes the Schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
 !
 !  =========== DOCUMENTATION ===========
@@ -776,10 +775,11 @@ contains
 !     ..
 !     .. Executable Statements ..
 !
-      SAFMIN = DLAMCH( 'S' )
-      EPS = DLAMCH( 'P' )
-      SAFMN2 = DLAMCH( 'B' )**INT( LOG( SAFMIN / EPS ) / &
-                  LOG( DLAMCH( 'B' ) ) / TWO )
+      SAFMIN = tiny(safmin)
+      eps = epsilon(eps)
+      SAFMN2 = radix(safmn2)**INT( LOG( SAFMIN / EPS ) / &
+                  LOG( dble(radix(safmn2)) ) / TWO )
+
       SAFMX2 = ONE / SAFMN2
       IF( C.EQ.ZERO ) THEN
          CS = ONE
@@ -926,9 +926,7 @@ contains
       END IF
       RETURN
 !
-!     End of DLANV2
-!
-      END
+      END SUBROUTINE DLANV2
 !> \brief \b DLARFG generates an elementary reflector (Householder matrix).
 !
 !  =========== DOCUMENTATION ===========
@@ -1079,7 +1077,7 @@ contains
 !        general case
 !
          BETA = -SIGN(norm2([ALPHA, XNORM]), ALPHA )
-         SAFMIN = DLAMCH( 'S' ) / DLAMCH( 'E' )
+         SAFMIN = tiny(safmin) / (epsilon(safmin) / radix(safmin))
          KNT = 0
          IF( ABS( BETA ).LT.SAFMIN ) THEN
 !
@@ -1113,277 +1111,6 @@ contains
 !
       RETURN
 !
-!     End of DLARFG
-!
-      END
-!> \brief \b LSAME
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!  Definition:
-!  ===========
-!
-!       LOGICAL FUNCTION LSAME(CA,CB)
-!
-!       .. Scalar Arguments ..
-!       CHARACTER CA,CB
-!       ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!> LSAME returns .TRUE. if CA is the same letter as CB regardless of
-!> case.
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] CA
-!> \verbatim
-!>          CA is CHARACTER*1
-!> \endverbatim
-!>
-!> \param[in] CB
-!> \verbatim
-!>          CB is CHARACTER*1
-!>          CA and CB specify the single characters to be compared.
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
-!
-!> \ingroup lsame
-!
-!  =====================================================================
-      LOGICAL FUNCTION LSAME(CA,CB)
-!
-!  -- Reference BLAS level1 routine --
-!  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!
-!     .. Scalar Arguments ..
-      CHARACTER CA,CB
-!     ..
-!
-! =====================================================================
-!
-!     .. Intrinsic Functions ..
-      INTRINSIC ICHAR
-!     ..
-!     .. Local Scalars ..
-      INTEGER INTA,INTB,ZCODE
-!     ..
-!
-!     Test if the characters are equal
-!
-      LSAME = CA .EQ. CB
-      IF (LSAME) RETURN
-!
-!     Now test for equivalence if both characters are alphabetic.
-!
-      ZCODE = ICHAR('Z')
-!
-!     Use 'Z' rather than 'A' so that ASCII can be detected on Prime
-!     machines, on which ICHAR returns a value with bit 8 set.
-!     ICHAR('A') on Prime machines returns 193 which is the same as
-!     ICHAR('A') on an EBCDIC machine.
-!
-      INTA = ICHAR(CA)
-      INTB = ICHAR(CB)
-!
-      IF (ZCODE.EQ.90 .OR. ZCODE.EQ.122) THEN
-!
-!        ASCII is assumed - ZCODE is the ASCII code of either lower or
-!        upper case 'Z'.
-!
-          IF (INTA.GE.97 .AND. INTA.LE.122) INTA = INTA - 32
-          IF (INTB.GE.97 .AND. INTB.LE.122) INTB = INTB - 32
-!
-      ELSE IF (ZCODE.EQ.233 .OR. ZCODE.EQ.169) THEN
-!
-!        EBCDIC is assumed - ZCODE is the EBCDIC code of either lower or
-!        upper case 'Z'.
-!
-          IF (INTA.GE.129 .AND. INTA.LE.137 .OR. &
-              INTA.GE.145 .AND. INTA.LE.153 .OR. &
-              INTA.GE.162 .AND. INTA.LE.169) INTA = INTA + 64
-          IF (INTB.GE.129 .AND. INTB.LE.137 .OR. &
-              INTB.GE.145 .AND. INTB.LE.153 .OR. &
-              INTB.GE.162 .AND. INTB.LE.169) INTB = INTB + 64
-!
-      ELSE IF (ZCODE.EQ.218 .OR. ZCODE.EQ.250) THEN
-!
-!        ASCII is assumed, on Prime machines - ZCODE is the ASCII code
-!        plus 128 of either lower or upper case 'Z'.
-!
-          IF (INTA.GE.225 .AND. INTA.LE.250) INTA = INTA - 32
-          IF (INTB.GE.225 .AND. INTB.LE.250) INTB = INTB - 32
-      END IF
-      LSAME = INTA .EQ. INTB
-!
-!     RETURN
-!
-!     End of LSAME
-!
-      END
-!> \brief \b DLAMCH
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!  Definition:
-!  ===========
-!
-!      DOUBLE PRECISION FUNCTION DLAMCH( CMACH )
-!
-!     .. Scalar Arguments ..
-!     CHARACTER          CMACH
-!     ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!> DLAMCH determines double precision machine parameters.
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] CMACH
-!> \verbatim
-!>          CMACH is CHARACTER*1
-!>          Specifies the value to be returned by DLAMCH:
-!>          = 'E' or 'e',   DLAMCH := eps
-!>          = 'S' or 's ,   DLAMCH := sfmin
-!>          = 'B' or 'b',   DLAMCH := base
-!>          = 'P' or 'p',   DLAMCH := eps*base
-!>          = 'N' or 'n',   DLAMCH := t
-!>          = 'R' or 'r',   DLAMCH := rnd
-!>          = 'M' or 'm',   DLAMCH := emin
-!>          = 'U' or 'u',   DLAMCH := rmin
-!>          = 'L' or 'l',   DLAMCH := emax
-!>          = 'O' or 'o',   DLAMCH := rmax
-!>          where
-!>          eps   = relative machine precision
-!>          sfmin = safe minimum, such that 1/sfmin does not overflow
-!>          base  = base of the machine
-!>          prec  = eps*base
-!>          t     = number of (base) digits in the mantissa
-!>          rnd   = 1.0 when rounding occurs in addition, 0.0 otherwise
-!>          emin  = minimum exponent before (gradual) underflow
-!>          rmin  = underflow threshold - base**(emin-1)
-!>          emax  = largest exponent before overflow
-!>          rmax  = overflow threshold  - (base**emax)*(1-eps)
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
-!
-!> \date December 2016
-!
-!> \ingroup auxOTHERauxiliary
-!
-!  =====================================================================
-      DOUBLE PRECISION FUNCTION DLAMCH( CMACH )
-!
-!  -- LAPACK auxiliary routine (version 3.7.0) --
-!  -- LAPACK is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!     December 2016
-!
-!     .. Scalar Arguments ..
-      CHARACTER          CMACH
-!     ..
-!
-! =====================================================================
-!
-!     .. Parameters ..
-      DOUBLE PRECISION   ONE, ZERO
-      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
-!     ..
-!     .. Local Scalars ..
-      DOUBLE PRECISION   RND, EPS, SFMIN, SMALL, RMACH
-!     ..
-!     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC          DIGITS, EPSILON, HUGE, MAXEXPONENT, &
-                         MINEXPONENT, RADIX, TINY
-!     ..
-!     .. Executable Statements ..
-!
-!
-!     Assume rounding, not chopping. Always.
-!
-      RND = ONE
-!
-      IF( ONE.EQ.RND ) THEN
-         EPS = EPSILON(ZERO) * 0.5
-      ELSE
-         EPS = EPSILON(ZERO)
-      END IF
-!
-      IF( LSAME( CMACH, 'E' ) ) THEN
-         RMACH = EPS
-      ELSE IF( LSAME( CMACH, 'S' ) ) THEN
-         SFMIN = TINY(ZERO)
-         SMALL = ONE / HUGE(ZERO)
-         IF( SMALL.GE.SFMIN ) THEN
-!
-!           Use SMALL plus a bit, to avoid the possibility of rounding
-!           causing overflow when computing  1/sfmin.
-!
-            SFMIN = SMALL*( ONE+EPS )
-         END IF
-         RMACH = SFMIN
-      ELSE IF( LSAME( CMACH, 'B' ) ) THEN
-         RMACH = RADIX(ZERO)
-      ELSE IF( LSAME( CMACH, 'P' ) ) THEN
-         RMACH = EPS * RADIX(ZERO)
-      ELSE IF( LSAME( CMACH, 'N' ) ) THEN
-         RMACH = DIGITS(ZERO)
-      ELSE IF( LSAME( CMACH, 'R' ) ) THEN
-         RMACH = RND
-      ELSE IF( LSAME( CMACH, 'M' ) ) THEN
-         RMACH = MINEXPONENT(ZERO)
-      ELSE IF( LSAME( CMACH, 'U' ) ) THEN
-         RMACH = tiny(zero)
-      ELSE IF( LSAME( CMACH, 'L' ) ) THEN
-         RMACH = MAXEXPONENT(ZERO)
-      ELSE IF( LSAME( CMACH, 'O' ) ) THEN
-         RMACH = HUGE(ZERO)
-      ELSE
-         RMACH = ZERO
-      END IF
-!
-      DLAMCH = RMACH
-      RETURN
-!
-!     End of DLAMCH
-!
-      END
-!***********************************************************************
-!
+      END SUBROUTINE DLARFG
 !***********************************************************************
 end module numa__dlahqr
