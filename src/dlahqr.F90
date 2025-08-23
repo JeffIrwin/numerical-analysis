@@ -336,12 +336,8 @@ end function house
 !  =========================================================
 !
 !     .. parameters ..
-      double precision   zero, one, two
-      parameter          ( zero = 0.0d0, one = 1.0d0, two = 2.0d0 )
-      double precision   dat1, dat2
-      parameter          ( dat1 = 3.0d0 / 4.0d0, dat2 = -0.4375d0 )
-      integer            kexsh
-      parameter          ( kexsh = 10 )
+	  double precision, parameter :: DAT1 = 3.0d0 / 4.0d0, DAT2 = -0.4375d0
+      integer, parameter :: KEXSH = 10
 !     ..
 !     .. local scalars ..
       double precision   aa, ab, ba, bb, cs, det, h11, h12, h21, h21s, &
@@ -369,24 +365,24 @@ end function house
          return
       if( ilo == ihi ) then
          wr( ilo ) = h( ilo, ilo )
-         wi( ilo ) = zero
+         wi( ilo ) = 0
          return
       end if
 !
 !     ==== clear out the trash ====
       do 10 j = ilo, ihi - 3
-         h( j+2, j ) = zero
-         h( j+3, j ) = zero
+         h( j+2, j ) = 0
+         h( j+3, j ) = 0
    10 continue
       if( ilo <= ihi-2 ) &
-         h( ihi, ihi-2 ) = zero
+         h( ihi, ihi-2 ) = 0
 !
       nh = ihi - ilo + 1
       nz = ihiz - iloz + 1
 
 !     set machine-dependent constants for the stopping criterion.
       safmin = tiny(safmin)
-      safmax = one / safmin
+      safmax = 1 / safmin
       ulp = epsilon(ulp)
 
       smlnum = safmin*( dble( nh ) / ulp )
@@ -432,7 +428,7 @@ end function house
             if( abs( h( k, k-1 ) ) <= smlnum ) &
                go to 40
             tst = abs( h( k-1, k-1 ) ) + abs( h( k, k ) )
-            if( tst == zero ) then
+            if( tst == 0 ) then
                if( k-2 >= ilo ) &
                   tst = tst + abs( h( k-1, k-2 ) )
                if( k+1 <= ihi ) &
@@ -460,7 +456,7 @@ end function house
 !
 !           h(l,l-1) is negligible
 !
-            h( l, l-1 ) = zero
+            h( l, l-1 ) = 0
          end if
 !
 !        exit from loop if a submatrix of order 1 or 2 has split off.
@@ -478,49 +474,43 @@ end function house
             i2 = i
          end if
 !
-         if( mod(kdefl,2*kexsh) == 0 ) then
-!
+         if( mod(kdefl,2*KEXSH) == 0 ) then
 !           exceptional shift.
-!
             s = abs( h( i, i-1 ) ) + abs( h( i-1, i-2 ) )
-            h11 = dat1*s + h( i, i )
-            h12 = dat2*s
+            h11 = DAT1*s + h( i, i )
+            h12 = DAT2*s
             h21 = s
             h22 = h11
-         else if( mod(kdefl,kexsh) == 0 ) then
-!
+         else if( mod(kdefl,KEXSH) == 0 ) then
 !           exceptional shift.
-!
             s = abs( h( l+1, l ) ) + abs( h( l+2, l+1 ) )
-            h11 = dat1*s + h( l, l )
-            h12 = dat2*s
+            h11 = DAT1*s + h( l, l )
+            h12 = DAT2*s
             h21 = s
             h22 = h11
          else
-!
 !           prepare to use francis' double shift
 !           (i.e. 2nd degree generalized rayleigh quotient)
-!
             h11 = h( i-1, i-1 )
             h21 = h( i, i-1 )
             h12 = h( i-1, i )
             h22 = h( i, i )
          end if
          s = abs( h11 ) + abs( h12 ) + abs( h21 ) + abs( h22 )
-         if( s == zero ) then
-            rt1r = zero
-            rt1i = zero
-            rt2r = zero
-            rt2i = zero
+         if( s <= 0 ) then
+            rt1r = 0
+            rt1i = 0
+            rt2r = 0
+            rt2i = 0
          else
             h11 = h11 / s
             h21 = h21 / s
             h12 = h12 / s
             h22 = h22 / s
-            tr = ( h11+h22 ) / two
+            tr = ( h11+h22 ) / 2
             det = ( h11-tr )*( h22-tr ) - h12*h21
             rtdisc = sqrt( abs( det ) )
-            if( det >= zero ) then
+            if( det >= 0 ) then
 !
 !              ==== complex conjugate shifts ====
 !
@@ -541,8 +531,8 @@ end function house
                   rt2r = rt2r*s
                   rt1r = rt2r
                end if
-               rt1i = zero
-               rt2i = zero
+               rt1i = 0
+               rt2i = 0
             end if
          end if
 !
@@ -601,6 +591,19 @@ end function house
             !print *, "v       = ", v
             !print *, "t1 = ", t1
 
+            if( k > m ) then
+               h( k, k-1 ) = v( 1 )
+               h( k+1, k-1 ) = 0
+               if( k < i-1 ) &
+                  h( k+2, k-1 ) = 0
+            else if( m > l ) then
+!               ==== use the following instead of
+!               .    h( k, k-1 ) = -h( k, k-1 ) to
+!               .    avoid a bug when v(2) and v(3)
+!               .    underflow. ====
+               h( k, k-1 ) = h( k, k-1 )*( 1-t1 )
+            end if
+
             if( nr == 3 ) then
                p3 = eye(nr) - t1 * outer_product([1.d0, v(2:nr)], [1.d0, v(2:nr)])
 
@@ -649,7 +652,7 @@ end function house
 !        h(i,i-1) is negligible: one eigenvalue has converged.
 !
          wr( i ) = h( i, i )
-         wi( i ) = zero
+         wi( i ) = 0
       else if( l == i-1 ) then
 !
 !        h(i-1,i-2) is negligible: a pair of eigenvalues have converged.
@@ -827,9 +830,6 @@ end function house
 !  =====================================================================
 !
 !     .. parameters ..
-      double precision   zero, half, one, two
-      parameter          ( zero = 0.0d+0, half = 0.5d+0, one = 1.0d+0, &
-                           two = 2.0d0 )
       double precision   multpl
       parameter          ( multpl = 4.0d+0 )
 !     ..
@@ -839,44 +839,41 @@ end function house
                          safmn2, safmx2
       integer            count
 !     ..
-!     .. intrinsic functions ..
-      intrinsic          abs, max, min, sign, sqrt
-!     ..
 !     .. executable statements ..
 !
       safmin = tiny(safmin)
       eps = epsilon(eps)
       safmn2 = radix(safmn2)**int( log( safmin / eps ) / &
-                  log( dble(radix(safmn2)) ) / two )
+                  log( dble(radix(safmn2)) ) / 2 )
 
-      safmx2 = one / safmn2
-      if( c == zero ) then
-         cs = one
-         sn = zero
+      safmx2 = 1 / safmn2
+      if( c == 0 ) then
+         cs = 1
+         sn = 0
 !
-      else if( b == zero ) then
+      else if( b == 0 ) then
 !
 !        swap rows and columns
 !
-         cs = zero
-         sn = one
+         cs = 0
+         sn = 1
          temp = d
          d = a
          a = temp
          b = -c
-         c = zero
+         c = 0
 !
-      else if( ( a-d ) == zero .and. sign( one, b ) /= sign( one, c ) ) &
+      else if( ( a-d ) == 0 .and. sign_( b ) /= sign_( c ) ) &
                 then
-         cs = one
-         sn = zero
+         cs = 1
+         sn = 0
 !
       else
 !
          temp = a - d
-         p = half*temp
+         p = 0.5d0*temp
          bcmax = max( abs( b ), abs( c ) )
-         bcmis = min( abs( b ), abs( c ) )*sign( one, b )*sign( one, c )
+         bcmis = min( abs( b ), abs( c ) )*sign_( b )*sign_( c )
          scale = max( abs( p ), bcmax )
          z = ( p / scale )*p + ( bcmax / scale )*bcmis
 !
@@ -897,7 +894,7 @@ end function house
             cs = z / tau
             sn = c / tau
             b = b - c
-            c = zero
+            c = 0
 !
          else
 !
@@ -921,10 +918,10 @@ end function house
                if (count  <=  20) &
                   goto 10
             end if
-            p = half*temp
+            p = 0.5d0*temp
             tau = norm2([sigma, temp])
-            cs = sqrt( half*( one+abs( sigma ) / tau ) )
-            sn = -( p / ( tau*cs ) )*sign( one, sigma )
+            cs = sqrt( 0.5d0*( 1+abs( sigma ) / tau ) )
+            sn = -( p / ( tau*cs ) )*sign_( sigma )
 !
 !           compute [ aa  bb ] = [ a  b ] [ cs -sn ]
 !                   [ cc  dd ]   [ c  d ] [ sn  cs ]
@@ -946,24 +943,24 @@ end function house
             c = -( aa*sn ) + ( cc*cs )
             d = -bb*sn + dd*cs
 !
-            temp = half*( a+d )
+            temp = 0.5d0*( a+d )
             a = temp
             d = temp
 !
-            if( c /= zero ) then
-               if( b /= zero ) then
-                  if( sign( one, b ) == sign( one, c ) ) then
+            if( c /= 0 ) then
+               if( b /= 0 ) then
+                  if( sign_( b ) == sign_( c ) ) then
 !
 !                    real eigenvalues: reduce to upper triangular form
 !
                      sab = sqrt( abs( b ) )
                      sac = sqrt( abs( c ) )
                      p = sign( sab*sac, c )
-                     tau = one / sqrt( abs( b+c ) )
+                     tau = 1 / sqrt( abs( b+c ) )
                      a = temp + p
                      d = temp - p
                      b = b - c
-                     c = zero
+                     c = 0
                      cs1 = sab*tau
                      sn1 = sac*tau
                      temp = cs*cs1 - sn*sn1
@@ -972,7 +969,7 @@ end function house
                   end if
                else
                   b = -c
-                  c = zero
+                  c = 0
                   temp = cs
                   cs = -sn
                   sn = temp
@@ -986,9 +983,9 @@ end function house
 !
       rt1r = a
       rt2r = d
-      if( c == zero ) then
-         rt1i = zero
-         rt2i = zero
+      if( c == 0 ) then
+         rt1i = 0
+         rt2i = 0
       else
          rt1i = sqrt( abs( b ) )*sqrt( abs( c ) )
          rt2i = -rt1i
@@ -1114,31 +1111,24 @@ end function house
 !
 !  =====================================================================
 !
-!     .. parameters ..
-      double precision   one, zero
-      parameter          ( one = 1.0d+0, zero = 0.0d+0 )
-!     ..
 !     .. local scalars ..
       integer            j, knt
       double precision   beta, rsafmn, safmin, xnorm
 !     ..
-!     .. intrinsic functions ..
-      intrinsic          abs, sign
-!     ..
 !     .. executable statements ..
 !
       if( n <= 1 ) then
-         tau = zero
+         tau = 0
          return
       end if
 !
       xnorm = norm2(x(1: n-1))
 !
-      if( xnorm == zero ) then
+      if( xnorm == 0 ) then
 !
 !        h  =  i
 !
-         tau = zero
+         tau = 0
       else
 !
 !        general case
@@ -1150,7 +1140,7 @@ end function house
 !
 !           xnorm, beta may be inaccurate; scale x and recompute them
 !
-            rsafmn = one / safmin
+            rsafmn = 1 / safmin
    10       continue
             knt = knt + 1
 
