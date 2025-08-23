@@ -1,151 +1,5 @@
 module numa__dlahqr
 contains
-!> \brief \b DCOPY
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!  Definition:
-!  ===========
-!
-!       SUBROUTINE DCOPY(N,DX,INCX,DY,INCY)
-!
-!       .. Scalar Arguments ..
-!       INTEGER INCX,INCY,N
-!       ..
-!       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
-!       ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!>    DCOPY copies a vector, x, to a vector, y.
-!>    uses unrolled loops for increments equal to 1.
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] N
-!> \verbatim
-!>          N is INTEGER
-!>         number of elements in input vector(s)
-!> \endverbatim
-!>
-!> \param[in] DX
-!> \verbatim
-!>          DX is DOUBLE PRECISION array, dimension ( 1 + ( N - 1 )*abs( INCX ) )
-!> \endverbatim
-!>
-!> \param[in] INCX
-!> \verbatim
-!>          INCX is INTEGER
-!>         storage spacing between elements of DX
-!> \endverbatim
-!>
-!> \param[out] DY
-!> \verbatim
-!>          DY is DOUBLE PRECISION array, dimension ( 1 + ( N - 1 )*abs( INCY ) )
-!> \endverbatim
-!>
-!> \param[in] INCY
-!> \verbatim
-!>          INCY is INTEGER
-!>         storage spacing between elements of DY
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
-!
-!> \ingroup copy
-!
-!> \par Further Details:
-!  =====================
-!>
-!> \verbatim
-!>
-!>     jack dongarra, linpack, 3/11/78.
-!>     modified 12/3/93, array(1) declarations changed to array(*)
-!> \endverbatim
-!>
-!  =====================================================================
-      SUBROUTINE DCOPY(N,DX,INCX,DY,INCY)
-!
-!  -- Reference BLAS level1 routine --
-!  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!
-!     .. Scalar Arguments ..
-      INTEGER INCX,INCY,N
-!     ..
-!     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
-!     ..
-!
-!  =====================================================================
-!
-!     .. Local Scalars ..
-      INTEGER I,IX,IY,M,MP1
-!     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC MOD
-!     ..
-      IF (N.LE.0) RETURN
-      IF (INCX.EQ.1 .AND. INCY.EQ.1) THEN
-!
-!        code for both increments equal to 1
-!
-!
-!        clean-up loop
-!
-         M = MOD(N,7)
-         IF (M.NE.0) THEN
-            DO I = 1,M
-               DY(I) = DX(I)
-            END DO
-            IF (N.LT.7) RETURN
-         END IF
-         MP1 = M + 1
-         DO I = MP1,N,7
-            DY(I) = DX(I)
-            DY(I+1) = DX(I+1)
-            DY(I+2) = DX(I+2)
-            DY(I+3) = DX(I+3)
-            DY(I+4) = DX(I+4)
-            DY(I+5) = DX(I+5)
-            DY(I+6) = DX(I+6)
-         END DO
-      ELSE
-!
-!        code for unequal increments or equal increments
-!          not equal to 1
-!
-         IX = 1
-         IY = 1
-         IF (INCX.LT.0) IX = (-N+1)*INCX + 1
-         IF (INCY.LT.0) IY = (-N+1)*INCY + 1
-         DO I = 1,N
-            DY(IY) = DX(IX)
-            IX = IX + INCX
-            IY = IY + INCY
-         END DO
-      END IF
-      RETURN
-!
-!     End of DCOPY
-!
-      END
 !> \brief \b DISNAN tests input for NaN.
 !
 !  =========== DOCUMENTATION ===========
@@ -694,7 +548,7 @@ contains
 !
             NR = MIN( 3, I-K+1 )
             IF( K.GT.M ) &
-               CALL DCOPY( NR, H( K, K-1 ), 1, V, 1 )
+               v(1: nr) = h(k: k+nr-1, k-1)
             CALL DLARFG( NR, V( 1 ), V( 2 ), 1, T1 )
             IF( K.GT.M ) THEN
                H( K, K-1 ) = V( 1 )
@@ -1127,7 +981,7 @@ contains
 !
 !           Compute B and the rotation matrix
 !
-            TAU = DLAPY2( C, Z )
+            TAU = norm2([C, Z])
             CS = Z / TAU
             SN = C / TAU
             B = B - C
@@ -1156,7 +1010,7 @@ contains
                   GOTO 10
             END IF
             P = HALF*TEMP
-            TAU = DLAPY2( SIGMA, TEMP )
+            TAU = norm2([SIGMA, TEMP])
             CS = SQRT( HALF*( ONE+ABS( SIGMA ) / TAU ) )
             SN = -( P / ( TAU*CS ) )*SIGN( ONE, SIGMA )
 !
@@ -1230,116 +1084,6 @@ contains
       RETURN
 !
 !     End of DLANV2
-!
-      END
-!> \brief \b DLAPY2 returns sqrt(x2+y2).
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!> \htmlonly
-!> Download DLAPY2 + dependencies
-!> <a href="http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz&filename=/lapack/lapack_routine/dlapy2.f">
-!> [TGZ]</a>
-!> <a href="http://www.netlib.org/cgi-bin/netlibfiles.zip?format=zip&filename=/lapack/lapack_routine/dlapy2.f">
-!> [ZIP]</a>
-!> <a href="http://www.netlib.org/cgi-bin/netlibfiles.txt?format=txt&filename=/lapack/lapack_routine/dlapy2.f">
-!> [TXT]</a>
-!> \endhtmlonly
-!
-!  Definition:
-!  ===========
-!
-!       DOUBLE PRECISION FUNCTION DLAPY2( X, Y )
-!
-!       .. Scalar Arguments ..
-!       DOUBLE PRECISION   X, Y
-!       ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!> DLAPY2 returns sqrt(x**2+y**2), taking care not to cause unnecessary
-!> overflow and unnecessary underflow.
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] X
-!> \verbatim
-!>          X is DOUBLE PRECISION
-!> \endverbatim
-!>
-!> \param[in] Y
-!> \verbatim
-!>          Y is DOUBLE PRECISION
-!>          X and Y specify the values x and y.
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
-!
-!> \ingroup lapy2
-!
-!  =====================================================================
-      DOUBLE PRECISION FUNCTION DLAPY2( X, Y )
-!
-!  -- LAPACK auxiliary routine --
-!  -- LAPACK is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!
-!     .. Scalar Arguments ..
-      DOUBLE PRECISION   X, Y
-!     ..
-!
-!  =====================================================================
-!
-!     .. Parameters ..
-      DOUBLE PRECISION   ZERO
-      PARAMETER          ( ZERO = 0.0D0 )
-      DOUBLE PRECISION   ONE
-      PARAMETER          ( ONE = 1.0D0 )
-!     ..
-!     .. Local Scalars ..
-      DOUBLE PRECISION   W, XABS, YABS, Z, HUGEVAL
-      LOGICAL            X_IS_NAN, Y_IS_NAN
-!     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC          ABS, MAX, MIN, SQRT
-!     ..
-!     .. Executable Statements ..
-!
-      X_IS_NAN = DISNAN( X )
-      Y_IS_NAN = DISNAN( Y )
-      IF ( X_IS_NAN ) DLAPY2 = X
-      IF ( Y_IS_NAN ) DLAPY2 = Y
-      HUGEVAL = DLAMCH( 'Overflow' )
-!
-      IF ( .NOT.( X_IS_NAN.OR.Y_IS_NAN ) ) THEN
-         XABS = ABS( X )
-         YABS = ABS( Y )
-         W = MAX( XABS, YABS )
-         Z = MIN( XABS, YABS )
-         IF( Z.EQ.ZERO .OR. W.GT.HUGEVAL ) THEN
-            DLAPY2 = W
-         ELSE
-            DLAPY2 = W*SQRT( ONE+( Z / W )**2 )
-         END IF
-      END IF
-      RETURN
-!
-!     End of DLAPY2
 !
       END
 !> \brief \b DLARFG generates an elementary reflector (Householder matrix).
@@ -1480,7 +1224,7 @@ contains
          RETURN
       END IF
 !
-      XNORM = DNRM2( N-1, X, INCX )
+      XNORM = norm2(x(1: n-1))
 !
       IF( XNORM.EQ.ZERO ) THEN
 !
@@ -1491,7 +1235,7 @@ contains
 !
 !        general case
 !
-         BETA = -SIGN( DLAPY2( ALPHA, XNORM ), ALPHA )
+         BETA = -SIGN(norm2([ALPHA, XNORM]), ALPHA )
          SAFMIN = DLAMCH( 'S' ) / DLAMCH( 'E' )
          KNT = 0
          IF( ABS( BETA ).LT.SAFMIN ) THEN
@@ -1501,7 +1245,8 @@ contains
             RSAFMN = ONE / SAFMIN
    10       CONTINUE
             KNT = KNT + 1
-            CALL DSCAL( N-1, RSAFMN, X, INCX )
+
+            x(1: n-1: incx) = rsafmn * x(1: n-1: incx)
             BETA = BETA*RSAFMN
             ALPHA = ALPHA*RSAFMN
             IF( (ABS( BETA ).LT.SAFMIN) .AND. (KNT .LT. 20) ) &
@@ -1509,11 +1254,11 @@ contains
 !
 !           New BETA is at most 1, at least SAFMIN
 !
-            XNORM = DNRM2( N-1, X, INCX )
-            BETA = -SIGN( DLAPY2( ALPHA, XNORM ), ALPHA )
+            XNORM = norm2(x(1: n-1))
+            BETA = -SIGN(norm2([ALPHA, XNORM]), ALPHA )
          END IF
          TAU = ( BETA-ALPHA ) / BETA
-         CALL DSCAL( N-1, ONE / ( ALPHA-BETA ), X, INCX )
+         x(1: n-1: incx) = x(1: n-1: incx) / (alpha - beta)
 !
 !        If ALPHA is subnormal, it may lose relative accuracy
 !
@@ -1528,205 +1273,6 @@ contains
 !     End of DLARFG
 !
       END
-!> \brief \b DNRM2
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!  Definition:
-!  ===========
-!
-!       DOUBLE PRECISION FUNCTION DNRM2(N,X,INCX)
-!
-!       .. Scalar Arguments ..
-!       INTEGER INCX,N
-!       ..
-!       .. Array Arguments ..
-!       DOUBLE PRECISION X(*)
-!       ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!> DNRM2 returns the euclidean norm of a vector via the function
-!> name, so that
-!>
-!>    DNRM2 := sqrt( x'*x )
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] N
-!> \verbatim
-!>          N is INTEGER
-!>         number of elements in input vector(s)
-!> \endverbatim
-!>
-!> \param[in] X
-!> \verbatim
-!>          X is DOUBLE PRECISION array, dimension ( 1 + ( N - 1 )*abs( INCX ) )
-!> \endverbatim
-!>
-!> \param[in] INCX
-!> \verbatim
-!>          INCX is INTEGER, storage spacing between elements of X
-!>          If INCX > 0, X(1+(i-1)*INCX) = x(i) for 1 <= i <= n
-!>          If INCX < 0, X(1-(n-i)*INCX) = x(i) for 1 <= i <= n
-!>          If INCX = 0, x isn't a vector so there is no need to call
-!>          this subroutine.  If you call it anyway, it will count x(1)
-!>          in the vector norm N times.
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Edward Anderson, Lockheed Martin
-!
-!> \date August 2016
-!
-!> \ingroup nrm2
-!
-!> \par Contributors:
-!  ==================
-!>
-!> Weslley Pereira, University of Colorado Denver, USA
-!
-!> \par Further Details:
-!  =====================
-!>
-!> \verbatim
-!>
-!>  Anderson E. (2017)
-!>  Algorithm 978: Safe Scaling in the Level 1 BLAS
-!>  ACM Trans Math Softw 44:1--28
-!>  https://doi.org/10.1145/3061665
-!>
-!>  Blue, James L. (1978)
-!>  A Portable Fortran Program to Find the Euclidean Norm of a Vector
-!>  ACM Trans Math Softw 4:15--23
-!>  https://doi.org/10.1145/355769.355771
-!>
-!> \endverbatim
-!>
-!  =====================================================================
-function DNRM2( n, x, incx ) 
-   integer, parameter :: wp = kind(1.d0)
-   real(wp) :: DNRM2
-!
-!  -- Reference BLAS level1 routine (version 3.9.1) --
-!  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!     March 2021
-!
-!  .. Constants ..
-   real(wp), parameter :: zero = 0.0_wp
-   real(wp), parameter :: one  = 1.0_wp
-   real(wp), parameter :: maxN = huge(0.0_wp)
-!  ..
-!  .. Blue's scaling constants ..
-   real(wp), parameter :: tsml = real(radix(0._wp), wp)**ceiling( &
-       (minexponent(0._wp) - 1) * 0.5_wp)
-   real(wp), parameter :: tbig = real(radix(0._wp), wp)**floor( &
-       (maxexponent(0._wp) - digits(0._wp) + 1) * 0.5_wp)
-   real(wp), parameter :: ssml = real(radix(0._wp), wp)**( - floor( &
-       (minexponent(0._wp) - digits(0._wp)) * 0.5_wp))
-   real(wp), parameter :: sbig = real(radix(0._wp), wp)**( - ceiling( &
-       (maxexponent(0._wp) + digits(0._wp) - 1) * 0.5_wp))
-!  ..
-!  .. Scalar Arguments ..
-   integer :: incx, n
-!  ..
-!  .. Array Arguments ..
-   real(wp) :: x(*)
-!  ..
-!  .. Local Scalars ..
-   integer :: i, ix
-   logical :: notbig
-   real(wp) :: abig, amed, asml, ax, scl, sumsq, ymax, ymin
-!
-!  Quick return if possible
-!
-   DNRM2 = zero
-   if( n <= 0 ) return
-!
-   scl = one
-   sumsq = zero
-!
-!  Compute the sum of squares in 3 accumulators:
-!     abig -- sums of squares scaled down to avoid overflow
-!     asml -- sums of squares scaled up to avoid underflow
-!     amed -- sums of squares that do not require scaling
-!  The thresholds and multipliers are
-!     tbig -- values bigger than this are scaled down by sbig
-!     tsml -- values smaller than this are scaled up by ssml
-!
-   notbig = .true.
-   asml = zero
-   amed = zero
-   abig = zero
-   ix = 1
-   if( incx < 0 ) ix = 1 - (n-1)*incx
-   do i = 1, n
-      ax = abs(x(ix))
-      if (ax > tbig) then
-         abig = abig + (ax*sbig)**2
-         notbig = .false.
-      else if (ax < tsml) then
-         if (notbig) asml = asml + (ax*ssml)**2
-      else
-         amed = amed + ax**2
-      end if
-      ix = ix + incx
-   end do
-!
-!  Combine abig and amed or amed and asml if more than one
-!  accumulator was used.
-!
-   if (abig > zero) then
-!
-!     Combine abig and amed if abig > 0.
-!
-      if ( (amed > zero) .or. (amed > maxN) .or. (amed /= amed) ) then
-         abig = abig + (amed*sbig)*sbig
-      end if
-      scl = one / sbig
-      sumsq = abig
-   else if (asml > zero) then
-!
-!     Combine amed and asml if asml > 0.
-!
-      if ( (amed > zero) .or. (amed > maxN) .or. (amed /= amed) ) then
-         amed = sqrt(amed)
-         asml = sqrt(asml) / ssml
-         if (asml > amed) then
-            ymin = amed
-            ymax = asml
-         else
-            ymin = asml
-            ymax = amed
-         end if
-         scl = one
-         sumsq = ymax**2*( one + (ymin/ymax)**2 )
-      else
-         scl = one / ssml
-         sumsq = asml
-      end if
-   else
-!
-!     Otherwise all values are mid-range
-!
-      scl = one
-      sumsq = amed
-   end if
-   DNRM2 = scl*sqrt( sumsq )
-   return
-end function
 !> \brief \b DROT
 !
 !  =========== DOCUMENTATION ===========
@@ -1867,145 +1413,6 @@ end function
       RETURN
 !
 !     End of DROT
-!
-      END
-!> \brief \b DSCAL
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!  Definition:
-!  ===========
-!
-!       SUBROUTINE DSCAL(N,DA,DX,INCX)
-!
-!       .. Scalar Arguments ..
-!       DOUBLE PRECISION DA
-!       INTEGER INCX,N
-!       ..
-!       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*)
-!       ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!>    DSCAL scales a vector by a constant.
-!>    uses unrolled loops for increment equal to 1.
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] N
-!> \verbatim
-!>          N is INTEGER
-!>         number of elements in input vector(s)
-!> \endverbatim
-!>
-!> \param[in] DA
-!> \verbatim
-!>          DA is DOUBLE PRECISION
-!>           On entry, DA specifies the scalar alpha.
-!> \endverbatim
-!>
-!> \param[in,out] DX
-!> \verbatim
-!>          DX is DOUBLE PRECISION array, dimension ( 1 + ( N - 1 )*abs( INCX ) )
-!> \endverbatim
-!>
-!> \param[in] INCX
-!> \verbatim
-!>          INCX is INTEGER
-!>         storage spacing between elements of DX
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
-!
-!> \ingroup scal
-!
-!> \par Further Details:
-!  =====================
-!>
-!> \verbatim
-!>
-!>     jack dongarra, linpack, 3/11/78.
-!>     modified 3/93 to return if incx .le. 0.
-!>     modified 12/3/93, array(1) declarations changed to array(*)
-!> \endverbatim
-!>
-!  =====================================================================
-      SUBROUTINE DSCAL(N,DA,DX,INCX)
-!
-!  -- Reference BLAS level1 routine --
-!  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!
-!     .. Scalar Arguments ..
-      DOUBLE PRECISION DA
-      INTEGER INCX,N
-!     ..
-!     .. Array Arguments ..
-      DOUBLE PRECISION DX(*)
-!     ..
-!
-!  =====================================================================
-!
-!     .. Local Scalars ..
-      INTEGER I,M,MP1,NINCX
-!     .. Parameters ..
-      DOUBLE PRECISION ONE
-      PARAMETER (ONE=1.0D+0)
-!     ..
-!     .. Intrinsic Functions ..
-      INTRINSIC MOD
-!     ..
-      IF (N.LE.0 .OR. INCX.LE.0 .OR. DA.EQ.ONE) RETURN
-      IF (INCX.EQ.1) THEN
-!
-!        code for increment equal to 1
-!
-!
-!        clean-up loop
-!
-         M = MOD(N,5)
-         IF (M.NE.0) THEN
-            DO I = 1,M
-               DX(I) = DA*DX(I)
-            END DO
-            IF (N.LT.5) RETURN
-         END IF
-         MP1 = M + 1
-         DO I = MP1,N,5
-            DX(I) = DA*DX(I)
-            DX(I+1) = DA*DX(I+1)
-            DX(I+2) = DA*DX(I+2)
-            DX(I+3) = DA*DX(I+3)
-            DX(I+4) = DA*DX(I+4)
-         END DO
-      ELSE
-!
-!        code for increment not equal to 1
-!
-         NINCX = N*INCX
-         DO I = 1,NINCX,INCX
-            DX(I) = DA*DX(I)
-         END DO
-      END IF
-      RETURN
-!
-!     End of DSCAL
 !
       END
 !> \brief \b LSAME
