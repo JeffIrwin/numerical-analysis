@@ -21,13 +21,6 @@ module numa
 
 	! TODO:
 	!
-	! - There are several places where I note a routine should "panic" or issue
-	!   a "fatal" error, only logging a warning for now and continuing.  These
-	!   should actually stop (or wrap a stop), unless an optional `iostat` arg
-	!   is given to the function, in which case we can continue and let the
-	!   caller decide how to recover.  I guess this is the Fortranic way.  Also
-	!   make panic use a macro to log the filename and line number
-	!   * wip
 	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
 	!   specifically for Intel, e.g. initialization of complex arrays
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
@@ -58,22 +51,19 @@ module numa
 			double precision :: fx
 		end function
 
-		! Scalar to scalar with additional parameters `beta`, e.g. for
-		! non-linear least squares in gauss_newton()
-		!
-		! TODO: rename?  maybe `fn_f64_params_to_f64`?  The `beta` is probably
-		! confusing
-		function fn_f64_beta_to_f64(x, beta) result(fx)
+		! Scalar to scalar with additional parameters, e.g. for non-linear least
+		! squares in gauss_newton()
+		function fn_f64_params_to_f64(x, params) result(fx)
 			double precision, intent(in) :: x
-			double precision, intent(in) :: beta(:)
+			double precision, intent(in) :: params(:)
 			double precision :: fx
 		end function
 
-		! Scalar to vector with beta parameters, e.g. the derivatives of
-		! fn_f64_beta_to_f64
-		function fn_f64_beta_to_vec_f64(x, beta) result(fx)
+		! Scalar to vector with params parameters, e.g. the derivatives of
+		! fn_f64_params_to_f64
+		function fn_f64_params_to_vec_f64(x, params) result(fx)
 			double precision, intent(in) :: x
-			double precision, intent(in) :: beta(:)
+			double precision, intent(in) :: params(:)
 			double precision, allocatable :: fx(:)
 		end function
 
@@ -4073,6 +4063,7 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 		end if
 
 		! Compute first 3 elements of first column of M
+
 		a11 = aa(1,1)
 		a21 = aa(2,1)
 		a12 = aa(1,2)
@@ -4180,11 +4171,7 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 			aa(i,j) = 0.d0
 			i = i - 1
 			iter = 0
-
-		! TODO: eps multiplier?
-		!else if (abs(aa(i-1, j-1)) < 1.d2 * eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
-		else if (abs(aa(i-1, j-1)) < 1.d0 * eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
-
+		else if (abs(aa(i-1, j-1)) < eps * (abs(aa(j-1, j-1)) + abs(aa(j,j)))) then
 			!print *, "i -= 2"
 			aa(i-1, j-1) = 0.d0
 			i = i - 2
@@ -4760,8 +4747,8 @@ function gauss_newton(x, y, f, df, beta0, iters) result(beta)
 
 	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
-	procedure(fn_f64_beta_to_f64) :: f
-	procedure(fn_f64_beta_to_vec_f64) :: df
+	procedure(fn_f64_params_to_f64) :: f
+	procedure(fn_f64_params_to_vec_f64) :: df
 	double precision, intent(in) :: beta0(:)
 	integer, intent(in) :: iters
 
@@ -4824,7 +4811,7 @@ function nelder_mead_fit(x, y, f, beta0, beta_tol, iters) result(beta)
 
 	use numa__utils
 	double precision, intent(in) :: x(:), y(:)
-	procedure(fn_f64_beta_to_f64) :: f
+	procedure(fn_f64_params_to_f64) :: f
 	double precision, intent(in) :: beta0(:)
 	double precision, optional, intent(in) :: beta_tol
 	integer, optional, intent(in) :: iters
@@ -4973,52 +4960,48 @@ end function nelder_mead_fit
 
 !===============================================================================
 
-function nelder_mead(f, beta0, beta_tol, iters) result(beta)
-	! Solve an optimization problem by finding `beta` in order to minimize 
-	! f(beta)
-	!
-	! TODO: rename `beta` to `x`. This is just a legacy of having written
-	! nelder_mead_fit() first
+function nelder_mead(f, x0, x_tol, iters) result(x)
+	! Solve an optimization problem by finding `x` in order to minimize 
+	! f(x)
 
 	use numa__utils
-	!procedure(fn_f64_beta_to_f64) :: f
 	procedure(fn_vec_f64_to_f64) :: f
-	double precision, intent(in) :: beta0(:)
-	double precision, optional, intent(in) :: beta_tol
+	double precision, intent(in) :: x0(:)
+	double precision, optional, intent(in) :: x_tol
 	integer, optional, intent(in) :: iters
 
-	double precision, allocatable :: beta(:)
+	double precision, allocatable :: x(:)
 	!********
 
-	double precision :: fr, fe, fc, beta_tol_
+	double precision :: fr, fe, fc, x_tol_
 	double precision, parameter :: alpha_ = 1, gamma_ = 2, rho_ = 0.5, sigma_ = 0.5
-	double precision, allocatable :: bs(:,:), fs(:), bo(:), br(:), &
-		be(:), bc(:)
+	double precision, allocatable :: xs(:,:), fs(:), xo(:), xr(:), &
+		xe(:), xc(:)
 
 	integer :: i, nb, nb1, iter, iters_
 	integer, allocatable :: idx(:)
 
 	logical :: converged
 
-	beta_tol_ = 1.d-3
+	x_tol_ = 1.d-3
 	iters_ = 1000
-	if (present(beta_tol)) beta_tol_ = beta_tol
+	if (present(x_tol)) x_tol_ = x_tol
 	if (present(iters)) iters_ = iters
-	nb = size(beta0)
+	nb = size(x0)
 	nb1 = nb + 1  ! number of simplex points
 
 	! Initial simplex
-	allocate(bs(nb, nb1))
+	allocate(xs(nb, nb1))
 	do i = 1, nb
-		bs(:,i) = beta0
-		bs(i,i) = bs(i,i) + 1
+		xs(:,i) = x0
+		xs(i,i) = xs(i,i) + 1
 	end do
-	bs(:,nb1) = beta0
+	xs(:,nb1) = x0
 
 	! Evaluate fn on initial simplex
 	allocate(fs(nb1))
 	do i = 1, nb1
-		fs(i) = nm_eval_res(bs(:,i))
+		fs(i) = f(xs(:,i))
 	end do
 	!print *, "fs init = ", fs
 
@@ -5030,69 +5013,69 @@ function nelder_mead(f, beta0, beta_tol, iters) result(beta)
 		!print *, "idx = ", idx
 
 		fs = fs(idx)
-		bs = bs(:, idx)
+		xs = xs(:, idx)
 		!print *, "fs = ", fs
 
-		!print *, "bs = "
-		!print "(2es16.6)", bs
+		!print *, "xs = "
+		!print "(2es16.6)", xs
 
 		! Note: this is a bad criterion because 1 and nb1 may not be
 		! representative of the simplex size
-		if (norm2(bs(:,1) - bs(:,nb1)) < beta_tol_) then
+		if (norm2(xs(:,1) - xs(:,nb1)) < x_tol_) then
 			!print *, "iter = ", iter
 			converged = .true.
 			exit
 		end if
 
 		! Centroid
-		bo = sum(bs(:, 1: nb), dim = 2) / nb
-		!print *, "bo = ", bo
+		xo = sum(xs(:, 1: nb), dim = 2) / nb
+		!print *, "xo = ", xo
 
 		! Reflect
-		br = bo + alpha_ * (bo - bs(:,nb1))
-		fr = nm_eval_res(br)
+		xr = xo + alpha_ * (xo - xs(:,nb1))
+		fr = f(xr)
 
 		if (fs(1) <= fr .and. fr < fs(nb)) then
 			! Replace
 			fs(nb1) = fr
-			bs(:,nb1) = br
+			xs(:,nb1) = xr
 			cycle
 		end if
 
 		if (fr < fs(1)) then
 			! Expand
-			be = bo + gamma_ * (br - bo)
-			fe = nm_eval_res(be)
+			xe = xo + gamma_ * (xr - xo)
+			fe = f(xe)
 
 			if (fe < fr) then
 				fs(nb1) = fe
-				bs(:,nb1) = be
+				xs(:,nb1) = xe
 			else
 				fs(nb1) = fr
-				bs(:,nb1) = br
+				xs(:,nb1) = xr
 			end if
 			cycle
 		end if
 
 		if (fr < fs(nb1)) then
 			! Contract outward
-			bc = bo + rho_ * (br - bo)
-			fc = nm_eval_res(bc)
+			xc = xo + rho_ * (xr - xo)
+			fc = f(xc)
 
 			if (fc < fr) then
 				fs(nb1) = fc
-				bs(:,nb1) = bc
+				xs(:,nb1) = xc
 				cycle
 			end if
 
 		else
 			! Contract inward
-			bc = bo + rho_ * (bs(:,nb1) - bo)
-			fc = nm_eval_res(bc)
+			xc = xo + rho_ * (xs(:,nb1) - xo)
+			fc = f(xc)
 
 			if (fc < fs(nb1)) then
 				fs(nb1) = fc
-				bs(:,nb1) = bc
+				xs(:,nb1) = xc
 				cycle
 			end if
 
@@ -5100,8 +5083,8 @@ function nelder_mead(f, beta0, beta_tol, iters) result(beta)
 
 		! Shrink
 		do i = 2, nb1
-			bs(:,i) = bs(:,1) + sigma_ * (bs(:,i) - bs(:,1))
-			fs(i) = nm_eval_res(bs(:,i))
+			xs(:,i) = xs(:,1) + sigma_ * (xs(:,i) - xs(:,1))
+			fs(i) = f(xs(:,i))
 		end do
 
 	end do
@@ -5110,17 +5093,7 @@ function nelder_mead(f, beta0, beta_tol, iters) result(beta)
 		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
 			": nelder_mead() has not converged"
 	end if
-	beta = bs(:,1)
-
-	!--------------------------------
-	contains
-
-		double precision function nm_eval_res(beta_) result(res)
-			! Evaluate the residual and sum its squares
-			double precision, intent(in) :: beta_(:)
-			! TODO: if it's just one line, this should be (manually) inlined
-			res = f(beta_)
-		end function nm_eval_res
+	x = xs(:,1)
 
 end function nelder_mead
 

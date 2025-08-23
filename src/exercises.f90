@@ -1931,7 +1931,7 @@ integer function chapter_3_adaptive() result(nfail)
 	! array of doubles (and ints).  This would need another fn interface, say
 	! fn_f64_to_f64_dble_data, which also takes the data
 	!
-	! Actually I have created exactly this in fn_f64_beta_to_f64.  A new
+	! Actually I have created exactly this in fn_f64_params_to_f64.  A new
 	! gk15_adaptive_integrator() is still needed
 
 	area = gk15_adaptive_integrator(bessel_3_2p5, 0.d0, PI, 1.d-10)
@@ -2520,7 +2520,7 @@ integer function chapter_4_nelder_mead() result(nfail)
 	! Expected (known) minimum
 	pk = [1.d0, 1.d0]
 
-	p = nelder_mead(rosenbrock_banana, [100.d0, 100.d0], beta_tol = 1.d-9)
+	p = nelder_mead(rosenbrock_banana, [100.d0, 100.d0], x_tol = 1.d-9)
 	print "(a,*(es16.6))", " p = ", p
 
 	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana 2D")
@@ -2530,8 +2530,8 @@ integer function chapter_4_nelder_mead() result(nfail)
 	!
 	! In higher dimensions, it's harder to converge for this fn if you start too far away for the minimum
 	pk = [1, 1, 1, 1]
-	p = nelder_mead(rosenbrock_banana_nd, [20.d0, 20.d0, 20.d0, 20.d0], beta_tol = 1.d-9, iters = 5000)
-	!p = nelder_mead(rosenbrock_banana_nd, [100.d0, 100.d0, 100.d0, 100.d0], beta_tol = 1.d-15, iters = 10000)
+	p = nelder_mead(rosenbrock_banana_nd, [20.d0, 20.d0, 20.d0, 20.d0], x_tol = 1.d-9, iters = 5000)
+	!p = nelder_mead(rosenbrock_banana_nd, [100.d0, 100.d0, 100.d0, 100.d0], x_tol = 1.d-15, iters = 10000)
 	print "(a,*(es16.6))", " p = ", p
 	print *, "f(p) = ", rosenbrock_banana_nd(p)
 	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana 4D")
@@ -2539,7 +2539,7 @@ integer function chapter_4_nelder_mead() result(nfail)
 	!********
 	! Optimize 6D Rosenbrock banana
 	pk = [1, 1, 1, 1, 1, 1]
-	p = nelder_mead(rosenbrock_banana_nd, [10.d0, 10.d0, 10.d0, 10.d0, 10.d0, 10.d0], beta_tol = 1.d-9, iters = 10000)
+	p = nelder_mead(rosenbrock_banana_nd, [10.d0, 10.d0, 10.d0, 10.d0, 10.d0, 10.d0], x_tol = 1.d-9, iters = 10000)
 	print "(a,*(es16.6))", " p = ", p
 	print *, "f(p) = ", rosenbrock_banana_nd(p)
 	call test(norm2(p - pk), 0.d0, 1.d-6, nfail, "nelder_mead rosenbrock_banana 6D")
