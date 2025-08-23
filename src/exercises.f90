@@ -3,6 +3,7 @@
 module numa__exercises
 
 	use numa
+	use numa__blas
 	use numa__functions
 	use numa__utils
 
@@ -2708,7 +2709,6 @@ end function chapter_4_nelder_mead
 !===============================================================================
 
 integer function chapter_4_qr_c64() result(nfail)
-
 	character(len = *), parameter :: label = "chapter_4_qr_c64"
 
 	double precision, allocatable :: ar(:,:), ai(:,:)

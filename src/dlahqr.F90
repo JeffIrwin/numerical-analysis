@@ -210,6 +210,7 @@ contains
 	subroutine dlahqr(wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
 							iloz, ihiz, z, ldz, info)
 
+		use numa__blas
 		use numa__utils
 		implicit none
 
@@ -438,11 +439,7 @@ contains
 					nr = min(3, i - k + 1)
 					if (k > m) v(1:nr) = h(k:k + nr - 1, k - 1)
 
-					call house_f64(v(1), v(2:nr), t1)!, io)
-					!if (io /= 0) then
-					!	info = 1
-					!	return
-					!end if
+					call house_f64(v(1), v(2:nr), t1)
 
 					if (k > m) then
 						h(k, k - 1) = v(1)

@@ -1309,6 +1309,7 @@ subroutine hess(a, u)
 	! Apply the Householder Hessenberg reduction to `a`
 	!
 	! Source:  https://dspace.mit.edu/bitstream/handle/1721.1/75282/18-335j-fall-2006/contents/lecture-notes/lec14.pdf
+	use numa__blas
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable, optional, intent(out) :: u(:,:)
@@ -1563,6 +1564,7 @@ function qr_get_q_expl_f64(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
+	use numa__blas
 	use numa__utils
 	double precision, intent(in) :: qr(:,:), diag_(:)
 	double precision, allocatable :: q(:,:)
@@ -1590,6 +1592,7 @@ end function triu_f64
 
 subroutine qr_factor_c64(a, diag_, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
+	use numa__blas
 	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 
@@ -1676,6 +1679,7 @@ function qr_get_q_expl_c64(qr, diag_) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
+	use numa__blas
 	use numa__utils
 	double complex, intent(in) :: qr(:,:), diag_(:)
 	double complex, allocatable :: q(:,:)
@@ -3563,6 +3567,7 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
 	! QR algorithm
 
+	use numa__blas
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, allocatable :: eigvals(:)
@@ -3675,6 +3680,7 @@ function house(x, iostat) result(pp)
 	! matrices, whereas house_c64() runs on arbitrarily large matrices for QR
 	! factoring
 
+	use numa__blas
 	use numa__utils
 	double precision, intent(in) :: x(:)
 	double precision, allocatable :: pp(:,:)
@@ -3726,8 +3732,9 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 	! Get the eigenvalues of `aa` using the Francis double step QR algorithm,
 	! using LAPACK's dlahqr() routine (but still my home-made hess() routine)
 
-	use numa__utils
+	use numa__blas
 	use numa__dlahqr
+	use numa__utils
 	double precision, intent(inout) :: aa(:,:)
 	double complex, allocatable :: eigvals(:)
 	double complex, optional, allocatable, intent(out) :: eigvecs(:,:)
@@ -3825,8 +3832,9 @@ end function eig_lapack
 !===============================================================================
 
 function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
-	! Get the eigenvalues of `aa` using the Francis double step QR algorithm
-
+	! Get the eigenvalues of `aa` using the Francis double step QR algorithm.
+	! Use eig_lapack() instead because it's much more robust
+	use numa__blas
 	use numa__utils
 	double precision, intent(inout) :: aa(:,:)
 	double complex, allocatable :: eigvals(:)
@@ -4084,7 +4092,7 @@ subroutine real_schur_to_complex(r, q, cr, cq, eps)
 	! the MATLAB and scipy functions rsf2csf()
 	!
 	! Matrix `r` is quasi-triangular and `q` is unitary
-
+	use numa__blas
 	use numa__utils
 	double precision, intent(in) :: r(:,:), q(:,:)
 	double complex, allocatable, intent(out) :: cr(:,:), cq(:,:)
