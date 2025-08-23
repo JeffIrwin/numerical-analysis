@@ -314,6 +314,7 @@ contains
 !     ..
 !     .. Local Arrays ..
       DOUBLE PRECISION   V( 3 )
+	  double precision :: p2(2,2)
 !     ..
 !     ..
 !     .. Intrinsic Functions ..
@@ -658,22 +659,26 @@ contains
                       H( I, I ), WR( I-1 ), WI( I-1 ), WR( I ), WI( I ), &
                       CS, SN )
 !
+         if (wantt .or. wantz) then
+            p2(1,:) = [ cs, sn]
+            p2(2,:) = [-sn, cs]
+         end if
+
          IF( WANTT ) THEN
 !
 !           Apply the transformation to the rest of H.
 !
-            IF( I2.GT.I ) &
-               CALL DROT( I2-I, H( I-1, I+1 ), LDH, H( I, I+1 ), LDH, &
-                          CS, SN )
-            CALL DROT( I-I1-1, H( I1, I-1 ), 1, H( I1, I ), 1, CS, &
-                       SN )
+            IF( I2.GT.I ) then
+               !h(i-1:i, i+1:n) = matmul(p2, h(i-1:i, i+1:n))
+               h(i-1:i, i+1:i2) = matmul(p2, h(i-1:i, i+1:i2))
+            end if
+            h(i1: i-2, i-1:i) = matmul(h(i1: i-2, i-1:i), transpose(p2))
          END IF
          IF( WANTZ ) THEN
 !
 !           Apply the transformation to Z.
 !
-            CALL DROT( NZ, Z( ILOZ, I-1 ), 1, Z( ILOZ, I ), 1, CS, &
-                       SN )
+            z(iloz:nz, i-1:i) = matmul(z(iloz:nz, i-1:i), transpose(p2))
          END IF
       END IF
 !     reset deflation counter
@@ -1271,148 +1276,6 @@ contains
       RETURN
 !
 !     End of DLARFG
-!
-      END
-!> \brief \b DROT
-!
-!  =========== DOCUMENTATION ===========
-!
-! Online html documentation available at
-!            http://www.netlib.org/lapack/explore-html/
-!
-!  Definition:
-!  ===========
-!
-!       SUBROUTINE DROT(N,DX,INCX,DY,INCY,C,S)
-!
-!       .. Scalar Arguments ..
-!       DOUBLE PRECISION C,S
-!       INTEGER INCX,INCY,N
-!       ..
-!       .. Array Arguments ..
-!       DOUBLE PRECISION DX(*),DY(*)
-!       ..
-!
-!
-!> \par Purpose:
-!  =============
-!>
-!> \verbatim
-!>
-!>    DROT applies a plane rotation.
-!> \endverbatim
-!
-!  Arguments:
-!  ==========
-!
-!> \param[in] N
-!> \verbatim
-!>          N is INTEGER
-!>         number of elements in input vector(s)
-!> \endverbatim
-!>
-!> \param[in,out] DX
-!> \verbatim
-!>          DX is DOUBLE PRECISION array, dimension ( 1 + ( N - 1 )*abs( INCX ) )
-!> \endverbatim
-!>
-!> \param[in] INCX
-!> \verbatim
-!>          INCX is INTEGER
-!>         storage spacing between elements of DX
-!> \endverbatim
-!>
-!> \param[in,out] DY
-!> \verbatim
-!>          DY is DOUBLE PRECISION array, dimension ( 1 + ( N - 1 )*abs( INCY ) )
-!> \endverbatim
-!>
-!> \param[in] INCY
-!> \verbatim
-!>          INCY is INTEGER
-!>         storage spacing between elements of DY
-!> \endverbatim
-!>
-!> \param[in] C
-!> \verbatim
-!>          C is DOUBLE PRECISION
-!> \endverbatim
-!>
-!> \param[in] S
-!> \verbatim
-!>          S is DOUBLE PRECISION
-!> \endverbatim
-!
-!  Authors:
-!  ========
-!
-!> \author Univ. of Tennessee
-!> \author Univ. of California Berkeley
-!> \author Univ. of Colorado Denver
-!> \author NAG Ltd.
-!
-!> \ingroup rot
-!
-!> \par Further Details:
-!  =====================
-!>
-!> \verbatim
-!>
-!>     jack dongarra, linpack, 3/11/78.
-!>     modified 12/3/93, array(1) declarations changed to array(*)
-!> \endverbatim
-!>
-!  =====================================================================
-      SUBROUTINE DROT(N,DX,INCX,DY,INCY,C,S)
-!
-!  -- Reference BLAS level1 routine --
-!  -- Reference BLAS is a software package provided by Univ. of Tennessee,    --
-!  -- Univ. of California Berkeley, Univ. of Colorado Denver and NAG Ltd..--
-!
-!     .. Scalar Arguments ..
-      DOUBLE PRECISION C,S
-      INTEGER INCX,INCY,N
-!     ..
-!     .. Array Arguments ..
-      DOUBLE PRECISION DX(*),DY(*)
-!     ..
-!
-!  =====================================================================
-!
-!     .. Local Scalars ..
-      DOUBLE PRECISION DTEMP
-      INTEGER I,IX,IY
-!     ..
-      IF (N.LE.0) RETURN
-      IF (INCX.EQ.1 .AND. INCY.EQ.1) THEN
-!
-!       code for both increments equal to 1
-!
-         DO I = 1,N
-            DTEMP = C*DX(I) + S*DY(I)
-            DY(I) = C*DY(I) - S*DX(I)
-            DX(I) = DTEMP
-         END DO
-      ELSE
-!
-!       code for unequal increments or equal increments not equal
-!         to 1
-!
-         IX = 1
-         IY = 1
-         IF (INCX.LT.0) IX = (-N+1)*INCX + 1
-         IF (INCY.LT.0) IY = (-N+1)*INCY + 1
-         DO I = 1,N
-            DTEMP = C*DX(IX) + S*DY(IY)
-            DY(IY) = C*DY(IY) - S*DX(IX)
-            DX(IX) = DTEMP
-            IX = IX + INCX
-            IY = IY + INCY
-         END DO
-      END IF
-      RETURN
-!
-!     End of DROT
 !
       END
 !> \brief \b LSAME
