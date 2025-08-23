@@ -3051,6 +3051,9 @@ integer function chapter_6_francis_qr() result(nfail)
 	!print *, "eigvals2 = [real, imag]"
 	!print "(2es15.5)", sorted(eigvals2)
 
+	!print *, "eigvecs = "
+	!print "("//to_str(2*n)//"es15.5)", eigvecs
+
 	!print *, "a * eigvecs / eigvecs = "
 	!print "("//to_str(2*n)//"es15.5)", matmul(a0, eigvecs) / eigvecs
 
@@ -3079,11 +3082,17 @@ integer function chapter_6_francis_qr() result(nfail)
 	print *, "a = "
 	print "("//to_str(n)//"es19.9)", a
 	eigvals = eig_lapack(a, eigvecs)
+
 	print *, "eigvals = [real, imag]"
 	print "(2es15.5)", sorted(eigvals)
-	! TODO: test results
 
-	!stop
+	!print *, "eigvecs = "
+	!print "("//to_str(2*n)//"es15.5)", eigvecs
+
+	diff = norm2(abs( &
+		matmul(a0, eigvecs) - spread(eigvals, 1, n) * eigvecs))
+	print *, "diff = ", diff
+	call test(diff, 0.d0, 1.d-6 * n, nfail, "eig_lapack vec 1")
 
 	!********
 	! Fuzz test

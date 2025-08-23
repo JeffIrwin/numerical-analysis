@@ -3885,8 +3885,10 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 	!********
 
 	!character(len = :), allocatable :: msg
+	double complex, allocatable :: ca(:,:), cq(:,:)
+	double precision, parameter :: eps = 1.d-10
 	double precision, allocatable :: pq(:,:)
-	integer :: n
+	integer :: i, n
 
 	if (present(iostat)) iostat = 0
 
@@ -3919,20 +3921,18 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 		! Eigval real/imag components
 		allocate(wr(n), wi(n))
 
+		! TODO: set false if eigvecs not present, test
 		!wantt = .false.
 		!wantz = .false.
 		wantt = .true.  ! want full schur form, not just eigvals
 		wantz = .true.
 
-		call DLAHQR( WANTT, WANTZ, N, ILO, IHI, aa, LDH, WR, WI, &
-			ILOZ, IHIZ, pq, LDZ, INFO )
-
-		! TODO: copy eigvecs out.  I think I still have to do
-		! real_schur_to_complex() and all that jazz
+		call dlahqr(wantt, wantz, n, ilo, ihi, aa, ldh, wr, wi, &
+			iloz, ihiz, pq, ldz, info)
+		! TODO: check info
 
 		! Copy eigvals out
 		eigvals = dcmplx(wr, wi)
-		!eigvals = wr + IMAG_ * wi
 
 		print *, "aa = "
 		print "("//to_str(n)//"es16.6)", aa
@@ -3941,6 +3941,28 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 		print "("//to_str(n)//"es16.6)", pq
 
 	end block
+
+	if (.not. present(eigvecs)) return
+
+	! Zero the remaining below-diagonal non-zeros
+	call real_schur_to_complex(aa, pq, ca, cq, eps)
+
+	! Some of the eigenvalues get swapped around in real_schur_to_complex().
+	! TODO: is this true for LAPACK?  Need more fuzz testing
+	eigvals = diag(ca)
+
+	!print *, "ca = "
+	!print "("//to_str(2*n)//"es19.9)", ca
+
+	! Find the eigenvectors of triangular `ca`
+	eigvecs = eye(n)
+	do i = 2, n
+		eigvecs(1: i-1, i) = invmul(ca(i,i) * eye(i-1) - ca(:i-1, :i-1) , ca(:i-1, i))
+	end do
+	!print *, "R eigvecs = "
+	!print "("//to_str(n)//"es19.9)", eigvecs
+
+	eigvecs = matmul(cq, eigvecs)
 
 end function eig_lapack
 
