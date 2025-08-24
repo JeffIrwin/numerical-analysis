@@ -5045,13 +5045,18 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 	end if
 
 	ns = count(contypes == GE_LP) + count(contypes == LE_LP)  ! number of slack vars
-	nr = count(contypes == LE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
+
+	!nr = count(contypes == LE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
+	nr = count(contypes == GE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
+
 	print *, "nv, ns, nr = ", nv, ns, nr
 
 	nt = nv + ns + nr
 	print *, "nt = ", nt
 
 	coefs = zeros(size(cons, 1)+1, nt+1)
+	!coefs = zeros(size(cons, 1)+1, nt+2)
+
 	print *, "size cons 1 = ", size(cons, 1)
 
 	print *, "coefs = "
@@ -5085,10 +5090,16 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 			irs(nirs) = i
 
 		else if (contypes(i-1) == EQ_LP) then
+			! TODO: ir will set something here or in the GE_LP branch which is
+			! overwritten by the rhs.  Is that correct? Maybe just fixed it
 			ir = ir + 1
 			coefs(i, ir) = 1
 			nirs = nirs + 1
 			irs(nirs) = i
+			if (ir == size(coefs,2)) then
+				print *, "ERROR: ir overflow!"
+				stop
+			end if
 
 		end if
 
@@ -5100,6 +5111,8 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 
 	! Could trim irs if we can't just allocated conservatively to begin with
 	print *, "irs = ", irs(1: nirs)
+	print *, "count non-zero coefs = ", count(coefs /= 0)
+	!stop
 
 	!********
 	! Phase 1 of the simplex algorithm
@@ -5131,6 +5144,7 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 		ibv(i) = is
 	end do
 	print *, "ibv = ", ibv
+	!stop
 
 	! Run the simplex iterations
 	i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
@@ -5175,26 +5189,15 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 	end do
 
 	!********
-
 	!        r_index = self.num_r_vars + self.num_s_vars
 	!        for i in self.basic_vars:
 	!            if i > r_index:
 	!                raise ValueError("Infeasible solution")
-	!        self.delete_r_vars()
-	!        if 'min' in self.objective.lower():
-	!            self.solution = self.objective_minimize()
-	!        else:
-	!            self.solution = self.objective_maximize()
-	!        self.optimize_val = self.coeff_matrix[0][-1]
+	! TODO: check for infeasible solution
 
 	!********
 
-	! TODO: check for infeasible solution
-
 	! Delete r vars
-
-	! non_r_length = self.num_vars + self.num_s_vars + 1
-	! length = len(self.coeff_matrix[i])
 
 	ndel = size(coefs,2) - (nv + ns + 1)
 	print *, "ndel = ", ndel
@@ -5245,10 +5248,9 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 		! Find key row
 		vals = coefs(2:, size(coefs,2)) / coefs(2:, kc)
 		print *, "vals = ", vals
-		i1 = minloc(vals, coefs(2:,kc) > 0)
+		i1 = minloc(vals, coefs(2:, kc) > 0)
 		kr = i1(1) + 1
 		print *, "kr = ", kr
-	!            key_row = self.find_key_row(key_column = key_column)
 
 		! TODO: check kr /= 0.  If vals(kr) == 0, warn about degeneracy
 		!stop
@@ -5256,14 +5258,6 @@ function linprog(obj, cons, rhs, contypes, iostat) result(x)
 		ibv(kr) = kc
 		pivot = coefs(kr, kc)
 		coefs(kr,:) = coefs(kr,:) / pivot  ! normalize to pivot
-
-	!            self.basic_vars[key_row] = key_column
-	!            pivot = self.coeff_matrix[key_row][key_column]
-	!            self.normalize_to_pivot(key_row, pivot)
-	!            self.make_key_column_zero(key_column, key_row)
-	!
-	!            key_column = max_index(self.coeff_matrix[0])
-	!            condition = self.coeff_matrix[0][key_column] > 0
 
 		! Make key column zero
 		do i = 1, size(coefs,1)

@@ -2869,6 +2869,9 @@ integer function chapter_4_linprog() result(nfail)
 
 	!********
 
+	!if (.false.) then  ! TODO
+	if (.true.) then  ! TODO
+
 	obj = [4, 1]  ! `f` in MATLAB's linprog()
 	cons = transpose(reshape([ &  ! `A` in MATLAB
 		3, 1, & ! 3, &
@@ -2988,6 +2991,8 @@ integer function chapter_4_linprog() result(nfail)
 
 	print "(a,*(es13.3))", "x = ", x
 
+	end if  ! TODO: if false
+
 	!********
 	! Inequality and equality constraints, as well as additional constraints on
 	! the bounds of `x`
@@ -3037,6 +3042,7 @@ integer function chapter_4_linprog() result(nfail)
 	! TODO: there is a bug here depending on how the last 4 constraints are ordered
 	!
 	obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
+	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
 	cons = transpose(reshape([ &  ! `A` in MATLAB
 			1.0, 1.0, &
 			4.0, 1.0, &
@@ -3057,6 +3063,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	! Reordered.  This one is ok
 	obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
+	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
 	cons = transpose(reshape([ &  ! `A` in MATLAB
 			1.0, 1.0, &
 			4.0, 1.0, &
