@@ -2856,6 +2856,103 @@ end function chapter_4_qr_c64
 
 !===============================================================================
 
+integer function chapter_4_linprog() result(nfail)
+	character(len = *), parameter :: label = "chapter_4_linprog"
+
+	double precision, allocatable :: obj(:), cons(:,:), rhs(:), x(:)
+	integer, allocatable :: contypes(:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+
+	!objective = ('minimize', '4x_1 + 1x_2')
+	!constraints = [
+	!        '3x_1 + 1x_2 = 3',
+	!        '4x_1 + 3x_2 >= 6',
+	!        '1x_1 + 2x_2 <= 4',
+	!    ]
+
+	obj = [4, 1]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+		3, 1, & ! 3, &
+		4, 3, & ! 6, &
+		1, 2  & ! 4 &
+		] &
+		, [2, 3] &
+	))
+	rhs = [3, 6, 4]  ! `b` in MATLAB
+	contypes = [EQ_LP, GE_LP, LE_LP]
+
+	print *, "cons = "
+	print "(2es13.3)", transpose(cons)
+
+	!! TODO
+	x = linprog(obj, cons, rhs, contypes)
+	!!x = linprog(f,A,b)
+
+	print "(a,*(es13.3))", "x = ", x
+
+	!Lp_system = Simplex(num_vars=2, constraints=constraints, objective_function=objective)
+	!print(Lp_system.solution)
+	!#{'x_2': Fraction(6, 5), 'x_1': Fraction(3, 5)}
+	!print(Lp_system.optimize_val)
+
+	call test(norm2(x - [0.6d0, 1.2d0]), 0.d0, 1.d-12, nfail, "linprog 1")
+
+	!********
+
+	print *, "**********************************"
+	print *, "starting linprog example 2"
+
+	!    # Example from wikipedia:
+	!    #
+	!    #     https://en.wikipedia.org/wiki/Simplex_algorithm#Example
+	!    #
+	!    # Expect minimum of -20 at [0, 0, 5]
+	!    #
+	!    # For negative coefficients, a space after '-' is required. Otherwise, you
+	!    # can just maximize the negative objective instead of minimizing
+	!    objective = ('minimize', '- 2x_1 - 3x_2 - 4x_3')
+	!    #objective = ('maximize', '2x_1 + 3x_2 + 4x_3')
+	!    #objective = ('minimize', '-2x_1 + -3x_2 + -4x_3')
+	!    constraints = [
+	!            '2x_1 + 2x_2 + 1x_3 <= 10',
+	!            '2x_1 + 5x_2 + 3x_3 <= 15',
+	!            '1x_1 >= 0',
+	!            '1x_2 >= 0',
+	!            '1x_3 >= 0',
+	!    ]
+
+	obj = [-2, -3, -4]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+		2, 2, 1, &
+		2, 5, 3, &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 0, 1  &
+		] &
+		, [3, 5] &
+	))
+	rhs = [10, 15, 0, 0, 0]  ! `b` in MATLAB
+	contypes = [LE_LP, LE_LP, GE_LP, GE_LP, GE_LP]
+
+	print *, "cons = "
+	print "(3es13.3)", transpose(cons)
+
+	!x = linprog(f,A,b)
+	!x = linprog(obj, cons, rhs, contypes)
+
+	print "(a,*(es13.3))", "x = ", x
+
+	!********
+
+end function chapter_4_linprog
+
+!===============================================================================
+
 integer function chapter_6_basic_qr() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_6_basic_qr"

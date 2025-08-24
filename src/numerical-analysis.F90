@@ -30,10 +30,17 @@ module numa
 	double precision, parameter :: PI = 4 * atan(1.d0)
 	double complex, parameter :: IMAG_ = (0.d0, 1.d0)  ! sqrt(-1)
 
+	! Enum for spline_general() switch/case
 	integer, parameter :: &
 		SPLINE_CASE_NO_CURVE   = 1, &
 		SPLINE_CASE_PERIODIC   = 2, &
 		SPLINE_CASE_PRESCRIBED = 3
+
+	! Enum for linprog() constraint types, respectively ==, <=, >=
+	integer, parameter :: &
+		EQ_LP = 1, &
+		LE_LP = 2, &
+		GE_LP = 3
 
 	abstract interface
 		! These are function interfaces for passing callbacks
@@ -107,6 +114,11 @@ module numa
 		procedure :: zeros_vec
 		procedure :: zeros_mat
 	end interface zeros
+
+	interface zeros_i32
+		procedure :: zeros_vec_i32
+		!procedure :: zeros_mat_i32
+	end interface zeros_i32
 
 	interface diag
 		procedure :: diag_set
@@ -3275,6 +3287,14 @@ function zeros_vec(n) result(a)
 	a = 0
 end function zeros_vec
 
+function zeros_vec_i32(n) result(a)
+	! Size n vector of 0
+	integer, intent(in) :: n
+	integer, allocatable :: a(:)
+	allocate(a(n))
+	a = 0
+end function zeros_vec_i32
+
 !********
 
 function diag_set(v) result(d)
@@ -4953,6 +4973,324 @@ function nelder_mead(f, x0, x_tol, iters) result(x)
 	x = xs(:,1)
 
 end function nelder_mead
+
+!===============================================================================
+
+!x = linprog(obj, cons, rhs, contypes)
+function linprog(obj, cons, rhs, contypes) result(x)
+	! TODO: add an arg to select minimize or maximize objective
+	!
+	! Source:  https://github.com/khalibartan/simplex-method
+	use numa__utils
+	double precision, intent(in) :: obj(:)
+	double precision, intent(in) :: cons(:,:)
+	double precision, intent(in) :: rhs(:)
+	integer, intent(in) :: contypes(:)
+
+	double precision, allocatable :: x(:)
+	!********
+
+	double precision, parameter :: tol = 1.d-10  ! TODO: value?
+	double precision :: pivot, factor, fval
+	double precision, allocatable :: coefs(:,:), vals(:)
+	integer :: i, j, ii, kc, kr, i1(1), ns, nr, nv, nt, is, ir, ic, nirs, iter
+	integer, allocatable :: irs(:), ibv(:)
+
+	!********
+	! Construct coefs table from constraints.  Add `s` slack variables and
+	! additional `r` variables to balance equality (EQ_LP) and
+	! less-than-or-equal-to (LE_LP)
+
+	nv = size(obj)  ! number of variable
+	ns = count(contypes == GE_LP) + count(contypes == LE_LP)  ! number of slack vars
+	nr = count(contypes == LE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
+	print *, "nv, ns, nr = ", nv, ns, nr
+
+	nt = nv + ns + nr
+	print *, "nt = ", nt
+
+	!coefs = zeros(nt+1, size(cons, 1)+1)
+	coefs = zeros(size(cons, 1)+1, nt+1)
+	print *, "size cons 1 = ", size(cons, 1)
+
+	print *, "coefs = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	!print "("//to_str(size(coefs,1))//"es13.3)", coefs
+
+	is = nv
+	ir = nv + ns
+	irs = zeros_i32(size(cons,1)+1)  ! TODO: trim?
+	nirs = 0
+
+	print *, "rhs = ", rhs
+
+	do i = 2, size(cons, 1) + 1  ! shift by 1?
+		do j = 1, size(cons, 2)
+			coefs(i, j) = cons(i-1, j)
+		end do
+
+		if (contypes(i-1) == LE_LP) then
+			is = is + 1
+			coefs(i, is) = 1
+
+		else if (contypes(i-1) == GE_LP) then
+			is = is + 1
+			ir = ir + 1
+			coefs(i, is) = -1
+			coefs(i, ir) = 1
+			print *, "i, ir = ", i, ir
+			nirs = nirs + 1
+			irs(nirs) = i
+
+		else if (contypes(i-1) == EQ_LP) then
+			ir = ir + 1
+			coefs(i, ir) = 1
+			nirs = nirs + 1
+			irs(nirs) = i
+
+		end if
+
+		coefs(i, size(coefs,2)) = rhs(i-1)
+	end do
+	!coefs(size(coefs,1), size(coefs,2)) = 0 !! TODO
+
+	print *, "coefs = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+
+	! Could trim irs if we can't just allocated conservatively to begin with
+	print *, "irs = ", irs(1: nirs)
+
+	!********
+	! Phase 1 of the simplex algorithm
+
+	! Basic vars
+	ibv = zeros_i32(size(coefs, 1))
+	print *, "ibv = ", ibv
+
+	ir = nv + ns
+	coefs(1, ir+1: size(coefs,2)-1) = -1
+	print *, "coefs = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+
+	do ii = 1, nirs
+		i = irs(ii)
+		coefs(1,:) = coefs(1,:) + coefs(i,:)
+		ir = ir + 1
+		ibv(i) = ir
+	end do
+	print *, "coefs = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print *, "ibv = ", ibv
+
+	is = nv
+	do i = 2, size(ibv)
+		if (ibv(i) /= 0) cycle
+		is = is + 1
+		ibv(i) = is
+	end do
+	print *, "ibv = ", ibv
+
+	! Run the simplex iterations
+	i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
+	kc = i1(1)
+	print *, "kc = ", kc
+
+	iter = 0
+	!do while (coefs(1, kc) > 0)
+	do while (coefs(1, kc) > tol)  ! TODO: is tol needed?
+		iter = iter + 1
+
+		! Find key row
+		vals = coefs(2:, size(coefs,2)) / coefs(2:, kc)
+		print *, "vals = ", vals
+		i1 = minloc(vals, coefs(2:,kc) > 0)
+		kr = i1(1) + 1
+		print *, "kr = ", kr
+
+		! TODO: check kr /= 0.  If vals(kr) == 0, warn about degeneracy
+		!stop
+
+		ibv(kr) = kc
+		pivot = coefs(kr, kc)
+		coefs(kr,:) = coefs(kr,:) / pivot  ! normalize to pivot
+
+		! Make key column zero
+		do i = 1, size(coefs,1)
+			if (i == kr) cycle
+			factor = coefs(i,kc)
+			coefs(i,:) = coefs(i,:) - coefs(kr,:) * factor
+		end do
+
+		i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
+		kc = i1(1)
+
+		print *, "coefs = "
+		print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+		print *, "kc = ", kc
+		!if (iter == 2) stop
+
+	end do
+
+	!********
+
+	!        r_index = self.num_r_vars + self.num_s_vars
+	!        for i in self.basic_vars:
+	!            if i > r_index:
+	!                raise ValueError("Infeasible solution")
+	!        self.delete_r_vars()
+	!        if 'min' in self.objective.lower():
+	!            self.solution = self.objective_minimize()
+	!        else:
+	!            self.solution = self.objective_maximize()
+	!        self.optimize_val = self.coeff_matrix[0][-1]
+
+	!********
+
+	! TODO: check for infeasible solution
+
+	! Delete r vars
+
+	print *, "irs = ", irs(1: nirs)
+	print *, "nirs = ", nirs
+
+	! Shift rhs
+	coefs(:, size(coefs,2) - nirs) = coefs(:, size(coefs,2))
+	coefs = coefs(:, 1: size(coefs,2) - nirs)
+
+	print *, "coefs = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+
+	!********
+	! TODO: add maximization option.  Should be possible by simply negating
+	! objective and solution
+
+	! Update objective function
+	coefs(1, 1:size(obj)) = -obj
+
+	print *, "coefs after updating objective function = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+
+	do ir = 2, size(ibv)
+		ic = ibv(ir)
+		if (abs(coefs(1,ic)) < tol) cycle
+		print *, "ic = ", ic
+
+		coefs(1,:) = coefs(1,:) - coefs(1,ic) * coefs(ir,:)
+	end do
+
+	print *, "coefs after adding = "
+	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+
+	! Run the simplex iterations
+	i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
+	kc = i1(1)
+	print *, "kc = ", kc
+
+	iter = 0
+	!do while (coefs(1, kc) > 0)
+	do while (coefs(1, kc) > tol)  ! TODO: is tol needed?
+		iter = iter + 1
+
+		! Find key row
+		vals = coefs(2:, size(coefs,2)) / coefs(2:, kc)
+		print *, "vals = ", vals
+		i1 = minloc(vals, coefs(2:,kc) > 0)
+		kr = i1(1) + 1
+		print *, "kr = ", kr
+	!            key_row = self.find_key_row(key_column = key_column)
+
+		! TODO: check kr /= 0.  If vals(kr) == 0, warn about degeneracy
+		!stop
+
+		ibv(kr) = kc
+		pivot = coefs(kr, kc)
+		coefs(kr,:) = coefs(kr,:) / pivot  ! normalize to pivot
+
+	!            self.basic_vars[key_row] = key_column
+	!            pivot = self.coeff_matrix[key_row][key_column]
+	!            self.normalize_to_pivot(key_row, pivot)
+	!            self.make_key_column_zero(key_column, key_row)
+	!
+	!            key_column = max_index(self.coeff_matrix[0])
+	!            condition = self.coeff_matrix[0][key_column] > 0
+
+		! Make key column zero
+		do i = 1, size(coefs,1)
+			if (i == kr) cycle
+			factor = coefs(i,kc)
+			coefs(i,:) = coefs(i,:) - coefs(kr,:) * factor
+		end do
+
+		i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
+		kc = i1(1)
+
+		print *, "coefs = "
+		print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+		print *, "kc = ", kc
+		!if (iter == 2) stop
+
+	end do
+
+	!    def objective_minimize(self):
+	!
+	!        self.update_objective_function()
+	!
+	!        for row, column in enumerate(self.basic_vars[1:]):
+	!            if self.coeff_matrix[0][column] != 0:
+	!                self.coeff_matrix[0] = add_row(self.coeff_matrix[0], multiply_const_row(-self.coeff_matrix[0][column], self.coeff_matrix[row+1]))
+	!
+	!        key_column = max_index(self.coeff_matrix[0])
+	!        condition = self.coeff_matrix[0][key_column] > 0
+	!
+	!        while condition:
+	!            key_row = self.find_key_row(key_column = key_column)
+	!            self.basic_vars[key_row] = key_column
+	!            pivot = self.coeff_matrix[key_row][key_column]
+	!            self.normalize_to_pivot(key_row, pivot)
+	!            self.make_key_column_zero(key_column, key_row)
+	!
+	!            key_column = max_index(self.coeff_matrix[0])
+	!            condition = self.coeff_matrix[0][key_column] > 0
+	!
+	!        solution = {}
+	!        for i, var in enumerate(self.basic_vars[1:]):
+	!            if var < self.num_vars:
+	!                solution['x_'+str(var+1)] = self.coeff_matrix[i+1][-1]
+	!
+	!        for i in range(0, self.num_vars):
+	!            if i not in self.basic_vars[1:]:
+	!
+	!                solution['x_'+str(i+1)] = Fraction("0/1")
+	!        self.check_alternate_solution()
+	!        return solution
+
+	!********
+	! Get the solution `x`
+	x = coefs(2: size(obj)+1, size(coefs,2))  ! is it this easy?
+
+	!        solution = {}
+	!        for i, var in enumerate(self.basic_vars[1:]):
+	!            if var < self.num_vars:
+	!                solution['x_'+str(var+1)] = self.coeff_matrix[i+1][-1]
+	!
+	!        for i in range(0, self.num_vars):
+	!            if i not in self.basic_vars[1:]:
+	!
+	!                solution['x_'+str(i+1)] = Fraction("0/1")
+	!        self.check_alternate_solution()
+	!        return solution
+
+	! Get the optimal value of the objective function
+	fval = coefs(1, size(coefs,2))
+	print *, "fval = ", fval
+
+	!        self.optimize_val = self.coeff_matrix[0][-1]
+
+	!********
+	! TODO
+	!x = [0]
+
+end function linprog
 
 !===============================================================================
 
