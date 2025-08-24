@@ -3091,9 +3091,9 @@ integer function chapter_4_linprog() result(nfail)
 
 	print "(a,*(es13.3))", "x = ", x
 
-	!fval1 = dot_product(x, obj)
-	!fval2 = dot_product([0.1875, 1.25], obj)
-	!print *, "fval[1,2] = ", fval1, fval2
+	fval1 = dot_product(x, obj)
+	fval2 = dot_product([0.1875, 1.25], obj)
+	print *, "fval[1,2] = ", fval1, fval2
 
 	!********
 	print *, ""
