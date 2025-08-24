@@ -4993,7 +4993,8 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	double precision, parameter :: tol = 1.d-10  ! TODO: value?
 	double precision :: pivot, factor, fval
 	double precision, allocatable :: coefs(:,:), vals(:)
-	integer :: i, j, ii, kc, kr, i1(1), ns, nr, nv, nt, is, ir, ic, nirs, iter
+	integer :: i, j, ii, kc, kr, i1(1), ns, nr, nv, nt, is, ir, ic, nirs, &
+		iter, ndel
 	integer, allocatable :: irs(:), ibv(:)
 
 	!********
@@ -5069,7 +5070,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 
 	ir = nv + ns
 	coefs(1, ir+1: size(coefs,2)-1) = -1
-	print *, "coefs = "
+	print *, "coefs after setting -1 = "
 	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
 
 	do ii = 1, nirs
@@ -5128,6 +5129,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
 		print *, "kc = ", kc
 		!if (iter == 2) stop
+		!stop
 
 	end do
 
@@ -5150,15 +5152,25 @@ function linprog(obj, cons, rhs, contypes) result(x)
 
 	! Delete r vars
 
+	! non_r_length = self.num_vars + self.num_s_vars + 1
+	! length = len(self.coeff_matrix[i])
+
+	ndel = size(coefs,2) - (nv + ns + 1)
+	print *, "ndel = ", ndel
+
 	print *, "irs = ", irs(1: nirs)
 	print *, "nirs = ", nirs
 
 	! Shift rhs
-	coefs(:, size(coefs,2) - nirs) = coefs(:, size(coefs,2))
-	coefs = coefs(:, 1: size(coefs,2) - nirs)
+	coefs(:, size(coefs,2) - ndel) = coefs(:, size(coefs,2))
+	coefs = coefs(:, 1: size(coefs,2) - ndel)
+	!coefs(:, size(coefs,2) - nirs) = coefs(:, size(coefs,2))
+	!coefs = coefs(:, 1: size(coefs,2) - nirs)
 
-	print *, "coefs = "
+	print *, "coefs after deleting = "
 	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+
+	!stop
 
 	!********
 	! TODO: add maximization option.  Should be possible by simply negating
@@ -5266,7 +5278,20 @@ function linprog(obj, cons, rhs, contypes) result(x)
 
 	!********
 	! Get the solution `x`
-	x = coefs(2: size(obj)+1, size(coefs,2))  ! is it this easy?
+	x = zeros(size(obj))
+
+	!x = coefs(2: size(obj)+1, size(coefs,2))  ! is it this easy? no
+	!x = coefs(size(coefs,1)-size(obj)+1: size(coefs,1), size(coefs,2))  ! is it this easy? no
+
+	do i = 2, size(ibv)
+		if (ibv(i) > nv) cycle
+		x(ibv(i)) = coefs(i, size(coefs,2))
+	end do
+	do i = 1, nv
+		! TODO: avoid any()
+		if (any(ibv == i)) cycle
+		x(i) = 0
+	end do
 
 	!        solution = {}
 	!        for i, var in enumerate(self.basic_vars[1:]):
@@ -5280,7 +5305,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	!        self.check_alternate_solution()
 	!        return solution
 
-	! Get the optimal value of the objective function
+	! Get the optimal value of the objective function.  TODO: opt out arg
 	fval = coefs(1, size(coefs,2))
 	print *, "fval = ", fval
 

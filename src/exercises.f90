@@ -2891,6 +2891,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	!! TODO
 	x = linprog(obj, cons, rhs, contypes)
+	call test(norm2(x - [0.6d0, 1.2d0]), 0.d0, 1.d-12, nfail, "linprog 1")
 	!!x = linprog(f,A,b)
 
 	print "(a,*(es13.3))", "x = ", x
@@ -2900,7 +2901,6 @@ integer function chapter_4_linprog() result(nfail)
 	!#{'x_2': Fraction(6, 5), 'x_1': Fraction(3, 5)}
 	!print(Lp_system.optimize_val)
 
-	call test(norm2(x - [0.6d0, 1.2d0]), 0.d0, 1.d-12, nfail, "linprog 1")
 
 	!********
 
@@ -2942,8 +2942,8 @@ integer function chapter_4_linprog() result(nfail)
 	print *, "cons = "
 	print "(3es13.3)", transpose(cons)
 
-	!x = linprog(f,A,b)
-	!x = linprog(obj, cons, rhs, contypes)
+	x = linprog(obj, cons, rhs, contypes)
+	call test(norm2(x - [0.d0, 0.d0, 5.d0]), 0.d0, 1.d-12, nfail, "linprog 2")
 
 	print "(a,*(es13.3))", "x = ", x
 
