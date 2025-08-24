@@ -2859,6 +2859,7 @@ end function chapter_4_qr_c64
 integer function chapter_4_linprog() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_linprog"
 
+	double precision :: fval1, fval2
 	double precision, allocatable :: obj(:), cons(:,:), rhs(:), x(:)
 	integer, allocatable :: contypes(:)
 
@@ -2867,13 +2868,6 @@ integer function chapter_4_linprog() result(nfail)
 	nfail = 0
 
 	!********
-
-	!objective = ('minimize', '4x_1 + 1x_2')
-	!constraints = [
-	!        '3x_1 + 1x_2 = 3',
-	!        '4x_1 + 3x_2 >= 6',
-	!        '1x_1 + 2x_2 <= 4',
-	!    ]
 
 	obj = [4, 1]  ! `f` in MATLAB's linprog()
 	cons = transpose(reshape([ &  ! `A` in MATLAB
@@ -2889,18 +2883,10 @@ integer function chapter_4_linprog() result(nfail)
 	print *, "cons = "
 	print "(2es13.3)", transpose(cons)
 
-	!! TODO
 	x = linprog(obj, cons, rhs, contypes)
 	call test(norm2(x - [0.6d0, 1.2d0]), 0.d0, 1.d-12, nfail, "linprog 1")
-	!!x = linprog(f,A,b)
 
 	print "(a,*(es13.3))", "x = ", x
-
-	!Lp_system = Simplex(num_vars=2, constraints=constraints, objective_function=objective)
-	!print(Lp_system.solution)
-	!#{'x_2': Fraction(6, 5), 'x_1': Fraction(3, 5)}
-	!print(Lp_system.optimize_val)
-
 
 	!********
 
@@ -2912,12 +2898,8 @@ integer function chapter_4_linprog() result(nfail)
 	!    #     https://en.wikipedia.org/wiki/Simplex_algorithm#Example
 	!    #
 	!    # Expect minimum of -20 at [0, 0, 5]
-	!    #
-	!    # For negative coefficients, a space after '-' is required. Otherwise, you
-	!    # can just maximize the negative objective instead of minimizing
+	!
 	!    objective = ('minimize', '- 2x_1 - 3x_2 - 4x_3')
-	!    #objective = ('maximize', '2x_1 + 3x_2 + 4x_3')
-	!    #objective = ('minimize', '-2x_1 + -3x_2 + -4x_3')
 	!    constraints = [
 	!            '2x_1 + 2x_2 + 1x_3 <= 10',
 	!            '2x_1 + 5x_2 + 3x_3 <= 15',
@@ -2979,6 +2961,132 @@ integer function chapter_4_linprog() result(nfail)
 	call test(norm2(x - [2.d0/3, 4.d0/3]), 0.d0, 1.d-12, nfail, "linprog 3")
 
 	print "(a,*(es13.3))", "x = ", x
+
+	!********
+	! Inequality and equality constraints
+
+	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			1.0, 0.25, &
+			1.0, -1.0, &
+			-0.25, -1.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0,  &
+			1.0, 0.25 &
+		] &
+		, [2, 7] &
+	))
+	rhs = [2., 1., 2., 1., -1., 2., 0.5]
+	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP]
+
+	print *, "cons = "
+	print "(3es13.3)", transpose(cons)
+
+	x = linprog(obj, cons, rhs, contypes)
+	call test(norm2(x - [0, 2]), 0.d0, 1.d-12, nfail, "linprog 4")
+
+	print "(a,*(es13.3))", "x = ", x
+
+	!********
+	! Inequality and equality constraints, as well as additional constraints on
+	! the bounds of `x`
+
+	! TODO
+	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			1.0, 0.25, &
+			1.0, -1.0, &
+			-0.25, -1.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0,  &
+			1.0, 0.25, &
+			1.0, 0.0, &
+			0.0, 1.0, &
+			1.0, 0.0, &
+			0.0, 1.0  &
+		] &
+		, [2, 11] &
+	))
+	rhs = [2., 1., 2., 1., -1., 2., 0.5, -1.0, -0.5, 1.5, 1.25]
+	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, GE_LP, GE_LP, LE_LP, LE_LP]
+
+	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	!obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			1.0, 0.25, &
+			1.0, -1.0, &
+			-0.25, -1.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0,  &
+			1.0, 0.25, &
+			1.0, 0.0, &
+			0.0, 1.0, &
+			1.0, 0.0, &
+			0.0, 1.0  &
+		] &
+		, [2, 11] &
+	))
+	rhs = [2., 1., 2., 1., -1., 2., 0.5, 1.5, 1.25, -1.0, -0.5]
+	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, LE_LP, LE_LP, GE_LP, GE_LP]
+
+	! Same as above but scaled
+	!
+	! TODO: there is a bug here depending on how the last 4 constraints are ordered
+	!
+	obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			4.0, 1.0, &
+			1.0, -1.0, &
+			-1.0, -4.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0,  &
+			4.0, 1.0, &
+			1.0, 0.0, &
+			0.0, 2.0, &
+			2.0, 0.0, &
+			0.0, 4.0  &
+		] &
+		, [2, 11] &
+	))
+	rhs = [2., 4., 2., 4., -1., 2., 2.0, -1.0, -1.0, 3.0, 5.0]
+	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, GE_LP, GE_LP, LE_LP, LE_LP]
+
+	! Reordered.  This one is ok
+	obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			4.0, 1.0, &
+			1.0, -1.0, &
+			-1.0, -4.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0,  &
+			4.0, 1.0, &
+			2.0, 0.0, &
+			0.0, 4.0, &
+			1.0, 0.0, &
+			0.0, 2.0  &
+		] &
+		, [2, 11] &
+	))
+	rhs = [2., 4., 2., 4., -1., 2., 2.0, 3.0, 5.0, -1.0, -1.0]
+	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, LE_LP, LE_LP, GE_LP, GE_LP]
+
+	print *, "cons = "
+	print "(3es13.3)", transpose(cons)
+
+	x = linprog(obj, cons, rhs, contypes)
+
+	call test(norm2(x - [1.875E-01, 1.250E+00]), 0.d0, 1.d-12, nfail, "linprog 5")
+
+	print "(a,*(es13.3))", "x = ", x
+
+	!fval1 = dot_product(x, obj)
+	!fval2 = dot_product([0.1875, 1.25], obj)
+	!print *, "fval[1,2] = ", fval1, fval2
 
 	!********
 	print *, ""

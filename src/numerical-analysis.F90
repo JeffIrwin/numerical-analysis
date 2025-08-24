@@ -4976,9 +4976,18 @@ end function nelder_mead
 
 !===============================================================================
 
-!x = linprog(obj, cons, rhs, contypes)
-function linprog(obj, cons, rhs, contypes) result(x)
-	! TODO: add an arg to select minimize or maximize objective
+function linprog(obj, cons, rhs, contypes, iostat) result(x)
+	! Find x to minimize dot_product(obj, x) subject to the following
+	! constraints:
+	!
+	!     matmul(cons, x) ?= rhs
+	!
+	! where `?=` is one of `<=`, `>=`, or `==` according to the contypes enum
+	! per each rhs element, using enum values LE_LP, GE_LP, or EQ_LP
+	! respectively
+	!
+	! If you wish to maximize instead of minimize, negate your `obj` vector
+	! before calling linprog()
 	!
 	! Source:  https://github.com/khalibartan/simplex-method
 	use numa__utils
@@ -4986,10 +4995,12 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	double precision, intent(in) :: cons(:,:)
 	double precision, intent(in) :: rhs(:)
 	integer, intent(in) :: contypes(:)
+	integer, optional, intent(out) :: iostat
 
 	double precision, allocatable :: x(:)
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, parameter :: tol = 1.d-10  ! TODO: value?
 	double precision :: pivot, factor, fval
 	double precision, allocatable :: coefs(:,:), vals(:)
@@ -4997,10 +5008,15 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		iter, ndel
 	integer, allocatable :: irs(:), ibv(:)
 
+	if (present(iostat)) iostat = 0
+
+	print *, repeat("=", 80)
+	print *, repeat("=", 80)
+	print *, repeat("=", 80)
+	print *, "starting linprog()"
+
 	! I've used `size()` a lot more than I would like to here due to adapting
 	! this from python
-
-	! TODO: check that sizes match, e.g. rhs == contypes, rhs == cons
 
 	!********
 	! Construct coefs table from constraints.  Add `s` slack variables and
@@ -5008,6 +5024,26 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	! less-than-or-equal-to (LE_LP)
 
 	nv = size(obj)  ! number of variables
+
+	if (nv /= size(cons,2)) then
+		msg = "size(obj) does not match size(cons,2) in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	if (size(rhs) /= size(contypes)) then
+		msg = "size(rhs) does not match size(contypes) in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+	if (size(rhs) /= size(cons,1)) then
+		msg = "size(rhs) does not match size(cons,1) in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
+
 	ns = count(contypes == GE_LP) + count(contypes == LE_LP)  ! number of slack vars
 	nr = count(contypes == LE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
 	print *, "nv, ns, nr = ", nv, ns, nr
@@ -5015,13 +5051,13 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	nt = nv + ns + nr
 	print *, "nt = ", nt
 
-	!coefs = zeros(nt+1, size(cons, 1)+1)
 	coefs = zeros(size(cons, 1)+1, nt+1)
 	print *, "size cons 1 = ", size(cons, 1)
 
 	print *, "coefs = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
-	!print "("//to_str(size(coefs,1))//"es13.3)", coefs
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
+	!print "("//to_str(size(coefs,1))//"es10.2)", coefs
+	!stop
 
 	is = nv
 	ir = nv + ns
@@ -5058,10 +5094,9 @@ function linprog(obj, cons, rhs, contypes) result(x)
 
 		coefs(i, size(coefs,2)) = rhs(i-1)
 	end do
-	!coefs(size(coefs,1), size(coefs,2)) = 0 !! TODO
 
 	print *, "coefs = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 
 	! Could trim irs if we can't just allocated conservatively to begin with
 	print *, "irs = ", irs(1: nirs)
@@ -5075,8 +5110,9 @@ function linprog(obj, cons, rhs, contypes) result(x)
 
 	ir = nv + ns
 	coefs(1, ir+1: size(coefs,2)-1) = -1
+	!coefs(1, ir: size(coefs,2)-1) = -1
 	print *, "coefs after setting -1 = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 
 	do ii = 1, nirs
 		i = irs(ii)
@@ -5085,7 +5121,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		ibv(i) = ir
 	end do
 	print *, "coefs = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 	print *, "ibv = ", ibv
 
 	is = nv
@@ -5131,7 +5167,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		kc = i1(1)
 
 		print *, "coefs = "
-		print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+		print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 		print *, "kc = ", kc
 		!if (iter == 2) stop
 		!stop
@@ -5173,19 +5209,17 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	!coefs = coefs(:, 1: size(coefs,2) - nirs)
 
 	print *, "coefs after deleting = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 
 	!stop
 
 	!********
-	! TODO: add maximization option.  Should be possible by simply negating
-	! objective and solution
 
 	! Update objective function
 	coefs(1, 1:size(obj)) = -obj
 
 	print *, "coefs after updating objective function = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 
 	do ir = 2, size(ibv)
 		ic = ibv(ir)
@@ -5196,7 +5230,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	end do
 
 	print *, "coefs after adding = "
-	print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 
 	! Run the simplex iterations
 	i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
@@ -5242,44 +5276,11 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		kc = i1(1)
 
 		print *, "coefs = "
-		print "("//to_str(size(coefs,2))//"es13.3)", transpose(coefs)
+		print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
 		print *, "kc = ", kc
 		!if (iter == 2) stop
 
 	end do
-
-	!    def objective_minimize(self):
-	!
-	!        self.update_objective_function()
-	!
-	!        for row, column in enumerate(self.basic_vars[1:]):
-	!            if self.coeff_matrix[0][column] != 0:
-	!                self.coeff_matrix[0] = add_row(self.coeff_matrix[0], multiply_const_row(-self.coeff_matrix[0][column], self.coeff_matrix[row+1]))
-	!
-	!        key_column = max_index(self.coeff_matrix[0])
-	!        condition = self.coeff_matrix[0][key_column] > 0
-	!
-	!        while condition:
-	!            key_row = self.find_key_row(key_column = key_column)
-	!            self.basic_vars[key_row] = key_column
-	!            pivot = self.coeff_matrix[key_row][key_column]
-	!            self.normalize_to_pivot(key_row, pivot)
-	!            self.make_key_column_zero(key_column, key_row)
-	!
-	!            key_column = max_index(self.coeff_matrix[0])
-	!            condition = self.coeff_matrix[0][key_column] > 0
-	!
-	!        solution = {}
-	!        for i, var in enumerate(self.basic_vars[1:]):
-	!            if var < self.num_vars:
-	!                solution['x_'+str(var+1)] = self.coeff_matrix[i+1][-1]
-	!
-	!        for i in range(0, self.num_vars):
-	!            if i not in self.basic_vars[1:]:
-	!
-	!                solution['x_'+str(i+1)] = Fraction("0/1")
-	!        self.check_alternate_solution()
-	!        return solution
 
 	!********
 	! Get the solution `x`
@@ -5296,7 +5297,7 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		! TODO: avoid any().  Need tests because I'm not hitting this
 		if (any(ibv(2:) == i)) cycle
 		x(i) = 0
-		stop  ! TODO
+		!stop  ! TODO
 	end do
 
 	!        solution = {}
