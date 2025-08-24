@@ -4997,12 +4997,17 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		iter, ndel
 	integer, allocatable :: irs(:), ibv(:)
 
+	! I've used `size()` a lot more than I would like to here due to adapting
+	! this from python
+
+	! TODO: check that sizes match, e.g. rhs == contypes, rhs == cons
+
 	!********
 	! Construct coefs table from constraints.  Add `s` slack variables and
 	! additional `r` variables to balance equality (EQ_LP) and
 	! less-than-or-equal-to (LE_LP)
 
-	nv = size(obj)  ! number of variable
+	nv = size(obj)  ! number of variables
 	ns = count(contypes == GE_LP) + count(contypes == LE_LP)  ! number of slack vars
 	nr = count(contypes == LE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
 	print *, "nv, ns, nr = ", nv, ns, nr
@@ -5288,9 +5293,10 @@ function linprog(obj, cons, rhs, contypes) result(x)
 		x(ibv(i)) = coefs(i, size(coefs,2))
 	end do
 	do i = 1, nv
-		! TODO: avoid any()
-		if (any(ibv == i)) cycle
+		! TODO: avoid any().  Need tests because I'm not hitting this
+		if (any(ibv(2:) == i)) cycle
 		x(i) = 0
+		stop  ! TODO
 	end do
 
 	!        solution = {}
@@ -5300,7 +5306,6 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	!
 	!        for i in range(0, self.num_vars):
 	!            if i not in self.basic_vars[1:]:
-	!
 	!                solution['x_'+str(i+1)] = Fraction("0/1")
 	!        self.check_alternate_solution()
 	!        return solution
@@ -5308,12 +5313,6 @@ function linprog(obj, cons, rhs, contypes) result(x)
 	! Get the optimal value of the objective function.  TODO: opt out arg
 	fval = coefs(1, size(coefs,2))
 	print *, "fval = ", fval
-
-	!        self.optimize_val = self.coeff_matrix[0][-1]
-
-	!********
-	! TODO
-	!x = [0]
 
 end function linprog
 

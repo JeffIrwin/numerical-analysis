@@ -2948,6 +2948,40 @@ integer function chapter_4_linprog() result(nfail)
 	print "(a,*(es13.3))", "x = ", x
 
 	!********
+	! Example from MATLAB docs
+
+	! A = [1 1
+	!     1 1/4
+	!     1 -1
+	!     -1/4 -1
+	!     -1 -1
+	!     -1 1];
+	! b = [2 1 2 1 -1 2];
+
+	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	cons = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			1.0, 0.25, &
+			1.0, -1.0, &
+			-0.25, -1.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0  &
+		] &
+		, [2, 6] &
+	))
+	rhs = [2, 1, 2, 1, -1, 2]
+	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP]
+
+	print *, "cons = "
+	print "(3es13.3)", transpose(cons)
+
+	x = linprog(obj, cons, rhs, contypes)
+	call test(norm2(x - [2.d0/3, 4.d0/3]), 0.d0, 1.d-12, nfail, "linprog 3")
+
+	print "(a,*(es13.3))", "x = ", x
+
+	!********
+	print *, ""
 
 end function chapter_4_linprog
 
