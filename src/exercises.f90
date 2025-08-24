@@ -3476,8 +3476,8 @@ integer function chapter_6_eig_lapack() result(nfail)
 	deallocate(a)
 
 	p0 = -1
-	do n = 5, 175, 5  ! eig_lapack() is robust even for larger matrices
-	!do n = 5, 95, 11
+	!do n = 5, 175, 5  ! eig_lapack() is robust even for larger matrices
+	do n = 5, 95, 11
 
 		allocate(a(n, n))
 

@@ -1,6 +1,8 @@
 
 #include "panic.F90"
 
+!> Copied and adapted from LAPACK because the Francis QR algorithm is difficult
+!> to do robustly
 module numa__dlahqr
 	implicit none
 contains
