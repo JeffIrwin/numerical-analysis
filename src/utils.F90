@@ -549,7 +549,10 @@ double precision function sign_(x)
 	sign_ = sign(1.d0, x)
 end function sign_
 
-!********
+double precision function inf()
+	use ieee_arithmetic
+	inf = ieee_value(INF, ieee_positive_inf)
+end function inf
 
 !===============================================================================
 

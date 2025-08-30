@@ -4992,6 +4992,8 @@ function vstack_mat_vec(a, b, iostat) result(c)
 	integer, parameter :: nb = 1
 
 	if (present(iostat)) iostat = 0
+
+	! Sizes must match, unless at least one of the arrays is empty
 	if (size(a,2) /= size(b) .and. size(a) > 0 .and. size(b) > 0) then
 		msg = "size(a,2) does not match size(b) in vstack_mat_vec()"
 		call PANIC(msg, present(iostat))
@@ -5158,8 +5160,6 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	double precision, allocatable, intent(out) :: b(:)
 
 	!********
-
-	double precision :: INF
 	double precision, allocatable :: ub_newub(:), a1(:,:), a2(:,:), lb_shift(:)
 	integer :: m_ub, n_ub, n_bounds, n_free
 	integer, allocatable :: i_nolb(:), i_newub(:), shape_(:), i_free(:), &
@@ -5175,11 +5175,8 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	n_ub = size(a_ub, 2)
 	!print *, "m_ub, n_ub = ", m_ub, n_ub
 
-	INF = ieee_value(INF, ieee_positive_inf)
-
-	lb_none = lbs == -INF
-	ub_none = ubs == INF
-	lb_some = .not. lb_none  ! TODO: unused (until reset later)
+	lb_none = lbs == -inf()
+	ub_none = ubs == inf()
 	ub_some = .not. ub_none
 
 	!print *, "lb_none = ", lb_none
@@ -5192,13 +5189,12 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	!print *, "i_nolb = ", i_nolb
 
 	lbs(i_nolb) = -ubs(i_nolb)
-	ubs(i_nolb) = -lbs(i_nolb)  ! TODO: does nothing?
 	!print *, "lbs = ", lbs
 	!print *, "ubs = ", ubs
 	!print *, "c initial = ", c
 
-	lb_none = lbs == -INF
-	ub_none = ubs == INF
+	lb_none = lbs == -inf()
+	ub_none = ubs == inf()
 	lb_some = .not. lb_none
 	ub_some = .not. ub_none
 	c(i_nolb) = -c(i_nolb)
@@ -5216,6 +5212,8 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 
 	n_bounds = size(i_newub)
 	if (n_bounds > 0) then
+		! This condition seems unnecessary, but doesn't hurt
+
 		shape_ = [n_bounds, size(a_ub, 2)]
 		!print *, "shape_ = ", shape_
 
@@ -5331,12 +5329,10 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	double precision, allocatable :: x(:)
 	!********
 
-	double precision :: fval, lbi, ubi, INF
+	double precision :: fval, lbi, ubi
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
 		lb_(:), ub_(:), c0(:), lbs0(:), ubs0(:)
 	integer :: i, nx, n_unbounded
-
-	INF = ieee_value(INF, ieee_positive_inf)
 
 	if (present(iostat)) iostat = 0
 
@@ -5393,13 +5389,12 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 		ubi = ubs0(i)
 		!print *, "lbi, ubi = ", lbi, ubi
 
-		! TODO: INF can't be a parameter, but maybe it would be cleaner as a fn
-		if (lbi == -INF .and. ubi == INF) then
+		if (lbi == -inf() .and. ubi == inf()) then
 			!print *, "unbounded"
 			n_unbounded = n_unbounded + 1
 			x(i) = x(i) - x(nx + n_unbounded)
 		else
-			if (lbi == -INF) then
+			if (lbi == -inf()) then
 				x(i) = ubi - x(i)
 			else
 				x(i) = x(i) + lbi
