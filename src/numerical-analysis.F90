@@ -5175,24 +5175,12 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 
 	! Unbounded below: substitute xi = -xi' (unbounded above)
 	l_nolb_someub = lb_none .and. ub_some
-	print *, "l_nolb_someub = ", l_nolb_someub
-
 	i_nolb = mask_to_index(l_nolb_someub)
-	!i_nolb = findloc(l_nolb_someub, .true., 1)
-	!if (any(l_nolb_someub)) then
-	!	i_nolb = findloc(l_nolb_someub, .true., 1)
-	!else
-	!	allocate(i_nolb(0))
-	!end if
-
+	print *, "l_nolb_someub = ", l_nolb_someub
 	print *, "i_nolb = ", i_nolb
 
 	lbs(i_nolb) = -ubs(i_nolb)
 	ubs(i_nolb) = -lbs(i_nolb)  ! TODO: does nothing?
-	!where (l_nolb_someub)
-	!	lbs = -ubs
-	!	ubs = -lbs
-	!end where
 	print *, "lbs = ", lbs
 	print *, "ubs = ", ubs
 
@@ -5205,26 +5193,16 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	c(i_nolb) = -c(i_nolb)
 	print *, "c after *-1 = ", c
 
-	!if (size(i_nolb) > 0) then
-		a_ub(:, i_nolb) = -a_ub(:, i_nolb)
-		a_eq(:, i_nolb) = -a_eq(:, i_nolb)
-	!end if
+	a_ub(:, i_nolb) = -a_ub(:, i_nolb)
+	a_eq(:, i_nolb) = -a_eq(:, i_nolb)
 	!print *, "a_eq = ", a_eq
 
 	! Upper bound: add inequality constraint
 	i_newub = mask_to_index(ub_some)
-	!if (any(ub_some)) then
-	!	i_newub = findloc(ub_some, .true., 1)
-	!else
-	!	allocate(i_newub(0))
-	!end if
-	print *, "i_newub = ", i_newub
-
-	!filtered_array = pack(array, mask)
-	!ub_newub = pack(ubs, ub_some)
 	ub_newub = ubs(i_newub)
-
+	print *, "i_newub = ", i_newub
 	print *, "ub_newub = ", ub_newub
+
 	n_bounds = size(i_newub)
 	if (n_bounds > 0) then
 		shape_ = [n_bounds, size(a_ub, 2)]
@@ -5233,7 +5211,6 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 		! a_ub and b_ub change size here, thus they need to be allocatable
 		a_ub = vstack(a_ub, zeros(shape_(1), shape_(2)))
 
-		!a_ub(m_ub+1:, i_newub) = 1
 		a_ub(m_ub+1:, i_newub) = eye(size(i_newub))
 
 		print *, "size(b_ub) = ", size(b_ub)
@@ -5261,16 +5238,8 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	print *, "size(b_eq) = ", size(b_eq)
 	!print *, "allocated(b_eq) = ", allocated(b_eq)
 
-	!! I was having trouble here bc i forgor to declare the `b` arg allocatable
-	!if (size(b_eq) > 0) then
-		b = [b_ub, b_eq]
-	!else
-	!	b = b_ub
-	!end if
-	!b = cat(b_ub, b_eq)
-
+	b = [b_ub, b_eq]
 	c = [c, zeros(size(a_ub, 1))]
-
 	print *, "b = ", b
 	print *, "c after cat = ", c
 
@@ -5308,9 +5277,7 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 
 	print *, "b = ", b
 	print *, "size(a) = ", size(a)
-	if (size(a) > 0) then
-		b = b - sum(matmul( a(:, i_shift), diag(lb_shift) ), 2)
-	end if
+	b = b - sum(matmul(a(:, i_shift), diag(lb_shift)), 2)
 
 	print *, "****************"
 	print *, "linprog_get_abc() return values:"
@@ -5388,7 +5355,6 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	if (present(ub)) then
 		ub_ = ub
 	else
-		!ub_ = lb_ - 1  ! sentinel value for infinite upper bound
 		allocate(ub_(size(c)))
 		ub_ = ieee_value(ub_, ieee_positive_inf) !ieee_negative_inf
 	end if
@@ -5399,30 +5365,16 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	! Copy backups.  TODO: some of this may be changed after fixing intent in
 	! args
 	c0 = c
-
-	!a_ub0 = a_ub
-	!b_ub0 = b_ub
-	!a_eq0 = a_eq_
-	!b_eq0 = b_eq_
 	lbs0 = lb_
 	ubs0 = ub_
 
-	!call linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
-	call  linprog_get_abc(c, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)!, bounds)
+	call  linprog_get_abc(c, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
 	x = linprog_std(c, a, b)
 	print *, "x with slack = ", x
 
 	!********
 	! Post-solve
-
-	!! overkill interface for not much that needs to be done specifically for
-	!! the simplex method. maybe so with other methods from scipy like
-	!! revised-simplex, interior point, HiGHS, which are not implemented here
-	!call linprog_postsolve( &
-	!	c0, a_ub0, b_ub0, a_eq0, b_eq0, lbs0, ubs0, &
-	!	x, fval &
-	!	)
 
 	! Undo variable substitutions of linprog_get_abc()
 	n_unbounded = 0
@@ -5433,12 +5385,9 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 
 		! TODO: INF can't be a parameter, but maybe it would be cleaner as a fn
 		if (lbi == -INF .and. ubi == INF) then
-			print *, "unbounded"
+			!print *, "unbounded"
 			n_unbounded = n_unbounded + 1
-
 			x(i) = x(i) - x(nx + n_unbounded)
-			!x(i) = x(i) - x(nx + n_unbounded - 1)
-
 		else
 			if (lbi == -INF) then
 				x(i) = ubi - x(i)
@@ -5453,60 +5402,10 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	x = x(:nx)
 
 	fval = dot_product(x, c0)
-	!fval = dot_product(x, c)
 
 	print *, "fval = ", fval
 
 end function linprog
-
-!===============================================================================
-
-!subroutine linprog_postsolve &
-!	( &
-!		c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, &  ! input args
-!		x, &                                    ! in/out arg(s)
-!		fun  & !, slack, con                  ! output args
-!	)
-!
-!	! Given solution x to presolved, standard form linear program x, add fixed
-!	! variables back into the problem and undo the variable substitutions to get
-!	! solution to original linear program. Also, calculate the objective
-!	! function value, slack in original upper bound constraints, and residuals
-!	! in original equality constraints.
-!
-!	!    return x, fun, slack, con
-!	double precision, allocatable, intent(inout) :: c(:)
-!	double precision, allocatable, intent(inout) :: a_ub(:,:)
-!	double precision, allocatable, intent(inout) :: b_ub(:)
-!	double precision, intent(inout) :: a_eq(:,:)
-!	double precision, intent(inout) :: b_eq(:)
-!	double precision, intent(inout) :: lbs(:)
-!	double precision, intent(inout) :: ubs(:)
-!
-!	double precision, allocatable, intent(inout) :: x(:)
-!	double precision, intent(out) :: fun
-!
-!	!********
-!	integer :: n_x
-!
-!	print *, repeat("=", 60)
-!	print *, "starting linprog_postsolve()"
-!
-!	!********
-!
-!	! Nothing to unscale because nothing was scaled in the first place
-!
-!	!********
-!
-!	! Undo variable substitutions of linprog_get_abc()
-!	n_x = size(lbs)
-!	print *, "n_x = ", n_x
-!
-!	x = x(:n_x)
-!
-!	fun = dot_product(x, c)
-!
-!end subroutine linprog_postsolve
 
 !===============================================================================
 
@@ -5678,12 +5577,6 @@ subroutine linprog_solve_simplex(t, basis, phase)
 
 		do ir = 1, size(basis)
 			if (basis(ir) <= size(t,2) - 2) cycle
-			!if (basis(ir) <= size(t,2) - 1) cycle
-
-			!! MATLAB example hits this
-			!print *, "LOOPING"
-			!print *, "This is untested and maybe unreachable"
-			!stop
 
 			do ic = 1, size(t,2) - 1
 				if (abs(t(ir, ic)) <= tol) cycle
@@ -5762,7 +5655,7 @@ subroutine linprog_solve_simplex(t, basis, phase)
 			cycle
 		end if
 
-		! Apply pivot.  TODO: subroutine?
+		! Apply pivot
 		basis(pivrow) = pivcol
 		pivval = t(pivrow, pivcol)
 		t(pivrow, :) = t(pivrow, :) / pivval

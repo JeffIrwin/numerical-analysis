@@ -2860,10 +2860,6 @@ integer function chapter_4_linprog() result(nfail)
 	use ieee_arithmetic
 	character(len = *), parameter :: label = "chapter_4_linprog"
 
-	!double precision :: fval1, fval2
-	!double precision, allocatable :: obj(:), cons(:,:), rhs(:), x(:)
-	!integer, allocatable :: contypes(:)
-
 	double precision :: INF
 	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
 		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
@@ -3055,14 +3051,9 @@ integer function chapter_4_linprog() result(nfail)
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 9")
 
-	! TODO: more tests adapted from new online sources
 	!********
 	! Example from scipy test suite:  https://github.com/scipy/scipy/blob/main/scipy/optimize/tests/test_linprog.py
 
-    !c = np.array([-3, -2])
-    !A_ub = [[2, 1], [1, 1], [1, 0]]
-    !b_ub = [10, 8, 4]
-    !res = linprog(c, A_ub=A_ub, b_ub=b_ub, callback=cb, method=self.method)
 	c = [-3, -2]
 	a_ub = transpose(reshape([ &
 		2, 1, &
@@ -3088,14 +3079,6 @@ integer function chapter_4_linprog() result(nfail)
 	c = [2, 4, 9, 11, 4, 3, 8, 7, 0, 15, 16, 18]
 	n = -1
 	p = 1
-	!A_eq = [
-	!    [n, n, p, 0, p, 0, 0, 0, 0, p, 0, 0],
-	!    [p, 0, 0, p, 0, p, 0, 0, 0, 0, 0, 0],
-	!    [0, 0, n, n, 0, 0, 0, 0, 0, 0, 0, 0],
-	!    [0, 0, 0, 0, 0, 0, p, p, 0, 0, p, 0],
-	!    [0, 0, 0, 0, n, n, n, 0, p, 0, 0, 0],
-	!    [0, 0, 0, 0, 0, 0, 0, n, n, 0, 0, p],
-	!    [0, 0, 0, 0, 0, 0, 0, 0, 0, n, n, n]]
 	A_eq = transpose(reshape([ &
 	    n, n, p, 0, p, 0, 0, 0, 0, p, 0, 0, &
 	    p, 0, 0, p, 0, p, 0, 0, 0, 0, 0, 0, &
@@ -3104,7 +3087,6 @@ integer function chapter_4_linprog() result(nfail)
 	    0, 0, 0, 0, n, n, n, 0, p, 0, 0, 0, &
 	    0, 0, 0, 0, 0, 0, 0, n, n, 0, 0, p, &
 	    0, 0, 0, 0, 0, 0, 0, 0, 0, n, n, n], &
-		![7, 12] &
 		[12, 7] &
 	))
 	b_eq = [0, 19, -16, 33, 0, 0, -36]
@@ -3222,12 +3204,10 @@ integer function chapter_4_linprog() result(nfail)
 	! Scipy doc example, but `c` is modified so we properly test the
 	! `n_unbounded` block in the post-solve stage
 
-	!c = [-1, 4]
 	c = [4, -1]
 	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
 	b_ub = [6, 4] - 0
 	lb = [-INF, -3.d0]
-	!ub = [INF, INF]  ! still default
 
 	expect = [-3, -3]
 
