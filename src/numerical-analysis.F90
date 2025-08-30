@@ -3807,7 +3807,9 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 			wantt = .true.  ! want full schur form, not just eigvals
 			wantz = .true.
 		else
-			! `pq` doesn't need to be allocated
+			! Intel requires allocation of `pq` for dlahqr().  For GNU it
+			! doesn't matter
+			allocate(pq(0,0))
 			wantt = .false.
 			wantz = .false.
 		end if
@@ -5557,7 +5559,7 @@ subroutine linprog_solve_simplex(t, basis, phase)
 	!********
 	double precision, parameter :: tol = 1.d-10  ! TODO: set once at higher level and pass
 	double precision :: pivval
-	double precision, allocatable :: solution(:), q(:)
+	double precision, allocatable :: q(:)
 	integer :: i, k, m, nb, mb, nc, nr, pivcol, pivrow, i1(1), iter, ir, ic
 	logical :: complete
 
@@ -5612,13 +5614,6 @@ subroutine linprog_solve_simplex(t, basis, phase)
 	nb = size(basis)
 	mb = min(nb, m)
 
-	! TODO: solution is unused here because i don't have callback options
-	if (size(basis(:mb)) == 0) then
-		solution = zeros(size(t,2) - 1)
-	else
-		solution = zeros(max(size(t,2) - 1, maxval(basis(:mb)) + 1))
-	end if
-
 	nr = size(t, 1)
 	nc = size(t, 2)
 
@@ -5636,9 +5631,16 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		! Beware numpy.masked_where() works exactly the opposite as sensible
 		! Fortran mask :explode:
 		i1 = minloc(t(nr, :nc-1), t(nr, :nc-1) < -tol .and. t(nr, :nc-1) /= 0)
-
 		pivcol = i1(1)
+
+		! ifx 2024.1.0 has a bug here.  All mask are false but i1 is returned as
+		! 1 when it should be 0
+
+		!print *, "c = ", t(nr, :nc-1)
+		!print *, "m = ", t(nr, :nc-1) < -tol
+		!print *, "i1 = ", i1
 		!print *, "pivcol = ", pivcol
+
 		if (pivcol == 0) then
 			! Successful end of iteration
 			complete = .true.
@@ -5671,8 +5673,10 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		!
 		! "The pivot operation produces a pivot value of ..."
 
+		!print *, ""
 		!stop
 		if (iter == 1000) then
+		!if (iter == 100) then
 			print *, "ERROR: reached max iters!"
 			! TODO: panic
 			stop

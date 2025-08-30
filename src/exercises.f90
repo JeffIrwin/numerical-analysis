@@ -394,7 +394,7 @@ integer function chapter_2_fft_1() result(nfail)
 	call test(abs(2 * xx(7+1)), amp7, tol, nfail, "fft() amp7")
 
 	print *, "sum abs = ", sum(abs(xx))
-	call test(sum(abs(xx)), amp1+amp4+amp7, tol, nfail, "fft() sum")
+	call test(sum(abs(xx)), amp1+amp4+amp7, 1.d-12, nfail, "fft() sum")
 	print *, ""
 
 	xr = ifft(xx)
