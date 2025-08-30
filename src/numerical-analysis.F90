@@ -28,6 +28,7 @@ module numa
 	!   string
 
 	double precision, parameter :: PI = 4 * atan(1.d0)
+
 	double complex, parameter :: IMAG_ = (0.d0, 1.d0)  ! sqrt(-1)
 
 	! Enum for spline_general() switch/case
@@ -35,12 +36,6 @@ module numa
 		SPLINE_CASE_NO_CURVE   = 1, &
 		SPLINE_CASE_PERIODIC   = 2, &
 		SPLINE_CASE_PRESCRIBED = 3
-
-	! Enum for linprog() constraint types, respectively ==, <=, >=
-	integer, parameter :: &
-		EQ_LP = 1, &
-		LE_LP = 2, &
-		GE_LP = 3
 
 	abstract interface
 		! These are function interfaces for passing callbacks
@@ -155,6 +150,16 @@ module numa
 		procedure :: qr_mul_transpose_mat_f64
 		! Needs c64 overloads
 	end interface qr_mul_transpose
+
+	interface hstack
+		procedure :: hstack_mat_mat
+		procedure :: hstack_mat_vec
+	end interface hstack
+
+	interface vstack
+		procedure :: vstack_mat_mat
+		procedure :: vstack_mat_vec
+	end interface vstack
 
 	! If this file gets too long, it might be good to split it up roughly
 	! per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
@@ -4976,340 +4981,808 @@ end function nelder_mead
 
 !===============================================================================
 
-function linprog(obj, cons, rhs, contypes, iostat) result(x)
-	! Find x to minimize dot_product(obj, x) subject to the following
-	! constraints:
-	!
-	!     matmul(cons, x) ?= rhs
-	!
-	! where `?=` is one of `<=`, `>=`, or `==` according to the contypes enum
-	! per each rhs element, using enum values LE_LP, GE_LP, or EQ_LP
-	! respectively
-	!
-	! If you wish to maximize instead of minimize, negate your `obj` vector
-	! before calling linprog()
-	!
-	! Source:  https://github.com/khalibartan/simplex-method
-	use numa__utils
-	double precision, intent(in) :: obj(:)
-	double precision, intent(in) :: cons(:,:)
-	double precision, intent(in) :: rhs(:)
-	integer, intent(in) :: contypes(:)
-	integer, optional, intent(out) :: iostat
+!function cat(a, b) result(c)
+!	! Concatenate vectors with guards for empty vectors
+!	double precision, intent(in) :: a(:), b(:)
+!	double precision, allocatable :: c(:)
+!	!********
+!	integer :: na, nb
+!
+!	na = size(a)
+!	nb = size(b)
+!
+!	allocate(c(na+nb))
+!	if (na > 0) c(1:na ) = a
+!	if (nb > 0) c(na+1:) = b
+!
+!end function cat
 
+!===============================================================================
+
+function vstack_mat_vec(a, b) result(c)
+	double precision, intent(in) :: a(:,:), b(:)
+	double precision, allocatable :: c(:,:)
+	!********
+	integer :: na, nb
+
+	na = size(a, 1)
+	nb = 1
+
+	allocate(c(na+nb, size(a,2)))
+
+	print *, "na, nb = ", na, nb
+	print *, "size(b) = ", size(b)
+	print *, "size(a,2) = ", size(a,2)
+
+	c(1:na, :) = a
+	c(na+1, :) = b
+
+end function vstack_mat_vec
+
+!********
+
+function vstack_mat_mat(a, b) result(c)
+	double precision, intent(in) :: a(:,:), b(:,:)
+	double precision, allocatable :: c(:,:)
+	!********
+	integer :: na, nb
+
+	na = size(a, 1)
+	nb = size(b, 1)
+	print *, "na, nb = ", na, nb
+	print *, "size(a,2) = ", size(a,2)
+
+	allocate(c(na+nb, size(a,2)))
+	if (size(a,2) == 0) return
+
+	if (na > 0) c(1:na , :) = a
+	if (nb > 0) c(na+1:, :) = b
+
+end function vstack_mat_mat
+
+!===============================================================================
+
+function hstack_mat_mat(a, b) result(c)
+	! `hstack` and `vstack` are named after corresponding numpy functions
+	double precision, intent(in) :: a(:,:), b(:,:)
+	double precision, allocatable :: c(:,:)
+	!********
+	integer :: na, nb
+
+	! TODO: size match check, here and in vstack and overload(s)
+
+	na = size(a, 2)
+	nb = size(b, 2)
+
+	allocate(c(size(a,1), na+nb))
+	!print *, "na, nb = ", na ,nb
+	!print *, "size(a,2) = ", size(a,2)
+
+	! TODO: this could use guards for empty arrays like i've added in vstack
+	c(:, 1: na) = a
+	c(:, na+1:) = b
+	!c(1: na, :) = a
+	!c(na+1:, :) = b
+
+end function hstack_mat_mat
+
+!===============================================================================
+
+function hstack_mat_vec(a, b) result(c)
+	double precision, intent(in) :: a(:,:), b(:)
+	double precision, allocatable :: c(:,:)
+	!********
+	integer :: na, nb
+
+	na = size(a, 2)
+	nb = 1
+
+	allocate(c(size(a,1), na+nb))
+	print *, "na, nb = ", na ,nb
+	print *, "size(a,2) = ", size(a,2)
+
+	c(:, 1: na) = a
+	c(:, na+1 ) = b
+
+end function hstack_mat_vec
+
+!===============================================================================
+function mask_to_index(mask) result(indices)
+	! TODO: utils
+	!
+	! Convert a logical mask array to an index array `indices`
+	!
+	! For example:
+	!
+	!     mask_to_index([.true., .false., .false, .true.])
+	!     ==
+	!     [1, 4]
+	!
+	! This is useful if you actually need the index array.  If you just want the
+	! result of indexing the parent array by the returned index array, you can
+	! just use built-in pack(parent, mask) instead
+
+	logical, intent(in) :: mask(:)
+	integer, allocatable :: indices(:)
+	!********
+	integer :: i, j
+
+	! Overallocate and then trim.  Could make two passes, explicitly or
+	! implicitly using count()
+	allocate(indices(size(mask)))
+	i = 0
+	do j = 1, size(mask)
+		if (.not. (mask(j))) cycle
+		i = i + 1
+		indices(i) = j
+	end do
+	indices = indices(:i)  ! trim
+
+end function mask_to_index
+
+!===============================================================================
+
+subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
+	! Convert a general linprog problem to the standard form taken by
+	! `linprog_std()`
+	!
+	! This is based on scipy:
+	!
+	!     https://github.com/scipy/scipy/blob/5f112b048b552e8788027dec7e95fb112daeeec1/scipy/optimize/_linprog_util.py#L1030
+
+	use ieee_arithmetic
+	use numa__blas
+	use numa__utils
+
+	double precision, allocatable, intent(inout) :: c(:)
+	double precision, allocatable, intent(inout) :: a_ub(:,:)
+	double precision, allocatable, intent(inout) :: b_ub(:)
+	double precision, intent(inout) :: a_eq(:,:)
+	double precision, intent(inout) :: b_eq(:)
+	double precision, intent(inout) :: lbs(:)
+	double precision, intent(inout) :: ubs(:)
+
+	double precision, allocatable, intent(out) :: a(:,:)
+	double precision, allocatable, intent(out) :: b(:)
+
+	!********
+
+	double precision :: INF
+	double precision, allocatable :: ub_newub(:), a1(:,:), a2(:,:), lb_shift(:)
+	integer :: m_ub, n_ub, n_bounds, n_free
+	integer, allocatable :: i_nolb(:), i_newub(:), shape_(:), i_free(:), &
+		i_shift(:)
+	logical, allocatable :: lb_none(:), ub_none(:), lb_some(:), ub_some(:), &
+		l_nolb_someub(:), l_free(:)
+
+	print *, "starting linprog_get_abc()"
+	!print *, "a_ub = "
+	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
+
+	m_ub = size(a_ub, 1)
+	n_ub = size(a_ub, 2)
+	print *, "m_ub, n_ub = ", m_ub, n_ub
+
+	INF = ieee_value(INF, ieee_positive_inf)
+
+	lb_none = lbs == -INF
+	ub_none = ubs == INF
+	lb_some = .not. lb_none  ! TODO: unused (until reset later)
+	ub_some = .not. ub_none
+
+	print *, "lb_none = ", lb_none
+	print *, "ub_none = ", ub_none
+
+	! Unbounded below: substitute xi = -xi' (unbounded above)
+	l_nolb_someub = lb_none .and. ub_some
+	print *, "l_nolb_someub = ", l_nolb_someub
+
+	i_nolb = mask_to_index(l_nolb_someub)
+	!i_nolb = findloc(l_nolb_someub, .true., 1)
+	!if (any(l_nolb_someub)) then
+	!	i_nolb = findloc(l_nolb_someub, .true., 1)
+	!else
+	!	allocate(i_nolb(0))
+	!end if
+
+	print *, "i_nolb = ", i_nolb
+
+	lbs(i_nolb) = -ubs(i_nolb)
+	ubs(i_nolb) = -lbs(i_nolb)  ! TODO: does nothing?
+	!where (l_nolb_someub)
+	!	lbs = -ubs
+	!	ubs = -lbs
+	!end where
+	print *, "lbs = ", lbs
+	print *, "ubs = ", ubs
+
+	print *, "c initial = ", c
+
+	lb_none = lbs == -INF
+	ub_none = ubs == INF
+	lb_some = .not. lb_none
+	ub_some = .not. ub_none
+	c(i_nolb) = -c(i_nolb)
+	print *, "c after *-1 = ", c
+
+	!if (size(i_nolb) > 0) then
+		a_ub(:, i_nolb) = -a_ub(:, i_nolb)
+		a_eq(:, i_nolb) = -a_eq(:, i_nolb)
+	!end if
+	!print *, "a_eq = ", a_eq
+
+	! Upper bound: add inequality constraint
+	i_newub = mask_to_index(ub_some)
+	!if (any(ub_some)) then
+	!	i_newub = findloc(ub_some, .true., 1)
+	!else
+	!	allocate(i_newub(0))
+	!end if
+	print *, "i_newub = ", i_newub
+
+	!filtered_array = pack(array, mask)
+	!ub_newub = pack(ubs, ub_some)
+	ub_newub = ubs(i_newub)
+
+	print *, "ub_newub = ", ub_newub
+	n_bounds = size(i_newub)
+	if (n_bounds > 0) then
+		shape_ = [n_bounds, size(a_ub, 2)]
+		print *, "shape_ = ", shape_
+
+		! a_ub and b_ub change size here, thus they need to be allocatable
+		a_ub = vstack(a_ub, zeros(shape_(1), shape_(2)))
+
+		!a_ub(m_ub+1:, i_newub) = 1
+		a_ub(m_ub+1:, i_newub) = eye(size(i_newub))
+
+		print *, "size(b_ub) = ", size(b_ub)
+		b_ub = [b_ub, zeros(n_bounds)]
+		print *, "size(b_ub) = ", size(b_ub)
+
+		print *, "n_bounds = ", n_bounds
+		print *, "b_ub = ", b_ub
+		print *, "m_ub = ", m_ub
+
+		b_ub(m_ub+1:) = ub_newub
+
+	end if
+	!! TODO: make a print_mat() routine
+	!print *, "a_ub after n_bounds > 0 = "
+	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
+	print *, "b_ub = ", b_ub
+
+	a1 = vstack(a_ub, a_eq)
+	!print *, "a1 = "
+	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
+
+	print *, "b_ub = ", b_ub
+	print *, "b_eq = ", b_eq
+	print *, "size(b_eq) = ", size(b_eq)
+	!print *, "allocated(b_eq) = ", allocated(b_eq)
+
+	!! I was having trouble here bc i forgor to declare the `b` arg allocatable
+	!if (size(b_eq) > 0) then
+		b = [b_ub, b_eq]
+	!else
+	!	b = b_ub
+	!end if
+	!b = cat(b_ub, b_eq)
+
+	c = [c, zeros(size(a_ub, 1))]
+
+	print *, "b = ", b
+	print *, "c after cat = ", c
+
+	! Unbounded: substitute xi = xi+ + xi-
+	l_free = lb_none .and. ub_none
+	i_free = mask_to_index(l_free)
+	n_free = size(i_free)
+	c = [c, zeros(n_free)]
+	print *, "c = ", c
+
+	a1 = hstack(a1(:, :n_ub), -a1(:, i_free))
+	print *, "i_free = ", i_free
+
+	!! TODO: review for other off-by-one errors like this
+	!c(n_ub: n_ub+n_free) = -c(i_free)
+	c(n_ub+1: n_ub+n_free) = -c(i_free)
+
+	!print *, "a1 = "
+	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
+	print *, "n_ub, n_free = ", n_ub, n_free
+	print *, "c after i_free = ", c
+
+	! Add slack variables
+	a2 = vstack(eye(size(a_ub,1)), zeros(size(a_eq, 1), size(a_ub, 1)))
+
+	a = hstack(a1, a2)
+	!print *, "a = "
+	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
+
+	! Lower bound: substitute xi = xi' + lb
+	i_shift = mask_to_index(lb_some)
+	lb_shift = lbs(i_shift)
+	print *, "lb_some = ", lb_some
+	print *, "lb_shift = ", lb_shift
+
+	print *, "b = ", b
+	print *, "size(a) = ", size(a)
+	if (size(a) > 0) then
+		b = b - sum(matmul( a(:, i_shift), diag(lb_shift) ), 2)
+	end if
+
+	print *, "****************"
+	print *, "linprog_get_abc() return values:"
+	!print *, "a = "
+	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
+	print *, "b = ", b
+	print *, "c = ", c
+	!stop
+	print *, "****************"
+
+	!    return A, b, c, c0, x0
+
+end subroutine linprog_get_abc
+
+!===============================================================================
+
+function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
+	! Solve a general linear programming problem:
+	!
+	! Minimize:
+	!
+	!     dot_product(c, x)
+	!
+	! Subject to:
+	!
+	!     matmul(a_ub, x) <= b_ub
+	!     matmul(a_eq, x) == b_eq  (optional)
+	!     lb <= x <= ub            (lb default 0, ub default infinity)
+
+	use ieee_arithmetic
+
+	use numa__blas
+	use numa__utils
+
+	double precision, allocatable, intent(inout) :: a_ub(:,:), b_ub(:), c(:)  ! TODO: intent in with copies?
+
+	double precision, optional, allocatable, intent(inout) :: a_eq(:,:), b_eq(:)
+	double precision, optional, allocatable, intent(inout) :: lb(:), ub(:)
+
+	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
 	!********
 
-	character(len = :), allocatable :: msg
-	double precision, parameter :: tol = 1.d-10  ! TODO: value?
-	double precision :: pivot, factor, fval
-	double precision, allocatable :: coefs(:,:), vals(:)
-	integer :: i, j, ii, kc, kr, i1(1), ns, nr, nv, nt, is, ir, ic, nirs, &
-		iter, ndel
-	integer, allocatable :: irs(:), ibv(:)
+	double precision :: fval, lbi, ubi, INF
+	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
+		lb_(:), ub_(:), c0(:), a_ub0(:,:), b_ub0(:), a_eq0(:,:), b_eq0(:), &
+		lbs0(:), ubs0(:)
+	integer :: i, nx, n_unbounded
+
+	INF = ieee_value(INF, ieee_positive_inf)
 
 	if (present(iostat)) iostat = 0
 
-	print *, repeat("=", 80)
-	print *, repeat("=", 80)
-	print *, repeat("=", 80)
+	print *, repeat("=", 60)
 	print *, "starting linprog()"
 
-	! I've used `size()` a lot more than I would like to here due to adapting
-	! this from python
+	! TODO: check both or neither of a_eq and b_eq are present
+	if (present(a_eq)) then
+		a_eq_ = a_eq
+	else
+		allocate(a_eq_(0,0))
+	end if
+	if (present(b_eq)) then
+		print *, "b_eq present"
+		b_eq_ = b_eq
+	else
+		print *, "b_eq not present"
+		allocate(b_eq_(0))
+	end if
+
+	if (present(lb)) then
+		lb_ = lb
+	else
+		lb_ = zeros(size(c))
+	end if
+	if (present(ub)) then
+		ub_ = ub
+	else
+		!ub_ = lb_ - 1  ! sentinel value for infinite upper bound
+		allocate(ub_(size(c)))
+		ub_ = ieee_value(ub_, ieee_positive_inf) !ieee_negative_inf
+	end if
+	print *, "ub_ = ", ub_
+
+	nx = size(c)
+
+	! Copy backups.  TODO: some of this may be changed after fixing intent in
+	! args
+	c0 = c
+
+	!a_ub0 = a_ub
+	!b_ub0 = b_ub
+	!a_eq0 = a_eq_
+	!b_eq0 = b_eq_
+	lbs0 = lb_
+	ubs0 = ub_
+
+	!call linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
+	call  linprog_get_abc(c, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)!, bounds)
+
+	x = linprog_std(c, a, b)
+	print *, "x with slack = ", x
 
 	!********
-	! Construct coefs table from constraints.  Add `s` slack variables and
-	! additional `r` variables to balance equality (EQ_LP) and
-	! less-than-or-equal-to (LE_LP)
+	! Post-solve
 
-	nv = size(obj)  ! number of variables
+	!! overkill interface for not much that needs to be done specifically for
+	!! the simplex method. maybe so with other methods from scipy like
+	!! revised-simplex, interior point, HiGHS, which are not implemented here
+	!call linprog_postsolve( &
+	!	c0, a_ub0, b_ub0, a_eq0, b_eq0, lbs0, ubs0, &
+	!	x, fval &
+	!	)
 
-	if (nv /= size(cons,2)) then
-		msg = "size(obj) does not match size(cons,2) in linprog()"
-		call PANIC(msg, present(iostat))
-		iostat = 1
-		return
-	end if
-	if (size(rhs) /= size(contypes)) then
-		msg = "size(rhs) does not match size(contypes) in linprog()"
-		call PANIC(msg, present(iostat))
-		iostat = 2
-		return
-	end if
-	if (size(rhs) /= size(cons,1)) then
-		msg = "size(rhs) does not match size(cons,1) in linprog()"
-		call PANIC(msg, present(iostat))
-		iostat = 3
-		return
-	end if
+	! Undo variable substitutions of linprog_get_abc()
+	n_unbounded = 0
+	do i = 1, nx
+		lbi = lbs0(i)
+		ubi = ubs0(i)
+		print *, "lbi, ubi = ", lbi, ubi
 
-	ns = count(contypes == GE_LP) + count(contypes == LE_LP)  ! number of slack vars
+		! TODO: INF can't be a parameter, but maybe it would be cleaner as a fn
+		if (lbi == -INF .and. ubi == INF) then
+			print *, "unbounded"
+			n_unbounded = n_unbounded + 1
 
-	!nr = count(contypes == LE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
-	nr = count(contypes == GE_LP) + count(contypes == EQ_LP)  ! number of balancing vars
+			x(i) = x(i) - x(nx + n_unbounded)
+			!x(i) = x(i) - x(nx + n_unbounded - 1)
 
-	print *, "nv, ns, nr = ", nv, ns, nr
-
-	nt = nv + ns + nr
-	print *, "nt = ", nt
-
-	coefs = zeros(size(cons, 1)+1, nt+1)
-	!coefs = zeros(size(cons, 1)+1, nt+2)
-
-	print *, "size cons 1 = ", size(cons, 1)
-
-	print *, "coefs = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-	!print "("//to_str(size(coefs,1))//"es10.2)", coefs
-	!stop
-
-	is = nv
-	ir = nv + ns
-	irs = zeros_i32(size(cons,1)+1)  ! TODO: trim?
-	nirs = 0
-
-	print *, "rhs = ", rhs
-
-	do i = 2, size(cons, 1) + 1  ! shift by 1?
-		do j = 1, size(cons, 2)
-			coefs(i, j) = cons(i-1, j)
-		end do
-
-		if (contypes(i-1) == LE_LP) then
-			is = is + 1
-			coefs(i, is) = 1
-
-		else if (contypes(i-1) == GE_LP) then
-			is = is + 1
-			ir = ir + 1
-			coefs(i, is) = -1
-			coefs(i, ir) = 1
-			print *, "i, ir = ", i, ir
-			nirs = nirs + 1
-			irs(nirs) = i
-
-		else if (contypes(i-1) == EQ_LP) then
-			! TODO: ir will set something here or in the GE_LP branch which is
-			! overwritten by the rhs.  Is that correct? Maybe just fixed it
-			ir = ir + 1
-			coefs(i, ir) = 1
-			nirs = nirs + 1
-			irs(nirs) = i
-			if (ir == size(coefs,2)) then
-				print *, "ERROR: ir overflow!"
-				stop
+		else
+			if (lbi == -INF) then
+				x(i) = ubi - x(i)
+			else
+				x(i) = x(i) + lbi
 			end if
-
 		end if
-
-		coefs(i, size(coefs,2)) = rhs(i-1)
 	end do
 
-	print *, "coefs = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
+	! Remove slack vars from x solution
+	print *, "nx = ", nx
+	x = x(:nx)
 
-	! Could trim irs if we can't just allocated conservatively to begin with
-	print *, "irs = ", irs(1: nirs)
-	print *, "count non-zero coefs = ", count(coefs /= 0)
-	!stop
+	fval = dot_product(x, c0)
+	!fval = dot_product(x, c)
 
-	!********
-	! Phase 1 of the simplex algorithm
-
-	! Basic vars
-	ibv = zeros_i32(size(coefs, 1))
-	print *, "ibv = ", ibv
-
-	ir = nv + ns
-	coefs(1, ir+1: size(coefs,2)-1) = -1
-	!coefs(1, ir: size(coefs,2)-1) = -1
-	print *, "coefs after setting -1 = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-
-	do ii = 1, nirs
-		i = irs(ii)
-		coefs(1,:) = coefs(1,:) + coefs(i,:)
-		ir = ir + 1
-		ibv(i) = ir
-	end do
-	print *, "coefs = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-	print *, "ibv = ", ibv
-
-	is = nv
-	do i = 2, size(ibv)
-		if (ibv(i) /= 0) cycle
-		is = is + 1
-		ibv(i) = is
-	end do
-	print *, "ibv = ", ibv
-	!stop
-
-	! Run the simplex iterations
-	i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
-	kc = i1(1)
-	print *, "kc = ", kc
-
-	iter = 0
-	!do while (coefs(1, kc) > 0)
-	do while (coefs(1, kc) > tol)  ! TODO: is tol needed?
-		iter = iter + 1
-
-		! Find key row
-		vals = coefs(2:, size(coefs,2)) / coefs(2:, kc)
-		print *, "vals = ", vals
-		i1 = minloc(vals, coefs(2:,kc) > 0)
-		kr = i1(1) + 1
-		print *, "kr = ", kr
-
-		! TODO: check kr /= 0.  If vals(kr) == 0, warn about degeneracy
-		!stop
-
-		ibv(kr) = kc
-		pivot = coefs(kr, kc)
-		coefs(kr,:) = coefs(kr,:) / pivot  ! normalize to pivot
-
-		! Make key column zero
-		do i = 1, size(coefs,1)
-			if (i == kr) cycle
-			factor = coefs(i,kc)
-			coefs(i,:) = coefs(i,:) - coefs(kr,:) * factor
-		end do
-
-		i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
-		kc = i1(1)
-
-		print *, "coefs = "
-		print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-		print *, "kc = ", kc
-		!if (iter == 2) stop
-		!stop
-
-	end do
-
-	!********
-	!        r_index = self.num_r_vars + self.num_s_vars
-	!        for i in self.basic_vars:
-	!            if i > r_index:
-	!                raise ValueError("Infeasible solution")
-	! TODO: check for infeasible solution
-
-	!********
-
-	! Delete r vars
-
-	ndel = size(coefs,2) - (nv + ns + 1)
-	print *, "ndel = ", ndel
-
-	print *, "irs = ", irs(1: nirs)
-	print *, "nirs = ", nirs
-
-	! Shift rhs
-	coefs(:, size(coefs,2) - ndel) = coefs(:, size(coefs,2))
-	coefs = coefs(:, 1: size(coefs,2) - ndel)
-	!coefs(:, size(coefs,2) - nirs) = coefs(:, size(coefs,2))
-	!coefs = coefs(:, 1: size(coefs,2) - nirs)
-
-	print *, "coefs after deleting = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-
-	!stop
-
-	!********
-
-	! Update objective function
-	coefs(1, 1:size(obj)) = -obj
-
-	print *, "coefs after updating objective function = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-
-	do ir = 2, size(ibv)
-		ic = ibv(ir)
-		if (abs(coefs(1,ic)) < tol) cycle
-		print *, "ic = ", ic
-
-		coefs(1,:) = coefs(1,:) - coefs(1,ic) * coefs(ir,:)
-	end do
-
-	print *, "coefs after adding = "
-	print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-
-	! Run the simplex iterations
-	i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
-	kc = i1(1)
-	print *, "kc = ", kc
-
-	iter = 0
-	!do while (coefs(1, kc) > 0)
-	do while (coefs(1, kc) > tol)  ! TODO: is tol needed?
-		iter = iter + 1
-
-		! Find key row
-		vals = coefs(2:, size(coefs,2)) / coefs(2:, kc)
-		print *, "vals = ", vals
-		i1 = minloc(vals, coefs(2:, kc) > 0)
-		kr = i1(1) + 1
-		print *, "kr = ", kr
-
-		! TODO: check kr /= 0.  If vals(kr) == 0, warn about degeneracy
-		!stop
-
-		ibv(kr) = kc
-		pivot = coefs(kr, kc)
-		coefs(kr,:) = coefs(kr,:) / pivot  ! normalize to pivot
-
-		! Make key column zero
-		do i = 1, size(coefs,1)
-			if (i == kr) cycle
-			factor = coefs(i,kc)
-			coefs(i,:) = coefs(i,:) - coefs(kr,:) * factor
-		end do
-
-		i1 = maxloc(coefs(1, 1:size(coefs,2)-1))
-		kc = i1(1)
-
-		print *, "coefs = "
-		print "("//to_str(size(coefs,2))//"es10.2)", transpose(coefs)
-		print *, "kc = ", kc
-		!if (iter == 2) stop
-
-	end do
-
-	!********
-	! Get the solution `x`
-	x = zeros(size(obj))
-
-	!x = coefs(2: size(obj)+1, size(coefs,2))  ! is it this easy? no
-	!x = coefs(size(coefs,1)-size(obj)+1: size(coefs,1), size(coefs,2))  ! is it this easy? no
-
-	do i = 2, size(ibv)
-		if (ibv(i) > nv) cycle
-		x(ibv(i)) = coefs(i, size(coefs,2))
-	end do
-	do i = 1, nv
-		! TODO: avoid any().  Need tests because I'm not hitting this
-		if (any(ibv(2:) == i)) cycle
-		x(i) = 0
-		!stop  ! TODO
-	end do
-
-	!        solution = {}
-	!        for i, var in enumerate(self.basic_vars[1:]):
-	!            if var < self.num_vars:
-	!                solution['x_'+str(var+1)] = self.coeff_matrix[i+1][-1]
-	!
-	!        for i in range(0, self.num_vars):
-	!            if i not in self.basic_vars[1:]:
-	!                solution['x_'+str(i+1)] = Fraction("0/1")
-	!        self.check_alternate_solution()
-	!        return solution
-
-	! Get the optimal value of the objective function.  TODO: opt out arg
-	fval = coefs(1, size(coefs,2))
 	print *, "fval = ", fval
 
 end function linprog
+
+!===============================================================================
+
+!subroutine linprog_postsolve &
+!	( &
+!		c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, &  ! input args
+!		x, &                                    ! in/out arg(s)
+!		fun  & !, slack, con                  ! output args
+!	)
+!
+!	! Given solution x to presolved, standard form linear program x, add fixed
+!	! variables back into the problem and undo the variable substitutions to get
+!	! solution to original linear program. Also, calculate the objective
+!	! function value, slack in original upper bound constraints, and residuals
+!	! in original equality constraints.
+!
+!	!    return x, fun, slack, con
+!	double precision, allocatable, intent(inout) :: c(:)
+!	double precision, allocatable, intent(inout) :: a_ub(:,:)
+!	double precision, allocatable, intent(inout) :: b_ub(:)
+!	double precision, intent(inout) :: a_eq(:,:)
+!	double precision, intent(inout) :: b_eq(:)
+!	double precision, intent(inout) :: lbs(:)
+!	double precision, intent(inout) :: ubs(:)
+!
+!	double precision, allocatable, intent(inout) :: x(:)
+!	double precision, intent(out) :: fun
+!
+!	!********
+!	integer :: n_x
+!
+!	print *, repeat("=", 60)
+!	print *, "starting linprog_postsolve()"
+!
+!	!********
+!
+!	! Nothing to unscale because nothing was scaled in the first place
+!
+!	!********
+!
+!	! Undo variable substitutions of linprog_get_abc()
+!	n_x = size(lbs)
+!	print *, "n_x = ", n_x
+!
+!	x = x(:n_x)
+!
+!	fun = dot_product(x, c)
+!
+!end subroutine linprog_postsolve
+
+!===============================================================================
+
+function linprog_std(c, a, b, iostat) result(x)
+	! Solve a linear programming problem in standard form (?):
+	!
+	! Minimize:
+	!
+	!     dot_product(c, x)
+	!
+	! Subject to:
+	!
+	!     matmul(a, x) == b
+	!     all(x >= 0)
+	!
+	! Note that *standard* form is different from *canonical* form
+	!
+	! This implementation is based on `_linprog_simplex()` from scipy:
+	!
+	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L438C5-L438C21
+
+	use numa__blas
+	use numa__utils
+
+	!double precision, intent(in) :: a(:,:), b(:), c(:)
+	double precision, intent(inout) :: a(:,:), b(:), c(:)  ! TODO: intent in
+
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable :: x(:)
+	!********
+
+	double precision, parameter :: c0 = 0  ! ?
+	double precision, parameter :: tol = 1.d-10  ! TODO: pass to linprog_solve_simplex()
+	double precision, allocatable :: row_constraints(:,:), t(:,:), t0(:,:)
+	double precision, allocatable :: row_objective(:)
+	double precision, allocatable :: row_pseudo_objective(:), solution(:)
+	integer :: i, m, n, nc
+	integer, allocatable :: av(:), basis(:)
+
+	if (present(iostat)) iostat = 0
+
+	n = size(a, 1)
+	m = size(a, 2)
+	print *, "n, m = ", n, m
+
+	! All constraints must have b >= 0
+	do i = 1, size(b)
+		if (b(i) >= 0) cycle
+		a(i,:) = -a(i,:)
+		b(i) = -b(i)
+	end do
+
+	! As all constraints are equality constraints, the artificial variables `av`
+	! will also be initial basic variables
+	av = [(i, i = 1, n)] + m
+	basis = av
+
+	print *, "av    = ", av
+	print *, "basis = ", basis
+
+	! Format the phase one tableau by adding artificial variables and stacking
+	! the constraints, the objective row and pseudo-objective row
+	row_constraints = hstack(hstack(a, eye(n)), b)
+
+	print *, "row_constraints = "
+	print "("//to_str(size(row_constraints,2))//"es14.4)", transpose(row_constraints)
+
+	row_objective = [c, zeros(n), c0]
+	print *, "row_objective = "
+	print "(*(es14.4))", row_objective
+
+	row_pseudo_objective = -sum(row_constraints, 1)
+	row_pseudo_objective(av) = 0
+	print *, "row_pseudo_objective = "
+	print "(*(es14.4))", row_pseudo_objective
+
+	t = vstack(vstack(row_constraints, row_objective), row_pseudo_objective)
+
+	print *, "t initial = "
+	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+
+	call linprog_solve_simplex(t, basis, phase = 1)
+
+	print *, "t after phase 1 = "
+	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+
+	!********
+
+	if (abs(t(size(t,1), size(t,2))) >= tol) then
+		print *, "Error: solution is infeasible in linprog_std()"
+		! TODO: panic
+		stop
+	end if
+
+	! Remove the pseudo-objective row from the tableau
+	t = t(1: size(t,1) - 1, :)
+
+	print *, "t after removing pseudo-objective = "
+	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+
+	! Remove the artificial variables columns from the tableau
+	t0 = t
+	nc = 0
+	print *, "av = ", av
+	do i = 1, size(t,2)
+
+		! TODO: avoid any(). Assume that `av` is sorted to optimize.  Verify
+		! that it's sorted and panic otherwise, but don't explicitly sort it.
+		! Could also use a temp logical array to help without assuming sorted
+		!
+		! `av` is guaranteed to be sorted from the way that it is initialized
+		! and unchanged.  `Basis`, on the other hand, gets modified in phase 1
+		if (any(av == i)) cycle
+
+		nc = nc + 1
+		t(:, nc) = t0(:, i)
+	end do
+	t = t(:, 1:nc)
+
+	print *, "t after removing artificial vars = "
+	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+
+	!********
+
+	call linprog_solve_simplex(t, basis, phase = 2)
+	solution = zeros(n + m)
+	solution(basis(:n)) = t(:n, size(t,2))
+	x = solution(:m)
+
+end function linprog_std
+
+!********
+
+subroutine linprog_solve_simplex(t, basis, phase)
+	! TODO: private
+	!
+	! This is based on `_solve_simplex()` from scipy:
+	!
+	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L232
+	!
+	use numa__utils
+	double precision, intent(inout) :: t(:,:)
+	integer, intent(inout) :: basis(:)
+	integer, intent(in) :: phase
+	!********
+	double precision, parameter :: tol = 1.d-10  ! TODO: set once at higher level and pass
+	double precision :: pivval
+	double precision, allocatable :: solution(:), q(:)
+	integer :: i, k, m, nb, mb, nc, nr, pivcol, pivrow, i1(1), iter, ir, ic
+	logical :: complete
+
+	! TODO: rename overly long variables
+
+	print *, "starting linprog_solve_simplex(), phase = ", to_str(phase)
+
+	if (phase == 1) then
+		m = size(t, 2) - 2
+		! TODO: rename `k` so I don't accidentally change it by using it as a
+		! loop var e.g.
+		k = 2
+	else
+		m = size(t, 2) - 1
+		k = 1
+	end if
+	print *, "m = ", m
+
+	if (phase /= 1) then
+		! Check if any artificial variables are still in the basis ...
+
+		do ir = 1, size(basis)
+			if (basis(ir) <= size(t,2) - 2) cycle
+			!if (basis(ir) <= size(t,2) - 1) cycle
+
+			!! MATLAB example hits this
+			!print *, "LOOPING"
+			!print *, "This is untested and maybe unreachable"
+			!stop
+
+			do ic = 1, size(t,2) - 1
+				if (abs(t(ir, ic)) <= tol) cycle
+
+				!print *, "phase 2 pre-pivot"
+				!stop
+
+				! Apply pivot
+				pivrow = ir
+				pivcol = ic
+
+				basis(pivrow) = pivcol
+				pivval = t(pivrow, pivcol)
+				t(pivrow, :) = t(pivrow, :) / pivval
+				do i = 1, size(t, 1)
+					if (i == pivrow) cycle
+					t(i,:) = t(i,:) - t(pivrow,:) * t(i, pivcol)
+				end do
+
+				! Pivot on first non-cycled `ic` only, but then iterate to next
+				! row `ir`
+				exit
+
+			end do
+		end do
+
+	end if
+
+	nb = size(basis)
+	mb = min(nb, m)
+
+	! TODO: solution is unused here because i don't have callback options
+	if (size(basis(:mb)) == 0) then
+		solution = zeros(size(t,2) - 1)
+	else
+		solution = zeros(max(size(t,2) - 1, maxval(basis(:mb)) + 1))
+	end if
+
+	nr = size(t, 1)
+	nc = size(t, 2)
+
+	complete = .false.
+	iter = 0
+	do while (.not. complete)
+		iter = iter + 1
+
+		print *, "iter"
+		print *, "t = "
+		print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+
+		! Find the pivot column
+		!
+		! Beware numpy.masked_where() works exactly the opposite as sensible
+		! Fortran mask :explode:
+		i1 = minloc(t(nr, :nc-1), t(nr, :nc-1) < -tol .and. t(nr, :nc-1) /= 0)
+
+		pivcol = i1(1)
+		print *, "pivcol = ", pivcol
+		if (pivcol == 0) then
+			! Successful end of iteration
+			complete = .true.
+			cycle
+		end if
+
+		q = t(:nr-k, nc) / t(:nr-k, pivcol)
+		print *, "q = ", q
+		i1 = minloc(q, t(:nr-k, pivcol) > tol)
+
+		pivrow = i1(1)
+		print *, "pivrow = ", pivrow
+		if (pivrow == 0) then
+			print*, "ERROR: pivot row not found!"
+			! TODO: panic
+			stop
+			complete = .true.
+			cycle
+		end if
+
+		! Apply pivot.  TODO: subroutine?
+		basis(pivrow) = pivcol
+		pivval = t(pivrow, pivcol)
+		t(pivrow, :) = t(pivrow, :) / pivval
+		do i = 1, size(t, 1)
+			if (i == pivrow) cycle
+			t(i,:) = t(i,:) - t(pivrow,:) * t(i, pivcol)
+		end do
+		! TODO: check if pivval is too close to tol
+		!
+		! "The pivot operation produces a pivot value of ..."
+
+		!stop
+		if (iter == 1000) then
+			print *, "ERROR: reached max iters!"
+			stop
+		end if
+	end do
+
+end subroutine linprog_solve_simplex
 
 !===============================================================================
 

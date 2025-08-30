@@ -2857,94 +2857,114 @@ end function chapter_4_qr_c64
 !===============================================================================
 
 integer function chapter_4_linprog() result(nfail)
+	use ieee_arithmetic
 	character(len = *), parameter :: label = "chapter_4_linprog"
 
-	double precision :: fval1, fval2
-	double precision, allocatable :: obj(:), cons(:,:), rhs(:), x(:)
-	integer, allocatable :: contypes(:)
+	!double precision :: fval1, fval2
+	!double precision, allocatable :: obj(:), cons(:,:), rhs(:), x(:)
+	!integer, allocatable :: contypes(:)
+
+	double precision :: INF
+	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
+		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
+	integer :: n, p
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
-	!********
-
-	!if (.false.) then  ! TODO
-	if (.true.) then  ! TODO
-
-	obj = [4, 1]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
-		3, 1, & ! 3, &
-		4, 3, & ! 6, &
-		1, 2  & ! 4 &
-		] &
-		, [2, 3] &
-	))
-	rhs = [3, 6, 4]  ! `b` in MATLAB
-	contypes = [EQ_LP, GE_LP, LE_LP]
-
-	print *, "cons = "
-	print "(2es13.3)", transpose(cons)
-
-	x = linprog(obj, cons, rhs, contypes)
-	call test(norm2(x - [0.6d0, 1.2d0]), 0.d0, 1.d-12, nfail, "linprog 1")
-
-	print "(a,*(es13.3))", "x = ", x
+	INF = ieee_value(INF, ieee_positive_inf)
 
 	!********
+	! Standard form, using linprog_std()
 
-	print *, "**********************************"
-	print *, "starting linprog example 2"
+	c = [8, 6, 0, 0]
+	a = transpose(reshape([ &
+	        1.0, 1.0, -1.0, 0.0, &
+	        -0.05, 0.07, 0.0, 1.0  &
+		], [4, 2]))
+	b = [1, 0]
+	expect = [0.58333333d0, 0.41666667d0, 0.d0, 0.d0]
 
-	!    # Example from wikipedia:
-	!    #
-	!    #     https://en.wikipedia.org/wiki/Simplex_algorithm#Example
-	!    #
-	!    # Expect minimum of -20 at [0, 0, 5]
+	print *, "a = "
+	print "(4es13.3)", transpose(a)
+
+	x = linprog_std(c, a, b)
+
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-7, nfail, "linprog_std 1")
+
+	!********
+	! General, using linprog()
 	!
-	!    objective = ('minimize', '- 2x_1 - 3x_2 - 4x_3')
-	!    constraints = [
-	!            '2x_1 + 2x_2 + 1x_3 <= 10',
-	!            '2x_1 + 5x_2 + 3x_3 <= 15',
-	!            '1x_1 >= 0',
-	!            '1x_2 >= 0',
-	!            '1x_3 >= 0',
-	!    ]
+	! This is the example from the scipy docs but without any non-default bounds
+	!
+	! By default there is still a lower bound at 0, but no upper bound
 
-	obj = [-2, -3, -4]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
-		2, 2, 1, &
-		2, 5, 3, &
-		1, 0, 0, &
-		0, 1, 0, &
-		0, 0, 1  &
-		] &
-		, [3, 5] &
-	))
-	rhs = [10, 15, 0, 0, 0]  ! `b` in MATLAB
-	contypes = [LE_LP, LE_LP, GE_LP, GE_LP, GE_LP]
+	c = [-1, 4]
+	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
+	b_ub = [6, 4]
 
-	print *, "cons = "
-	print "(3es13.3)", transpose(cons)
+	expect = [4, 0]
 
-	x = linprog(obj, cons, rhs, contypes)
-	call test(norm2(x - [0.d0, 0.d0, 5.d0]), 0.d0, 1.d-12, nfail, "linprog 2")
+	x = linprog(c, a_ub, b_ub)
+	print *, "x = ", x
 
-	print "(a,*(es13.3))", "x = ", x
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 2")
 
 	!********
-	! Example from MATLAB docs
+	! Scipy example including non-default bounds
 
-	! A = [1 1
-	!     1 1/4
-	!     1 -1
-	!     -1/4 -1
-	!     -1 -1
-	!     -1 1];
-	! b = [2 1 2 1 -1 2];
+	c = [-1, 4]
+	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
+	b_ub = [6, 4]
+	lb = [-INF, -3.d0]
+	!ub = [INF, INF]  ! still default
+	print *, "lb = ", lb
 
-	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
+	expect = [10, -3]
+
+	x = linprog(c, a_ub, b_ub, lb = lb)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
+
+	!********
+	! Example from https://github.com/khalibartan/simplex-method/issues/2
+
+	c = [4, 1]
+	a_ub = transpose(reshape([-4, -3, 1, 2] , [2, 2]))
+	b_ub = [-6, 4]
+	a_eq = reshape([3, 1] , [1, 2])
+	b_eq = [3]
+
+	expect = [0.4d0, 1.8d0]
+
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 4")
+
+	!********
+	! Example from https://en.wikipedia.org/wiki/Simplex_algorithm#Example
+
+	c = [-2, -3, -4]
+	a_ub = transpose(reshape([3, 2, 1,   2, 5, 3] , [3, 2]))
+	b_ub = [10, 15]
+
+	expect = [0, 0, 5]
+
+	x = linprog(c, a_ub, b_ub)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 5")
+
+	!********
+	! Example from MATLAB docs:  https://www.mathworks.com/help/optim/ug/linprog.html
+
+	c = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	a_ub = transpose(reshape([ &  ! `A` in MATLAB
 			1.0, 1.0, &
 			1.0, 0.25, &
 			1.0, -1.0, &
@@ -2954,146 +2974,267 @@ integer function chapter_4_linprog() result(nfail)
 		] &
 		, [2, 6] &
 	))
-	rhs = [2, 1, 2, 1, -1, 2]
-	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP]
+	b_ub = [2, 1, 2, 1, -1, 2]
 
-	print *, "cons = "
-	print "(3es13.3)", transpose(cons)
+	expect = [2.d0/3, 4.d0/3]
 
-	x = linprog(obj, cons, rhs, contypes)
-	call test(norm2(x - [2.d0/3, 4.d0/3]), 0.d0, 1.d-12, nfail, "linprog 3")
+	x = linprog(c, a_ub, b_ub)
+	print *, "x = ", x
 
-	print "(a,*(es13.3))", "x = ", x
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 6")
 
 	!********
-	! Inequality and equality constraints
+	! MATLAB example with an equality
 
-	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
+	c = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	a_ub = transpose(reshape([ &  ! `A` in MATLAB
 			1.0, 1.0, &
 			1.0, 0.25, &
 			1.0, -1.0, &
 			-0.25, -1.0, &
 			-1.0, -1.0, &
-			-1.0, 1.0,  &
-			1.0, 0.25 &
+			-1.0, 1.0  &
 		] &
-		, [2, 7] &
+		, [2, 6] &
 	))
-	rhs = [2., 1., 2., 1., -1., 2., 0.5]
-	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP]
+	b_ub = [2, 1, 2, 1, -1, 2]
+	a_eq = reshape([1.0, 0.25] , [1, 2])
+	b_eq = [0.5]
 
-	print *, "cons = "
-	print "(3es13.3)", transpose(cons)
+	expect = [0, 2]
 
-	x = linprog(obj, cons, rhs, contypes)
-	call test(norm2(x - [0, 2]), 0.d0, 1.d-12, nfail, "linprog 4")
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	print *, "x = ", x
 
-	print "(a,*(es13.3))", "x = ", x
-
-	end if  ! TODO: if false
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 7")
 
 	!********
-	! Inequality and equality constraints, as well as additional constraints on
-	! the bounds of `x`
+	! MATLAB example with bounds (all constraint types)
 
-	! TODO
-	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
+	c = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	a_ub = transpose(reshape([ &  ! `A` in MATLAB
 			1.0, 1.0, &
 			1.0, 0.25, &
 			1.0, -1.0, &
 			-0.25, -1.0, &
 			-1.0, -1.0, &
-			-1.0, 1.0,  &
-			1.0, 0.25, &
-			1.0, 0.0, &
-			0.0, 1.0, &
-			1.0, 0.0, &
-			0.0, 1.0  &
+			-1.0, 1.0  &
 		] &
-		, [2, 11] &
+		, [2, 6] &
 	))
-	rhs = [2., 1., 2., 1., -1., 2., 0.5, -1.0, -0.5, 1.5, 1.25]
-	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, GE_LP, GE_LP, LE_LP, LE_LP]
+	b_ub = [2, 1, 2, 1, -1, 2]
+	a_eq = reshape([1.0, 0.25] , [1, 2])
+	b_eq = [0.5]
+	lb = [-1.0, -0.5]
+	ub = [1.5, 1.25]
 
-	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	!obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
-			1.0, 1.0, &
-			1.0, 0.25, &
-			1.0, -1.0, &
-			-0.25, -1.0, &
-			-1.0, -1.0, &
-			-1.0, 1.0,  &
-			1.0, 0.25, &
-			1.0, 0.0, &
-			0.0, 1.0, &
-			1.0, 0.0, &
-			0.0, 1.0  &
+	expect = [0.1875d0, 1.25d0]
+
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 8")
+
+	!********
+	! Another example from MATLAB docs
+
+	c = [-5, -4, -6]
+	a_ub = transpose(reshape([ &  ! `A` in MATLAB
+		1, -1, 1, &
+		3,  2, 4,  &
+		3,  2, 0   &
 		] &
-		, [2, 11] &
+		, [3, 3] &
 	))
-	rhs = [2., 1., 2., 1., -1., 2., 0.5, 1.5, 1.25, -1.0, -0.5]
-	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, LE_LP, LE_LP, GE_LP, GE_LP]
+	b_ub = [20, 42, 30]
 
-	! Same as above but scaled
-	!
-	! TODO: there is a bug here depending on how the last 4 constraints are ordered
-	!
-	obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
-	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
-			1.0, 1.0, &
-			4.0, 1.0, &
-			1.0, -1.0, &
-			-1.0, -4.0, &
-			-1.0, -1.0, &
-			-1.0, 1.0,  &
-			4.0, 1.0, &
-			1.0, 0.0, &
-			0.0, 2.0, &
-			2.0, 0.0, &
-			0.0, 4.0  &
-		] &
-		, [2, 11] &
+	expect = [0, 15, 3]
+
+	x = linprog(c, a_ub, b_ub)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 9")
+
+	! TODO: more tests adapted from new online sources
+	!********
+	! Example from scipy test suite:  https://github.com/scipy/scipy/blob/main/scipy/optimize/tests/test_linprog.py
+
+    !c = np.array([-3, -2])
+    !A_ub = [[2, 1], [1, 1], [1, 0]]
+    !b_ub = [10, 8, 4]
+    !res = linprog(c, A_ub=A_ub, b_ub=b_ub, callback=cb, method=self.method)
+	c = [-3, -2]
+	a_ub = transpose(reshape([ &
+		2, 1, &
+		1, 1, &
+		1, 0 &
+		], &
+		[2, 3] &
 	))
-	rhs = [2., 4., 2., 4., -1., 2., 2.0, -1.0, -1.0, 3.0, 5.0]
-	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, GE_LP, GE_LP, LE_LP, LE_LP]
+	b_ub = [10, 8, 4]
+	! Expect fval = -18
 
-	! Reordered.  This one is ok
-	obj = [-3.d0, -1.d0]  ! `f` in MATLAB's linprog()
-	obj = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	cons = transpose(reshape([ &  ! `A` in MATLAB
-			1.0, 1.0, &
-			4.0, 1.0, &
-			1.0, -1.0, &
-			-1.0, -4.0, &
-			-1.0, -1.0, &
-			-1.0, 1.0,  &
-			4.0, 1.0, &
-			2.0, 0.0, &
-			0.0, 4.0, &
-			1.0, 0.0, &
-			0.0, 2.0  &
-		] &
-		, [2, 11] &
+	expect = [2, 6]
+
+	x = linprog(c, a_ub, b_ub)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 10")
+
+	!********
+	! A network flow problem with supply and demand at nodes and with costs
+	! along directed edges:  https://www.princeton.edu/~rvdb/542/lectures/lec10.pdf
+
+	c = [2, 4, 9, 11, 4, 3, 8, 7, 0, 15, 16, 18]
+	n = -1
+	p = 1
+	!A_eq = [
+	!    [n, n, p, 0, p, 0, 0, 0, 0, p, 0, 0],
+	!    [p, 0, 0, p, 0, p, 0, 0, 0, 0, 0, 0],
+	!    [0, 0, n, n, 0, 0, 0, 0, 0, 0, 0, 0],
+	!    [0, 0, 0, 0, 0, 0, p, p, 0, 0, p, 0],
+	!    [0, 0, 0, 0, n, n, n, 0, p, 0, 0, 0],
+	!    [0, 0, 0, 0, 0, 0, 0, n, n, 0, 0, p],
+	!    [0, 0, 0, 0, 0, 0, 0, 0, 0, n, n, n]]
+	A_eq = transpose(reshape([ &
+	    n, n, p, 0, p, 0, 0, 0, 0, p, 0, 0, &
+	    p, 0, 0, p, 0, p, 0, 0, 0, 0, 0, 0, &
+	    0, 0, n, n, 0, 0, 0, 0, 0, 0, 0, 0, &
+	    0, 0, 0, 0, 0, 0, p, p, 0, 0, p, 0, &
+	    0, 0, 0, 0, n, n, n, 0, p, 0, 0, 0, &
+	    0, 0, 0, 0, 0, 0, 0, n, n, 0, 0, p, &
+	    0, 0, 0, 0, 0, 0, 0, 0, 0, n, n, n], &
+		![7, 12] &
+		[12, 7] &
 	))
-	rhs = [2., 4., 2., 4., -1., 2., 2.0, 3.0, 5.0, -1.0, -1.0]
-	contypes = [LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, LE_LP, EQ_LP, LE_LP, LE_LP, GE_LP, GE_LP]
+	b_eq = [0, 19, -16, 33, 0, 0, -36]
+	! Expect fval = 755
+	expect = [19, 0, 16, 0, 0, 0, 0, 0, 0, 3, 33, 0]
 
-	print *, "cons = "
-	print "(3es13.3)", transpose(cons)
+	! TODO: make [a_ub, b_ub] optional?  It's tricky now because you have to be
+	! very careful to get size(a_ub,2) correct even if size 1 is 0
+	deallocate(a_ub, b_ub)
+	!allocate(a_ub(0,0), b_ub(0))
+	allocate(a_ub(0,12), b_ub(0))
 
-	x = linprog(obj, cons, rhs, contypes)
+	!x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
+	print *, "x = ", x
 
-	call test(norm2(x - [1.875E-01, 1.250E+00]), 0.d0, 1.d-12, nfail, "linprog 5")
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 11")
 
-	print "(a,*(es13.3))", "x = ", x
+	!********
+	! "nontrivial" test from scipy
 
-	fval1 = dot_product(x, obj)
-	fval2 = dot_product([0.1875, 1.25], obj)
-	print *, "fval[1,2] = ", fval1, fval2
+	c = [-1, 8, 4, -6]
+	a_ub = transpose(reshape([ &
+		-7, -7, 6, 9, &
+		1, -1, -3, 0, &
+		10, -10, -7, 7, &
+		6, -1, 3, 4 &
+		], &
+		[4, 4] &
+	))
+	b_ub = [-3, 6, -6, 6]
+	a_eq = reshape([-10, 1, 1, -8] , [1, 4])
+	b_eq = [-4]
+
+	expect = [101.d0 / 1391, 1462.d0 / 1391, 0.d0, 752.d0 / 1391]
+
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	print *, "x = ", x
+	print *, "fval expect = ", 7083.d0 / 1391
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 12")
+
+	!********
+
+	c = [4, 8, 3, 0, 0, 0]
+	a_eq = transpose(reshape([ &
+		2., 5., 3., -1., 0., 0.,   &
+		3., 2.5, 8., 0., -1., 0., &
+		8., 10., 4., 0., 0., -1.   &
+		], &
+		[6, 3] &
+	))
+	b_eq = [185, 155, 600]
+
+	deallocate(a_ub, b_ub)
+	allocate(a_ub(0,6), b_ub(0))
+
+	expect = [66.25d0, 0.d0, 17.5d0, 0.d0, 183.75d0, 0.d0]
+
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 13")
+
+	!********
+
+	!c = [2.8, 6.3, 10.8, -2.8, -6.3, -10.8]
+	!A_eq = transpose(reshape([ &
+	!	-1, -1, -1, 0, 0, 0, &
+	!	0, 0, 0, 1, 1, 1, &
+	!	1, 0, 0, 1, 0, 0, &
+	!	0, 1, 0, 0, 1, 0, &
+	!	0, 0, 1, 0, 0, 1 &
+	!	], &
+	!	[6, 5] &
+	!))
+	!b_eq = [-0.5, 0.4, 0.3, 0.3, 0.3]
+
+	!deallocate(a_ub, b_ub)
+	!allocate(a_ub(0,6), b_ub(0))
+
+	!! TODO: "solution is infeasible".  Can this be fixed with more iterations
+	!! or different tolerance, or can simplex just not cope with this problem?
+	!x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	!x = linprog_std(c, a_eq, b_eq)
+	!print *, "x = ", x
+
+	!********
+
+	c = [-0.1, -0.07, 0.004, 0.004, 0.004, 0.004]
+	A_ub = transpose(reshape([ &
+		1.0, 0., 0., 0., 0., 0., &
+		-1.0, 0., 0., 0., 0., 0., &
+		0., -1.0, 0., 0., 0., 0., &
+		0., 1.0, 0., 0., 0., 0., &
+		1.0, 1.0, 0., 0., 0., 0. &
+		], &
+		[6, 5] &
+	))
+	b_ub = [3.0, 3.0, 3.0, 3.0, 20.0]
+	A_eq = transpose(reshape([ &
+		1.0, 0., -1., 1., -1., 1., &
+		0., -1.0, -1., 1., -1., 1. &
+		], &
+		[6, 2] &
+	))
+	b_eq = [0, 0]
+
+	expect = [0, 0, 0, 0, 0, 0]
+
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	print *, "x = ", x
+
+	!********
+	! Scipy doc example, but `c` is modified so we properly test the
+	! `n_unbounded` block in the post-solve stage
+
+	!c = [-1, 4]
+	c = [4, -1]
+	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
+	b_ub = [6, 4] - 0
+	lb = [-INF, -3.d0]
+	!ub = [INF, INF]  ! still default
+
+	expect = [-3, -3]
+
+	x = linprog(c, a_ub, b_ub, lb = lb)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
 
 	!********
 	print *, ""
