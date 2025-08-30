@@ -4981,41 +4981,57 @@ end function nelder_mead
 
 !===============================================================================
 
-function vstack_mat_vec(a, b) result(c)
+function vstack_mat_vec(a, b, iostat) result(c)
+	use numa__utils
 	double precision, intent(in) :: a(:,:), b(:)
 	double precision, allocatable :: c(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
-	integer :: na, nb
+	character(len = :), allocatable :: msg
+	integer :: na
+	integer, parameter :: nb = 1
+
+	if (present(iostat)) iostat = 0
+	if (size(a,2) /= size(b) .and. size(a) > 0 .and. size(b) > 0) then
+		msg = "size(a,2) does not match size(b) in vstack_mat_vec()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	na = size(a, 1)
-	nb = 1
-
 	allocate(c(na+nb, size(a,2)))
+	if (size(a,2) <= 0) return
 
-	!print *, "na, nb = ", na, nb
-	!print *, "size(b) = ", size(b)
-	!print *, "size(a,2) = ", size(a,2)
-
-	c(1:na, :) = a
-	c(na+1, :) = b
+	if (na > 0) c(1:na, :) = a
+	if (nb > 0) c(na+1, :) = b
 
 end function vstack_mat_vec
 
 !********
 
-function vstack_mat_mat(a, b) result(c)
+function vstack_mat_mat(a, b, iostat) result(c)
+	use numa__utils
 	double precision, intent(in) :: a(:,:), b(:,:)
 	double precision, allocatable :: c(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	integer :: na, nb
+
+	if (present(iostat)) iostat = 0
+	if (size(a,2) /= size(b,2) .and. size(a) > 0 .and. size(b) > 0) then
+		msg = "size(a,2) does not match size(b,2) in vstack_mat_mat()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	na = size(a, 1)
 	nb = size(b, 1)
-	!print *, "na, nb = ", na, nb
-	!print *, "size(a,2) = ", size(a,2)
 
 	allocate(c(na+nb, size(a,2)))
-	if (size(a,2) == 0) return
+	if (size(a,2) <= 0) return
 
 	if (na > 0) c(1:na , :) = a
 	if (nb > 0) c(na+1:, :) = b
@@ -5024,47 +5040,61 @@ end function vstack_mat_mat
 
 !===============================================================================
 
-function hstack_mat_mat(a, b) result(c)
+function hstack_mat_mat(a, b, iostat) result(c)
 	! `hstack` and `vstack` are named after corresponding numpy functions
+	use numa__utils
 	double precision, intent(in) :: a(:,:), b(:,:)
 	double precision, allocatable :: c(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	integer :: na, nb
 
-	! TODO: size match check, here and in vstack and overload(s)
+	if (present(iostat)) iostat = 0
+	if (size(a,1) /= size(b,1) .and. size(a) > 0 .and. size(b) > 0) then
+		msg = "size(a,1) does not match size(b,1) in hstack_mat_mat()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	na = size(a, 2)
 	nb = size(b, 2)
-
 	allocate(c(size(a,1), na+nb))
-	!print *, "na, nb = ", na ,nb
-	!print *, "size(a,2) = ", size(a,2)
+	if (size(a,1) <= 0) return
 
-	! TODO: this could use guards for empty arrays like i've added in vstack
-	c(:, 1: na) = a
-	c(:, na+1:) = b
-	!c(1: na, :) = a
-	!c(na+1:, :) = b
+	if (na > 0) c(:, 1: na) = a
+	if (nb > 0) c(:, na+1:) = b
 
 end function hstack_mat_mat
 
 !===============================================================================
 
-function hstack_mat_vec(a, b) result(c)
+function hstack_mat_vec(a, b, iostat) result(c)
+	use numa__utils
 	double precision, intent(in) :: a(:,:), b(:)
 	double precision, allocatable :: c(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	integer :: na, nb
+
+	if (present(iostat)) iostat = 0
+	if (size(a,1) /= size(b) .and. size(a) > 0 .and. size(b) > 0) then
+		msg = "size(a,1) does not match size(b) in hstack_mat_vec()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	na = size(a, 2)
 	nb = 1
 
 	allocate(c(size(a,1), na+nb))
-	!print *, "na, nb = ", na ,nb
-	!print *, "size(a,2) = ", size(a,2)
+	if (size(a,1) <= 0) return
 
-	c(:, 1: na) = a
-	c(:, na+1 ) = b
+	if (na > 0) c(:, 1: na) = a
+	if (nb > 0) c(:, na+1 ) = b
 
 end function hstack_mat_vec
 
