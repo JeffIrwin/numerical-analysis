@@ -3729,11 +3729,11 @@ function house(x, iostat) result(pp)
 	if (normv <= 0) then
 		v = v * 1.d50
 		normv = norm2(v)
-		print *, "normv = ", normv
-		print *, "v/normv = ", v / normv
+		!print *, "normv = ", normv
+		!print *, "v/normv = ", v / normv
 
 		pp = eye(n)
-		print *, "v = ", v
+		!print *, "v = ", v
 		msg = "vector is singular in house()"
 		call PANIC(msg, present(iostat))
 		iostat = 1
@@ -3953,7 +3953,7 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 			p3 = house(v, io)
 
 			if (io /= 0) then
-				print *, "x, y, z = ", x, y, z
+				!print *, "x, y, z = ", x, y, z
 				msg = "house() failed in eig_francis_qr()"
 				call PANIC(msg, present(iostat))
 				iostat = 2
@@ -3984,7 +3984,7 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 
 		s = abs(x) + abs(y)
 		if (s <= 0) then
-			print *, "x, y = ", x, y
+			!print *, "x, y = ", x, y
 			msg = "matrix is singular in eig_francis_qr()"
 			call PANIC(msg, present(iostat))
 			iostat = 3
@@ -4981,24 +4981,6 @@ end function nelder_mead
 
 !===============================================================================
 
-!function cat(a, b) result(c)
-!	! Concatenate vectors with guards for empty vectors
-!	double precision, intent(in) :: a(:), b(:)
-!	double precision, allocatable :: c(:)
-!	!********
-!	integer :: na, nb
-!
-!	na = size(a)
-!	nb = size(b)
-!
-!	allocate(c(na+nb))
-!	if (na > 0) c(1:na ) = a
-!	if (nb > 0) c(na+1:) = b
-!
-!end function cat
-
-!===============================================================================
-
 function vstack_mat_vec(a, b) result(c)
 	double precision, intent(in) :: a(:,:), b(:)
 	double precision, allocatable :: c(:,:)
@@ -5010,9 +4992,9 @@ function vstack_mat_vec(a, b) result(c)
 
 	allocate(c(na+nb, size(a,2)))
 
-	print *, "na, nb = ", na, nb
-	print *, "size(b) = ", size(b)
-	print *, "size(a,2) = ", size(a,2)
+	!print *, "na, nb = ", na, nb
+	!print *, "size(b) = ", size(b)
+	!print *, "size(a,2) = ", size(a,2)
 
 	c(1:na, :) = a
 	c(na+1, :) = b
@@ -5029,8 +5011,8 @@ function vstack_mat_mat(a, b) result(c)
 
 	na = size(a, 1)
 	nb = size(b, 1)
-	print *, "na, nb = ", na, nb
-	print *, "size(a,2) = ", size(a,2)
+	!print *, "na, nb = ", na, nb
+	!print *, "size(a,2) = ", size(a,2)
 
 	allocate(c(na+nb, size(a,2)))
 	if (size(a,2) == 0) return
@@ -5078,8 +5060,8 @@ function hstack_mat_vec(a, b) result(c)
 	nb = 1
 
 	allocate(c(size(a,1), na+nb))
-	print *, "na, nb = ", na ,nb
-	print *, "size(a,2) = ", size(a,2)
+	!print *, "na, nb = ", na ,nb
+	!print *, "size(a,2) = ", size(a,2)
 
 	c(:, 1: na) = a
 	c(:, na+1 ) = b
@@ -5155,13 +5137,13 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	logical, allocatable :: lb_none(:), ub_none(:), lb_some(:), ub_some(:), &
 		l_nolb_someub(:), l_free(:)
 
-	print *, "starting linprog_get_abc()"
+	!print *, "starting linprog_get_abc()"
 	!print *, "a_ub = "
 	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
 
 	m_ub = size(a_ub, 1)
 	n_ub = size(a_ub, 2)
-	print *, "m_ub, n_ub = ", m_ub, n_ub
+	!print *, "m_ub, n_ub = ", m_ub, n_ub
 
 	INF = ieee_value(INF, ieee_positive_inf)
 
@@ -5170,28 +5152,27 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	lb_some = .not. lb_none  ! TODO: unused (until reset later)
 	ub_some = .not. ub_none
 
-	print *, "lb_none = ", lb_none
-	print *, "ub_none = ", ub_none
+	!print *, "lb_none = ", lb_none
+	!print *, "ub_none = ", ub_none
 
 	! Unbounded below: substitute xi = -xi' (unbounded above)
 	l_nolb_someub = lb_none .and. ub_some
 	i_nolb = mask_to_index(l_nolb_someub)
-	print *, "l_nolb_someub = ", l_nolb_someub
-	print *, "i_nolb = ", i_nolb
+	!print *, "l_nolb_someub = ", l_nolb_someub
+	!print *, "i_nolb = ", i_nolb
 
 	lbs(i_nolb) = -ubs(i_nolb)
 	ubs(i_nolb) = -lbs(i_nolb)  ! TODO: does nothing?
-	print *, "lbs = ", lbs
-	print *, "ubs = ", ubs
-
-	print *, "c initial = ", c
+	!print *, "lbs = ", lbs
+	!print *, "ubs = ", ubs
+	!print *, "c initial = ", c
 
 	lb_none = lbs == -INF
 	ub_none = ubs == INF
 	lb_some = .not. lb_none
 	ub_some = .not. ub_none
 	c(i_nolb) = -c(i_nolb)
-	print *, "c after *-1 = ", c
+	!print *, "c after *-1 = ", c
 
 	a_ub(:, i_nolb) = -a_ub(:, i_nolb)
 	a_eq(:, i_nolb) = -a_eq(:, i_nolb)
@@ -5200,58 +5181,59 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	! Upper bound: add inequality constraint
 	i_newub = mask_to_index(ub_some)
 	ub_newub = ubs(i_newub)
-	print *, "i_newub = ", i_newub
-	print *, "ub_newub = ", ub_newub
+	!print *, "i_newub = ", i_newub
+	!print *, "ub_newub = ", ub_newub
 
 	n_bounds = size(i_newub)
 	if (n_bounds > 0) then
 		shape_ = [n_bounds, size(a_ub, 2)]
-		print *, "shape_ = ", shape_
+		!print *, "shape_ = ", shape_
 
 		! a_ub and b_ub change size here, thus they need to be allocatable
 		a_ub = vstack(a_ub, zeros(shape_(1), shape_(2)))
 
 		a_ub(m_ub+1:, i_newub) = eye(size(i_newub))
 
-		print *, "size(b_ub) = ", size(b_ub)
+		!print *, "size(b_ub) = ", size(b_ub)
 		b_ub = [b_ub, zeros(n_bounds)]
-		print *, "size(b_ub) = ", size(b_ub)
+		!print *, "size(b_ub) = ", size(b_ub)
 
-		print *, "n_bounds = ", n_bounds
-		print *, "b_ub = ", b_ub
-		print *, "m_ub = ", m_ub
+		!print *, "n_bounds = ", n_bounds
+		!print *, "b_ub = ", b_ub
+		!print *, "m_ub = ", m_ub
 
 		b_ub(m_ub+1:) = ub_newub
 
 	end if
-	!! TODO: make a print_mat() routine
+	!! TODO: make a print_mat() routine.  Fortran panics on fmt string "0es14.4"
+	!! if matrix is empty
 	!print *, "a_ub after n_bounds > 0 = "
 	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
-	print *, "b_ub = ", b_ub
+	!print *, "b_ub = ", b_ub
 
 	a1 = vstack(a_ub, a_eq)
 	!print *, "a1 = "
 	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
 
-	print *, "b_ub = ", b_ub
-	print *, "b_eq = ", b_eq
-	print *, "size(b_eq) = ", size(b_eq)
+	!print *, "b_ub = ", b_ub
+	!print *, "b_eq = ", b_eq
+	!print *, "size(b_eq) = ", size(b_eq)
 	!print *, "allocated(b_eq) = ", allocated(b_eq)
 
 	b = [b_ub, b_eq]
 	c = [c, zeros(size(a_ub, 1))]
-	print *, "b = ", b
-	print *, "c after cat = ", c
+	!print *, "b = ", b
+	!print *, "c after cat = ", c
 
 	! Unbounded: substitute xi = xi+ + xi-
 	l_free = lb_none .and. ub_none
 	i_free = mask_to_index(l_free)
 	n_free = size(i_free)
 	c = [c, zeros(n_free)]
-	print *, "c = ", c
+	!print *, "c = ", c
 
 	a1 = hstack(a1(:, :n_ub), -a1(:, i_free))
-	print *, "i_free = ", i_free
+	!print *, "i_free = ", i_free
 
 	!! TODO: review for other off-by-one errors like this
 	!c(n_ub: n_ub+n_free) = -c(i_free)
@@ -5259,8 +5241,8 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 
 	!print *, "a1 = "
 	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
-	print *, "n_ub, n_free = ", n_ub, n_free
-	print *, "c after i_free = ", c
+	!print *, "n_ub, n_free = ", n_ub, n_free
+	!print *, "c after i_free = ", c
 
 	! Add slack variables
 	a2 = vstack(eye(size(a_ub,1)), zeros(size(a_eq, 1), size(a_ub, 1)))
@@ -5272,23 +5254,21 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	! Lower bound: substitute xi = xi' + lb
 	i_shift = mask_to_index(lb_some)
 	lb_shift = lbs(i_shift)
-	print *, "lb_some = ", lb_some
-	print *, "lb_shift = ", lb_shift
+	!print *, "lb_some = ", lb_some
+	!print *, "lb_shift = ", lb_shift
 
-	print *, "b = ", b
-	print *, "size(a) = ", size(a)
+	!print *, "b = ", b
+	!print *, "size(a) = ", size(a)
 	b = b - sum(matmul(a(:, i_shift), diag(lb_shift)), 2)
 
-	print *, "****************"
-	print *, "linprog_get_abc() return values:"
+	!print *, "****************"
+	!print *, "linprog_get_abc() return values:"
 	!print *, "a = "
 	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
-	print *, "b = ", b
-	print *, "c = ", c
+	!print *, "b = ", b
+	!print *, "c = ", c
 	!stop
-	print *, "****************"
-
-	!    return A, b, c, c0, x0
+	!print *, "****************"
 
 end subroutine linprog_get_abc
 
@@ -5330,8 +5310,8 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 
 	if (present(iostat)) iostat = 0
 
-	print *, repeat("=", 60)
-	print *, "starting linprog()"
+	!print *, repeat("=", 60)
+	!print *, "starting linprog()"
 
 	! TODO: check both or neither of a_eq and b_eq are present
 	if (present(a_eq)) then
@@ -5340,10 +5320,10 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 		allocate(a_eq_(0,0))
 	end if
 	if (present(b_eq)) then
-		print *, "b_eq present"
+		!print *, "b_eq present"
 		b_eq_ = b_eq
 	else
-		print *, "b_eq not present"
+		!print *, "b_eq not present"
 		allocate(b_eq_(0))
 	end if
 
@@ -5358,7 +5338,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 		allocate(ub_(size(c)))
 		ub_ = ieee_value(ub_, ieee_positive_inf) !ieee_negative_inf
 	end if
-	print *, "ub_ = ", ub_
+	!print *, "ub_ = ", ub_
 
 	nx = size(c)
 
@@ -5371,7 +5351,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	call  linprog_get_abc(c, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
 	x = linprog_std(c, a, b)
-	print *, "x with slack = ", x
+	!print *, "x with slack = ", x
 
 	!********
 	! Post-solve
@@ -5381,7 +5361,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	do i = 1, nx
 		lbi = lbs0(i)
 		ubi = ubs0(i)
-		print *, "lbi, ubi = ", lbi, ubi
+		!print *, "lbi, ubi = ", lbi, ubi
 
 		! TODO: INF can't be a parameter, but maybe it would be cleaner as a fn
 		if (lbi == -INF .and. ubi == INF) then
@@ -5398,12 +5378,11 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	end do
 
 	! Remove slack vars from x solution
-	print *, "nx = ", nx
+	!print *, "nx = ", nx
 	x = x(:nx)
 
 	fval = dot_product(x, c0)
-
-	print *, "fval = ", fval
+	!print *, "fval = ", fval
 
 end function linprog
 
@@ -5449,7 +5428,7 @@ function linprog_std(c, a, b, iostat) result(x)
 
 	n = size(a, 1)
 	m = size(a, 2)
-	print *, "n, m = ", n, m
+	!print *, "n, m = ", n, m
 
 	! All constraints must have b >= 0
 	do i = 1, size(b)
@@ -5463,34 +5442,34 @@ function linprog_std(c, a, b, iostat) result(x)
 	av = [(i, i = 1, n)] + m
 	basis = av
 
-	print *, "av    = ", av
-	print *, "basis = ", basis
+	!print *, "av    = ", av
+	!print *, "basis = ", basis
 
 	! Format the phase one tableau by adding artificial variables and stacking
 	! the constraints, the objective row and pseudo-objective row
 	row_constraints = hstack(hstack(a, eye(n)), b)
 
-	print *, "row_constraints = "
-	print "("//to_str(size(row_constraints,2))//"es14.4)", transpose(row_constraints)
+	!print *, "row_constraints = "
+	!print "("//to_str(size(row_constraints,2))//"es14.4)", transpose(row_constraints)
 
 	row_objective = [c, zeros(n), c0]
-	print *, "row_objective = "
-	print "(*(es14.4))", row_objective
+	!print *, "row_objective = "
+	!print "(*(es14.4))", row_objective
 
 	row_pseudo_objective = -sum(row_constraints, 1)
 	row_pseudo_objective(av) = 0
-	print *, "row_pseudo_objective = "
-	print "(*(es14.4))", row_pseudo_objective
+	!print *, "row_pseudo_objective = "
+	!print "(*(es14.4))", row_pseudo_objective
 
 	t = vstack(vstack(row_constraints, row_objective), row_pseudo_objective)
 
-	print *, "t initial = "
-	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+	!print *, "t initial = "
+	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 	call linprog_solve_simplex(t, basis, phase = 1)
 
-	print *, "t after phase 1 = "
-	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+	!print *, "t after phase 1 = "
+	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 	!********
 
@@ -5503,13 +5482,13 @@ function linprog_std(c, a, b, iostat) result(x)
 	! Remove the pseudo-objective row from the tableau
 	t = t(1: size(t,1) - 1, :)
 
-	print *, "t after removing pseudo-objective = "
-	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+	!print *, "t after removing pseudo-objective = "
+	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 	! Remove the artificial variables columns from the tableau
 	t0 = t
 	nc = 0
-	print *, "av = ", av
+	!print *, "av = ", av
 	do i = 1, size(t,2)
 
 		! TODO: avoid any(). Assume that `av` is sorted to optimize.  Verify
@@ -5525,8 +5504,8 @@ function linprog_std(c, a, b, iostat) result(x)
 	end do
 	t = t(:, 1:nc)
 
-	print *, "t after removing artificial vars = "
-	print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+	!print *, "t after removing artificial vars = "
+	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 	!********
 
@@ -5559,7 +5538,7 @@ subroutine linprog_solve_simplex(t, basis, phase)
 
 	! TODO: rename overly long variables
 
-	print *, "starting linprog_solve_simplex(), phase = ", to_str(phase)
+	!print *, "starting linprog_solve_simplex(), phase = ", to_str(phase)
 
 	if (phase == 1) then
 		m = size(t, 2) - 2
@@ -5570,7 +5549,7 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		m = size(t, 2) - 1
 		k = 1
 	end if
-	print *, "m = ", m
+	!print *, "m = ", m
 
 	if (phase /= 1) then
 		! Check if any artificial variables are still in the basis ...
@@ -5623,9 +5602,9 @@ subroutine linprog_solve_simplex(t, basis, phase)
 	do while (.not. complete)
 		iter = iter + 1
 
-		print *, "iter"
-		print *, "t = "
-		print "("//to_str(size(t,2))//"es14.4)", transpose(t)
+		!print *, "iter"
+		!print *, "t = "
+		!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 		! Find the pivot column
 		!
@@ -5634,7 +5613,7 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		i1 = minloc(t(nr, :nc-1), t(nr, :nc-1) < -tol .and. t(nr, :nc-1) /= 0)
 
 		pivcol = i1(1)
-		print *, "pivcol = ", pivcol
+		!print *, "pivcol = ", pivcol
 		if (pivcol == 0) then
 			! Successful end of iteration
 			complete = .true.
@@ -5642,11 +5621,11 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		end if
 
 		q = t(:nr-k, nc) / t(:nr-k, pivcol)
-		print *, "q = ", q
+		!print *, "q = ", q
 		i1 = minloc(q, t(:nr-k, pivcol) > tol)
 
 		pivrow = i1(1)
-		print *, "pivrow = ", pivrow
+		!print *, "pivrow = ", pivrow
 		if (pivrow == 0) then
 			print*, "ERROR: pivot row not found!"
 			! TODO: panic
@@ -5670,6 +5649,7 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		!stop
 		if (iter == 1000) then
 			print *, "ERROR: reached max iters!"
+			! TODO: panic
 			stop
 		end if
 	end do

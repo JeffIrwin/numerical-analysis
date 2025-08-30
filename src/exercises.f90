@@ -3200,6 +3200,8 @@ integer function chapter_4_linprog() result(nfail)
 	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
 	print *, "x = ", x
 
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 14")
+
 	!********
 	! Scipy doc example, but `c` is modified so we properly test the
 	! `n_unbounded` block in the post-solve stage
@@ -3214,7 +3216,7 @@ integer function chapter_4_linprog() result(nfail)
 	x = linprog(c, a_ub, b_ub, lb = lb)
 	print *, "x = ", x
 
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 15")
 
 	!********
 	print *, ""
