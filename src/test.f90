@@ -28,6 +28,7 @@ program main
 	!-------------------------------------------------------
 	! Test some pre-requisite basic functionality before getting into the actual
 	! numerical analysis
+	nfail = nfail + test_compiler_sanity()
 	nfail = nfail + test_bad_numa_usage()
 
 	!-------------------------------------------------------

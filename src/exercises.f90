@@ -85,6 +85,48 @@ end subroutine tests
 
 !===============================================================================
 
+integer function test_compiler_sanity() result(nfail)
+
+	character(len = *), parameter :: label = "test_compiler_sanity"
+
+	character(len = :), allocatable :: link
+	double precision, allocatable :: a(:)
+	integer :: n, i1(1)
+	logical, allocatable :: mask(:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+	!-----------------------------------
+
+	n = 5
+	allocate(a(n), mask(n))
+	a = 1.d0
+	mask = .false.
+
+	i1 = minloc(a, mask)
+	if (i1(1) /= 0) then
+
+		! Actually exit because other tests need a conforming minloc() fn.  At
+		! least, linprog() needs it
+
+		write(*,*) RED // "Catastrophic error" // COLOR_RESET // &
+			":  minloc() does not return 0 for all false mask."
+		write(*,*) "If using an Intel compiler, use `-standard-semantics`."
+		write(*,*) "See the discussion at the following link:"
+		write(*,*)
+		link = "https://community.intel.com/t5/Intel-Fortran-Compiler/Incorrect-minloc-maxloc-results-with-ifx-2024-0/m-p/1549936"
+		write(*,"(a)") "    " // link
+		write(*,*)
+
+		call exit(1)
+
+	end if
+
+end function test_compiler_sanity
+
+!===============================================================================
+
 integer function test_bad_numa_usage() result(nfail)
 
 	character(len = *), parameter :: label = "test_bad_numa_usage"
