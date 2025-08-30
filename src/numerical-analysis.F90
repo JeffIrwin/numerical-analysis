@@ -5235,10 +5235,7 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 		b_ub(m_ub+1:) = ub_newub
 
 	end if
-	!! TODO: make a print_mat() routine.  Fortran panics on fmt string "0es14.4"
-	!! if matrix is empty
-	!print *, "a_ub after n_bounds > 0 = "
-	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
+	!call print_mat(a_ub, "a_ub after n bound > 0 = ")
 	!print *, "b_ub = ", b_ub
 
 	a1 = vstack(a_ub, a_eq)

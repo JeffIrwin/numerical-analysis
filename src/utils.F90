@@ -42,13 +42,13 @@ module numa__utils
 		! Functions
 		procedure :: sorted_f64
 		procedure :: sorted_c64
-	end interface
+	end interface sorted
 
 	interface sort
 		! Subroutines
 		procedure :: sort_f64
 		procedure :: sort_c64
-	end interface
+	end interface sort
 
 	interface compare_lex
 		procedure :: compare_lex  ! TODO: rename routines that clash with the overload
@@ -57,11 +57,15 @@ module numa__utils
 	interface lt_lex
 		procedure :: lt_lex
 		procedure :: lt_lex_c64
-	end interface
+	end interface lt_lex
 	interface lte_lex
 		procedure :: lte_lex
 		procedure :: lte_lex_c64
-	end interface
+	end interface lte_lex
+
+	interface print_mat
+		procedure :: print_mat_f64
+	end interface print_mat
 
 	integer, parameter :: &
 		COMPARE_LESS_ = -1, &
@@ -553,6 +557,31 @@ double precision function inf()
 	use ieee_arithmetic
 	inf = ieee_value(INF, ieee_positive_inf)
 end function inf
+
+!===============================================================================
+
+subroutine print_mat_f64(mat, msg, fmt)
+	use iso_fortran_env
+	double precision, intent(in) :: mat(:,:)
+	character(len = *), optional, intent(in) :: msg, fmt
+	!********
+	character(len = :), allocatable :: fmt_
+	integer, parameter :: UNIT = OUTPUT_UNIT
+
+	fmt_ = "es14.4"
+	if (present(fmt)) fmt_ = fmt
+
+	if (present(msg)) then
+		write(*, "(a)") " " // msg
+	end if
+
+	write(UNIT, "(a)") " ["
+	if (size(mat) > 0) then
+		write(UNIT, "(" // to_str(size(mat,2)) // fmt_ // ")") transpose(mat)
+	end if
+	write(UNIT, "(a)") " ]"
+
+end subroutine print_mat_f64
 
 !===============================================================================
 
