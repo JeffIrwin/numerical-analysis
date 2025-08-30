@@ -5331,6 +5331,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	double precision, allocatable :: x(:)
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: fval, lbi, ubi
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
 		lb_(:), ub_(:), c0(:), lbs0(:), ubs0(:)
@@ -5341,7 +5342,57 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	!print *, repeat("=", 60)
 	!print *, "starting linprog()"
 
-	! TODO: check both or neither of a_eq and b_eq are present
+	if (size(c) /= size(a_ub,2)) then
+		msg = "size(c) does not match size(a_ub,2) in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	if (present(a_eq)) then
+		if (size(c) /= size(a_eq,2)) then
+			msg = "size(c) does not match size(a_eq,2) in linprog()"
+			call PANIC(msg, present(iostat))
+			iostat = 2
+			return
+		end if
+	end if
+	if (present(lb)) then
+		if (size(c) /= size(lb)) then
+			msg = "size(c) does not match size(lb) in linprog()"
+			call PANIC(msg, present(iostat))
+			iostat = 3
+			return
+		end if
+	end if
+	if (present(ub)) then
+		if (size(c) /= size(ub)) then
+			msg = "size(c) does not match size(ub) in linprog()"
+			call PANIC(msg, present(iostat))
+			iostat = 4
+			return
+		end if
+	end if
+	if (size(a_ub,1) /= size(b_ub)) then
+		msg = "size(a_ub,1) does not match size(b_ub) in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 5
+		return
+	end if
+	if (present(a_eq) .and. present(b_eq)) then
+		if (size(a_eq,1) /= size(b_eq)) then
+			msg = "size(a_eq,1) does not match size(b_eq) in linprog()"
+			call PANIC(msg, present(iostat))
+			iostat = 6
+			return
+		end if
+	end if
+	if (present(a_eq) .neqv. present(b_eq)) then
+		msg = "`a_eq` must be present if and only if `b_eq` is present in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 7
+		return
+	end if
+
 	if (present(a_eq)) then
 		a_eq_ = a_eq
 	else
@@ -5364,7 +5415,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 		ub_ = ub
 	else
 		allocate(ub_(size(c)))
-		ub_ = ieee_value(ub_, ieee_positive_inf) !ieee_negative_inf
+		ub_ = inf()
 	end if
 	!print *, "ub_ = ", ub_
 
@@ -5408,6 +5459,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	!print *, "nx = ", nx
 	x = x(:nx)
 
+	! TODO: opt out arg
 	fval = dot_product(x, c0)
 	!print *, "fval = ", fval
 
@@ -5443,6 +5495,7 @@ function linprog_std(c, a, b, iostat) result(x)
 	double precision, allocatable :: x(:)
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision, parameter :: c0 = 0  ! ?
 	double precision, parameter :: tol = 1.d-10  ! TODO: pass to linprog_solve_simplex()
 	double precision, allocatable :: row_constraints(:,:), t(:,:), t0(:,:)
@@ -5452,6 +5505,19 @@ function linprog_std(c, a, b, iostat) result(x)
 	integer, allocatable :: av(:), basis(:)
 
 	if (present(iostat)) iostat = 0
+
+	if (size(c) /= size(a,2)) then
+		msg = "size(c) does not match size(a,2) in linprog_std()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	if (size(a,1) /= size(b)) then
+		msg = "size(a,1) does not match size(b) in linprog_std()"
+		call PANIC(msg, present(iostat))
+		iostat = 5
+		return
+	end if
 
 	n = size(a, 1)
 	m = size(a, 2)

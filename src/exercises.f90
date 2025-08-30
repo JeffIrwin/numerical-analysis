@@ -2902,7 +2902,6 @@ integer function chapter_4_linprog() result(nfail)
 	use ieee_arithmetic
 	character(len = *), parameter :: label = "chapter_4_linprog"
 
-	double precision :: INF
 	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
 		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
 	integer :: n, p
@@ -2910,8 +2909,6 @@ integer function chapter_4_linprog() result(nfail)
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
-
-	INF = ieee_value(INF, ieee_positive_inf)
 
 	!********
 	! Standard form, using linprog_std()
@@ -2957,8 +2954,8 @@ integer function chapter_4_linprog() result(nfail)
 	c = [-1, 4]
 	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
 	b_ub = [6, 4]
-	lb = [-INF, -3.d0]
-	!ub = [INF, INF]  ! still default
+	lb = [-inf(), -3.d0]
+	!ub = [inf(), inf()]  ! still default
 	print *, "lb = ", lb
 
 	expect = [10, -3]
@@ -3195,6 +3192,13 @@ integer function chapter_4_linprog() result(nfail)
 
 	!********
 
+	!! Scipy calls `_remove_redundancy_svd()` during presolve for this example,
+	!! which is not implemented here
+	!!
+	!!     "A_eq does not appear to be of full row rank. To improve performance,
+	!!     check the problem formulation for redundant equality constraints."
+	!!
+
 	!c = [2.8, 6.3, 10.8, -2.8, -6.3, -10.8]
 	!A_eq = transpose(reshape([ &
 	!	-1, -1, -1, 0, 0, 0, &
@@ -3251,7 +3255,7 @@ integer function chapter_4_linprog() result(nfail)
 	c = [4, -1]
 	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
 	b_ub = [6, 4] - 0
-	lb = [-INF, -3.d0]
+	lb = [-inf(), -3.d0]
 
 	expect = [-3, -3]
 
