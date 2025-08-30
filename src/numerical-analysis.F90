@@ -5138,7 +5138,7 @@ end function mask_to_index
 
 !===============================================================================
 
-subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
+subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	! Convert a general linprog problem to the standard form taken by
 	! `linprog_std()`
 	!
@@ -5154,9 +5154,9 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)!, bounds)
 	double precision, allocatable, intent(inout) :: a_ub(:,:)
 	double precision, allocatable, intent(inout) :: b_ub(:)
 	double precision, intent(inout) :: a_eq(:,:)
-	double precision, intent(inout) :: b_eq(:)
+	double precision, intent(inout) :: b_eq(:)  ! could be intent in
 	double precision, intent(inout) :: lbs(:)
-	double precision, intent(inout) :: ubs(:)
+	double precision, intent(inout) :: ubs(:)   ! could be intent in
 
 	double precision, allocatable, intent(out) :: a(:,:)
 	double precision, allocatable, intent(out) :: b(:)
@@ -5316,16 +5316,19 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	!     matmul(a_ub, x) <= b_ub
 	!     matmul(a_eq, x) == b_eq  (optional)
 	!     lb <= x <= ub            (lb default 0, ub default infinity)
+	!
+	! A wrapper fn could be added which avoids modifying a_ub, b_ub, a_eq, and
+	! b_eq, like inv() vs invert(), by doing extra copying
 
 	use ieee_arithmetic
 
 	use numa__blas
 	use numa__utils
 
-	double precision, allocatable, intent(inout) :: a_ub(:,:), b_ub(:), c(:)  ! TODO: intent in with copies?
-
+	double precision, allocatable, intent(in) :: c(:)
+	double precision, allocatable, intent(inout) :: a_ub(:,:), b_ub(:)
 	double precision, optional, allocatable, intent(inout) :: a_eq(:,:), b_eq(:)
-	double precision, optional, allocatable, intent(inout) :: lb(:), ub(:)
+	double precision, optional, allocatable, intent(in) :: lb(:), ub(:)
 
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
@@ -5334,7 +5337,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	character(len = :), allocatable :: msg
 	double precision :: fval, lbi, ubi
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
-		lb_(:), ub_(:), c0(:), lbs0(:), ubs0(:)
+		lb_(:), ub_(:), c_(:), lbs0(:), ubs0(:)
 	integer :: i, nx, n_unbounded
 
 	if (present(iostat)) iostat = 0
@@ -5421,15 +5424,16 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 
 	nx = size(c)
 
-	! Copy backups.  TODO: some of this may be changed after fixing intent in
-	! args
-	c0 = c
+	! Make modifiable copies
+	c_ = c
+
+	! Copy backups
 	lbs0 = lb_
 	ubs0 = ub_
 
-	call  linprog_get_abc(c, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
+	call  linprog_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
-	x = linprog_std(c, a, b)
+	x = linprog_std(c_, a, b)
 	!print *, "x with slack = ", x
 
 	!********
@@ -5460,7 +5464,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	x = x(:nx)
 
 	! TODO: opt out arg
-	fval = dot_product(x, c0)
+	fval = dot_product(x, c)
 	!print *, "fval = ", fval
 
 end function linprog
@@ -5488,8 +5492,9 @@ function linprog_std(c, a, b, iostat) result(x)
 	use numa__blas
 	use numa__utils
 
-	!double precision, intent(in) :: a(:,:), b(:), c(:)
-	double precision, intent(inout) :: a(:,:), b(:), c(:)  ! TODO: intent in
+	double precision, intent(in) :: c(:)
+	double precision, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: b(:)
 
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
