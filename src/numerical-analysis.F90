@@ -5299,7 +5299,7 @@ end subroutine linprog_get_abc
 
 !===============================================================================
 
-function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
+function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
 	! Solve a general linear programming problem:
 	!
 	! Minimize:
@@ -5325,17 +5325,22 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 	double precision, optional, allocatable, intent(inout) :: a_eq(:,:), b_eq(:)
 	double precision, optional, allocatable, intent(in) :: lb(:), ub(:)
 
+	double precision, optional, intent(in) :: tol
+	double precision, optional, intent(out) :: fval
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision :: fval, lbi, ubi
+	double precision :: lbi, ubi, tol_
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
 		lb_(:), ub_(:), c_(:), lbs0(:), ubs0(:)
-	integer :: i, nx, n_unbounded
+	integer :: i, nx, n_unbounded, io
 
 	if (present(iostat)) iostat = 0
+
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
 
 	!print *, repeat("=", 60)
 	!print *, "starting linprog()"
@@ -5428,7 +5433,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 
 	call  linprog_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
-	x = linprog_std(c_, a, b)
+	x = linprog_std(c_, a, b, tol_, io)
 	!print *, "x with slack = ", x
 
 	!********
@@ -5453,20 +5458,18 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 			end if
 		end if
 	end do
+	!print *, "nx = ", nx
 
 	! Remove slack vars from x solution
-	!print *, "nx = ", nx
 	x = x(:nx)
 
-	! TODO: opt out arg
-	fval = dot_product(x, c)
-	!print *, "fval = ", fval
+	if (present(fval)) fval = dot_product(x, c)
 
 end function linprog
 
 !===============================================================================
 
-function linprog_std(c, a, b, iostat) result(x)
+function linprog_std(c, a, b, tol, iostat) result(x)
 	! Solve a linear programming problem in standard form (?):
 	!
 	! Minimize:
@@ -5491,13 +5494,14 @@ function linprog_std(c, a, b, iostat) result(x)
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: b(:)
 
+	double precision, optional, intent(in) :: tol
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision, parameter :: c0 = 0  ! ?
-	double precision, parameter :: tol = 1.d-10  ! TODO: pass to linprog_solve_simplex()
+	double precision, parameter :: c0 = 0  ! opt arg in scipy but never changed here
+	double precision :: tol_
 	double precision, allocatable :: row_constraints(:,:), t(:,:)
 	double precision, allocatable :: row_objective(:)
 	double precision, allocatable :: row_pseudo_objective(:), solution(:)
@@ -5505,6 +5509,9 @@ function linprog_std(c, a, b, iostat) result(x)
 	integer, allocatable :: av(:), basis(:)
 
 	if (present(iostat)) iostat = 0
+
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
 
 	if (size(c) /= size(a,2)) then
 		msg = "size(c) does not match size(a,2) in linprog_std()"
@@ -5559,14 +5566,14 @@ function linprog_std(c, a, b, iostat) result(x)
 	!print *, "t initial = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
-	call linprog_solve_simplex(t, basis, phase = 1)
+	call linprog_solve_simplex(t, basis, tol_, phase = 1)
 
 	!print *, "t after phase 1 = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 	!********
 
-	if (abs(t(size(t,1), size(t,2))) >= tol) then
+	if (abs(t(size(t,1), size(t,2))) >= tol_) then
 		print *, "Error: solution is infeasible in linprog_std()"
 		! TODO: panic
 		stop
@@ -5586,7 +5593,7 @@ function linprog_std(c, a, b, iostat) result(x)
 
 	!********
 
-	call linprog_solve_simplex(t, basis, phase = 2)
+	call linprog_solve_simplex(t, basis, tol_, phase = 2)
 	solution = zeros(n + m)
 	solution(basis(:n)) = t(:n, size(t,2))
 	x = solution(:m)
@@ -5623,7 +5630,7 @@ end subroutine rm_cols
 
 !********
 
-subroutine linprog_solve_simplex(t, basis, phase)
+subroutine linprog_solve_simplex(t, basis, tol, phase)
 	! TODO: private
 	!
 	! This is based on `_solve_simplex()` from scipy:
@@ -5633,9 +5640,9 @@ subroutine linprog_solve_simplex(t, basis, phase)
 	use numa__utils
 	double precision, intent(inout) :: t(:,:)
 	integer, intent(inout) :: basis(:)
+	double precision, intent(in) :: tol
 	integer, intent(in) :: phase
 	!********
-	double precision, parameter :: tol = 1.d-10  ! TODO: set once at higher level and pass
 	double precision :: pivval
 	double precision, allocatable :: q(:)
 	integer :: i, k, m, nb, mb, nc, nr, pivcol, pivrow, i1(1), iter, ir, ic

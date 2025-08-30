@@ -2902,6 +2902,7 @@ integer function chapter_4_linprog() result(nfail)
 	use ieee_arithmetic
 	character(len = *), parameter :: label = "chapter_4_linprog"
 
+	double precision :: fval, fexpect
 	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
 		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
 	integer :: n, p
@@ -3102,14 +3103,15 @@ integer function chapter_4_linprog() result(nfail)
 		[2, 3] &
 	))
 	b_ub = [10, 8, 4]
-	! Expect fval = -18
 
+	fexpect = -18
 	expect = [2, 6]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, fval = fval)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 10")
+	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 10")
 
 	!********
 	! A network flow problem with supply and demand at nodes and with costs
@@ -3129,8 +3131,8 @@ integer function chapter_4_linprog() result(nfail)
 		[12, 7] &
 	))
 	b_eq = [0, 19, -16, 33, 0, 0, -36]
-	! Expect fval = 755
 	expect = [19, 0, 16, 0, 0, 0, 0, 0, 0, 3, 33, 0]
+	fexpect = 755
 
 	! TODO: make [a_ub, b_ub] optional?  It's tricky now because you have to be
 	! very careful to get size(a_ub,2) correct even if size 1 is 0
@@ -3139,10 +3141,12 @@ integer function chapter_4_linprog() result(nfail)
 	allocate(a_ub(0,12), b_ub(0))
 
 	!x = linprog(c, a_ub, b_ub)
-	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
-	print *, "x = ", x
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, fval=fval)
+	!print *, "x = ", x
+	print *, "fval = ", fval
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 11")
+	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 11")
 
 	!********
 	! "nontrivial" test from scipy
@@ -3161,12 +3165,13 @@ integer function chapter_4_linprog() result(nfail)
 	b_eq = [-4]
 
 	expect = [101.d0 / 1391, 1462.d0 / 1391, 0.d0, 752.d0 / 1391]
+	fexpect = 7083.d0 / 1391
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, fval=fval)
 	print *, "x = ", x
-	print *, "fval expect = ", 7083.d0 / 1391
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 12")
+	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 12")
 
 	!********
 
@@ -3192,33 +3197,42 @@ integer function chapter_4_linprog() result(nfail)
 
 	!********
 
-	!! Scipy calls `_remove_redundancy_svd()` during presolve for this example,
-	!! which is not implemented here
-	!!
-	!!     "A_eq does not appear to be of full row rank. To improve performance,
-	!!     check the problem formulation for redundant equality constraints."
-	!!
+	! Scipy calls `_remove_redundancy_svd()` during presolve for this example,
+	! which is not implemented here
+	!
+	!     "A_eq does not appear to be of full row rank. To improve performance,
+	!     check the problem formulation for redundant equality constraints."
+	!
 
-	!c = [2.8, 6.3, 10.8, -2.8, -6.3, -10.8]
-	!A_eq = transpose(reshape([ &
-	!	-1, -1, -1, 0, 0, 0, &
-	!	0, 0, 0, 1, 1, 1, &
-	!	1, 0, 0, 1, 0, 0, &
-	!	0, 1, 0, 0, 1, 0, &
-	!	0, 0, 1, 0, 0, 1 &
-	!	], &
-	!	[6, 5] &
-	!))
-	!b_eq = [-0.5, 0.4, 0.3, 0.3, 0.3]
+	c = [2.8, 6.3, 10.8, -2.8, -6.3, -10.8]
+	A_eq = transpose(reshape([ &
+		-1, -1, -1, 0, 0, 0, &
+		0, 0, 0, 1, 1, 1, &
+		1, 0, 0, 1, 0, 0, &
+		0, 1, 0, 0, 1, 0, &
+		0, 0, 1, 0, 0, 1 &
+		], &
+		[6, 5] &
+	))
+	b_eq = [-0.5, 0.4, 0.3, 0.3, 0.3]
 
-	!deallocate(a_ub, b_ub)
-	!allocate(a_ub(0,6), b_ub(0))
+	expect = [0.3d0, 0.2d0, 0.0d0, 0.0d0, 0.1d0, 0.3d0]
 
-	!! TODO: "solution is infeasible".  Can this be fixed with more iterations
-	!! or different tolerance, or can simplex just not cope with this problem?
-	!x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	deallocate(a_ub, b_ub)
+	allocate(a_ub(0,6), b_ub(0))
+
+	! With the default tolerance, the "solution is infeasible" for this case.
+	! It can be worked around with a looser tolerance, although the accuracy of
+	! the solution is also worsened
+	!
+	! Surely there are other pathological cases where the tolerance workaround
+	! does not help.  Those cases would actually require redundancy removal
+
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, tol=1.d-5)
 	!x = linprog_std(c, a_eq, b_eq)
-	!print *, "x = ", x
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-6, nfail, "linprog 13.1")
 
 	!********
 
