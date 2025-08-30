@@ -5262,8 +5262,6 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	a1 = hstack(a1(:, :n_ub), -a1(:, i_free))
 	!print *, "i_free = ", i_free
 
-	!! TODO: review for other off-by-one errors like this
-	!c(n_ub: n_ub+n_free) = -c(i_free)
 	c(n_ub+1: n_ub+n_free) = -c(i_free)
 
 	!print *, "a1 = "
@@ -5500,10 +5498,10 @@ function linprog_std(c, a, b, iostat) result(x)
 	character(len = :), allocatable :: msg
 	double precision, parameter :: c0 = 0  ! ?
 	double precision, parameter :: tol = 1.d-10  ! TODO: pass to linprog_solve_simplex()
-	double precision, allocatable :: row_constraints(:,:), t(:,:), t0(:,:)
+	double precision, allocatable :: row_constraints(:,:), t(:,:)
 	double precision, allocatable :: row_objective(:)
 	double precision, allocatable :: row_pseudo_objective(:), solution(:)
-	integer :: i, m, n, nc
+	integer :: i, m, n
 	integer, allocatable :: av(:), basis(:)
 
 	if (present(iostat)) iostat = 0
@@ -5581,23 +5579,7 @@ function linprog_std(c, a, b, iostat) result(x)
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
 	! Remove the artificial variables columns from the tableau
-	t0 = t
-	nc = 0
-	!print *, "av = ", av
-	do i = 1, size(t,2)
-
-		! TODO: avoid any(). Assume that `av` is sorted to optimize.  Verify
-		! that it's sorted and panic otherwise, but don't explicitly sort it.
-		! Could also use a temp logical array to help without assuming sorted
-		!
-		! `av` is guaranteed to be sorted from the way that it is initialized
-		! and unchanged.  `Basis`, on the other hand, gets modified in phase 1
-		if (any(av == i)) cycle
-
-		nc = nc + 1
-		t(:, nc) = t0(:, i)
-	end do
-	t = t(:, 1:nc)
+	call rm_cols(t, av)
 
 	!print *, "t after removing artificial vars = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
@@ -5610,6 +5592,34 @@ function linprog_std(c, a, b, iostat) result(x)
 	x = solution(:m)
 
 end function linprog_std
+
+!********
+
+subroutine rm_cols(a, indices)
+	! Remove columns at given `indices` from matrix `a`.  Shrink `a` on output
+	use numa__utils
+	double precision, allocatable, intent(inout) :: a(:,:)
+	integer, intent(in) :: indices(:)
+	!********
+	logical, allocatable :: mask(:)
+
+	! Use a temp array to track which indices to keep.  Alternatively you could
+	! assume that `indices` are sorted (possibly with verification)
+	allocate(mask(size(a,2)))
+	mask = .false.
+	mask(indices) = .true.
+	mask = .not. mask
+
+	!print *, "indices = ", indices
+	!print *, "mask    = ", mask
+	!print *, "mask_to_index = ", mask_to_index(mask)
+	!call print_mat(a, "before removing cols")
+
+	a = a(:, mask_to_index(mask))
+
+	!call print_mat(a, "after  removing cols")
+
+end subroutine rm_cols
 
 !********
 
@@ -5698,11 +5708,10 @@ subroutine linprog_solve_simplex(t, basis, phase)
 		!
 		! Beware numpy.masked_where() works exactly the opposite as sensible
 		! Fortran mask :explode:
+		!
+		! Also this minloc requires -standard-semantics for Intel compilers
 		i1 = minloc(t(nr, :nc-1), t(nr, :nc-1) < -tol .and. t(nr, :nc-1) /= 0)
 		pivcol = i1(1)
-
-		! ifx 2024.1.0 has a bug here.  All mask are false but i1 is returned as
-		! 1 when it should be 0
 
 		!print *, "c = ", t(nr, :nc-1)
 		!print *, "m = ", t(nr, :nc-1) < -tol
