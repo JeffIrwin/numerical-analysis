@@ -5356,8 +5356,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, iostat) result(x)
 
 	double precision :: fval, lbi, ubi, INF
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
-		lb_(:), ub_(:), c0(:), a_ub0(:,:), b_ub0(:), a_eq0(:,:), b_eq0(:), &
-		lbs0(:), ubs0(:)
+		lb_(:), ub_(:), c0(:), lbs0(:), ubs0(:)
 	integer :: i, nx, n_unbounded
 
 	INF = ieee_value(INF, ieee_positive_inf)
