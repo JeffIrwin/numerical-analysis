@@ -176,7 +176,7 @@ end subroutine linprog_get_abc
 
 !===============================================================================
 
-function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
+function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) result(x)
 	! Solve a general linear programming problem:
 	!
 	! Minimize:
@@ -203,6 +203,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
 	double precision, optional, allocatable, intent(in) :: lb(:), ub(:)
 
 	double precision, optional, intent(in) :: tol
+	integer, optional, intent(in) :: iters
 	double precision, optional, intent(out) :: fval
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
@@ -212,12 +213,17 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
 	double precision :: lbi, ubi, tol_
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
 		lb_(:), ub_(:), c_(:), lbs0(:), ubs0(:)
-	integer :: i, nx, n_unbounded, io
+	integer :: i, nx, n_unbounded, io, iters_
 
 	if (present(iostat)) iostat = 0
 
 	tol_ = 1.d-10
 	if (present(tol)) tol_ = tol
+
+	iters_ = 1000
+	if (present(iters)) iters_ = iters
+
+	x = [0]
 
 	!print *, repeat("=", 60)
 	!print *, "starting linprog()"
@@ -310,7 +316,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
 
 	call linprog_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
-	x = linprog_std(c_, a, b, tol_, io)
+	x = linprog_std(c_, a, b, tol_, iters_, io)
 	if (io /= 0) then
 		msg = "linprog_std() failed in linprog()"
 		call PANIC(msg, present(iostat))
@@ -352,7 +358,7 @@ end function linprog
 
 !===============================================================================
 
-function linprog_std(c, a, b, tol, iostat) result(x)
+function linprog_std(c, a, b, tol, iters, iostat) result(x)
 	! Solve a linear programming problem in standard form (?):
 	!
 	! Minimize:
@@ -378,6 +384,7 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	double precision, intent(inout) :: b(:)
 
 	double precision, optional, intent(in) :: tol
+	integer, optional, intent(in) :: iters
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
 	!********
@@ -388,13 +395,17 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	double precision, allocatable :: row_constraints(:,:), t(:,:)
 	double precision, allocatable :: row_objective(:)
 	double precision, allocatable :: row_pseudo_objective(:), solution(:)
-	integer :: i, m, n, io
+	integer :: i, m, n, io, iters_
 	integer, allocatable :: av(:), basis(:)
 
 	if (present(iostat)) iostat = 0
+	x = [0]
 
 	tol_ = 1.d-10
 	if (present(tol)) tol_ = tol
+
+	iters_ = 1000
+	if (present(iters)) iters_ = iters
 
 	if (size(c) /= size(a,2)) then
 		msg = "size(c) does not match size(a,2) in linprog_std()"
@@ -449,7 +460,7 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	!print *, "t initial = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
-	call linprog_solve_simplex(t, basis, tol_, phase = 1, iostat = io)
+	call linprog_solve_simplex(t, basis, tol_, iters_, phase = 1, iostat = io)
 	if (io /= 0) then
 		msg = "linprog_solve_simplex() phase 1 failed in linprog_std()"
 		call PANIC(msg, present(iostat))
@@ -483,7 +494,7 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 
 	!********
 
-	call linprog_solve_simplex(t, basis, tol_, phase = 2, iostat = io)
+	call linprog_solve_simplex(t, basis, tol_, iters_, phase = 2, iostat = io)
 	if (io /= 0) then
 		msg = "linprog_solve_simplex() phase 2 failed in linprog_std()"
 		call PANIC(msg, present(iostat))
@@ -527,7 +538,7 @@ end subroutine rm_cols
 
 !********
 
-subroutine linprog_solve_simplex(t, basis, tol, phase, iostat)
+subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 	! This is based on `_solve_simplex()` from scipy:
 	!
 	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L232
@@ -536,6 +547,7 @@ subroutine linprog_solve_simplex(t, basis, tol, phase, iostat)
 	double precision, intent(inout) :: t(:,:)
 	integer, intent(inout) :: basis(:)
 	double precision, intent(in) :: tol
+	integer, intent(in) :: iters
 	integer, intent(in) :: phase
 	integer, optional, intent(out) :: iostat
 	!********
@@ -657,8 +669,7 @@ subroutine linprog_solve_simplex(t, basis, tol, phase, iostat)
 
 		!print *, ""
 		!stop
-		if (iter == 1000) then
-			! TODO: pass max iters optionally from caller
+		if (iter >= iters) then
 			msg = "max iterations reached in linprog_solve_simplex()"
 			call PANIC(msg, present(iostat))
 			iostat = 2
