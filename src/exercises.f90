@@ -3,9 +3,7 @@
 module numa__exercises
 
 	use numa
-	use numa__blas
 	use numa__functions
-	use numa__utils
 
 	implicit none
 

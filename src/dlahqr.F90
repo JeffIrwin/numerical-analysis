@@ -212,7 +212,7 @@ contains
 	subroutine dlahqr(wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
 							iloz, ihiz, z, ldz, info)
 
-		use numa__blas
+		use numa__blarg
 		use numa__utils
 		implicit none
 

@@ -187,7 +187,7 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	!     https://github.com/scipy/scipy/blob/5f112b048b552e8788027dec7e95fb112daeeec1/scipy/optimize/_linprog_util.py#L1030
 
 	use ieee_arithmetic
-	use numa__blas
+	use numa__blarg
 	use numa__utils
 
 	double precision, allocatable, intent(inout) :: c(:)
@@ -357,7 +357,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
 
 	use ieee_arithmetic
 
-	use numa__blas
+	use numa__blarg
 	use numa__utils
 
 	double precision, allocatable, intent(in) :: c(:)
@@ -527,7 +527,7 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	!
 	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L438C5-L438C21
 
-	use numa__blas
+	use numa__blarg
 	use numa__utils
 
 	double precision, intent(in) :: c(:)

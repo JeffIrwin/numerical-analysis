@@ -1,11 +1,11 @@
 
 #include "panic.F90"
 
-!> Basic linear algebra (sub)routines with minimal dependencies
+!> Basic Linear Algebra Routine Group
 !>
-!> This actually has nothing to do with "BLAS" but it's an ok name.  I could
-!> call it math, but this is all math.  Even linalg is too generic.
-module numa__blas
+!> > blarg:  (informal) Expressing frustration or disappointment.
+!> > Blarg! I'm sick of this.
+module numa__blarg
 
 	implicit none
 
@@ -294,5 +294,5 @@ end function diag_get_c64
 
 !===============================================================================
 
-end module numa__blas
+end module numa__blarg
 
