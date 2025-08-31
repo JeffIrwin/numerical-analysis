@@ -16,7 +16,7 @@ var searchData=
   ['tridiag_5ffactor_13',['tridiag_factor',['../namespacenuma____linalg.html#a79995b77354a1cc76288b0a246bdbc07',1,'numa__linalg']]],
   ['tridiag_5finvmul_14',['tridiag_invmul',['../namespacenuma____linalg.html#a6252f86a488bf95cba6389682ac88645',1,'numa__linalg']]],
   ['tridiag_5fsolve_15',['tridiag_solve',['../namespacenuma____linalg.html#a72478ed78bc4a3daaa200e6531357b35',1,'numa__linalg']]],
-  ['triu_16',['triu',['../interfacenuma_1_1triu.html',1,'numa']]],
-  ['triu_5fc64_17',['triu_c64',['../namespacenuma.html#a7accfd2ee0fd6862b681c617c8d1d0b0',1,'numa']]],
-  ['triu_5ff64_18',['triu_f64',['../namespacenuma.html#a42c05743763f0c9c344cbcf0dce98658',1,'numa']]]
+  ['triu_16',['triu',['../interfacenuma____blarg_1_1triu.html',1,'numa__blarg']]],
+  ['triu_5fc64_17',['triu_c64',['../namespacenuma____blarg.html#a988cc548a20cc120d34733cc11a1977f',1,'numa__blarg']]],
+  ['triu_5ff64_18',['triu_f64',['../namespacenuma____blarg.html#a62df4df52a554e683c45c9cf2ac2505e',1,'numa__blarg']]]
 ];

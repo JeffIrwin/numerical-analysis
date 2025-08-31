@@ -93,19 +93,1028 @@ $(function(){initNavTree('namespacenuma____linalg.html','',''); });
 </div><!--header-->
 <div class="contents">
 
-<p>Main public-facing module for numerical analysis.  
+<p>Module for high-level linear algebra. Some other more basic routines can be found in the module <span class="tt"><a class="el" href="namespacenuma____blarg.html" title="Basic Linear Algebra Routine Group.">numa__blarg</a></span>.  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-nested-classes" class="groupheader"><a id="nested-classes" name="nested-classes"></a>
+Data Types</h2></td></tr>
+<tr class="memitem:lu_5Finvmul" id="r_lu_5Finvmul"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1lu__invmul.html">lu_invmul</a></td></tr>
+<tr class="memitem:lu_5Ffactor" id="r_lu_5Ffactor"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1lu__factor.html">lu_factor</a></td></tr>
+<tr class="memitem:lu_5Fsolve" id="r_lu_5Fsolve"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1lu__solve.html">lu_solve</a></td></tr>
+<tr class="memitem:lu_5Fkernel" id="r_lu_5Fkernel"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1lu__kernel.html">lu_kernel</a></td></tr>
+<tr class="memitem:backsub" id="r_backsub"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1backsub.html">backsub</a></td></tr>
+<tr class="memitem:invmul" id="r_invmul"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1invmul.html">invmul</a></td></tr>
+<tr class="memitem:qr_5Fsolve" id="r_qr_5Fsolve"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1qr__solve.html">qr_solve</a></td></tr>
+<tr class="memitem:qr_5Ffactor" id="r_qr_5Ffactor"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1qr__factor.html">qr_factor</a></td></tr>
+<tr class="memitem:qr_5Fget_5Fq_5Fexpl" id="r_qr_5Fget_5Fq_5Fexpl"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1qr__get__q__expl.html">qr_get_q_expl</a></td></tr>
+<tr class="memitem:qr_5Fmul" id="r_qr_5Fmul"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1qr__mul.html">qr_mul</a></td></tr>
+<tr class="memitem:qr_5Fmul_5Ftranspose" id="r_qr_5Fmul_5Ftranspose"><td class="memItemLeft" align="right" valign="top">interface &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="interfacenuma____linalg_1_1qr__mul__transpose.html">qr_mul_transpose</a></td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a79995b77354a1cc76288b0a246bdbc07" id="r_a79995b77354a1cc76288b0a246bdbc07"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a79995b77354a1cc76288b0a246bdbc07">tridiag_factor</a> (a, iostat)</td></tr>
 <tr class="memitem:a72478ed78bc4a3daaa200e6531357b35" id="r_a72478ed78bc4a3daaa200e6531357b35"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a72478ed78bc4a3daaa200e6531357b35">tridiag_solve</a> (a, bx)</td></tr>
 <tr class="memitem:a6252f86a488bf95cba6389682ac88645" id="r_a6252f86a488bf95cba6389682ac88645"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6252f86a488bf95cba6389682ac88645">tridiag_invmul</a> (a, bx, iostat)</td></tr>
 <tr class="memitem:a829701de86b62672bc29a03ef1d60c54" id="r_a829701de86b62672bc29a03ef1d60c54"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a829701de86b62672bc29a03ef1d60c54">tridiag_corner_invmul</a> (aa, bx, iostat)</td></tr>
+<tr class="memitem:a46442e436407bceca851e739039c16e0" id="r_a46442e436407bceca851e739039c16e0"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46442e436407bceca851e739039c16e0">banded_factor</a> (a, al, indx, nl, nu, iostat)</td></tr>
+<tr class="memitem:ae2c5aedc70afce5146ee69427fb31021" id="r_ae2c5aedc70afce5146ee69427fb31021"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae2c5aedc70afce5146ee69427fb31021">banded_solve</a> (a, al, indx, nl, nu, bx)</td></tr>
+<tr class="memitem:a1ef36887659f30881c868e22514bd601" id="r_a1ef36887659f30881c868e22514bd601"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ef36887659f30881c868e22514bd601">banded_invmul</a> (a, bx, nl, nu)</td></tr>
+<tr class="memdesc:a1ef36887659f30881c868e22514bd601"><td class="mdescLeft">&#160;</td><td class="mdescRight">Solves a linear system <span class="tt">a*x == b</span> for <span class="tt">x</span> with a banded matrix <span class="tt">a</span>.  <br /></td></tr>
+<tr class="memitem:a53beac58761e685a2566b3ba042fbbdd" id="r_a53beac58761e685a2566b3ba042fbbdd"><td class="memItemLeft" align="right" valign="top">double complex function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a53beac58761e685a2566b3ba042fbbdd">invmul_vec_c64</a> (a, b)</td></tr>
+<tr class="memitem:af0289e67e871f9d2f7680ca6ac409faf" id="r_af0289e67e871f9d2f7680ca6ac409faf"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af0289e67e871f9d2f7680ca6ac409faf">lu_invmul_vec</a> (a, bx)</td></tr>
+<tr class="memitem:aecef58e1dde2465871e414ba419d9263" id="r_aecef58e1dde2465871e414ba419d9263"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aecef58e1dde2465871e414ba419d9263">invmul_vec_f64</a> (a, b)</td></tr>
+<tr class="memitem:a76277a10bd0fd66444e4747c3df5b9d9" id="r_a76277a10bd0fd66444e4747c3df5b9d9"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a76277a10bd0fd66444e4747c3df5b9d9">invmul_mat_f64</a> (a, b)</td></tr>
+<tr class="memitem:a303035ecd5f2a764b738f2966ebafd26" id="r_a303035ecd5f2a764b738f2966ebafd26"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a303035ecd5f2a764b738f2966ebafd26">lu_invmul_mat</a> (a, bx)</td></tr>
+<tr class="memitem:a49982eb1732bc2eaf021c21379a44062" id="r_a49982eb1732bc2eaf021c21379a44062"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a49982eb1732bc2eaf021c21379a44062">lu_factor_f64</a> (a, pivot, allow_singular, iostat)</td></tr>
+<tr class="memitem:a39198a16e5e3fc093af0da6c39537d83" id="r_a39198a16e5e3fc093af0da6c39537d83"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a39198a16e5e3fc093af0da6c39537d83">lu_factor_c64</a> (a, pivot, allow_singular, iostat)</td></tr>
+<tr class="memitem:a90c8effec8ced43fadb82cb466c807dd" id="r_a90c8effec8ced43fadb82cb466c807dd"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90c8effec8ced43fadb82cb466c807dd">cholesky_factor</a> (a, allow_singular, iostat)</td></tr>
+<tr class="memitem:acbb767815530b995c1ff977c48061281" id="r_acbb767815530b995c1ff977c48061281"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbb767815530b995c1ff977c48061281">qr_factor_gram_schmidt</a> (a, r)</td></tr>
+<tr class="memitem:a690d6c545c43cdebca917680a63c455d" id="r_a690d6c545c43cdebca917680a63c455d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a690d6c545c43cdebca917680a63c455d">qr_factor_f64</a> (a, diag_, allow_rect, iostat)</td></tr>
+<tr class="memitem:a8f92857012568e6c8da3f5efbb741672" id="r_a8f92857012568e6c8da3f5efbb741672"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f92857012568e6c8da3f5efbb741672">qr_mul_mat_f64</a> (qr, diag_, x)</td></tr>
+<tr class="memitem:af52aefd18fead036d08326dfe27ad7f1" id="r_af52aefd18fead036d08326dfe27ad7f1"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af52aefd18fead036d08326dfe27ad7f1">qr_mul_transpose_mat_f64</a> (qr, diag_, x)</td></tr>
+<tr class="memitem:a994df206f6fbe8f8d85c6239a1c1e692" id="r_a994df206f6fbe8f8d85c6239a1c1e692"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a994df206f6fbe8f8d85c6239a1c1e692">qr_mul_transpose_vec_f64</a> (qr, diag_, x)</td></tr>
+<tr class="memitem:abe4292818e38751c032664508db38415" id="r_abe4292818e38751c032664508db38415"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abe4292818e38751c032664508db38415">qr_get_q_expl_f64</a> (qr, diag_)</td></tr>
+<tr class="memitem:a4fbc6d402d01ef69739384975d8a9386" id="r_a4fbc6d402d01ef69739384975d8a9386"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4fbc6d402d01ef69739384975d8a9386">qr_factor_c64</a> (a, diag_, iostat)</td></tr>
+<tr class="memitem:ab1038b3d730eddd42d1b28a87b32255c" id="r_ab1038b3d730eddd42d1b28a87b32255c"><td class="memItemLeft" align="right" valign="top">double complex function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab1038b3d730eddd42d1b28a87b32255c">qr_mul_mat_c64</a> (qr, diag_, x)</td></tr>
+<tr class="memitem:a5c653febce581f4efc9d7371f65fcfa6" id="r_a5c653febce581f4efc9d7371f65fcfa6"><td class="memItemLeft" align="right" valign="top">double complex function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c653febce581f4efc9d7371f65fcfa6">qr_get_q_expl_c64</a> (qr, diag_)</td></tr>
+<tr class="memitem:a5f667976bb88e200d1c416ffcb16e15b" id="r_a5f667976bb88e200d1c416ffcb16e15b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5f667976bb88e200d1c416ffcb16e15b">cholesky_solve</a> (a, bx)</td></tr>
+<tr class="memitem:a4af3e6c4c4dde10ddfc62f55cd00b82b" id="r_a4af3e6c4c4dde10ddfc62f55cd00b82b"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4af3e6c4c4dde10ddfc62f55cd00b82b">lu_solve_c64</a> (a, bx, pivot)</td></tr>
+<tr class="memitem:a84fc684b599ff1ed546abf4a60c2cac7" id="r_a84fc684b599ff1ed546abf4a60c2cac7"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84fc684b599ff1ed546abf4a60c2cac7">lu_solve_f64</a> (a, bx, pivot)</td></tr>
+<tr class="memitem:a080b11a4af74ccfe5734ba73863570f0" id="r_a080b11a4af74ccfe5734ba73863570f0"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a080b11a4af74ccfe5734ba73863570f0">inv</a> (a)</td></tr>
+<tr class="memitem:a7c350daaf97591f45d76f2c10d0ffd4d" id="r_a7c350daaf97591f45d76f2c10d0ffd4d"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7c350daaf97591f45d76f2c10d0ffd4d">invert</a> (a)</td></tr>
+<tr class="memitem:a9baeaae3556fc03f21e194edc596ed5e" id="r_a9baeaae3556fc03f21e194edc596ed5e"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9baeaae3556fc03f21e194edc596ed5e">gauss_jordan</a> (a, iostat)</td></tr>
+<tr class="memitem:a23a97f402556d50a0e6bf28be49f58e5" id="r_a23a97f402556d50a0e6bf28be49f58e5"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a23a97f402556d50a0e6bf28be49f58e5">matmul_triu_ge</a> (upper, ge, iostat)</td></tr>
+<tr class="memitem:aaf38d18e6d9d39c22dc240eedacda959" id="r_aaf38d18e6d9d39c22dc240eedacda959"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf38d18e6d9d39c22dc240eedacda959">lu_kernel_f64</a> (a)</td></tr>
+<tr class="memitem:a4366d595b21a898fc668e69421178cf1" id="r_a4366d595b21a898fc668e69421178cf1"><td class="memItemLeft" align="right" valign="top">double complex function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4366d595b21a898fc668e69421178cf1">lu_kernel_c64</a> (a)</td></tr>
+<tr class="memitem:af2aa98c6a76a107949392fc97afc4251" id="r_af2aa98c6a76a107949392fc97afc4251"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af2aa98c6a76a107949392fc97afc4251">qr_solve_f64</a> (a, b, allow_rect, iostat)</td></tr>
+<tr class="memitem:aaf7ef4507fd489d324f86ebc22dd400f" id="r_aaf7ef4507fd489d324f86ebc22dd400f"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaf7ef4507fd489d324f86ebc22dd400f">backsub_f64</a> (a, bx, pivot)</td></tr>
+<tr class="memitem:ad504909a777b2852baa80283b720d5a2" id="r_ad504909a777b2852baa80283b720d5a2"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad504909a777b2852baa80283b720d5a2">backsub_c64</a> (a, bx, pivot)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Main public-facing module for numerical analysis. </p>
+<div class="textblock"><p>Module for high-level linear algebra. Some other more basic routines can be found in the module <span class="tt"><a class="el" href="namespacenuma____blarg.html" title="Basic Linear Algebra Routine Group.">numa__blarg</a></span>. </p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
+<a id="ad504909a777b2852baa80283b720d5a2" name="ad504909a777b2852baa80283b720d5a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad504909a777b2852baa80283b720d5a2">&#9670;&#160;</a></span>backsub_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::backsub_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>pivot</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aaf7ef4507fd489d324f86ebc22dd400f" name="aaf7ef4507fd489d324f86ebc22dd400f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf7ef4507fd489d324f86ebc22dd400f">&#9670;&#160;</a></span>backsub_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::backsub_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>pivot</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a46442e436407bceca851e739039c16e0" name="a46442e436407bceca851e739039c16e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46442e436407bceca851e739039c16e0">&#9670;&#160;</a></span>banded_factor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::banded_factor </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(out), allocatable</td>          <td class="paramname"><span class="paramname"><em>al</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(out), allocatable</td>          <td class="paramname"><span class="paramname"><em>indx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>nl</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>nu</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a46442e436407bceca851e739039c16e0_icgraph.png" border="0" usemap="#anamespacenuma____linalg_a46442e436407bceca851e739039c16e0_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a46442e436407bceca851e739039c16e0_icgraph" id="anamespacenuma____linalg_a46442e436407bceca851e739039c16e0_icgraph">
+<area shape="rect" title=" " alt="" coords="219,5,384,45"/>
+<area shape="rect" href="namespacenuma____linalg.html#a1ef36887659f30881c868e22514bd601" title="Solves a linear system a*x == b for x with a banded matrix a." alt="" coords="5,5,171,45"/>
+<area shape="poly" title=" " alt="" coords="205,28,171,28,171,23,205,23"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a1ef36887659f30881c868e22514bd601" name="a1ef36887659f30881c868e22514bd601"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ef36887659f30881c868e22514bd601">&#9670;&#160;</a></span>banded_invmul()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::banded_invmul </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>nl</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>nu</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Solves a linear system <span class="tt">a*x == b</span> for <span class="tt">x</span> with a banded matrix <span class="tt">a</span>. </p>
+<p>Banded matrix <span class="tt">a</span> is packed into a mostly sparse rectangular array. For example, this data structure: </p><pre class="fragment">nl = 2  ! number of lower bands
+nu = 1  ! number of upper bands
+n  = 5  ! size of x
+allocate(a(nl+nu+1, n))
+a(:, 1) = [0, 0, 5, 2]
+a(:, 2) = [0, 3, 6, 2]
+a(:, 3) = [2, 3, 7, 2]
+a(:, 4) = [2, 3, 8, 2]
+a(:, 5) = [2, 3, 3, 0]
+</pre><p>represents this dense matrix in MATLAB/Scilab layout: </p><pre class="fragment">a = [
+    5 2 0 0 0
+    3 6 2 0 0
+    2 3 7 2 0
+    0 2 3 8 2
+    0 0 2 3 3
+]
+</pre><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">a</td><td>Banded matrix on input, factored on output </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">bx</td><td>RHS <span class="tt">b</span> on input, <span class="tt">x</span> on output </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nl</td><td>Number of lower non-zero bands below diagonal </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">nu</td><td>Number of upper non-zero bands above diagonal </td></tr>
+  </table>
+  </dd>
+</dl>
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a1ef36887659f30881c868e22514bd601_cgraph.png" border="0" usemap="#anamespacenuma____linalg_a1ef36887659f30881c868e22514bd601_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a1ef36887659f30881c868e22514bd601_cgraph" id="anamespacenuma____linalg_a1ef36887659f30881c868e22514bd601_cgraph">
+<area shape="rect" title="Solves a linear system a*x == b for x with a banded matrix a." alt="" coords="5,37,171,77"/>
+<area shape="rect" href="namespacenuma____linalg.html#a46442e436407bceca851e739039c16e0" title=" " alt="" coords="219,5,384,45"/>
+<area shape="poly" title=" " alt="" coords="170,42,205,37,205,42,171,48"/>
+<area shape="rect" href="namespacenuma____linalg.html#ae2c5aedc70afce5146ee69427fb31021" title=" " alt="" coords="219,69,384,109"/>
+<area shape="poly" title=" " alt="" coords="171,67,205,72,205,78,170,72"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="ae2c5aedc70afce5146ee69427fb31021" name="ae2c5aedc70afce5146ee69427fb31021"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae2c5aedc70afce5146ee69427fb31021">&#9670;&#160;</a></span>banded_solve()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::banded_solve </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>al</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>indx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>nl</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(in)</td>          <td class="paramname"><span class="paramname"><em>nu</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_ae2c5aedc70afce5146ee69427fb31021_icgraph.png" border="0" usemap="#anamespacenuma____linalg_ae2c5aedc70afce5146ee69427fb31021_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_ae2c5aedc70afce5146ee69427fb31021_icgraph" id="anamespacenuma____linalg_ae2c5aedc70afce5146ee69427fb31021_icgraph">
+<area shape="rect" title=" " alt="" coords="219,5,384,45"/>
+<area shape="rect" href="namespacenuma____linalg.html#a1ef36887659f30881c868e22514bd601" title="Solves a linear system a*x == b for x with a banded matrix a." alt="" coords="5,5,171,45"/>
+<area shape="poly" title=" " alt="" coords="205,28,171,28,171,23,205,23"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a90c8effec8ced43fadb82cb466c807dd" name="a90c8effec8ced43fadb82cb466c807dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a90c8effec8ced43fadb82cb466c807dd">&#9670;&#160;</a></span>cholesky_factor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::cholesky_factor </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>allow_singular</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5f667976bb88e200d1c416ffcb16e15b" name="a5f667976bb88e200d1c416ffcb16e15b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5f667976bb88e200d1c416ffcb16e15b">&#9670;&#160;</a></span>cholesky_solve()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::cholesky_solve </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9baeaae3556fc03f21e194edc596ed5e" name="a9baeaae3556fc03f21e194edc596ed5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9baeaae3556fc03f21e194edc596ed5e">&#9670;&#160;</a></span>gauss_jordan()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::gauss_jordan </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout), allocatable</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a9baeaae3556fc03f21e194edc596ed5e_icgraph.png" border="0" usemap="#anamespacenuma____linalg_a9baeaae3556fc03f21e194edc596ed5e_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a9baeaae3556fc03f21e194edc596ed5e_icgraph" id="anamespacenuma____linalg_a9baeaae3556fc03f21e194edc596ed5e_icgraph">
+<area shape="rect" title=" " alt="" coords="208,47,363,87"/>
+<area shape="rect" href="namespacenuma____linalg.html#a080b11a4af74ccfe5734ba73863570f0" title=" " alt="" coords="14,29,151,55"/>
+<area shape="poly" title=" " alt="" coords="194,59,151,53,152,48,195,53"/>
+<area shape="rect" href="namespacenuma____linalg.html#a7c350daaf97591f45d76f2c10d0ffd4d" title=" " alt="" coords="5,79,160,104"/>
+<area shape="poly" title=" " alt="" coords="195,81,161,85,160,79,194,75"/>
+<area shape="poly" title=" " alt="" coords="119,20,109,11,83,8,61,10,50,15,47,20,54,28,49,31,42,21,46,11,60,5,83,3,111,6,122,16"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a080b11a4af74ccfe5734ba73863570f0" name="a080b11a4af74ccfe5734ba73863570f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a080b11a4af74ccfe5734ba73863570f0">&#9670;&#160;</a></span>inv()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:,:), allocatable numa__linalg::inv </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in), allocatable</td>          <td class="paramname"><span class="paramname"><em>a</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_cgraph.png" border="0" usemap="#anamespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_cgraph" id="anamespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_cgraph">
+<area shape="rect" title=" " alt="" coords="5,29,143,55"/>
+<area shape="poly" title=" " alt="" coords="42,31,36,21,39,11,52,5,74,3,100,6,111,15,108,19,98,11,74,8,54,10,43,15,41,20,47,28"/>
+<area shape="rect" href="namespacenuma____linalg.html#a9baeaae3556fc03f21e194edc596ed5e" title=" " alt="" coords="191,22,345,62"/>
+<area shape="poly" title=" " alt="" coords="143,39,176,39,176,45,143,45"/>
+</map>
+</div>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_icgraph.png" border="0" usemap="#anamespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_icgraph" id="anamespacenuma____linalg_a080b11a4af74ccfe5734ba73863570f0_icgraph">
+<area shape="rect" title=" " alt="" coords="5,29,143,55"/>
+<area shape="poly" title=" " alt="" coords="97,18,90,11,74,8,60,10,53,15,51,20,55,28,51,30,46,21,48,11,58,5,74,3,93,6,101,14"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a7c350daaf97591f45d76f2c10d0ffd4d" name="a7c350daaf97591f45d76f2c10d0ffd4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c350daaf97591f45d76f2c10d0ffd4d">&#9670;&#160;</a></span>invert()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::invert </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout), allocatable</td>          <td class="paramname"><span class="paramname"><em>a</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a7c350daaf97591f45d76f2c10d0ffd4d_cgraph.png" border="0" usemap="#anamespacenuma____linalg_a7c350daaf97591f45d76f2c10d0ffd4d_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a7c350daaf97591f45d76f2c10d0ffd4d_cgraph" id="anamespacenuma____linalg_a7c350daaf97591f45d76f2c10d0ffd4d_cgraph">
+<area shape="rect" title=" " alt="" coords="5,13,160,38"/>
+<area shape="rect" href="namespacenuma____linalg.html#a9baeaae3556fc03f21e194edc596ed5e" title=" " alt="" coords="208,5,363,45"/>
+<area shape="poly" title=" " alt="" coords="160,23,194,23,194,28,160,28"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a76277a10bd0fd66444e4747c3df5b9d9" name="a76277a10bd0fd66444e4747c3df5b9d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76277a10bd0fd66444e4747c3df5b9d9">&#9670;&#160;</a></span>invmul_mat_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:,:), allocatable numa__linalg::invmul_mat_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>b</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a53beac58761e685a2566b3ba042fbbdd" name="a53beac58761e685a2566b3ba042fbbdd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a53beac58761e685a2566b3ba042fbbdd">&#9670;&#160;</a></span>invmul_vec_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double complex function, dimension(:), allocatable numa__linalg::invmul_vec_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>b</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aecef58e1dde2465871e414ba419d9263" name="aecef58e1dde2465871e414ba419d9263"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aecef58e1dde2465871e414ba419d9263">&#9670;&#160;</a></span>invmul_vec_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:), allocatable numa__linalg::invmul_vec_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>b</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a39198a16e5e3fc093af0da6c39537d83" name="a39198a16e5e3fc093af0da6c39537d83"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a39198a16e5e3fc093af0da6c39537d83">&#9670;&#160;</a></span>lu_factor_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::lu_factor_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(inout), allocatable</td>          <td class="paramname"><span class="paramname"><em>pivot</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>allow_singular</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a49982eb1732bc2eaf021c21379a44062" name="a49982eb1732bc2eaf021c21379a44062"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a49982eb1732bc2eaf021c21379a44062">&#9670;&#160;</a></span>lu_factor_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::lu_factor_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(inout), allocatable</td>          <td class="paramname"><span class="paramname"><em>pivot</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>allow_singular</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a303035ecd5f2a764b738f2966ebafd26" name="a303035ecd5f2a764b738f2966ebafd26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a303035ecd5f2a764b738f2966ebafd26">&#9670;&#160;</a></span>lu_invmul_mat()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::lu_invmul_mat </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af0289e67e871f9d2f7680ca6ac409faf" name="af0289e67e871f9d2f7680ca6ac409faf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af0289e67e871f9d2f7680ca6ac409faf">&#9670;&#160;</a></span>lu_invmul_vec()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::lu_invmul_vec </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4366d595b21a898fc668e69421178cf1" name="a4366d595b21a898fc668e69421178cf1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4366d595b21a898fc668e69421178cf1">&#9670;&#160;</a></span>lu_kernel_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double complex function, dimension(:), allocatable numa__linalg::lu_kernel_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aaf38d18e6d9d39c22dc240eedacda959" name="aaf38d18e6d9d39c22dc240eedacda959"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaf38d18e6d9d39c22dc240eedacda959">&#9670;&#160;</a></span>lu_kernel_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:), allocatable numa__linalg::lu_kernel_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4af3e6c4c4dde10ddfc62f55cd00b82b" name="a4af3e6c4c4dde10ddfc62f55cd00b82b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4af3e6c4c4dde10ddfc62f55cd00b82b">&#9670;&#160;</a></span>lu_solve_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::lu_solve_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pivot</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a84fc684b599ff1ed546abf4a60c2cac7" name="a84fc684b599ff1ed546abf4a60c2cac7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a84fc684b599ff1ed546abf4a60c2cac7">&#9670;&#160;</a></span>lu_solve_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::lu_solve_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>bx</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>pivot</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a23a97f402556d50a0e6bf28be49f58e5" name="a23a97f402556d50a0e6bf28be49f58e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23a97f402556d50a0e6bf28be49f58e5">&#9670;&#160;</a></span>matmul_triu_ge()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:,:), allocatable numa__linalg::matmul_triu_ge </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>upper</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>ge</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a23a97f402556d50a0e6bf28be49f58e5_icgraph.png" border="0" usemap="#anamespacenuma____linalg_a23a97f402556d50a0e6bf28be49f58e5_icgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a23a97f402556d50a0e6bf28be49f58e5_icgraph" id="anamespacenuma____linalg_a23a97f402556d50a0e6bf28be49f58e5_icgraph">
+<area shape="rect" title=" " alt="" coords="236,5,404,45"/>
+<area shape="rect" href="namespacenuma____eig.html#a32d89572359c6193bbe208375d66f853" title=" " alt="" coords="5,13,188,38"/>
+<area shape="poly" title=" " alt="" coords="222,28,188,28,188,23,222,23"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a4fbc6d402d01ef69739384975d8a9386" name="a4fbc6d402d01ef69739384975d8a9386"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4fbc6d402d01ef69739384975d8a9386">&#9670;&#160;</a></span>qr_factor_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::qr_factor_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:), intent(out), allocatable</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a4fbc6d402d01ef69739384975d8a9386_cgraph.png" border="0" usemap="#anamespacenuma____linalg_a4fbc6d402d01ef69739384975d8a9386_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a4fbc6d402d01ef69739384975d8a9386_cgraph" id="anamespacenuma____linalg_a4fbc6d402d01ef69739384975d8a9386_cgraph">
+<area shape="rect" title=" " alt="" coords="5,67,211,92"/>
+<area shape="rect" href="namespacenuma____blarg.html#a79cbebd531ee01b40a5b96f0049dfa93" title=" " alt="" coords="259,67,441,92"/>
+<area shape="poly" title=" " alt="" coords="211,77,245,77,245,82,211,82"/>
+<area shape="rect" href="namespacenuma____blarg.html#a8cbf4bbb457b92668659dc51fdee1bf3" title=" " alt="" coords="489,29,652,55"/>
+<area shape="poly" title=" " alt="" coords="425,64,481,54,482,60,426,69"/>
+<area shape="rect" href="namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="499,103,642,128"/>
+<area shape="poly" title=" " alt="" coords="429,89,486,99,485,104,428,95"/>
+<area shape="poly" title=" " alt="" coords="535,31,527,21,531,11,546,5,571,3,601,6,613,15,610,20,599,11,571,8,547,10,535,15,532,20,539,28"/>
+<area shape="poly" title=" " alt="" coords="535,104,527,94,531,84,546,78,571,76,601,80,613,89,610,93,599,85,571,81,547,83,535,88,532,94,539,101"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a690d6c545c43cdebca917680a63c455d" name="a690d6c545c43cdebca917680a63c455d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a690d6c545c43cdebca917680a63c455d">&#9670;&#160;</a></span>qr_factor_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::qr_factor_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(out), allocatable</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in), optional</td>          <td class="paramname"><span class="paramname"><em>allow_rect</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a690d6c545c43cdebca917680a63c455d_cgraph.png" border="0" usemap="#anamespacenuma____linalg_a690d6c545c43cdebca917680a63c455d_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a690d6c545c43cdebca917680a63c455d_cgraph" id="anamespacenuma____linalg_a690d6c545c43cdebca917680a63c455d_cgraph">
+<area shape="rect" title=" " alt="" coords="5,29,208,55"/>
+<area shape="rect" href="namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="256,29,399,55"/>
+<area shape="poly" title=" " alt="" coords="208,39,242,39,242,45,208,45"/>
+<area shape="poly" title=" " alt="" coords="292,31,284,21,288,11,303,5,327,3,358,6,370,15,367,20,356,11,327,8,304,10,292,15,289,20,296,28"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="acbb767815530b995c1ff977c48061281" name="acbb767815530b995c1ff977c48061281"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbb767815530b995c1ff977c48061281">&#9670;&#160;</a></span>qr_factor_gram_schmidt()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">subroutine numa__linalg::qr_factor_gram_schmidt </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(out), allocatable</td>          <td class="paramname"><span class="paramname"><em>r</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5c653febce581f4efc9d7371f65fcfa6" name="a5c653febce581f4efc9d7371f65fcfa6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c653febce581f4efc9d7371f65fcfa6">&#9670;&#160;</a></span>qr_get_q_expl_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double complex function, dimension(:,:), allocatable numa__linalg::qr_get_q_expl_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>qr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_a5c653febce581f4efc9d7371f65fcfa6_cgraph.png" border="0" usemap="#anamespacenuma____linalg_a5c653febce581f4efc9d7371f65fcfa6_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_a5c653febce581f4efc9d7371f65fcfa6_cgraph" id="anamespacenuma____linalg_a5c653febce581f4efc9d7371f65fcfa6_cgraph">
+<area shape="rect" title=" " alt="" coords="5,22,164,62"/>
+<area shape="rect" href="namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="212,29,351,55"/>
+<area shape="poly" title=" " alt="" coords="164,39,198,39,198,45,164,45"/>
+<area shape="poly" title=" " alt="" coords="249,31,242,21,246,11,259,5,281,3,308,6,319,15,316,19,306,11,281,8,261,10,250,15,248,20,253,28"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="abe4292818e38751c032664508db38415" name="abe4292818e38751c032664508db38415"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe4292818e38751c032664508db38415">&#9670;&#160;</a></span>qr_get_q_expl_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:,:), allocatable numa__linalg::qr_get_q_expl_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>qr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="namespacenuma____linalg_abe4292818e38751c032664508db38415_cgraph.png" border="0" usemap="#anamespacenuma____linalg_abe4292818e38751c032664508db38415_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____linalg_abe4292818e38751c032664508db38415_cgraph" id="anamespacenuma____linalg_abe4292818e38751c032664508db38415_cgraph">
+<area shape="rect" title=" " alt="" coords="5,22,164,62"/>
+<area shape="rect" href="namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="212,29,351,55"/>
+<area shape="poly" title=" " alt="" coords="164,39,198,39,198,45,164,45"/>
+<area shape="poly" title=" " alt="" coords="249,31,242,21,246,11,259,5,281,3,308,6,319,15,316,19,306,11,281,8,261,10,250,15,248,20,253,28"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="ab1038b3d730eddd42d1b28a87b32255c" name="ab1038b3d730eddd42d1b28a87b32255c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab1038b3d730eddd42d1b28a87b32255c">&#9670;&#160;</a></span>qr_mul_mat_c64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double complex function, dimension(:,:), allocatable numa__linalg::qr_mul_mat_c64 </td>
+          <td>(</td>
+          <td class="paramtype">double complex, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>qr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double complex, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a8f92857012568e6c8da3f5efbb741672" name="a8f92857012568e6c8da3f5efbb741672"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8f92857012568e6c8da3f5efbb741672">&#9670;&#160;</a></span>qr_mul_mat_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:,:), allocatable numa__linalg::qr_mul_mat_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>qr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af52aefd18fead036d08326dfe27ad7f1" name="af52aefd18fead036d08326dfe27ad7f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af52aefd18fead036d08326dfe27ad7f1">&#9670;&#160;</a></span>qr_mul_transpose_mat_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:,:), allocatable numa__linalg::qr_mul_transpose_mat_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>qr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a994df206f6fbe8f8d85c6239a1c1e692" name="a994df206f6fbe8f8d85c6239a1c1e692"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a994df206f6fbe8f8d85c6239a1c1e692">&#9670;&#160;</a></span>qr_mul_transpose_vec_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:), allocatable numa__linalg::qr_mul_transpose_vec_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>qr</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>diag_</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>x</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af2aa98c6a76a107949392fc97afc4251" name="af2aa98c6a76a107949392fc97afc4251"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2aa98c6a76a107949392fc97afc4251">&#9670;&#160;</a></span>qr_solve_f64()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double precision function, dimension(:), allocatable numa__linalg::qr_solve_f64 </td>
+          <td>(</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(inout)</td>          <td class="paramname"><span class="paramname"><em>a</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double precision, dimension(:), intent(in)</td>          <td class="paramname"><span class="paramname"><em>b</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">logical, intent(in)</td>          <td class="paramname"><span class="paramname"><em>allow_rect</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a829701de86b62672bc29a03ef1d60c54" name="a829701de86b62672bc29a03ef1d60c54"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a829701de86b62672bc29a03ef1d60c54">&#9670;&#160;</a></span>tridiag_corner_invmul()</h2>
 

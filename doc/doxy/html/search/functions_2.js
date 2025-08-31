@@ -30,8 +30,8 @@ var searchData=
   ['chapter_5f6_5feig_5flapack_27',['chapter_6_eig_lapack',['../namespacenuma____exercises.html#a4d511d9b37582a0ae588f446f5854872',1,'numa__exercises']]],
   ['chapter_5f6_5ffrancis_5fqr_28',['chapter_6_francis_qr',['../namespacenuma____exercises.html#ab5b37a891f8826f3449413ee25b677d8',1,'numa__exercises']]],
   ['chapter_5f6_5fhessenberg_5fqr_29',['chapter_6_hessenberg_qr',['../namespacenuma____exercises.html#acbb53e512ebb071fb9c47793da1d237d',1,'numa__exercises']]],
-  ['cholesky_5ffactor_30',['cholesky_factor',['../namespacenuma.html#a61809f872c4adbf1ee5709a258365265',1,'numa']]],
-  ['cholesky_5fsolve_31',['cholesky_solve',['../namespacenuma.html#a4a02690108dcdee0b7cc67c9de4a35ce',1,'numa']]],
+  ['cholesky_5ffactor_30',['cholesky_factor',['../namespacenuma____linalg.html#a90c8effec8ced43fadb82cb466c807dd',1,'numa__linalg']]],
+  ['cholesky_5fsolve_31',['cholesky_solve',['../namespacenuma____linalg.html#a5f667976bb88e200d1c416ffcb16e15b',1,'numa__linalg']]],
   ['compare_5flex_32',['compare_lex',['../namespacenuma____utils.html#a6158431e90414ca32c3649ba6b92c17c',1,'numa__utils']]],
   ['compare_5flex_5fc64_33',['compare_lex_c64',['../namespacenuma____utils.html#a83e4b6de76406acd073df11d6b3ec205',1,'numa__utils']]],
   ['cotd_5ffn_34',['cotd_fn',['../namespacenuma____functions.html#ab7bca4ece6893c6125bae18b3a8ae2d2',1,'numa__functions']]]

@@ -11,12 +11,12 @@ var searchData=
   ['lt_5flex_5fc64_8',['lt_lex_c64',['../namespacenuma____utils.html#a591728e44a246e14b2641f8aa1ef52fc',1,'numa__utils']]],
   ['lte_5flex_9',['lte_lex',['../namespacenuma____utils.html#ac62dc390e25d3c03ad10ff9f8055728b',1,'numa__utils']]],
   ['lte_5flex_5fc64_10',['lte_lex_c64',['../namespacenuma____utils.html#aff3000ada7f27f71f88bbf54885ac579',1,'numa__utils']]],
-  ['lu_5ffactor_5fc64_11',['lu_factor_c64',['../namespacenuma.html#a6305690bbe488a78718e1e9e6c83171f',1,'numa']]],
-  ['lu_5ffactor_5ff64_12',['lu_factor_f64',['../namespacenuma.html#ad3bde05f663eff09178a17f18f901ca0',1,'numa']]],
-  ['lu_5finvmul_5fmat_13',['lu_invmul_mat',['../namespacenuma.html#aa1f654b533ed64d09c947d63891234dd',1,'numa']]],
-  ['lu_5finvmul_5fvec_14',['lu_invmul_vec',['../namespacenuma.html#a97c9aa915b072280f24a5c07ac0812ab',1,'numa']]],
-  ['lu_5fkernel_5fc64_15',['lu_kernel_c64',['../namespacenuma.html#a30dab925ea5947be8665c7a129c17beb',1,'numa']]],
-  ['lu_5fkernel_5ff64_16',['lu_kernel_f64',['../namespacenuma.html#ab44f85f8bfc90b7aecc1df769282e18d',1,'numa']]],
-  ['lu_5fsolve_5fc64_17',['lu_solve_c64',['../namespacenuma.html#ae17e47b505925317bf45c68e82311a7a',1,'numa']]],
-  ['lu_5fsolve_5ff64_18',['lu_solve_f64',['../namespacenuma.html#ab3937bde329ed9133e1922bef3f00470',1,'numa']]]
+  ['lu_5ffactor_5fc64_11',['lu_factor_c64',['../namespacenuma____linalg.html#a39198a16e5e3fc093af0da6c39537d83',1,'numa__linalg']]],
+  ['lu_5ffactor_5ff64_12',['lu_factor_f64',['../namespacenuma____linalg.html#a49982eb1732bc2eaf021c21379a44062',1,'numa__linalg']]],
+  ['lu_5finvmul_5fmat_13',['lu_invmul_mat',['../namespacenuma____linalg.html#a303035ecd5f2a764b738f2966ebafd26',1,'numa__linalg']]],
+  ['lu_5finvmul_5fvec_14',['lu_invmul_vec',['../namespacenuma____linalg.html#af0289e67e871f9d2f7680ca6ac409faf',1,'numa__linalg']]],
+  ['lu_5fkernel_5fc64_15',['lu_kernel_c64',['../namespacenuma____linalg.html#a4366d595b21a898fc668e69421178cf1',1,'numa__linalg']]],
+  ['lu_5fkernel_5ff64_16',['lu_kernel_f64',['../namespacenuma____linalg.html#aaf38d18e6d9d39c22dc240eedacda959',1,'numa__linalg']]],
+  ['lu_5fsolve_5fc64_17',['lu_solve_c64',['../namespacenuma____linalg.html#a4af3e6c4c4dde10ddfc62f55cd00b82b',1,'numa__linalg']]],
+  ['lu_5fsolve_5ff64_18',['lu_solve_f64',['../namespacenuma____linalg.html#a84fc684b599ff1ed546abf4a60c2cac7',1,'numa__linalg']]]
 ];

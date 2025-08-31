@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['hess_0',['hess',['../namespacenuma.html#ae9ffddb64b05eda1a19dd7e5b93c9f45',1,'numa']]],
-  ['house_1',['house',['../namespacenuma.html#ac82810796b087d7112b50c6591c8358e',1,'numa']]],
+  ['hess_0',['hess',['../namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c',1,'numa__eig']]],
+  ['house_1',['house',['../namespacenuma____eig.html#a42b25b90462d055242dfe9d1b037081f',1,'numa__eig']]],
   ['house_5fc64_2',['house_c64',['../namespacenuma____blarg.html#a79cbebd531ee01b40a5b96f0049dfa93',1,'numa__blarg']]],
   ['house_5ff64_3',['house_f64',['../namespacenuma____blarg.html#a072815a677b6d7627f9d082ebeb87de7',1,'numa__blarg']]],
   ['hstack_4',['hstack',['../interfacenuma____linprog_1_1hstack.html',1,'numa__linprog']]],

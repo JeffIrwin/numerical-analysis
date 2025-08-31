@@ -1,19 +1,25 @@
 <map id="src/panic.F90" name="src/panic.F90">
-<area shape="rect" id="Node000001" title=" " alt="" coords="498,5,606,31"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="661,5,769,31"/>
 <area shape="rect" id="Node000002" href="$blarg_8F90.html" title=" " alt="" coords="5,79,112,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="485,31,124,81,113,83,112,78,124,76,484,25"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="647,27,415,48,124,81,112,83,112,78,124,76,415,43,647,22"/>
 <area shape="rect" id="Node000003" href="$dlahqr_8F90.html" title=" " alt="" coords="137,79,250,104"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="485,35,251,81,250,76,484,30"/>
-<area shape="rect" id="Node000004" href="$integrate_8F90.html" title=" " alt="" coords="274,79,406,104"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="506,37,375,81,373,76,504,32"/>
-<area shape="rect" id="Node000005" href="$interp_8F90.html" title=" " alt="" coords="430,79,541,104"/>
-<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="533,43,498,80,494,77,530,39"/>
-<area shape="rect" id="Node000006" href="$linalg_8F90.html" title=" " alt="" coords="565,79,675,104"/>
-<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="574,39,611,77,607,80,571,42"/>
-<area shape="rect" id="Node000007" href="$linprog_8F90.html" title=" " alt="" coords="699,79,818,104"/>
-<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="599,33,726,76,724,81,597,38"/>
-<area shape="rect" id="Node000008" href="$numerical-analysis_8F90.html" title=" " alt="" coords="843,79,1040,104"/>
-<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="620,29,879,76,878,81,619,34"/>
-<area shape="rect" id="Node000009" href="$utils_8F90.html" title=" " alt="" coords="1064,79,1165,104"/>
-<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="620,23,815,45,1052,76,1064,78,1063,83,1052,81,814,50,619,29"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="647,30,263,81,250,83,250,78,262,76,646,25"/>
+<area shape="rect" id="Node000004" href="$eig_8F90.html" title=" " alt="" coords="275,79,368,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="647,34,380,81,369,84,368,78,380,76,646,28"/>
+<area shape="rect" id="Node000005" href="$fit_8F90.html" title=" " alt="" coords="393,79,479,104"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="657,37,480,81,479,76,656,31"/>
+<area shape="rect" id="Node000006" href="$integrate_8F90.html" title=" " alt="" coords="503,79,635,104"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="680,39,594,81,592,76,678,34"/>
+<area shape="rect" id="Node000007" href="$interp_8F90.html" title=" " alt="" coords="659,79,770,104"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="717,44,717,79,712,79,712,44"/>
+<area shape="rect" id="Node000008" href="$linalg_8F90.html" title=" " alt="" coords="795,79,904,104"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="750,35,829,76,826,81,747,39"/>
+<area shape="rect" id="Node000009" href="$linprog_8F90.html" title=" " alt="" coords="929,79,1047,104"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="772,32,944,76,943,81,771,37"/>
+<area shape="rect" id="Node000010" href="$numerical-analysis_8F90.html" title=" " alt="" coords="1072,79,1269,104"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="783,27,1098,76,1097,81,782,32"/>
+<area shape="rect" id="Node000011" href="$opt_8F90.html" title=" " alt="" coords="1294,79,1389,104"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="783,22,1005,42,1282,76,1294,78,1293,83,1281,81,1004,48,782,27"/>
+<area shape="rect" id="Node000012" href="$utils_8F90.html" title=" " alt="" coords="1413,79,1515,104"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="783,20,1054,40,1227,56,1402,76,1413,78,1413,83,1401,81,1226,61,1053,45,782,26"/>
 </map>

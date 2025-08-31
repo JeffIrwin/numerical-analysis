@@ -1,0 +1,12 @@
+<map id="numa__eig::eig_hess_qr" name="numa__eig::eig_hess_qr">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,55,184,80"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="413,29,551,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="184,59,399,45,399,50,184,64"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c" title=" " alt="" coords="232,80,363,105"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="185,76,219,80,218,85,184,81"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="451,31,445,21,448,11,461,5,482,3,507,6,518,15,515,19,505,11,482,8,463,10,452,15,450,20,456,28"/>
+<area shape="poly" id="edge4_Node000003_Node000002" title=" " alt="" coords="344,77,421,56,422,61,345,82"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="411,103,553,128"/>
+<area shape="poly" id="edge5_Node000003_Node000004" title=" " alt="" coords="363,98,397,102,397,108,363,103"/>
+<area shape="poly" id="edge6_Node000004_Node000004" title=" " alt="" coords="451,104,445,94,448,85,461,78,482,76,507,80,518,88,515,92,505,84,482,81,463,83,452,88,450,94,456,101"/>
+</map>

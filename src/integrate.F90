@@ -546,7 +546,7 @@ end function gk15_aux
 
 !===============================================================================
 
-recursive double precision function gk15_adaptive_integrator &
+double precision function gk15_adaptive_integrator &
 	( &
 		f, xmin, xmax, tol, max_levels, iostat &
 	) &
@@ -670,7 +670,7 @@ end function gk15i_aux
 
 !===============================================================================
 
-recursive double precision function gk15i_adaptive_integrator &
+double precision function gk15i_adaptive_integrator &
 	( &
 		f, xmin, tol, max_levels, iostat &
 	) &
@@ -750,7 +750,7 @@ end function gk15i_adaptive_integrator
 
 !===============================================================================
 
-recursive double precision function gk15ii_adaptive_integrator &
+double precision function gk15ii_adaptive_integrator &
 	( &
 		f, tol, max_levels, iostat &
 	) &
@@ -810,7 +810,7 @@ end function gk15ii_adaptive_integrator
 
 !===============================================================================
 
-recursive double precision function gk15ni_adaptive_integrator &
+double precision function gk15ni_adaptive_integrator &
 	( &
 		f, xmax, tol, max_levels, iostat &
 	) &

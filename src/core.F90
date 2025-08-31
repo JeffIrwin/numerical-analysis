@@ -1,5 +1,4 @@
 
-
 !> Core module with minimal dependencies
 module numa__core
 

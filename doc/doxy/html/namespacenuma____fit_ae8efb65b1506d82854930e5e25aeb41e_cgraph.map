@@ -1,0 +1,10 @@
+<map id="numa__fit::nelder_mead_fit" name="numa__fit::nelder_mead_fit">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,47,204,72"/>
+<area shape="rect" id="Node000002" href="$fit_8F90.html#a8f90f929ef67498f005bdc5629cd123e" title=" " alt="" coords="277,5,382,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="174,44,263,27,264,33,175,49"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0" title=" " alt="" coords="252,79,407,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="177,69,239,81,238,86,176,75"/>
+<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="291,80,288,70,295,61,308,55,329,53,353,56,367,63,364,68,352,61,329,58,310,60,298,65,294,71,296,78"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____utils.html#aa743df57005f55647002a6dbe4f7253b" title=" " alt="" coords="455,79,619,119"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="407,97,441,97,441,102,407,102"/>
+</map>

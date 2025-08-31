@@ -1,0 +1,25 @@
+<map id="numa__eig::eig_lapack" name="numa__eig::eig_lapack">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,179,176,204"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40" title="dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix,..." alt="" coords="227,92,389,117"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="123,176,262,120,264,125,125,181"/>
+<area shape="rect" id="Node000007" href="$namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c" title=" " alt="" coords="243,179,373,204"/>
+<area shape="poly" id="edge9_Node000001_Node000007" title=" " alt="" coords="176,189,229,189,229,194,176,194"/>
+<area shape="rect" id="Node000008" href="$namespacenuma____eig.html#ac2f8289ad209b651d2e5af2618e27cc1" title=" " alt="" coords="224,237,392,277"/>
+<area shape="poly" id="edge12_Node000001_Node000008" title=" " alt="" coords="135,202,229,230,227,235,133,207"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="dlanv2 computes the schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="447,5,614,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="332,89,380,65,439,40,462,32,463,37,441,44,383,70,334,94"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="461,128,600,153"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="387,115,448,125,447,130,386,120"/>
+<area shape="rect" id="Node000006" href="$namespacenuma____blarg.html#a072815a677b6d7627f9d082ebeb87de7" title=" " alt="" coords="440,55,621,80"/>
+<area shape="poly" id="edge7_Node000002_Node000006" title=" " alt="" coords="384,89,441,80,442,85,385,95"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="669,55,812,80"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="586,28,673,49,672,54,585,33"/>
+<area shape="poly" id="edge4_Node000004_Node000004" title=" " alt="" coords="707,56,699,46,703,36,717,30,741,28,770,32,781,41,778,45,768,37,741,33,719,35,707,40,704,46,711,53"/>
+<area shape="poly" id="edge6_Node000005_Node000005" title=" " alt="" coords="497,130,489,120,493,110,507,104,531,101,560,105,571,114,568,118,558,110,531,107,509,109,497,113,494,119,501,126"/>
+<area shape="poly" id="edge8_Node000006_Node000004" title=" " alt="" coords="622,65,655,65,655,70,622,70"/>
+<area shape="poly" id="edge11_Node000007_Node000004" title=" " alt="" coords="374,194,428,195,491,192,557,181,620,162,649,147,675,128,717,89,721,93,679,132,652,152,622,167,558,187,492,197,428,200,373,199"/>
+<area shape="poly" id="edge10_Node000007_Node000005" title=" " alt="" coords="364,176,460,154,461,159,365,181"/>
+<area shape="rect" id="Node000009" href="$namespacenuma____blarg.html#a8cbf4bbb457b92668659dc51fdee1bf3" title=" " alt="" coords="449,253,612,279"/>
+<area shape="poly" id="edge13_Node000008_Node000009" title=" " alt="" coords="393,258,436,259,436,265,392,263"/>
+<area shape="poly" id="edge14_Node000009_Node000009" title=" " alt="" coords="497,255,489,245,493,235,507,229,531,227,560,230,571,239,568,244,558,235,531,232,509,234,497,239,494,244,501,252"/>
+</map>

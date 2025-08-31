@@ -1,0 +1,11 @@
+<map id="numa__linalg::qr_factor_c64" name="numa__linalg::qr_factor_c64">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,67,211,92"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____blarg.html#a79cbebd531ee01b40a5b96f0049dfa93" title=" " alt="" coords="259,67,441,92"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="211,77,245,77,245,82,211,82"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____blarg.html#a8cbf4bbb457b92668659dc51fdee1bf3" title=" " alt="" coords="489,29,652,55"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="425,64,481,54,482,60,426,69"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="499,103,642,128"/>
+<area shape="poly" id="edge4_Node000002_Node000004" title=" " alt="" coords="429,89,486,99,485,104,428,95"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="535,31,527,21,531,11,546,5,571,3,601,6,613,15,610,20,599,11,571,8,547,10,535,15,532,20,539,28"/>
+<area shape="poly" id="edge5_Node000004_Node000004" title=" " alt="" coords="535,104,527,94,531,84,546,78,571,76,601,80,613,89,610,93,599,85,571,81,547,83,535,88,532,94,539,101"/>
+</map>

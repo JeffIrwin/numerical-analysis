@@ -1,0 +1,9 @@
+<map id="numa__eig::house" name="numa__eig::house">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,67,145,92"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="195,29,334,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="140,64,186,55,187,60,141,69"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="193,103,336,128"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="143,89,185,97,184,103,142,95"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="233,31,227,21,230,11,243,5,265,3,291,6,302,15,298,19,289,11,265,8,245,10,234,15,232,20,238,28"/>
+<area shape="poly" id="edge4_Node000003_Node000003" title=" " alt="" coords="233,104,227,94,230,84,243,78,265,76,291,80,302,88,298,92,289,84,265,81,245,83,234,88,232,94,238,101"/>
+</map>

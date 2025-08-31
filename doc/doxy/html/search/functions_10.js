@@ -3,7 +3,7 @@ var searchData=
   ['rand_5ff64_0',['rand_f64',['../namespacenuma____blarg.html#a10ad802496a5933ef6f79b9092d88a46',1,'numa__blarg']]],
   ['rate_5fdx_5ffn_1',['rate_dx_fn',['../namespacenuma____functions.html#ae563121b3e881b11584701179a60cd31',1,'numa__functions']]],
   ['rate_5ffn_2',['rate_fn',['../namespacenuma____functions.html#aa47e209f97bf805626cb92e36810c576',1,'numa__functions']]],
-  ['real_5fschur_5fto_5fcomplex_3',['real_schur_to_complex',['../namespacenuma.html#aa0f4b045f98598577271c0268bdb561f',1,'numa']]],
+  ['real_5fschur_5fto_5fcomplex_3',['real_schur_to_complex',['../namespacenuma____eig.html#ac2f8289ad209b651d2e5af2618e27cc1',1,'numa__eig']]],
   ['rm_5fcols_4',['rm_cols',['../namespacenuma____linprog.html#a198ae17e01792c08311b253ce678eda5',1,'numa__linprog']]],
   ['romberg_5fintegrator_5',['romberg_integrator',['../namespacenuma____integrate.html#a594c3a5bfb51c1e4f2231d6f16c1c66e',1,'numa__integrate']]],
   ['romberg_5fintegrator_5ffixed_6',['romberg_integrator_fixed',['../namespacenuma____integrate.html#a65beebcb63c6c46ca857197017cb9f84',1,'numa__integrate']]],

@@ -1,11 +1,21 @@
 var namespaces_dup =
 [
-    [ "numa", "namespacenuma.html", "namespacenuma" ],
+    [ "numa", "namespacenuma.html", null ],
     [ "numa__blarg", "namespacenuma____blarg.html", "namespacenuma____blarg" ],
     [ "numa__core", "namespacenuma____core.html", "namespacenuma____core" ],
     [ "numa__dlahqr", "namespacenuma____dlahqr.html", [
       [ "dlahqr", "namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40", null ],
       [ "dlanv2", "namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2", null ]
+    ] ],
+    [ "numa__eig", "namespacenuma____eig.html", [
+      [ "eig_basic_qr", "namespacenuma____eig.html#a32d89572359c6193bbe208375d66f853", null ],
+      [ "eig_francis_qr", "namespacenuma____eig.html#a7c945ccb301d0b407189a22009d62dac", null ],
+      [ "eig_hess_qr", "namespacenuma____eig.html#a30fb433e80034efa92d74663abab925b", null ],
+      [ "eig_hess_qr_kernel", "namespacenuma____eig.html#a99acc801e3972b96c286debd457b7771", null ],
+      [ "eig_lapack", "namespacenuma____eig.html#a4e82b9a2a0a30fd1f6315c38638161dc", null ],
+      [ "hess", "namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c", null ],
+      [ "house", "namespacenuma____eig.html#a42b25b90462d055242dfe9d1b037081f", null ],
+      [ "real_schur_to_complex", "namespacenuma____eig.html#ac2f8289ad209b651d2e5af2618e27cc1", null ]
     ] ],
     [ "numa__exercises", "namespacenuma____exercises.html", [
       [ "assert", "namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec", null ],
@@ -45,6 +55,13 @@ var namespaces_dup =
       [ "test_ne", "namespacenuma____exercises.html#abd3a9dfaf528728a53a01750d6d15c04", null ],
       [ "tests", "namespacenuma____exercises.html#a8468eb348b236fdfe3b997557f2f6239", null ]
     ] ],
+    [ "numa__fit", "namespacenuma____fit.html", [
+      [ "gauss_newton", "namespacenuma____fit.html#add35af602e5d68d8288202c5a0719737", null ],
+      [ "nelder_mead_fit", "namespacenuma____fit.html#ae8efb65b1506d82854930e5e25aeb41e", null ],
+      [ "polyfit", "namespacenuma____fit.html#af65ec17ae518eade52a198b8c0202463", null ],
+      [ "polyfit_lu", "namespacenuma____fit.html#a8b35b703843ca15df4aeb7cd26d2066f", null ],
+      [ "polyval", "namespacenuma____fit.html#a02296fc3eceefd69befea44bc8392ea2", null ]
+    ] ],
     [ "numa__functions", "namespacenuma____functions.html", [
       [ "bessel_3_2p5", "namespacenuma____functions.html#ad4325c7d3487a3136d6d0d7b5d5512f2", null ],
       [ "bimodal_fn", "namespacenuma____functions.html#a845c2aec2e11a1c7d7df9b71444bd2ca", null ],
@@ -74,10 +91,10 @@ var namespaces_dup =
       [ "gauss5_single", "namespacenuma____integrate.html#aac802ca7685c959af18447b310b232c3", null ],
       [ "gauss7_single", "namespacenuma____integrate.html#a19a5fee50a46ac5d6dd5c8ba3f96e67e", null ],
       [ "gauss_general_single", "namespacenuma____integrate.html#af327699fb59f8f0d66aace2412206e66", null ],
-      [ "gk15_adaptive_integrator", "namespacenuma____integrate.html#a3602cecef3784ac63d0e5504528fd411", null ],
-      [ "gk15i_adaptive_integrator", "namespacenuma____integrate.html#aa39fdcc9d46a03dbf1e6b9fdc002184c", null ],
-      [ "gk15ii_adaptive_integrator", "namespacenuma____integrate.html#a2ffa3aed40e89f2fee277902636c15f2", null ],
-      [ "gk15ni_adaptive_integrator", "namespacenuma____integrate.html#abcbdb1e6314543b2cf551a566bd549c5", null ],
+      [ "gk15_adaptive_integrator", "namespacenuma____integrate.html#a0a1d875c4aee8bb7973fb638d2849fc2", null ],
+      [ "gk15i_adaptive_integrator", "namespacenuma____integrate.html#a6ea384ea4980517669524e4368f0d719", null ],
+      [ "gk15ii_adaptive_integrator", "namespacenuma____integrate.html#a75eb6a034325396a8762291a38918979", null ],
+      [ "gk15ni_adaptive_integrator", "namespacenuma____integrate.html#ad8bc06774535072658f4368a2518430f", null ],
       [ "kronrod15_single", "namespacenuma____integrate.html#ac2b8687f6a79aeeaebad8b02ecc911d5", null ],
       [ "milne_integrator", "namespacenuma____integrate.html#a4fe72d51064a256389f93baa15aeb877", null ],
       [ "newton_cotes_integrator", "namespacenuma____integrate.html#a0d242968e1ec8878f5d6ae5132831894", null ],
@@ -115,13 +132,11 @@ var namespaces_dup =
       [ "spline_case_periodic", "namespacenuma____interp.html#aaedf9afc4ad300cfbf1ee807da317e31", null ],
       [ "spline_case_prescribed", "namespacenuma____interp.html#a584b8275a49133e2eb6e150049d51bfe", null ]
     ] ],
-    [ "numa__linalg", "namespacenuma____linalg.html", [
-      [ "tridiag_corner_invmul", "namespacenuma____linalg.html#a829701de86b62672bc29a03ef1d60c54", null ],
-      [ "tridiag_factor", "namespacenuma____linalg.html#a79995b77354a1cc76288b0a246bdbc07", null ],
-      [ "tridiag_invmul", "namespacenuma____linalg.html#a6252f86a488bf95cba6389682ac88645", null ],
-      [ "tridiag_solve", "namespacenuma____linalg.html#a72478ed78bc4a3daaa200e6531357b35", null ]
-    ] ],
+    [ "numa__linalg", "namespacenuma____linalg.html", "namespacenuma____linalg" ],
     [ "numa__linprog", "namespacenuma____linprog.html", "namespacenuma____linprog" ],
+    [ "numa__opt", "namespacenuma____opt.html", [
+      [ "nelder_mead", "namespacenuma____opt.html#a8764b66d6ee9a9f2abc6037aa549445d", null ]
+    ] ],
     [ "numa__test", "namespacenuma____test.html", null ],
     [ "numa__utils", "namespacenuma____utils.html", "namespacenuma____utils" ]
 ];

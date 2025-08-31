@@ -32,10 +32,7 @@ module numa
 
 	! TODO:
 	!
-	! - this file is too long. it might be good to split it up roughly
-	!   per-chapter, e.g. into interpolate.f90, (fft.f90,) integrate.f90, etc.
-	!   * wip
-	!   * linalg is started. lots of other stuff should move there too
+	! - split up large files
 	!   * exercises need split up too
 	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
 	!   specifically for Intel, e.g. initialization of complex arrays
