@@ -82,6 +82,7 @@ program main
 	nfail = nfail + chapter_4_nelder_mead()
 	nfail = nfail + chapter_4_modify()
 	nfail = nfail + chapter_4_linprog()
+	! TODO: sparse cholesky?  covered briefly in chapter 4 appendix
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
