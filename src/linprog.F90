@@ -552,25 +552,21 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 	integer, optional, intent(out) :: iostat
 	!********
 	character(len = :), allocatable :: msg
-	double precision :: pivval
+	double precision :: pv
 	double precision, allocatable :: q(:)
-	integer :: i, k, m, nb, mb, nc, nr, pivcol, pivrow, i1(1), iter, ir, ic
+	integer :: i, m, nb, mb, nc, nr, ntrunc, kc, kr, i1(1), iter, ir, ic
 	logical :: complete
 
 	if (present(iostat)) iostat = 0
-
-	! TODO: rename overly long variables
 
 	!print *, "starting linprog_solve_simplex(), phase = ", to_str(phase)
 
 	if (phase == 1) then
 		m = size(t, 2) - 2
-		! TODO: rename `k` so I don't accidentally change it by using it as a
-		! loop var e.g.
-		k = 2
+		ntrunc = 2
 	else
 		m = size(t, 2) - 1
-		k = 1
+		ntrunc = 1
 	end if
 	!print *, "m = ", m
 
@@ -587,15 +583,15 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 				!stop
 
 				! Apply pivot
-				pivrow = ir
-				pivcol = ic
+				kr = ir
+				kc = ic
 
-				basis(pivrow) = pivcol
-				pivval = t(pivrow, pivcol)
-				t(pivrow, :) = t(pivrow, :) / pivval
+				basis(kr) = kc
+				pv = t(kr, kc)
+				t(kr, :) = t(kr, :) / pv
 				do i = 1, size(t, 1)
-					if (i == pivrow) cycle
-					t(i,:) = t(i,:) - t(pivrow,:) * t(i, pivcol)
+					if (i == kr) cycle
+					t(i,:) = t(i,:) - t(kr,:) * t(i, kc)
 				end do
 
 				! Pivot on first non-cycled `ic` only, but then iterate to next
@@ -629,26 +625,26 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 		!
 		! Also this minloc requires -standard-semantics for Intel compilers
 		i1 = minloc(t(nr, :nc-1), t(nr, :nc-1) < -tol .and. t(nr, :nc-1) /= 0)
-		pivcol = i1(1)
+		kc = i1(1)
 
 		!print *, "c = ", t(nr, :nc-1)
 		!print *, "m = ", t(nr, :nc-1) < -tol
 		!print *, "i1 = ", i1
-		!print *, "pivcol = ", pivcol
+		!print *, "pivcol = ", kc
 
-		if (pivcol == 0) then
+		if (kc == 0) then
 			! Successful end of iteration
 			complete = .true.
 			cycle
 		end if
 
-		q = t(:nr-k, nc) / t(:nr-k, pivcol)
+		q = t(:nr-ntrunc, nc) / t(:nr-ntrunc, kc)
 		!print *, "q = ", q
-		i1 = minloc(q, t(:nr-k, pivcol) > tol)
+		i1 = minloc(q, t(:nr-ntrunc, kc) > tol)
 
-		pivrow = i1(1)
-		!print *, "pivrow = ", pivrow
-		if (pivrow == 0) then
+		kr = i1(1)
+		!print *, "pivrow = ", kr
+		if (kr == 0) then
 			msg = "pivot row not found in linprog_solve_simplex()"
 			call PANIC(msg, present(iostat))
 			iostat = 1
@@ -656,16 +652,17 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 		end if
 
 		! Apply pivot
-		basis(pivrow) = pivcol
-		pivval = t(pivrow, pivcol)
-		t(pivrow, :) = t(pivrow, :) / pivval
+		basis(kr) = kc
+		pv = t(kr, kc)
+		t(kr, :) = t(kr, :) / pv
 		do i = 1, size(t, 1)
-			if (i == pivrow) cycle
-			t(i,:) = t(i,:) - t(pivrow,:) * t(i, pivcol)
+			if (i == kr) cycle
+			t(i,:) = t(i,:) - t(kr,:) * t(i, kc)
 		end do
-		! TODO: check if pivval is too close to tol
-		!
-		! "The pivot operation produces a pivot value of ..."
+		if (abs(pv) <= tol) then
+			write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+				": pivot value is nearly 0. The linprog problem may be ill-conditioned"
+		end if
 
 		!print *, ""
 		!stop
