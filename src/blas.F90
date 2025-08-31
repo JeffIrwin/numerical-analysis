@@ -14,6 +14,22 @@ module numa__blas
 		procedure :: outer_product_f64
 	end interface outer_product
 
+	interface zeros
+		procedure :: zeros_vec
+		procedure :: zeros_mat
+	end interface zeros
+
+	interface zeros_i32
+		procedure :: zeros_vec_i32
+		!procedure :: zeros_mat_i32
+	end interface zeros_i32
+
+	interface diag
+		procedure :: diag_set
+		procedure :: diag_get
+		procedure :: diag_get_c64
+	end interface diag
+
 contains
 
 !===============================================================================
@@ -202,6 +218,79 @@ double precision function norm2c(v)
 	norm2c = dble(sqrt(dot_product(v, v)))
 
 end function norm2c
+
+!===============================================================================
+
+function zeros_mat(m, n) result(a)
+	! m x n matrix of 0
+	integer, intent(in) :: m, n
+	double precision, allocatable :: a(:,:)
+	allocate(a(m, n))
+	a = 0
+end function zeros_mat
+
+function zeros_vec(n) result(a)
+	! Size n vector of 0
+	integer, intent(in) :: n
+	double precision, allocatable :: a(:)
+	allocate(a(n))
+	a = 0
+end function zeros_vec
+
+function zeros_vec_i32(n) result(a)
+	! Size n vector of 0
+	integer, intent(in) :: n
+	integer, allocatable :: a(:)
+	allocate(a(n))
+	a = 0
+end function zeros_vec_i32
+
+!********
+
+function diag_set(v) result(d)
+	! Spread a diagonal vector `v` into a matrix
+	double precision, intent(in) :: v(:)
+	double precision, allocatable :: d(:,:)
+	!********
+	integer :: i, n
+
+	n = size(v)
+	d = zeros(n, n)
+	do i = 1, n
+		d(i,i) = v(i)
+	end do
+
+end function diag_set
+
+function diag_get(a) result(v)
+	! Get the diagonal vector `v` from a matrix `a`
+	double precision, intent(in) :: a(:,:)
+	double precision, allocatable :: v(:)
+	!********
+	integer :: i, n
+
+	n = min(size(a,1), size(a,2))
+	allocate(v(n))
+	do i = 1, n
+		v(i) = a(i,i)
+	end do
+
+end function diag_get
+
+function diag_get_c64(a) result(v)
+	! Get the diagonal vector `v` from a matrix `a`
+	double complex, intent(in) :: a(:,:)
+	double complex, allocatable :: v(:)
+	!********
+	integer :: i, n
+
+	n = min(size(a,1), size(a,2))
+	allocate(v(n))
+	do i = 1, n
+		v(i) = a(i,i)
+	end do
+
+end function diag_get_c64
 
 !===============================================================================
 
