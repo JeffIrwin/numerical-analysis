@@ -10,3 +10,6 @@
 /plot-poly-*.txt
 /plot-gn-*.txt
 
+# Python junk
+/utils/__pycache__/
+

@@ -77,7 +77,6 @@ end function outer_product_c64
 
 !********
 
-! TODO: it makes sense for zeros() to be defined in here too
 function eye(n)
 	! n x n identity matrix
 
