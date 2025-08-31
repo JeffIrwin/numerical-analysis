@@ -31,6 +31,11 @@ module numa__blarg
 		procedure :: diag_get_c64
 	end interface diag
 
+	interface triu
+		procedure :: triu_c64
+		procedure :: triu_f64
+	end interface triu
+
 contains
 
 !===============================================================================
@@ -293,6 +298,39 @@ function diag_get_c64(a) result(v)
 	end do
 
 end function diag_get_c64
+
+!===============================================================================
+
+function triu_f64(a) result(r)
+	! Explicitly get R by zeroing lower triangle
+	double precision, intent(in) :: a(:,:)
+	double precision, allocatable :: r(:,:)
+	!********
+	integer :: i, n
+
+	n = min(size(a,1), size(a,2))
+	r = a(:n, :n)
+	do i = 1, n
+		r(i+1:, i) = 0
+	end do
+
+end function triu_f64
+
+!********
+
+function triu_c64(a) result(r)
+	! Explicitly get R (U) by zeroing lower triangle
+	double complex, intent(in) :: a(:,:)
+	double complex, allocatable :: r(:,:)
+	!********
+	integer :: i
+
+	r = a
+	do i = 1, size(a, 1)
+		r(i+1:, i) = 0
+	end do
+
+end function triu_c64
 
 !===============================================================================
 
