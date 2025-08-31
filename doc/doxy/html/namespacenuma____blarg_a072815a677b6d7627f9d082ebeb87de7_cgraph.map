@@ -1,0 +1,6 @@
+<map id="numa__blarg::house_f64" name="numa__blarg::house_f64">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,187,55"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="235,29,377,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="187,39,221,39,221,45,187,45"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="272,31,265,21,268,11,283,5,306,3,335,6,346,15,343,20,333,11,306,8,284,10,272,15,270,20,276,28"/>
+</map>

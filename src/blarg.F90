@@ -4,6 +4,7 @@
 !> Basic Linear Algebra Routine Group
 !>
 !> > blarg:  (informal) Expressing frustration or disappointment.
+!> >
 !> > Blarg! I'm sick of this.
 module numa__blarg
 
@@ -95,6 +96,7 @@ end function eye
 !********
 
 double precision function rand_f64()
+	! TODO: move out of blarg
 	call random_number(rand_f64)
 end function rand_f64
 

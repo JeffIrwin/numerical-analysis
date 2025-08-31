@@ -6,7 +6,7 @@ var searchData=
   ['banded_5finvmul_3',['banded_invmul',['../namespacenuma.html#a1537952d739aa19bc9d2501f08dd7385',1,'numa']]],
   ['banded_5fsolve_4',['banded_solve',['../namespacenuma.html#a5787e6c17cb170e9f2b035c3f3f2bf88',1,'numa']]],
   ['bessel_5f3_5f2p5_5',['bessel_3_2p5',['../namespacenuma____functions.html#ad4325c7d3487a3136d6d0d7b5d5512f2',1,'numa__functions']]],
-  ['bezier_5fcurve_6',['bezier_curve',['../namespacenuma.html#af9b54ccf11366d68f401999e49727f77',1,'numa']]],
+  ['bezier_5fcurve_6',['bezier_curve',['../namespacenuma____interp.html#a823932209bd232443fa757498e5beed6',1,'numa__interp']]],
   ['bimodal_5ffn_7',['bimodal_fn',['../namespacenuma____functions.html#a845c2aec2e11a1c7d7df9b71444bd2ca',1,'numa__functions']]],
-  ['bit_5freverse_8',['bit_reverse',['../namespacenuma.html#a04c0d9ea83deb23d3911b0747e2fabe6',1,'numa']]]
+  ['bit_5freverse_8',['bit_reverse',['../namespacenuma____interp.html#a2f4c7fd883bf5c8bd8352370d7c9dd5f',1,'numa__interp']]]
 ];

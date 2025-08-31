@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['invmul_0',['invmul',['../interfacenuma_1_1invmul.html',1,'numa']]]
+  ['hstack_0',['hstack',['../interfacenuma____linprog_1_1hstack.html',1,'numa__linprog']]]
 ];

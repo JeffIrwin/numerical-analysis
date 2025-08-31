@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['sort_0',['sort',['../interfacenuma____utils_1_1sort.html',1,'numa__utils']]],
-  ['sorted_1',['sorted',['../interfacenuma____utils_1_1sorted.html',1,'numa__utils']]]
+  ['print_5fmat_0',['print_mat',['../interfacenuma____utils_1_1print__mat.html',1,'numa__utils']]]
 ];

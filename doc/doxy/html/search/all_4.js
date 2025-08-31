@@ -11,5 +11,5 @@ var searchData=
   ['exercises_2ef90_8',['exercises.f90',['../exercises_8f90.html',1,'']]],
   ['exp_5ffn_9',['exp_fn',['../namespacenuma____functions.html#ac4dcdf169859ba802b6676587994ad2a',1,'numa__functions']]],
   ['exp_5fnx2_10',['exp_nx2',['../namespacenuma____functions.html#a4290a84b12241fa2fdbb0981e7e15ac7',1,'numa__functions']]],
-  ['eye_11',['eye',['../namespacenuma____blas.html#a23e42442f8707b8535602524ca8da6e1',1,'numa__blas']]]
+  ['eye_11',['eye',['../namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71',1,'numa__blarg']]]
 ];

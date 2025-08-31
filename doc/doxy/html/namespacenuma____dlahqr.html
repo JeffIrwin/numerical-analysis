@@ -92,6 +92,9 @@ $(function(){initNavTree('namespacenuma____dlahqr.html','',''); });
   <div class="headertitle"><div class="title">numa__dlahqr Module Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Copied and adapted from LAPACK because the Francis QR algorithm is difficult to do robustly.  
+<a href="#details">More...</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions/Subroutines</h2></td></tr>
@@ -100,7 +103,9 @@ Functions/Subroutines</h2></td></tr>
 <tr class="memitem:adb40b094701602a40d49cc3f10653cb2" id="r_adb40b094701602a40d49cc3f10653cb2"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adb40b094701602a40d49cc3f10653cb2">dlanv2</a> (a, b, c, d, rt1r, rt1i, rt2r, rt2i, cs, sn)</td></tr>
 <tr class="memdesc:adb40b094701602a40d49cc3f10653cb2"><td class="mdescLeft">&#160;</td><td class="mdescRight"><b>dlanv2</b> computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.  <br /></td></tr>
 </table>
-<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Copied and adapted from LAPACK because the Francis QR algorithm is difficult to do robustly. </p>
+</div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Function/Subroutine Documentation</h2>
 <a id="aecb8ef69db9e59baa4ad569518519f40" name="aecb8ef69db9e59baa4ad569518519f40"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aecb8ef69db9e59baa4ad569518519f40">&#9670;&#160;</a></span>dlahqr()</h2>
 
@@ -313,17 +318,17 @@ Here is the call graph for this function:</div>
 <div class="center"><img src="namespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph.png" border="0" usemap="#anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph" loading="lazy" alt=""/></div>
 <map name="anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph" id="anamespacenuma____dlahqr_aecb8ef69db9e59baa4ad569518519f40_cgraph">
 <area shape="rect" title="dlahqr computes the eigenvalues and schur factorization of an upper hessenberg matrix,..." alt="" coords="5,79,168,104"/>
-<area shape="rect" href="namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="dlanv2 computes the schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="220,5,387,31"/>
-<area shape="poly" title=" " alt="" coords="118,76,215,39,239,32,241,37,217,45,120,81"/>
-<area shape="rect" href="namespacenuma____blas.html#a23e42442f8707b8535602524ca8da6e1" title=" " alt="" coords="237,79,369,104"/>
+<area shape="rect" href="namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2" title="dlanv2 computes the schur factorization of a real 2&#45;by&#45;2 nonsymmetric matrix in standard form." alt="" coords="223,5,390,31"/>
+<area shape="poly" title=" " alt="" coords="117,76,215,39,240,32,242,37,217,45,119,81"/>
+<area shape="rect" href="namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="237,79,376,104"/>
 <area shape="poly" title=" " alt="" coords="168,89,224,89,224,94,168,94"/>
-<area shape="rect" href="namespacenuma____blas.html#adcc08215b430f39539b6a229ae9cce8e" title=" " alt="" coords="216,128,391,153"/>
-<area shape="poly" title=" " alt="" coords="144,101,234,122,233,128,143,107"/>
-<area shape="rect" href="namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="439,67,581,92"/>
-<area shape="poly" title=" " alt="" coords="352,28,391,39,457,60,456,65,390,45,351,33"/>
-<area shape="poly" title=" " alt="" coords="476,68,469,58,473,48,487,42,510,40,539,44,550,53,547,57,536,49,510,45,488,47,477,52,474,58,480,65"/>
-<area shape="poly" title=" " alt="" coords="270,80,262,70,266,60,280,54,303,52,332,56,343,65,340,69,330,61,303,57,281,59,270,64,268,70,274,77"/>
-<area shape="poly" title=" " alt="" coords="347,125,390,113,453,94,455,99,391,118,349,131"/>
+<area shape="rect" href="namespacenuma____blarg.html#a072815a677b6d7627f9d082ebeb87de7" title=" " alt="" coords="216,128,397,153"/>
+<area shape="poly" title=" " alt="" coords="145,101,236,122,235,128,143,107"/>
+<area shape="rect" href="namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0" title=" " alt="" coords="445,67,588,92"/>
+<area shape="poly" title=" " alt="" coords="358,28,398,39,464,60,463,65,397,45,356,33"/>
+<area shape="poly" title=" " alt="" coords="483,68,475,58,479,48,493,42,517,40,546,44,557,53,554,57,544,49,517,45,495,47,483,52,480,58,487,65"/>
+<area shape="poly" title=" " alt="" coords="273,80,265,70,269,60,283,54,307,52,336,56,347,65,344,69,334,61,307,57,285,59,273,64,270,70,277,77"/>
+<area shape="poly" title=" " alt="" coords="353,125,397,113,461,93,462,99,398,118,354,131"/>
 </map>
 </div>
 <div class="dynheader">

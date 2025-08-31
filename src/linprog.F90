@@ -1,7 +1,7 @@
 
 #include "panic.F90"
 
-!> Main public-facing module for numerical analysis
+!> Module for linear programming, i.e. linear optimization
 module numa__linprog
 
 	!use numa__core

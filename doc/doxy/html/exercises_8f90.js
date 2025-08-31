@@ -18,6 +18,7 @@ var exercises_8f90 =
     [ "numa__exercises::chapter_4_gauss_newton", "namespacenuma____exercises.html#a982becd25f21c63b5e13432464d8b6a2", null ],
     [ "numa__exercises::chapter_4_gram_schmidt", "namespacenuma____exercises.html#a3bb7364c661fee9c7f22c2d0c4bf89ff", null ],
     [ "numa__exercises::chapter_4_inv", "namespacenuma____exercises.html#a7445206a9d5cf89ab743a6e4c38fcd58", null ],
+    [ "numa__exercises::chapter_4_linprog", "namespacenuma____exercises.html#accfcce5815b7392705fb39e8dfabb8d0", null ],
     [ "numa__exercises::chapter_4_lls", "namespacenuma____exercises.html#aa17eb6c1bd5524592a484b184773f052", null ],
     [ "numa__exercises::chapter_4_lu", "namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8", null ],
     [ "numa__exercises::chapter_4_lu_c64", "namespacenuma____exercises.html#a6e19080f83b0300f98894c21e88ae167", null ],
@@ -32,6 +33,7 @@ var exercises_8f90 =
     [ "numa__exercises::diff_complex_vecs", "namespacenuma____exercises.html#a8a75bb95dea98eb112c9e0ca121a49f3", null ],
     [ "numa__exercises::test", "namespacenuma____exercises.html#ab8d02bd30223c4930913d3f1afc39626", null ],
     [ "numa__exercises::test_bad_numa_usage", "namespacenuma____exercises.html#af1ed546c954694a90b527df7622b9101", null ],
+    [ "numa__exercises::test_compiler_sanity", "namespacenuma____exercises.html#a79709608820b0014168d2f95412e6ea7", null ],
     [ "numa__exercises::test_ne", "namespacenuma____exercises.html#abd3a9dfaf528728a53a01750d6d15c04", null ],
     [ "numa__exercises::tests", "namespacenuma____exercises.html#a8468eb348b236fdfe3b997557f2f6239", null ]
 ];

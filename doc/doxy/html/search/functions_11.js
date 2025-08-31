@@ -2,10 +2,10 @@ var searchData=
 [
   ['select_5fmax_5fn_0',['select_max_n',['../namespacenuma____utils.html#a656d44b9d4efa4cb4be854515dfd3b2e',1,'numa__utils']]],
   ['sign_5f_1',['sign_',['../namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0',1,'numa__utils']]],
-  ['simpson_5f13_5fintegrator_2',['simpson_13_integrator',['../namespacenuma.html#acba6f040e8f5b88701eb2c83d7be3902',1,'numa']]],
-  ['simpson_5f38_5fintegrator_3',['simpson_38_integrator',['../namespacenuma.html#a4e34b3811a31d581fb218d7cc006d642',1,'numa']]],
-  ['simpson_5fadaptive_5fintegrator_4',['simpson_adaptive_integrator',['../namespacenuma.html#a128ef40806b0daaa5612b2b70e40cc41',1,'numa']]],
-  ['simpson_5fintegrator_5fvals_5',['simpson_integrator_vals',['../namespacenuma.html#ac8a5c04b0d97ae4f8f9428104e23a937',1,'numa']]],
+  ['simpson_5f13_5fintegrator_2',['simpson_13_integrator',['../namespacenuma____integrate.html#aff15563f68e438bd507b6aaad8d53be4',1,'numa__integrate']]],
+  ['simpson_5f38_5fintegrator_3',['simpson_38_integrator',['../namespacenuma____integrate.html#a3933872b1eab6160154dc17f0168af75',1,'numa__integrate']]],
+  ['simpson_5fadaptive_5fintegrator_4',['simpson_adaptive_integrator',['../namespacenuma____integrate.html#a7ea4aa0e5727b376da7bde26296f79ac',1,'numa__integrate']]],
+  ['simpson_5fintegrator_5fvals_5',['simpson_integrator_vals',['../namespacenuma____integrate.html#a928c1a4579fb903f06d9b5f06932bfa0',1,'numa__integrate']]],
   ['sin_5ffn_6',['sin_fn',['../namespacenuma____functions.html#a2d5c62e4aeb215e34a5fd0732e108144',1,'numa__functions']]],
   ['sinx_5fx_7',['sinx_x',['../namespacenuma____functions.html#a4d8ddfd3480b04c865bbd769483537e9',1,'numa__functions']]],
   ['sort_5fc64_8',['sort_c64',['../namespacenuma____utils.html#ac0fa38a990899fba300b008198c47400',1,'numa__utils']]],
@@ -15,8 +15,8 @@ var searchData=
   ['sortidx_5fc64_5f1_12',['sortidx_c64_1',['../namespacenuma____utils.html#a361d6677057b5989ce0ac3d716dc2908',1,'numa__utils']]],
   ['sortidx_5ff64_5f1_13',['sortidx_f64_1',['../namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0',1,'numa__utils']]],
   ['sortidx_5fi32_5f2_14',['sortidx_i32_2',['../namespacenuma____utils.html#adcc1939d35e0d2f859c832263a979853',1,'numa__utils']]],
-  ['spline_5fno_5fcurve_15',['spline_no_curve',['../namespacenuma.html#a4eb76b7d8fe6fb533a069cf58ce7e1d0',1,'numa']]],
-  ['spline_5fperiodic_16',['spline_periodic',['../namespacenuma.html#a8365c599aea84d4447c0465b6b0e17aa',1,'numa']]],
-  ['spline_5fprescribed_17',['spline_prescribed',['../namespacenuma.html#ad0354f94441bd0e131f3da07b39ef115',1,'numa']]],
+  ['spline_5fno_5fcurve_15',['spline_no_curve',['../namespacenuma____interp.html#a71374d8b3a6e2f065180d51a45735a3f',1,'numa__interp']]],
+  ['spline_5fperiodic_16',['spline_periodic',['../namespacenuma____interp.html#a167b41e75883e7e3f195b2f29c38f90f',1,'numa__interp']]],
+  ['spline_5fprescribed_17',['spline_prescribed',['../namespacenuma____interp.html#abfedb2e10ac56a55925fa9a811580ee4',1,'numa__interp']]],
   ['sqrt_5ffn_18',['sqrt_fn',['../namespacenuma____functions.html#a749164d5a22f001078f51556c0a0cec2',1,'numa__functions']]]
 ];

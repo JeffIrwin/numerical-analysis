@@ -2,13 +2,13 @@ var searchData=
 [
   ['nelder_5fmead_0',['nelder_mead',['../namespacenuma.html#a9327bfef59383f5e8c3132f9d3d392fa',1,'numa']]],
   ['nelder_5fmead_5ffit_1',['nelder_mead_fit',['../namespacenuma.html#aae0af1b69aaaeeb785063c3765b56577',1,'numa']]],
-  ['neville_5finterpolator_2',['neville_interpolator',['../namespacenuma.html#aff3295684d06e44e8f4ea19b0db4364c',1,'numa']]],
-  ['neville_5finterpolator_5fvals_3',['neville_interpolator_vals',['../namespacenuma.html#ad33ec9040e7e6efa78f20cd4e350eb7e',1,'numa']]],
-  ['neville_5frational_5finterpolator_4',['neville_rational_interpolator',['../namespacenuma.html#a09c7c4e6d718378836f9e02cf1afdf06',1,'numa']]],
-  ['neville_5frational_5finterpolator_5fvals_5',['neville_rational_interpolator_vals',['../namespacenuma.html#a208ff8574aef48f37a7ee56a0eb9b245',1,'numa']]],
-  ['newton_5fcotes_5fintegrator_6',['newton_cotes_integrator',['../namespacenuma.html#a04e8178ffdd8e3b65dc5889b7cc2852d',1,'numa']]],
-  ['newton_5finterpolator_7',['newton_interpolator',['../namespacenuma.html#aa5183ac9c05fd5b656a7f7640f0ab136',1,'numa']]],
-  ['newton_5finterpolator_5fvals_8',['newton_interpolator_vals',['../namespacenuma.html#a5263eadb40a1a4d278c0294f51822b26',1,'numa']]],
+  ['neville_5finterpolator_2',['neville_interpolator',['../namespacenuma____interp.html#aca4eeaea880cfacf70be72b8bb9a496f',1,'numa__interp']]],
+  ['neville_5finterpolator_5fvals_3',['neville_interpolator_vals',['../namespacenuma____interp.html#a5c4c254cd9c207ff2016e13c10ca0e40',1,'numa__interp']]],
+  ['neville_5frational_5finterpolator_4',['neville_rational_interpolator',['../namespacenuma____interp.html#adbc52f8cad47abbc99688a3f3a99bb51',1,'numa__interp']]],
+  ['neville_5frational_5finterpolator_5fvals_5',['neville_rational_interpolator_vals',['../namespacenuma____interp.html#a38b28e1146bfc6995a935bc0f00a231a',1,'numa__interp']]],
+  ['newton_5fcotes_5fintegrator_6',['newton_cotes_integrator',['../namespacenuma____integrate.html#a0d242968e1ec8878f5d6ae5132831894',1,'numa__integrate']]],
+  ['newton_5finterpolator_7',['newton_interpolator',['../namespacenuma____interp.html#aaf1279b29843ebc234512fd32623f925',1,'numa__interp']]],
+  ['newton_5finterpolator_5fvals_8',['newton_interpolator_vals',['../namespacenuma____interp.html#a2726e8e3e76eb7afc1ff8b75f99be655',1,'numa__interp']]],
   ['nm_5feval_5fres_9',['nm_eval_res',['../numerical-analysis_8F90.html#a8f90f929ef67498f005bdc5629cd123e',1,'numerical-analysis.F90']]],
-  ['norm2c_10',['norm2c',['../namespacenuma____blas.html#a5be406caa1e3e4ead02184f196511f96',1,'numa__blas']]]
+  ['norm2c_10',['norm2c',['../namespacenuma____blarg.html#a8cbf4bbb457b92668659dc51fdee1bf3',1,'numa__blarg']]]
 ];

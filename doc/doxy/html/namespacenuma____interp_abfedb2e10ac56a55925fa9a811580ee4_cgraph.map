@@ -1,0 +1,13 @@
+<map id="numa__interp::spline_prescribed" name="numa__interp::spline_prescribed">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,37,164,77"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____linalg.html#a829701de86b62672bc29a03ef1d60c54" title=" " alt="" coords="212,5,371,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="164,42,198,37,199,42,165,48"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____linalg.html#a6252f86a488bf95cba6389682ac88645" title=" " alt="" coords="212,69,371,109"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="165,67,199,72,198,78,164,72"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____linalg.html#a79995b77354a1cc76288b0a246bdbc07" title=" " alt="" coords="419,5,577,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="371,23,405,23,405,28,371,28"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____linalg.html#a72478ed78bc4a3daaa200e6531357b35" title=" " alt="" coords="419,69,577,109"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="357,43,421,63,419,68,356,48"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="356,67,419,47,421,52,357,72"/>
+<area shape="poly" id="edge6_Node000005_Node000004" title=" " alt="" coords="371,87,405,87,405,92,371,92"/>
+</map>

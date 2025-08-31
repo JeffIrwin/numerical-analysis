@@ -6,5 +6,6 @@ var searchData=
   ['partition_5fi32_5f2_3',['partition_i32_2',['../namespacenuma____utils.html#a5aeb3d226b4ff76b223d07d3b7500601',1,'numa__utils']]],
   ['polyfit_4',['polyfit',['../namespacenuma.html#a141f238d0fb3087a2e7bc47f9e0a77f8',1,'numa']]],
   ['polyfit_5flu_5',['polyfit_lu',['../namespacenuma.html#a421caf716e0ed7dd25973988cbfe80ae',1,'numa']]],
-  ['polyval_6',['polyval',['../namespacenuma.html#aabb43f550afb9e0c68900137feda9eee',1,'numa']]]
+  ['polyval_6',['polyval',['../namespacenuma.html#aabb43f550afb9e0c68900137feda9eee',1,'numa']]],
+  ['print_5fmat_5ff64_7',['print_mat_f64',['../namespacenuma____utils.html#aa79fead49ba5bc076af9ae0b9a26289b',1,'numa__utils']]]
 ];

@@ -1,7 +1,8 @@
 var namespaces_dup =
 [
     [ "numa", "namespacenuma.html", "namespacenuma" ],
-    [ "numa__blas", "namespacenuma____blas.html", "namespacenuma____blas" ],
+    [ "numa__blarg", "namespacenuma____blarg.html", "namespacenuma____blarg" ],
+    [ "numa__core", "namespacenuma____core.html", "namespacenuma____core" ],
     [ "numa__dlahqr", "namespacenuma____dlahqr.html", [
       [ "dlahqr", "namespacenuma____dlahqr.html#aecb8ef69db9e59baa4ad569518519f40", null ],
       [ "dlanv2", "namespacenuma____dlahqr.html#adb40b094701602a40d49cc3f10653cb2", null ]
@@ -25,6 +26,7 @@ var namespaces_dup =
       [ "chapter_4_gauss_newton", "namespacenuma____exercises.html#a982becd25f21c63b5e13432464d8b6a2", null ],
       [ "chapter_4_gram_schmidt", "namespacenuma____exercises.html#a3bb7364c661fee9c7f22c2d0c4bf89ff", null ],
       [ "chapter_4_inv", "namespacenuma____exercises.html#a7445206a9d5cf89ab743a6e4c38fcd58", null ],
+      [ "chapter_4_linprog", "namespacenuma____exercises.html#accfcce5815b7392705fb39e8dfabb8d0", null ],
       [ "chapter_4_lls", "namespacenuma____exercises.html#aa17eb6c1bd5524592a484b184773f052", null ],
       [ "chapter_4_lu", "namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8", null ],
       [ "chapter_4_lu_c64", "namespacenuma____exercises.html#a6e19080f83b0300f98894c21e88ae167", null ],
@@ -39,6 +41,7 @@ var namespaces_dup =
       [ "diff_complex_vecs", "namespacenuma____exercises.html#a8a75bb95dea98eb112c9e0ca121a49f3", null ],
       [ "test", "namespacenuma____exercises.html#ab8d02bd30223c4930913d3f1afc39626", null ],
       [ "test_bad_numa_usage", "namespacenuma____exercises.html#af1ed546c954694a90b527df7622b9101", null ],
+      [ "test_compiler_sanity", "namespacenuma____exercises.html#a79709608820b0014168d2f95412e6ea7", null ],
       [ "test_ne", "namespacenuma____exercises.html#abd3a9dfaf528728a53a01750d6d15c04", null ],
       [ "tests", "namespacenuma____exercises.html#a8468eb348b236fdfe3b997557f2f6239", null ]
     ] ],
@@ -64,6 +67,61 @@ var namespaces_dup =
       [ "sinx_x", "namespacenuma____functions.html#a4d8ddfd3480b04c865bbd769483537e9", null ],
       [ "sqrt_fn", "namespacenuma____functions.html#a749164d5a22f001078f51556c0a0cec2", null ]
     ] ],
+    [ "numa__integrate", "namespacenuma____integrate.html", [
+      [ "gauss2_single", "namespacenuma____integrate.html#a1ca42e65f25b80ce33bf40e952e105a1", null ],
+      [ "gauss3_single", "namespacenuma____integrate.html#a00a0d82b2b75f674e6dda5bf6d8fb74e", null ],
+      [ "gauss4_single", "namespacenuma____integrate.html#a2010d6a86ffff48bcf9604081b59bf57", null ],
+      [ "gauss5_single", "namespacenuma____integrate.html#aac802ca7685c959af18447b310b232c3", null ],
+      [ "gauss7_single", "namespacenuma____integrate.html#a19a5fee50a46ac5d6dd5c8ba3f96e67e", null ],
+      [ "gauss_general_single", "namespacenuma____integrate.html#af327699fb59f8f0d66aace2412206e66", null ],
+      [ "gk15_adaptive_integrator", "namespacenuma____integrate.html#a3602cecef3784ac63d0e5504528fd411", null ],
+      [ "gk15i_adaptive_integrator", "namespacenuma____integrate.html#aa39fdcc9d46a03dbf1e6b9fdc002184c", null ],
+      [ "gk15ii_adaptive_integrator", "namespacenuma____integrate.html#a2ffa3aed40e89f2fee277902636c15f2", null ],
+      [ "gk15ni_adaptive_integrator", "namespacenuma____integrate.html#abcbdb1e6314543b2cf551a566bd549c5", null ],
+      [ "kronrod15_single", "namespacenuma____integrate.html#ac2b8687f6a79aeeaebad8b02ecc911d5", null ],
+      [ "milne_integrator", "namespacenuma____integrate.html#a4fe72d51064a256389f93baa15aeb877", null ],
+      [ "newton_cotes_integrator", "namespacenuma____integrate.html#a0d242968e1ec8878f5d6ae5132831894", null ],
+      [ "romberg_integrator", "namespacenuma____integrate.html#a594c3a5bfb51c1e4f2231d6f16c1c66e", null ],
+      [ "romberg_integrator_fixed", "namespacenuma____integrate.html#a65beebcb63c6c46ca857197017cb9f84", null ],
+      [ "simpson_13_integrator", "namespacenuma____integrate.html#aff15563f68e438bd507b6aaad8d53be4", null ],
+      [ "simpson_38_integrator", "namespacenuma____integrate.html#a3933872b1eab6160154dc17f0168af75", null ],
+      [ "simpson_adaptive_integrator", "namespacenuma____integrate.html#a7ea4aa0e5727b376da7bde26296f79ac", null ],
+      [ "simpson_integrator_vals", "namespacenuma____integrate.html#a928c1a4579fb903f06d9b5f06932bfa0", null ],
+      [ "weddle_integrator", "namespacenuma____integrate.html#a5ef55e56d27d8d6c8017540f478eaa9d", null ],
+      [ "ng_gk15", "namespacenuma____integrate.html#af9810216828d39b1abe00f5ab2afea8d", null ],
+      [ "nk_gk15", "namespacenuma____integrate.html#a48816433e2c0f506bf09b3905987c74a", null ],
+      [ "wxg_gk15", "namespacenuma____integrate.html#a7ed044214d8e37775268ee587f164da6", null ],
+      [ "wxk_gk15", "namespacenuma____integrate.html#abbcbaaafefc166ef2298aeddd249f4a8", null ]
+    ] ],
+    [ "numa__interp", "namespacenuma____interp.html", [
+      [ "bezier_curve", "namespacenuma____interp.html#a823932209bd232443fa757498e5beed6", null ],
+      [ "bit_reverse", "namespacenuma____interp.html#a2f4c7fd883bf5c8bd8352370d7c9dd5f", null ],
+      [ "cardinal_spline", "namespacenuma____interp.html#a463dd20cc82641623a4976cfb38ffdb6", null ],
+      [ "fft", "namespacenuma____interp.html#a96a5cbb6e693ebafdd1f61e6dcfa3eee", null ],
+      [ "fft_core", "namespacenuma____interp.html#a732f84f916d709a83337c9888e3c59f6", null ],
+      [ "ifft", "namespacenuma____interp.html#afdf5c60bc7feeeccdc07bb9976f58cb2", null ],
+      [ "lagrange_interpolator", "namespacenuma____interp.html#a20a0164e375068ec1712f1a9bb734149", null ],
+      [ "lagrange_interpolator_vals", "namespacenuma____interp.html#a03409b401a51dcbb87e262e04918a41d", null ],
+      [ "neville_interpolator", "namespacenuma____interp.html#aca4eeaea880cfacf70be72b8bb9a496f", null ],
+      [ "neville_interpolator_vals", "namespacenuma____interp.html#a5c4c254cd9c207ff2016e13c10ca0e40", null ],
+      [ "neville_rational_interpolator", "namespacenuma____interp.html#adbc52f8cad47abbc99688a3f3a99bb51", null ],
+      [ "neville_rational_interpolator_vals", "namespacenuma____interp.html#a38b28e1146bfc6995a935bc0f00a231a", null ],
+      [ "newton_interpolator", "namespacenuma____interp.html#aaf1279b29843ebc234512fd32623f925", null ],
+      [ "newton_interpolator_vals", "namespacenuma____interp.html#a2726e8e3e76eb7afc1ff8b75f99be655", null ],
+      [ "spline_no_curve", "namespacenuma____interp.html#a71374d8b3a6e2f065180d51a45735a3f", null ],
+      [ "spline_periodic", "namespacenuma____interp.html#a167b41e75883e7e3f195b2f29c38f90f", null ],
+      [ "spline_prescribed", "namespacenuma____interp.html#abfedb2e10ac56a55925fa9a811580ee4", null ],
+      [ "spline_case_no_curve", "namespacenuma____interp.html#aa9c1e3c8f2258bcb79e81c24507011ad", null ],
+      [ "spline_case_periodic", "namespacenuma____interp.html#aaedf9afc4ad300cfbf1ee807da317e31", null ],
+      [ "spline_case_prescribed", "namespacenuma____interp.html#a584b8275a49133e2eb6e150049d51bfe", null ]
+    ] ],
+    [ "numa__linalg", "namespacenuma____linalg.html", [
+      [ "tridiag_corner_invmul", "namespacenuma____linalg.html#a829701de86b62672bc29a03ef1d60c54", null ],
+      [ "tridiag_factor", "namespacenuma____linalg.html#a79995b77354a1cc76288b0a246bdbc07", null ],
+      [ "tridiag_invmul", "namespacenuma____linalg.html#a6252f86a488bf95cba6389682ac88645", null ],
+      [ "tridiag_solve", "namespacenuma____linalg.html#a72478ed78bc4a3daaa200e6531357b35", null ]
+    ] ],
+    [ "numa__linprog", "namespacenuma____linprog.html", "namespacenuma____linprog" ],
     [ "numa__test", "namespacenuma____test.html", null ],
     [ "numa__utils", "namespacenuma____utils.html", "namespacenuma____utils" ]
 ];

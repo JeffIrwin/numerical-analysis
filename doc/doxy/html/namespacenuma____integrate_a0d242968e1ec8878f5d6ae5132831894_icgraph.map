@@ -1,0 +1,11 @@
+<map id="numa__integrate::newton_cotes_integrator" name="numa__integrate::newton_cotes_integrator">
+<area shape="rect" id="Node000001" title=" " alt="" coords="248,101,436,141"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____integrate.html#a4fe72d51064a256389f93baa15aeb877" title=" " alt="" coords="14,5,191,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="286,98,199,60,166,48,168,43,201,55,288,93"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____integrate.html#aff15563f68e438bd507b6aaad8d53be4" title=" " alt="" coords="5,69,200,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="234,110,200,105,200,100,235,104"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____integrate.html#a3933872b1eab6160154dc17f0168af75" title=" " alt="" coords="5,133,200,173"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="235,138,200,143,200,138,234,133"/>
+<area shape="rect" id="Node000005" href="$namespacenuma____integrate.html#a5ef55e56d27d8d6c8017540f478eaa9d" title=" " alt="" coords="9,197,196,237"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="288,150,201,188,168,200,166,195,199,183,286,145"/>
+</map>
