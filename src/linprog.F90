@@ -9,6 +9,8 @@ module numa__linprog
 
 	implicit none
 
+	private :: linprog_solve_simplex
+
 contains
 
 !===============================================================================
@@ -309,6 +311,12 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, fval, iostat) result(x)
 	call linprog_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
 	x = linprog_std(c_, a, b, tol_, io)
+	if (io /= 0) then
+		msg = "linprog_std() failed in linprog()"
+		call PANIC(msg, present(iostat))
+		iostat = 8
+		return
+	end if
 	!print *, "x with slack = ", x
 
 	!********
@@ -380,7 +388,7 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	double precision, allocatable :: row_constraints(:,:), t(:,:)
 	double precision, allocatable :: row_objective(:)
 	double precision, allocatable :: row_pseudo_objective(:), solution(:)
-	integer :: i, m, n
+	integer :: i, m, n, io
 	integer, allocatable :: av(:), basis(:)
 
 	if (present(iostat)) iostat = 0
@@ -441,7 +449,13 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	!print *, "t initial = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
-	call linprog_solve_simplex(t, basis, tol_, phase = 1)
+	call linprog_solve_simplex(t, basis, tol_, phase = 1, iostat = io)
+	if (io /= 0) then
+		msg = "linprog_solve_simplex() phase 1 failed in linprog_std()"
+		call PANIC(msg, present(iostat))
+		iostat = 9
+		return
+	end if
 
 	!print *, "t after phase 1 = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
@@ -449,9 +463,10 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 	!********
 
 	if (abs(t(size(t,1), size(t,2))) >= tol_) then
-		print *, "Error: solution is infeasible in linprog_std()"
-		! TODO: panic
-		stop
+		msg = "solution is infeasible in linprog_std()"
+		call PANIC(msg, present(iostat))
+		iostat = 8
+		return
 	end if
 
 	! Remove the pseudo-objective row from the tableau
@@ -468,7 +483,14 @@ function linprog_std(c, a, b, tol, iostat) result(x)
 
 	!********
 
-	call linprog_solve_simplex(t, basis, tol_, phase = 2)
+	call linprog_solve_simplex(t, basis, tol_, phase = 2, iostat = io)
+	if (io /= 0) then
+		msg = "linprog_solve_simplex() phase 2 failed in linprog_std()"
+		call PANIC(msg, present(iostat))
+		iostat = 9
+		return
+	end if
+
 	solution = zeros(n + m)
 	solution(basis(:n)) = t(:n, size(t,2))
 	x = solution(:m)
@@ -505,9 +527,7 @@ end subroutine rm_cols
 
 !********
 
-subroutine linprog_solve_simplex(t, basis, tol, phase)
-	! TODO: private
-	!
+subroutine linprog_solve_simplex(t, basis, tol, phase, iostat)
 	! This is based on `_solve_simplex()` from scipy:
 	!
 	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L232
@@ -517,11 +537,15 @@ subroutine linprog_solve_simplex(t, basis, tol, phase)
 	integer, intent(inout) :: basis(:)
 	double precision, intent(in) :: tol
 	integer, intent(in) :: phase
+	integer, optional, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	double precision :: pivval
 	double precision, allocatable :: q(:)
 	integer :: i, k, m, nb, mb, nc, nr, pivcol, pivrow, i1(1), iter, ir, ic
 	logical :: complete
+
+	if (present(iostat)) iostat = 0
 
 	! TODO: rename overly long variables
 
@@ -613,11 +637,10 @@ subroutine linprog_solve_simplex(t, basis, tol, phase)
 		pivrow = i1(1)
 		!print *, "pivrow = ", pivrow
 		if (pivrow == 0) then
-			print*, "ERROR: pivot row not found!"
-			! TODO: panic
-			stop
-			complete = .true.
-			cycle
+			msg = "pivot row not found in linprog_solve_simplex()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
 		end if
 
 		! Apply pivot
@@ -635,10 +658,11 @@ subroutine linprog_solve_simplex(t, basis, tol, phase)
 		!print *, ""
 		!stop
 		if (iter == 1000) then
-		!if (iter == 100) then
-			print *, "ERROR: reached max iters!"
-			! TODO: panic
-			stop
+			! TODO: pass max iters optionally from caller
+			msg = "max iterations reached in linprog_solve_simplex()"
+			call PANIC(msg, present(iostat))
+			iostat = 2
+			return
 		end if
 	end do
 
