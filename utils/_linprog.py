@@ -8,7 +8,7 @@ from warnings import warn
 #from ._linprog_simplex import _linprog_simplex
 from _linprog_simplex import _linprog_simplex
 
-#from ._linprog_rs import _linprog_rs
+from _linprog_rs import _linprog_rs
 #from ._linprog_doc import (_linprog_highs_doc, _linprog_ip_doc,  # noqa: F401
 #                           _linprog_rs_doc, _linprog_simplex_doc,
 #                           _linprog_highs_ipm_doc, _linprog_highs_ds_doc)
@@ -77,7 +77,8 @@ def linprog_terse_callback(res):
 def linprog(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
             bounds=(0, None),
             #method='highs',
-            method='simplex',
+            #method='simplex',
+            method='revised simplex',
             callback=None,
             options=None, x0=None, integrality=None):
     meth = method.lower()
@@ -166,10 +167,10 @@ def linprog(c, A_ub=None, b_ub=None, A_eq=None, b_eq=None,
         #    x, status, message, iteration = _linprog_ip(
         #        c, c0=c0, A=A, b=b, callback=callback,
         #        postsolve_args=postsolve_args, **solver_options)
-        #elif meth == 'revised simplex':
-        #    x, status, message, iteration = _linprog_rs(
-        #        c, c0=c0, A=A, b=b, x0=x0, callback=callback,
-        #        postsolve_args=postsolve_args, **solver_options)
+        elif meth == 'revised simplex':
+            x, status, message, iteration = _linprog_rs(
+                c, c0=c0, A=A, b=b, x0=x0, callback=callback,
+                postsolve_args=postsolve_args, **solver_options)
 
     # Eliminate artificial variables, re-introduce presolved variables, etc.
     disp = solver_options.get('disp', False)

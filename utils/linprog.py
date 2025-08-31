@@ -16,6 +16,32 @@ import numpy as np
 # prints 
 from _linprog import linprog
 
+#===================================================================
+
+c = [-1, 4]
+#c = [4, -1]
+A = [[-3, 1], [1, 2]]
+b = [6, 4]
+
+x0_bounds = (None, None)
+x1_bounds = (-3, None)
+
+#res = linprog(c, A_ub=A, b_ub=b)
+res = linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds])
+
+#res = scipy.optimize.linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds])
+
+print("===============================================")
+print("scipy doc example")
+print("res = ", res)
+print("fun = ", res["fun"])
+print("x = ", res["x"])
+print("msg = ", res["message"])
+exit(0)
+#print("fun = ", res.fun)
+#print("x   = ", res.x)
+#print("msg = ", res.message)
+
 ##===================================================================
 #
 #A_ub = None
@@ -92,32 +118,6 @@ print("fun = ", res["fun"])
 print("x = ", res["x"])  # expect  [0.1875 1.25]
 print("msg = ", res["message"])
 #exit(0)
-
-#===================================================================
-
-c = [-1, 4]
-c = [4, -1]
-A = [[-3, 1], [1, 2]]
-b = [6, 4]
-
-x0_bounds = (None, None)
-x1_bounds = (-3, None)
-
-#res = linprog(c, A_ub=A, b_ub=b)
-res = linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds])
-
-#res = scipy.optimize.linprog(c, A_ub=A, b_ub=b, bounds=[x0_bounds, x1_bounds])
-
-print("===============================================")
-print("scipy doc example")
-print("res = ", res)
-print("fun = ", res["fun"])
-print("x = ", res["x"])
-print("msg = ", res["message"])
-exit(0)
-#print("fun = ", res.fun)
-#print("x   = ", res.x)
-#print("msg = ", res.message)
 
 #===================================================================
 
