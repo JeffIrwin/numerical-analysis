@@ -34,13 +34,38 @@ module numa
 	!
 	! - split up large files
 	!   * exercises need split up too
+	!   * consider using submodules to avoid recompilation cascades.  see
+	!     syntran's use of submodules in parse.f90 for example
 	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
 	!   specifically for Intel, e.g. initialization of complex arrays
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
 	!   public fn.  See `lagrange_interpolator()` which has an example doc
 	!   string
 
+	integer, parameter :: &
+		NUMA_MAJOR = 0, &
+		NUMA_MINOR = 1, &
+		NUMA_PATCH = 0
+
 contains
+
+!===============================================================================
+
+subroutine print_version(unit)
+	use iso_fortran_env
+	integer, optional, intent(in) :: unit
+	!********
+	integer :: unit_
+
+	unit_ = output_unit
+	if (present(unit)) unit_ = unit
+
+	write(unit_, "(a)") " numa version " // &
+		to_str(NUMA_MAJOR) // "." // &
+		to_str(NUMA_MINOR) // "." // &
+		to_str(NUMA_PATCH)
+
+end subroutine print_version
 
 !===============================================================================
 

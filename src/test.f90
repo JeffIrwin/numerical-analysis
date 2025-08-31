@@ -22,6 +22,7 @@ program main
 	call cpu_time(t0)
 
 	write(*,*) MAGENTA // "Starting numerical-analysis test" // COLOR_RESET
+	call print_version()
 
 	nfail = 0
 

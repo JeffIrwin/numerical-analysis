@@ -4,7 +4,7 @@
 #include "panic.F90"
 
 !> Module for high-level linear algebra.  Some other more basic routines can be
-!> found in the module `numa__blarg`
+!> found in the module numa__blarg
 module numa__linalg
 
 	!use numa__core
