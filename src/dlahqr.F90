@@ -209,7 +209,14 @@ contains
 	!> \endverbatim
 	!>
 	! =====================================================================
-	subroutine dlahqr(wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
+#if defined(__INTEL_COMPILER)
+	! With Intel compilers, use MKL's dlahqr instead of this version.  May
+	! require linking with `-qmkl` flag
+	subroutine dlahqr_dummy &
+#else
+	subroutine dlahqr &
+#endif
+			(wantt, wantz, n, ilo, ihi, h, ldh, wr, wi, &
 							iloz, ihiz, z, ldz, info)
 
 		use numa__blarg
@@ -533,7 +540,9 @@ contains
 			i = l - 1
 		end do
 
-	end subroutine dlahqr
+	!end subroutine dlahqr_
+	end subroutine
+
 	!> \brief \b dlanv2 computes the schur factorization of a real 2-by-2 nonsymmetric matrix in standard form.
 
 	! =========== documentation ===========
