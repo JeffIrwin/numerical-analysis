@@ -111,10 +111,14 @@ def _generate_auxiliary_problem(A, b, x0, tol):
         x = np.zeros(n)
 
     r = b - A@x  # residual; this must be all zeros for feasibility
+    print("r = ", r)
 
     A[r < 0] = -A[r < 0]  # express problem with RHS positive for trivial BFS
     b[r < 0] = -b[r < 0]  # to the auxiliary problem
     r[r < 0] *= -1
+    print("A after neg = ")
+    print(A)
+    print("r = ", r)
 
     # Rows which we will need to find a trivial way to zero.
     # This should just be the rows where there is a nonzero residual.
@@ -124,25 +128,38 @@ def _generate_auxiliary_problem(A, b, x0, tol):
         nonzero_constraints = np.arange(m)
     else:
         nonzero_constraints = np.where(r > tol)[0]
+    print("nonzero_constraints = ", nonzero_constraints)
 
     # these are (at least some of) the initial basis columns
     basis = np.where(np.abs(x) > tol)[0]
+    print("basis = ")
+    print(basis)
 
     if len(nonzero_constraints) == 0 and len(basis) <= m:  # already a BFS
         c = np.zeros(n)
         basis = _get_more_basis_columns(A, basis)
+        print("basis after getting more = ")
+        print(basis)
         return A, b, c, basis, x, status
     elif (len(nonzero_constraints) > m - len(basis) or
           np.any(x < 0)):  # can't get trivial BFS
         c = np.zeros(n)
         status = 6
+        print("status = 6")
         return A, b, c, basis, x, status
 
     # chooses existing columns appropriate for inclusion in initial basis
     cols, rows = _select_singleton_columns(A, r)
+    print("rows = ", rows)
+    print("cols = ", cols)
+    #exit(0)
 
     # find the rows we need to zero that we _can_ zero with column singletons
     i_tofix = np.isin(rows, nonzero_constraints)
+    print("rows = ", rows)
+    print("nonzero_constraints = ", nonzero_constraints)
+    print("i_tofix = ", i_tofix)
+
     # these columns can't already be in the basis, though
     # we are going to add them to the basis and change the corresponding x val
     i_notinbasis = np.logical_not(np.isin(cols, basis))
@@ -176,7 +193,14 @@ def _generate_auxiliary_problem(A, b, x0, tol):
     # singletons we used to zero remaining constraints, and any additional
     # columns to get a full set (m columns)
     basis = np.concatenate((basis, basis_ng))
+    print("basis after ng cat = ")
+    print(basis)
     basis = _get_more_basis_columns(A, basis)  # add columns as needed
+    print("basis after getting more = ")
+    print(basis)
+
+    print("Ending _generate_auxiliary_problem")
+    print("=" * 60)
 
     return A, b, c, basis, x, status
 
@@ -185,16 +209,37 @@ def _select_singleton_columns(A, b):
     print("Starting _select_singleton_columns()")
     # find indices of all singleton columns and corresponding row indices
     column_indices = np.nonzero(np.sum(np.abs(A) != 0, axis=0) == 1)[0]
+    print("column_indices = ", column_indices)
+
     columns = A[:, column_indices]          # array of singleton columns
+    print("columns = ")
+    print(columns)
+
     row_indices = np.zeros(len(column_indices), dtype=int)
     nonzero_rows, nonzero_columns = np.nonzero(columns)
     row_indices[nonzero_columns] = nonzero_rows   # corresponding row indices
+
+    print("nonzero_rows    = ", nonzero_rows)
+    print("nonzero_columns = ", nonzero_columns)
+    print("row_indices     = ", row_indices)
+
+    print("A slice = ")
+    print(A[row_indices, column_indices])
+    print("b slice = ")
+    print(b[row_indices])
+    print("mat = ")
+    print(A[row_indices, column_indices]*b[row_indices])
 
     # keep only singletons with entries that have same sign as RHS
     # this is necessary because all elements of BFS must be non-negative
     same_sign = A[row_indices, column_indices]*b[row_indices] >= 0
     column_indices = column_indices[same_sign][::-1]
     row_indices = row_indices[same_sign][::-1]
+
+    print("same_sign = ", same_sign)
+    print("column_indices (reversed) = ", column_indices)
+    print("row_indices = ", row_indices)
+
     # Reversing the order so that steps below select rightmost columns
     # for initial basis, which will tend to be slack variables. (If the
     # guess corresponds with a basic feasible solution but a constraint
@@ -220,7 +265,9 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
     status = 0
     a = np.arange(n)                    # indices of columns of A
     ab = np.arange(m)                   # indices of columns of B
-    if maxupdate:
+
+    # BGLU works but I might want to port LU to Fortran instead first
+    if False and maxupdate:
         # basis matrix factorization object; similar to B = A[:, b]
         B = BGLU(A, b, maxupdate, mast)
     else:

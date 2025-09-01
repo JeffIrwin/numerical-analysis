@@ -65,6 +65,7 @@ module numa__utils
 
 	interface print_mat
 		procedure :: print_mat_f64
+		procedure :: print_mat_i32
 	end interface print_mat
 
 	integer, parameter :: &
@@ -582,6 +583,34 @@ subroutine print_mat_f64(mat, msg, fmt)
 	write(UNIT, "(a)") " ]"
 
 end subroutine print_mat_f64
+
+!********
+
+subroutine print_mat_i32(mat, msg, fmt)
+	! Note some integers will overflow the default fmt "(i8)" here.  i0 is
+	! problematic because you will probably want aligned printing, but "(i14)"
+	! wide enough for all ints is probably too wide for comfortable spacing
+	use iso_fortran_env
+	integer, intent(in) :: mat(:,:)
+	character(len = *), optional, intent(in) :: msg, fmt
+	!********
+	character(len = :), allocatable :: fmt_
+	integer, parameter :: UNIT = OUTPUT_UNIT
+
+	fmt_ = "i8"
+	if (present(fmt)) fmt_ = fmt
+
+	if (present(msg)) then
+		write(*, "(a)") " " // msg
+	end if
+
+	write(UNIT, "(a)") " ["
+	if (size(mat) > 0) then
+		write(UNIT, "(" // to_str(size(mat,2)) // fmt_ // ")") transpose(mat)
+	end if
+	write(UNIT, "(a)") " ]"
+
+end subroutine print_mat_i32
 
 !===============================================================================
 

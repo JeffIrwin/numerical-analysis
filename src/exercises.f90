@@ -2910,6 +2910,28 @@ integer function chapter_4_linprog() result(nfail)
 	nfail = 0
 
 	!********
+	! Scipy example including non-default bounds
+
+	c = [-1, 4]
+	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
+	b_ub = [6, 4]
+	lb = [-inf(), -3.d0]
+	!ub = [inf(), inf()]  ! still default
+	print *, "lb = ", lb
+
+	expect = [10, -3]
+
+	x = linprog(c, a_ub, b_ub, lb = lb, method = LINPROG_REVISED_SIMPLEX)
+	!x = linprog(c, a_ub, b_ub, lb = lb, fval = fval)  ! TODO
+
+	print *, "x = ", x
+	print *, "fval = ", fval
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
+
+	stop
+
+	!********
 	! Standard form, using linprog_std()
 
 	c = [8, 6, 0, 0]
@@ -2946,23 +2968,6 @@ integer function chapter_4_linprog() result(nfail)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 2")
-
-	!********
-	! Scipy example including non-default bounds
-
-	c = [-1, 4]
-	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
-	b_ub = [6, 4]
-	lb = [-inf(), -3.d0]
-	!ub = [inf(), inf()]  ! still default
-	print *, "lb = ", lb
-
-	expect = [10, -3]
-
-	x = linprog(c, a_ub, b_ub, lb = lb)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
 
 	!********
 	! Example from https://github.com/khalibartan/simplex-method/issues/2
