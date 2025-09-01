@@ -2998,6 +2998,12 @@ integer function chapter_4_linprog() result(nfail)
 	do im = 1, size(methods)
 	method = methods(im)
 
+	if (method == LINPROG_SIMPLEX) then
+		print *, "Testing method LINPROG_SIMPLEX"
+	else if (method == LINPROG_REVISED_SIMPLEX) then
+		print *, "Testing method LINPROG_REVISED_SIMPLEX"
+	end if
+
 	!********
 
 	c = [4.d0, 8.d0, 3.d0, 0.d0, 0.d0, 0.d0]
@@ -3354,9 +3360,9 @@ integer function chapter_4_linprog() result(nfail)
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 15")
 
 	!********
+	print *, ""
 	end do  ! methods
 	!********
-	print *, ""
 
 end function chapter_4_linprog
 

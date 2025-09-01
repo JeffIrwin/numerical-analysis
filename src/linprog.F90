@@ -453,30 +453,20 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	x = zeros(n)
 	r = b - matmul(a, x)
-	print *, "r = ", r
+	!print *, "r = ", r
 
 	!call print_mat(a, "a before neg = ")
 	ineg = mask_to_index(r < 0)
 	a(ineg, :) = -a(ineg, :)
 	b(ineg) = -b(ineg)
 	r(ineg) = -r(ineg)
-	call print_mat(a, "a after neg = ")
+	!call print_mat(a, "a after neg = ")
 
 	nonzero_constraints = [(i, i = 1, m)]
-	print *, "nonzero_constraints = ", nonzero_constraints
-
-	!    # these are (at least some of) the initial basis columns
-	!    basis = np.where(np.abs(x) > tol)[0]
+	!print *, "nonzero_constraints = ", nonzero_constraints
 
 	basis = mask_to_index(abs(x) > tol)
-	!i1 = findloc(abs(x) > tol_, .true.)
-	!if (i1(1) > 0) then
-	!   ! Unreachable
-	!	basis = [i1(1)]
-	!else
-	!	allocate(basis(0))
-	!end if
-	print *, "basis = ", basis
+	!print *, "basis = ", basis
 
 	!    if len(nonzero_constraints) == 0 and len(basis) <= m:  # already a BFS
 	!        c = np.zeros(n)
@@ -489,7 +479,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!        return A, b, c, basis, x, status
 
 	if (size(nonzero_constraints) == 0 .and. size(basis) <= m) then
-		print *, "TODO: already a basic feasible solution"
+		!print *, "TODO: already a basic feasible solution"
 
 		! TODO:  this is not actually a problem.  We just need to
 		! _get_more_basis_columns(), set c 0, and skip the rest of
@@ -517,38 +507,38 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	! Find indices of all singleton columns and corresponding row indices
 	column_indices = mask_to_index(count(abs(a) /= 0, dim = 1) == 1)
-	print *, "column_indices = ", column_indices
+	!print *, "column_indices = ", column_indices
 
 	columns = a(:, column_indices)  ! array of singleton columns
-	call print_mat(columns, "columns = ")
+	!call print_mat(columns, "columns = ")
 
 	row_indices = zeros_i32(size(column_indices))
 	idx2 = mask_to_index(columns /= 0)
 	nonzero_rows = idx2(1,:)
 	nonzero_cols = idx2(2,:)
-	call print_mat(idx2, "idx2 = ")
-	print *, "nonzero_rows = ", nonzero_rows
-	print *, "nonzero_cols = ", nonzero_cols
+	!call print_mat(idx2, "idx2 = ")
+	!print *, "nonzero_rows = ", nonzero_rows
+	!print *, "nonzero_cols = ", nonzero_cols
 
 	row_indices(nonzero_cols) = nonzero_rows
-	print *, "row_indices = ", row_indices
+	!print *, "row_indices = ", row_indices
 	!call print_mat(a(row_indices, column_indices), "a(rows, cols) = ")
 
 	allocate(anz( size(idx2, 2) ))
 	do i = 1, size(idx2, 2)
 		anz(i) = columns(idx2(1,i), idx2(2,i))
 	end do
-	print *, "anz = ", anz
+	!print *, "anz = ", anz
 
 	! Keep only singletons with entries that have the same sign as RHS
 	same_sign = mask_to_index(anz * b(row_indices) >= 0)
 	column_indices = reverse(column_indices(same_sign))
 	row_indices = reverse(row_indices(same_sign))
 
-	print *, "same_sign = ", same_sign
-	!print *, "column_indices slice = ", column_indices(same_sign)
-	print *, "column_indices reversed = ", column_indices
-	print *, "row_indices = ", row_indices
+	!print *, "same_sign = ", same_sign
+	!!print *, "column_indices slice = ", column_indices(same_sign)
+	!print *, "column_indices reversed = ", column_indices
+	!print *, "row_indices = ", row_indices
 
 	! For each row, keep the rightmost singleton column_indices with an entry in
 	! that row
@@ -565,11 +555,11 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	end block
 	!********
 
-	print *, "rows = ", rows
-	print *, "cols = ", cols
+	!print *, "rows = ", rows
+	!print *, "cols = ", cols
 
 	l_tofix = is_in_vec(rows, nonzero_constraints)
-	print *, "l_tofix = ", l_tofix
+	!print *, "l_tofix = ", l_tofix
 
 	l_notinbasis = .not. is_in_vec(cols, basis)
 	l_fix_without_aux = l_tofix .and. l_notinbasis
@@ -577,8 +567,8 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	rows = rows(i_fix_without_aux)
 	cols = cols(i_fix_without_aux)
 
-	print *, "l_notinbasis = ", l_notinbasis
-	print *, "l_fix_without_aux = ", l_fix_without_aux
+	!print *, "l_notinbasis = ", l_notinbasis
+	!print *, "l_fix_without_aux = ", l_fix_without_aux
 
 	arows = nonzero_constraints( &
 		mask_to_index(.not. is_in_vec(nonzero_constraints, rows)) &
@@ -586,13 +576,13 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	n_aux = size(arows)
 	acols = n + [(i, i = 1, n_aux)]
 
-	print *, "arows = ", arows
-	print *, "acols = ", acols
+	!print *, "arows = ", arows
+	!print *, "acols = ", acols
 
 	basis_ng = [cols, acols]
 	basis_ng_rows = [rows, arows]
-	print *, "basis_ng = ", basis_ng
-	print *, "basis_ng_rows = ", basis_ng_rows
+	!print *, "basis_ng = ", basis_ng
+	!print *, "basis_ng_rows = ", basis_ng_rows
 
 	! Add auxiliary singleton columns
 	a = hstack(a, zeros(m, n_aux))
@@ -605,19 +595,18 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	do i = 1, size(basis_ng)
 		x(basis_ng(i)) = r(basis_ng_rows(i)) / a(basis_ng_rows(i), basis_ng(i))
 	end do
-	print *, "x bfs = ", x
+	!print *, "x bfs = ", x
 
 	! Generate costs to minimize infeasibility
 	c = zeros(n_aux + n)
 	c(acols) = 1
-	print *, "c = ", c
+	!print *, "c = ", c
 
 	basis = [basis, basis_ng]
-	print *, "basis after ng cat       = ", basis
+	!print *, "basis after ng cat       = ", basis
 	basis = linprog_get_more_basis_cols(a, basis)
-	print *, "basis after getting more = ", basis
-
-	print *, "x = ", x
+	!print *, "basis after getting more = ", basis
+	!print *, "x = ", x
 
 	! End generate auxiliary problem
 	!********
@@ -662,7 +651,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 				new_basis_column = i
 			end if
 		end do
-		print *, "new_basis_column = ", new_basis_column
+		!print *, "new_basis_column = ", new_basis_column
 
 		if (basis_finder(pertinent_row, new_basis_column) < tol_) then
 			keep_rows(pertinent_row) = .false.
@@ -671,7 +660,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 		end if
 
 	end do
-	print *, "keep_rows = ", keep_rows
+	!print *, "keep_rows = ", keep_rows
 
 	! Form solution to original problem
 	a = a(mask_to_index(keep_rows), :n)
@@ -702,10 +691,10 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	logical :: converged
 	logical, allocatable :: bl(:)
 
-	print *, repeat("=", 60)
-	print *, "Starting rs_phase_two()"
-	print *, "b = ", b
-	print *, "x = ", x
+	!print *, repeat("=", 60)
+	!print *, "Starting rs_phase_two()"
+	!print *, "b = ", b
+	!print *, "x = ", x
 
 	m = size(aa, 1)
 	n = size(aa, 2)
@@ -713,8 +702,8 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	ab = [(i, i = 1, m)]
 
 	bb = aa(:, b)
-	call print_mat(aa, "aa = ")
-	call print_mat(bb, "bb = ")
+	!call print_mat(aa, "aa = ")
+	!call print_mat(bb, "bb = ")
 
 	converged = .false.
 	do iteration = 1, maxiter
@@ -724,7 +713,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 
 		xb = x(b)
 		cb = c(b)
-		call print_mat(bb, "bb = ")
+		!call print_mat(bb, "bb = ")
 
 		! TODO: is there a bug in my lu_factor_f64() pivoting? It says this is
 		! singular for the simple MATLAB example, but qr_solve_f64() works
@@ -737,17 +726,17 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 
 		c_hat = c - matmul(v, aa)
 
-		print *, "c = ", c
-		print *, "cb = ", cb
-		print *, "v = ", v
-		print *, "c_hat = ", c_hat
-		!print *, "bl = ", bl
-		print *, "c_hat (unmasked) = ", c_hat
-		print *, "size(bl)    = ", size(bl)
-		print *, "size(c_hat) = ", size(c_hat)
+		!print *, "c = ", c
+		!print *, "cb = ", cb
+		!print *, "v = ", v
+		!print *, "c_hat = ", c_hat
+		!!print *, "bl = ", bl
+		!print *, "c_hat (unmasked) = ", c_hat
+		!print *, "size(bl)    = ", size(bl)
+		!print *, "size(c_hat) = ", size(c_hat)
 
 		if (all(c_hat >= -tol .or. bl)) then
-			print *, "converged"
+			!print *, "converged"
 			converged = .true.
 			exit
 		end if
@@ -760,11 +749,11 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 			j = i
 			exit
 		end do
-		print *, "j = ", j
+		!print *, "j = ", j
 
 		!u = invmul(bb, aa(:,j))
 		u = qr_solve(bb, aa(:,j))
-		print *, "u = ", u
+		!print *, "u = ", u
 
 		! If none of `u` are positive, unbounded
 		ipos = mask_to_index(u > tol)
@@ -782,16 +771,16 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		x(b) = x(b) - th_star * u
 		x(j) = th_star
 
-		print *, "u > tol = ", u > tol
-		print *, "th = ", th
-		print *, "th_star = ", th_star
+		!print *, "u > tol = ", u > tol
+		!print *, "th = ", th
+		!print *, "th_star = ", th_star
 
 		! Update (modify) basis and basis matrix
 		i = ab(ipos(l))
 		b(i: m-1) = b(i+1: m)
 		b(size(b)) = j
 		bb = aa(:, b)
-		print *, "b = ", b
+		!print *, "b = ", b
 
 	end do
 	if (.not. converged) then
@@ -823,12 +812,12 @@ function linprog_get_more_basis_cols(aa, basis) result(res)
 	bl(basis) = .true.
 	options = a(mask_to_index(.not. bl))
 	options = options(mask_to_index(options <= n))
-	print *, "options = ", options
+	!print *, "options = ", options
 
 	! Form basis matrix
 	b = zeros(m, m)
 	b(:, 1: size(basis)) = aa(:, basis)
-	call print_mat(b, "b = ")
+	!call print_mat(b, "b = ")
 
 	if (size(basis) > 0 .and. &
 		qr_rank(b(:, :size(basis))) < size(basis)) then
@@ -836,7 +825,7 @@ function linprog_get_more_basis_cols(aa, basis) result(res)
 		! TODO: panic
 		stop
 	end if
-	print *, "ok"
+	!print *, "ok"
 
 	rank_ = 0
 	do i = 1, n
@@ -844,7 +833,7 @@ function linprog_get_more_basis_cols(aa, basis) result(res)
 		new_basis = options(perm(: m - size(basis)))
 		b(:, size(basis):) = aa(:, new_basis)
 		rank_ = qr_rank(b)
-		print *, "rank_ = ", rank_
+		!print *, "rank_ = ", rank_
 		!if (i > 1) stop  ! unreachable in tests
 		if (rank_ == m) exit
 	end do
