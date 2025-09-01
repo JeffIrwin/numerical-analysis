@@ -2903,11 +2903,72 @@ integer function chapter_4_linprog() result(nfail)
 	double precision :: fval, fexpect
 	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
 		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
-	integer :: n, p
+	integer :: n, p, rank_
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
+
+	!********
+
+	! Test rank calculation, needed for revised simplex
+	!
+	! TODO: separate test fn
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 0, 1  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 3 = ", rank_
+	call test(1.d0 * rank_, 3.d0, 1.d-14, nfail, "qr_rank 1")
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 1, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 2 = ", rank_
+	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 2")
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 0, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 2 = ", rank_
+	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 3")
+
+	a = reshape([ &
+		1, 0, 0, &
+		1, 0, 0, &
+		1, 0, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 1 = ", rank_
+	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 4")
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 0, 0, &
+		1, 0, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 1 = ", rank_
+	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 5")
 
 	!********
 	! Scipy example including non-default bounds

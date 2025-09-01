@@ -845,6 +845,67 @@ end subroutine qr_factor_gram_schmidt
 
 !********
 
+integer function qr_rank(a, allow_rect, iostat) result(rank_)
+	! Get the rank of `a` using QR factorization with Householder transformations
+	!
+	! TODO: tol?
+	!
+	! Matrix `a` is modified in the process
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+
+	logical, optional, intent(in) :: allow_rect
+	integer, optional, intent(out) :: iostat
+
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: s, normx, u1, wa, diag_
+	integer :: j, k, n
+	logical :: allow_rect_
+
+	allow_rect_ = .false.
+	if (present(iostat)) iostat = 0
+	if (present(allow_rect)) allow_rect_ = allow_rect
+
+	n = min(size(a,1), size(a,2))
+
+	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
+		msg = "matrix is not square in qr_factor_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	do j = 1, n
+		rank_ = j
+
+		normx = norm2(a(j:, j))
+		!print *, "normx = ", normx
+		if (normx <= 0) then
+			rank_ = rank_ - 1
+			exit
+		end if
+
+		s = -sign_(a(j,j))
+		u1 = a(j,j) - s * normx
+		a(j+1:, j) = a(j+1:, j) / u1
+		a(j,j) = s * normx
+		diag_ = -s * u1 / normx
+
+		do k = j+1, n
+			wa = diag_ * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+			a(j,k) = a(j,k) - wa
+			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
+		end do
+
+	end do
+
+end function qr_rank
+
+!********
+
 subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
 	use numa__utils

@@ -121,6 +121,15 @@ end function rand_f64
 
 !********
 
+integer function rand_i32(n)
+	! Random integer 0 <= rand_i32 < n
+	! TODO: move out of blarg
+	integer, intent(in) :: n
+	rand_i32 = floor(n * rand_f64())
+end function rand_i32
+
+!********
+
 subroutine house_c64(alpha, x, diag_, iostat)
 	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
 	!

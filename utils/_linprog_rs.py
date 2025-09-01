@@ -79,10 +79,13 @@ def _get_more_basis_columns(A, basis):
     bl[basis] = 1
     options = a[~bl]
     options = options[options < n]  # and they have to be non-artificial
+    print("options = ", options)
 
     # form basis matrix
     B = np.zeros((m, m))
     B[:, 0:len(basis)] = A[:, basis]
+    print("B = ")
+    print(B)
 
     if (basis.size > 0 and
             np.linalg.matrix_rank(B[:, :len(basis)]) < len(basis)):
@@ -167,12 +170,16 @@ def _generate_auxiliary_problem(A, b, x0, tol):
     rows = rows[i_fix_without_aux]
     cols = cols[i_fix_without_aux]
 
+    print("i_notinbasis = ", i_notinbasis)
+
     # indices of the rows we can only zero with auxiliary variable
     # these rows will get a one in each auxiliary column
     arows = nonzero_constraints[np.logical_not(
                                 np.isin(nonzero_constraints, rows))]
     n_aux = len(arows)
     acols = n + np.arange(n_aux)          # indices of auxiliary columns
+
+    print("arows = ", arows)
 
     basis_ng = np.concatenate((cols, acols))   # basis columns not from guess
     basis_ng_rows = np.concatenate((rows, arows))  # rows we need to zero
@@ -184,10 +191,12 @@ def _generate_auxiliary_problem(A, b, x0, tol):
     # generate initial BFS
     x = np.concatenate((x, np.zeros(n_aux)))
     x[basis_ng] = r[basis_ng_rows]/A[basis_ng_rows, basis_ng]
+    print("x = ", x)
 
     # generate costs to minimize infeasibility
     c = np.zeros(n_aux + n)
     c[acols] = 1
+    print("c = ", c)
 
     # basis columns correspond with nonzeros in guess, those with column
     # singletons we used to zero remaining constraints, and any additional
@@ -272,6 +281,11 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
         B = BGLU(A, b, maxupdate, mast)
     else:
         B = LU(A, b)
+    print("b = ", b)
+    print("A = ")
+    print(A)
+    print("B.B = ")
+    print(B.B)
 
     for iteration in range(iteration, maxiter):
 

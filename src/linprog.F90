@@ -4,8 +4,9 @@
 !> Module for linear programming, i.e. linear optimization
 module numa__linprog
 
-	!use numa__core
 	use numa__blarg
+	use numa__linalg
+	use numa__utils
 
 	implicit none
 
@@ -407,7 +408,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	use numa__blarg
 	use numa__utils
 
-	double precision, intent(in) :: c(:)
+	double precision, intent(inout) :: c(:)
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: b(:)
 
@@ -424,11 +425,12 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!double precision, allocatable :: row_constraints(:,:), t(:,:)
 	!double precision, allocatable :: row_objective(:)
 	!double precision, allocatable :: row_pseudo_objective(:), solution(:)
-	integer :: i, m, n, io, iters_, i1(1)
+	integer :: i, m, n, io, iters_, i1(1), n_aux
 	!integer, allocatable :: av(:), basis(:)
 	integer, allocatable :: basis(:), cols(:), rows(:), ineg(:), &
-		nonzero_constraints(:)
-	logical, allocatable :: l_tofix(:)
+		nonzero_constraints(:), i_fix_without_aux(:), arows(:), acols(:), &
+		basis_ng(:), basis_ng_rows(:)
+	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:)
 
 	if (present(iostat)) iostat = 0
 	x = [0]
@@ -629,6 +631,15 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!    rows = rows[i_fix_without_aux]
 	!    cols = cols[i_fix_without_aux]
 
+	l_notinbasis = .not. is_in_vec(cols, basis)
+	l_fix_without_aux = l_tofix .and. l_notinbasis
+	i_fix_without_aux = mask_to_index(l_fix_without_aux)
+	rows = rows(i_fix_without_aux)
+	cols = cols(i_fix_without_aux)
+
+	print *, "l_notinbasis = ", l_notinbasis
+	print *, "l_fix_without_aux = ", l_fix_without_aux
+
 	!    # indices of the rows we can only zero with auxiliary variable
 	!    # these rows will get a one in each auxiliary column
 	!    arows = nonzero_constraints[np.logical_not(
@@ -636,20 +647,49 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!    n_aux = len(arows)
 	!    acols = n + np.arange(n_aux)          # indices of auxiliary columns
 
+	arows = nonzero_constraints( &
+		mask_to_index(.not. is_in_vec(nonzero_constraints, rows)) &
+	)
+	n_aux = size(arows)
+	acols = n + [(i, i = 1, n_aux)]
+
+	print *, "arows = ", arows
+
 	!    basis_ng = np.concatenate((cols, acols))   # basis columns not from guess
 	!    basis_ng_rows = np.concatenate((rows, arows))  # rows we need to zero
+
+	basis_ng = [cols, acols]
+	basis_ng_rows = [rows, arows]
 
 	!    # add auxiliary singleton columns
 	!    A = np.hstack((A, np.zeros((m, n_aux))))
 	!    A[arows, acols] = 1
 
+	! Add auxiliary singleton columns
+	a = hstack(a, zeros(m, n_aux))
+	do i = 1, size(arows)
+		a(arows(i), acols(i)) = 1
+	end do
+
 	!    # generate initial BFS
 	!    x = np.concatenate((x, np.zeros(n_aux)))
 	!    x[basis_ng] = r[basis_ng_rows]/A[basis_ng_rows, basis_ng]
 
+	! Generate initial basic feasible solution
+	x = [x, zeros(n_aux)]
+	do i = 1, size(basis_ng)
+		x(i) = r(basis_ng_rows(i)) / a(basis_ng_rows(i), basis_ng(i))
+	end do
+	print *, "x = ", x
+
 	!    # generate costs to minimize infeasibility
 	!    c = np.zeros(n_aux + n)
 	!    c[acols] = 1
+
+	! Generate costs to minimize infeasibility
+	c = zeros(n_aux + n)
+	c(acols) = 1
+	print *, "c = ", c
 
 	!    # basis columns correspond with nonzeros in guess, those with column
 	!    # singletons we used to zero remaining constraints, and any additional
@@ -657,13 +697,291 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!    basis = np.concatenate((basis, basis_ng))
 	!    basis = _get_more_basis_columns(A, basis)  # add columns as needed
 
-	!    return A, b, c, basis, x, status
+	basis = [basis, basis_ng]
+	print *, "basis after ng cat       = ", basis
+	basis = linprog_get_more_basis_cols(a, basis)
+	print *, "basis after getting more = ", basis
 
+	!    return A, b, c, basis, x, status
 
 	! End generate auxiliary problem
 	!********
 
+	!    # solve auxiliary problem
+	!    phase_one_n = n
+	!    iter_k = 0
+	!    x, basis, status, iter_k = _phase_two(c, A, x, basis, callback,
+	!                                          postsolve_args,
+	!                                          maxiter, tol, disp,
+	!                                          maxupdate, mast, pivot,
+	!                                          iter_k, phase_one_n)
+
+	! Note: this is just phase 2 to solve the auxiliary problem inside phase 1.
+	! We still have to do a bunch of other stuff and then the actual phase 2
+	! later
+	call rs_phase_two(c, a, x, basis, iters, tol)
+
+	!    # check for infeasibility
+	!    residual = c.dot(x)
+	!    if status == 0 and residual > tol:
+	!        status = 2
+
+	!    # drive artificial variables out of basis
+	!    # TODO: test redundant row removal better
+	!    # TODO: make solve more efficient with BGLU? This could take a while.
+	!    keep_rows = np.ones(m, dtype=bool)
+	!    for basis_column in basis[basis >= n]:
+	!        B = A[:, basis]
+	!        try:
+	!            basis_finder = np.abs(solve(B, A))  # inefficient
+	!            pertinent_row = np.argmax(basis_finder[:, basis_column])
+	!            eligible_columns = np.ones(n, dtype=bool)
+	!            eligible_columns[basis[basis < n]] = 0
+	!            eligible_column_indices = np.where(eligible_columns)[0]
+	!            index = np.argmax(basis_finder[:, :n]
+	!                              [pertinent_row, eligible_columns])
+	!            new_basis_column = eligible_column_indices[index]
+	!            if basis_finder[pertinent_row, new_basis_column] < tol:
+	!                keep_rows[pertinent_row] = False
+	!            else:
+	!                basis[basis == basis_column] = new_basis_column
+	!        except LinAlgError:
+	!            status = 4
+
+	!    # form solution to original problem
+	!    A = A[keep_rows, :n]
+	!    basis = basis[keep_rows]
+	!    x = x[:n]
+	!    m = A.shape[0]
+	!    return x, basis, A, b, residual, status, iter_k
+
 end function linprog_rs
+
+!===============================================================================
+
+function rs_lu(aa, b) result(bb)
+	! TODO: maybe just inline this if it's so simple
+	double precision, intent(inout) :: aa(:,:)
+	integer, intent(inout) :: b(:)  ! basis
+	double precision, allocatable :: bb(:,:)
+!        self.A = A
+!        self.b = b
+!        self.B = A[:, b]
+!        self.m, self.n = A.shape
+
+	bb = aa(:, b)
+
+end function rs_lu
+!===============================================================================
+
+subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
+
+	double precision, intent(inout) :: c(:), aa(:,:), x(:)
+	integer, intent(inout) :: b(:)  ! basis
+	integer, intent(in) :: maxiter
+	double precision, intent(in) :: tol
+	!********
+	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:)
+	integer :: i, m, n, iteration
+	integer, allocatable :: a(:), ab(:)
+	logical, allocatable :: bl(:)
+
+!def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
+!               maxupdate, mast, pivot, iteration=0, phase_one_n=None):
+!    print("Starting _phase_two()")
+!    m, n = A.shape
+!    status = 0
+!    a = np.arange(n)                    # indices of columns of A
+!    ab = np.arange(m)                   # indices of columns of B
+
+	m = size(aa, 1)
+	n = size(aa, 2)
+	a = [(i, i = 1, n)]
+	ab = [(i, i = 1, m)]
+
+!    # BGLU works but I might want to port LU to Fortran instead first
+!    if False and maxupdate:
+!        # basis matrix factorization object; similar to B = A[:, b]
+!        B = BGLU(A, b, maxupdate, mast)
+!    else:
+!        B = LU(A, b)
+	bb = rs_lu(aa, b)
+	call print_mat(bb, "bb = ")
+
+!    for iteration in range(iteration, maxiter):
+	do iteration = 1, maxiter
+
+!        #if disp or callback is not None:
+!        #    _display_and_callback(phase_one_n, x, postsolve_args, status,
+!        #                          iteration, disp, callback)
+
+!        bl = np.zeros(len(a), dtype=bool)
+!        bl[b] = 1
+
+		bl = [(.false., i = 1, size(a))]
+		bl(b) = .true.
+
+!        xb = x[b]       # basic variables
+!        cb = c[b]       # basic costs
+
+		xb = x(b)
+		cb = c(b)
+
+!        try:
+!            v = B.solve(cb, transposed=True)    # similar to v = solve(B.T, cb)
+!        except LinAlgError:
+!            status = 4
+!            break
+
+		v = invmul(transpose(bb), cb)
+		print *, "cb = ", cb
+		print *, "v = ", v
+		stop
+
+!        # TODO: cythonize?
+!        c_hat = c - v.dot(A)    # reduced cost
+!        c_hat = c_hat[~bl]
+!        # Above is much faster than:
+!        # N = A[:, ~bl]                 # slow!
+!        # c_hat = c[~bl] - v.T.dot(N)
+!        # Can we perform the multiplication only on the nonbasic columns?
+
+!        if np.all(c_hat >= -tol):  # all reduced costs positive -> terminate
+!            break
+
+!        j = _select_enter_pivot(c_hat, bl, a, rule=pivot, tol=tol)
+!        u = B.solve(A[:, j])        # similar to u = solve(B, A[:, j])
+
+!        i = u > tol                 # if none of the u are positive, unbounded
+!        if not np.any(i):
+!            status = 3
+!            break
+
+!        th = xb[i]/u[i]
+!        l = np.argmin(th)           # implicitly selects smallest subscript
+!        th_star = th[l]             # step size
+
+!        x[b] = x[b] - th_star*u     # take step
+!        x[j] = th_star
+!        B.update(ab[i][l], j)       # modify basis
+!        b = B.b                     # similar to b[ab[i][l]] =
+
+	end do
+!    else:
+!        # If the end of the for loop is reached (without a break statement),
+!        # then another step has been taken, so the iteration counter should
+!        # increment, info should be displayed, and callback should be called.
+!        iteration += 1
+!        status = 1
+!        #if disp or callback is not None:
+!        #    _display_and_callback(phase_one_n, x, postsolve_args, status,
+!        #                          iteration, disp, callback)
+
+!    return x, b, status, iteration
+
+end subroutine rs_phase_two
+
+!===============================================================================
+
+!basis = linprog_get_more_basis_cols(a, basis)
+function linprog_get_more_basis_cols(aa, basis) result(res)
+	use numa__linalg
+	double precision, intent(in) :: aa(:,:)
+	integer, intent(in) :: basis(:)
+	integer, allocatable :: res(:)
+	!********
+	double precision, allocatable :: b(:,:)
+	integer :: i, m, n, rank_
+	integer, allocatable :: a(:), options(:), perm(:), new_basis(:)
+	logical, allocatable :: bl(:)
+
+	!def _get_more_basis_columns(A, basis):
+	!    print("Starting _get_more_basis_columns()")
+	!    m, n = A.shape
+
+	m = size(aa, 1)
+	n = size(aa, 2)
+
+	!    # options for inclusion are those that aren't already in the basis
+	!    a = np.arange(m+n)
+	!    bl = np.zeros(len(a), dtype=bool)
+	!    bl[basis] = 1
+	!    options = a[~bl]
+	!    options = options[options < n]  # and they have to be non-artificial
+
+	a = [(i, i = 1, m+n)]
+	bl = [(.false., i = 1, m+n)]
+	bl(basis) = .true.
+	options = a(mask_to_index(.not. bl))
+	options = options(mask_to_index(options <= n))
+	print *, "options = ", options
+
+	!    # form basis matrix
+	!    B = np.zeros((m, m))
+	!    B[:, 0:len(basis)] = A[:, basis]
+
+	! Form basis matrix
+	b = zeros(m, m)
+	b(:, 1: size(basis)) = aa(:, basis)
+	call print_mat(b, "b = ")
+
+	!    if (basis.size > 0 and
+	!            np.linalg.matrix_rank(B[:, :len(basis)]) < len(basis)):
+	!        raise Exception("Basis has dependent columns")
+
+	if (size(basis) > 0 .and. &
+		qr_rank(b(:, :size(basis))) < size(basis)) then
+		print *, "Error: basis has dependent columns"
+		! TODO: panic
+		stop
+	end if
+	print *, "ok"
+
+	!print *, "rand_perm = ", rand_perm(4)
+	!print *, "rand_perm = ", rand_perm(4)
+	!print *, "rand_perm = ", rand_perm(4)
+	!print *, "rand_perm = ", rand_perm(4)
+
+	!    rank = 0  # just enter the loop
+	!    for i in range(n):  # somewhat arbitrary, but we need another way out
+	!        # permute the options, and take as many as needed
+	!        new_basis = np.random.permutation(options)[:m-len(basis)]
+	!        B[:, len(basis):] = A[:, new_basis]  # update the basis matrix
+	!        rank = np.linalg.matrix_rank(B)      # check the rank
+	!        if rank == m:
+	!            break
+
+	rank_ = 0
+	do i = 1, n
+		perm = rand_perm(size(options))
+		new_basis = options(perm(: m - size(basis)))
+		b(:, size(basis):) = aa(:, new_basis)
+		rank_ = qr_rank(b)
+		print *, "rank_ = ", rank_
+		if (rank_ == m) exit
+	end do
+
+	!    return np.concatenate((basis, new_basis))
+	res = [basis, new_basis]
+
+end function linprog_get_more_basis_cols
+
+!===============================================================================
+
+function rand_perm(n)
+	! Fisher-Yates shuffle
+	integer, intent(in) :: n
+	integer, allocatable :: rand_perm(:)
+	!********
+	integer :: i, j
+
+	rand_perm = [(i, i = 1, n)]  ! initially identity
+	do i = 1, n-1
+		j = i + rand_i32(n-i+1)
+		rand_perm([i, j]) = rand_perm([j, i])
+	end do
+
+end function rand_perm
 
 !===============================================================================
 
