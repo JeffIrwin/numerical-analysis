@@ -366,6 +366,7 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
         #exit(0)
 
         b = B.b                     # similar to b[ab[i][l]] =
+        print("b = ", b)
 
     else:
         # If the end of the for loop is reached (without a break statement),

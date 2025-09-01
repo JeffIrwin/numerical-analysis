@@ -234,6 +234,7 @@ function linprog &
 	if (present(iters)) iters_ = iters
 
 	method_ = LINPROG_SIMPLEX
+	method_ = LINPROG_REVISED_SIMPLEX
 	if (present(method)) method_ = method
 
 	x = [0]
@@ -408,8 +409,8 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	use numa__blarg
 	use numa__utils
 
-	double precision, intent(inout) :: c(:)
-	double precision, intent(inout) :: a(:,:)
+	double precision, allocatable, intent(inout) :: c(:)
+	double precision, allocatable, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: b(:)
 
 	double precision, optional, intent(in) :: tol
@@ -663,6 +664,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	acols = n + [(i, i = 1, n_aux)]
 
 	print *, "arows = ", arows
+	print *, "acols = ", acols
 
 	!    basis_ng = np.concatenate((cols, acols))   # basis columns not from guess
 	!    basis_ng_rows = np.concatenate((rows, arows))  # rows we need to zero
@@ -861,14 +863,15 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	!********
 	double precision :: th_star
 	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
-		u(:), th(:)
+		u(:), th(:), bbt(:,:)
 	integer :: i, j, k, l, i1(1), m, n, iteration
-	integer, allocatable :: a(:), ab(:), ipos(:)
+	integer, allocatable :: a(:), ab(:), ipos(:), ibl(:)
 	logical :: converged
 	logical, allocatable :: bl(:)
 
 	print *, repeat("=", 60)
 	print *, "Starting rs_phase_two()"
+	print *, "b = ", b
 	print *, "x = ", x
 
 !def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
@@ -920,7 +923,17 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 !            status = 4
 !            break
 
-		v = invmul(transpose(bb), cb)
+		call print_mat(bb, "bb = ")
+
+		! TODO: is there a bug in my lu_factor_f64() pivoting? It says this is
+		! singular for the simple MATLAB example, but qr_solve_f64() works
+
+		bbt = transpose(bb)
+		!v = invmul(bbt, cb)
+		!v = invmul(transpose(bb), cb)
+		!v = qr_solve(transpose(bb), cb)
+		v = qr_solve_f64(bbt, cb)
+
 		print *, "c = ", c
 		print *, "cb = ", cb
 		print *, "v = ", v
@@ -935,15 +948,18 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 
 		c_hat = c - matmul(v, aa)
 		print *, "c_hat = ", c_hat
-		c_hat = c_hat(mask_to_index(.not. bl))
+
+		!ibl = mask_to_index(.not. bl)
+		!c_hat = c_hat(ibl)
+
 		!print *, "bl = ", bl
-		print *, "c_hat = ", c_hat
+		print *, "c_hat (unmasked) = ", c_hat
 
 		print *, "size(bl)    = ", size(bl)
 		print *, "size(c_hat) = ", size(c_hat)
 !        if np.all(c_hat >= -tol):  # all reduced costs positive -> terminate
 !            break
-		if (all(c_hat >= -tol)) then
+		if (all(c_hat >= -tol .or. bl)) then
 			print *, "converged"
 			converged = .true.
 			exit
@@ -964,11 +980,14 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		do i = 1, size(a)
 			if (bl(i)) cycle
 			if (c_hat(i) >= -tol) cycle
+			!if (c_hat(ibl(i)) >= -tol) cycle
 			j = i
 			exit
 		end do
+		print *, "j = ", j
 
-		u = invmul(bb, aa(:,j))
+		!u = invmul(bb, aa(:,j))
+		u = qr_solve(bb, aa(:,j))
 		print *, "u = ", u
 
 !        i = u > tol                 # if none of the u are positive, unbounded
@@ -1019,6 +1038,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		b(i: m-1) = b(i+1: m)
 		b(size(b)) = j
 		bb = aa(:, b)
+		print *, "b = ", b
 
 	end do
 !    else:
@@ -1189,6 +1209,7 @@ subroutine lp_unique(vec, vals, idxs)
 	end if
 
 	allocate(vals(n), idxs(n))
+	if (n <= 0) return
 
 	vals(1) = vec(1)
 	idxs(1) = 1

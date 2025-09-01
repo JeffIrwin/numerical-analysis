@@ -15,6 +15,31 @@ import numpy as np
 # Import like this to use manually-extracted scipy functions with added debug
 # prints 
 from _linprog import linprog
+#
+##===================================================================
+
+#	! Simple MATLAB example
+
+c = [-1.0, -1.0/3]
+a_ub = [
+    [1.0, 1.0],
+    [1.0, 0.25],
+    [1.0, -1.0],
+    [-0.25, -1.0],
+    [-1.0, -1.0],
+    [-1.0, 1.0],
+]
+b_ub = [2, 1, 2, 1, -1, 2]
+
+res = linprog(c, A_ub=a_ub, b_ub=b_ub)
+
+print("===============================================")
+print("MATLAB doc example")
+print("res = ", res)
+print("fun = ", res["fun"])
+print("x = ", res["x"])  # expect  [0.1875 1.25]
+print("msg = ", res["message"])
+exit(0)
 
 #===================================================================
 

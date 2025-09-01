@@ -533,8 +533,8 @@ function mask_to_index_mat(mask) result(indices)
 	! implicitly using count()
 	allocate( indices(2, size(mask)) )
 	i = 0
-	do k = 1, size(mask,2)
-	do j = 1, size(mask,1)
+	do k = 1, size(mask,1)
+	do j = 1, size(mask,2)
 		if (.not. (mask(k,j))) cycle
 		i = i + 1
 		indices(:,i) = [k, j]

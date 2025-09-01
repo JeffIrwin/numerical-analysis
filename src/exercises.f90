@@ -2971,6 +2971,30 @@ integer function chapter_4_linprog() result(nfail)
 	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 5")
 
 	!********
+	! Example from MATLAB docs:  https://www.mathworks.com/help/optim/ug/linprog.html
+
+	c = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
+	a_ub = transpose(reshape([ &  ! `A` in MATLAB
+			1.0, 1.0, &
+			1.0, 0.25, &
+			1.0, -1.0, &
+			-0.25, -1.0, &
+			-1.0, -1.0, &
+			-1.0, 1.0  &
+		] &
+		, [2, 6] &
+	))
+	b_ub = [2, 1, 2, 1, -1, 2]
+
+	expect = [2.d0/3, 4.d0/3]
+
+	x = linprog(c, a_ub, b_ub)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 6")
+	!stop
+
+	!********
 	! Scipy example including non-default bounds
 
 	c = [-1, 4]
@@ -3059,29 +3083,6 @@ integer function chapter_4_linprog() result(nfail)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 5")
-
-	!********
-	! Example from MATLAB docs:  https://www.mathworks.com/help/optim/ug/linprog.html
-
-	c = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
-	a_ub = transpose(reshape([ &  ! `A` in MATLAB
-			1.0, 1.0, &
-			1.0, 0.25, &
-			1.0, -1.0, &
-			-0.25, -1.0, &
-			-1.0, -1.0, &
-			-1.0, 1.0  &
-		] &
-		, [2, 6] &
-	))
-	b_ub = [2, 1, 2, 1, -1, 2]
-
-	expect = [2.d0/3, 4.d0/3]
-
-	x = linprog(c, a_ub, b_ub)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 6")
 
 	!********
 	! MATLAB example with an equality

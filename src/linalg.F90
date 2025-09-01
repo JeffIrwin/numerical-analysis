@@ -884,6 +884,7 @@ integer function qr_rank(a, allow_rect, iostat) result(rank_)
 		normx = norm2(a(j:, j))
 		!print *, "normx = ", normx
 		if (normx <= 0) then
+		!if (normx <= 1.d-10) then
 			rank_ = rank_ - 1
 			exit
 		end if
@@ -1529,7 +1530,7 @@ function qr_solve_f64(a, b, allow_rect, iostat) result(x)
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(in) :: b(:)
-	logical, intent(in) :: allow_rect
+	logical, optional, intent(in) :: allow_rect
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
 	!********
@@ -1537,10 +1538,14 @@ function qr_solve_f64(a, b, allow_rect, iostat) result(x)
 	character(len = :), allocatable :: msg
 	double precision, allocatable :: diag_(:)
 	integer :: io
+	logical :: allow_rect_
 
 	if (present(iostat)) iostat = 0
 
-	call qr_factor(a, diag_, allow_rect, io)
+	allow_rect_ = .false.
+	if (present(allow_rect)) allow_rect_ = allow_rect
+
+	call qr_factor(a, diag_, allow_rect_, io)
 	if (io /= 0) then
 		msg = "qr_factor() failed in qr_solve_f64()"
 		call PANIC(msg, present(iostat))
