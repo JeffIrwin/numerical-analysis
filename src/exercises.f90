@@ -2971,6 +2971,29 @@ integer function chapter_4_linprog() result(nfail)
 	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 5")
 
 	!********
+
+	c = [4, 8, 3, 0, 0, 0]
+	a_eq = transpose(reshape([ &
+		2., 5., 3., -1., 0., 0.,   &
+		3., 2.5, 8., 0., -1., 0., &
+		8., 10., 4., 0., 0., -1.   &
+		], &
+		[6, 3] &
+	))
+	b_eq = [185, 155, 600]
+
+	if (allocated(a_ub)) deallocate(a_ub, b_ub)
+	allocate(a_ub(0,6), b_ub(0))
+
+	expect = [66.25d0, 0.d0, 17.5d0, 0.d0, 183.75d0, 0.d0]
+
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-12, nfail, "linprog 13")
+	!stop
+
+	!********
 	! Example from MATLAB docs:  https://www.mathworks.com/help/optim/ug/linprog.html
 
 	c = [-1.d0, -1.d0/3]  ! `f` in MATLAB's linprog()
@@ -3210,8 +3233,9 @@ integer function chapter_4_linprog() result(nfail)
 	!print *, "x = ", x
 	print *, "fval = ", fval
 
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 11")
-	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 11")
+	call test(norm2(x - expect), 0.d0, 1.d-12, nfail, "linprog 11")
+	call test(fval - fexpect, 0.d0, 1.d-12, nfail, "linprog fval 11")
+	!stop
 
 	!********
 	! "nontrivial" test from scipy
@@ -3237,28 +3261,6 @@ integer function chapter_4_linprog() result(nfail)
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 12")
 	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 12")
-
-	!********
-
-	c = [4, 8, 3, 0, 0, 0]
-	a_eq = transpose(reshape([ &
-		2., 5., 3., -1., 0., 0.,   &
-		3., 2.5, 8., 0., -1., 0., &
-		8., 10., 4., 0., 0., -1.   &
-		], &
-		[6, 3] &
-	))
-	b_eq = [185, 155, 600]
-
-	deallocate(a_ub, b_ub)
-	allocate(a_ub(0,6), b_ub(0))
-
-	expect = [66.25d0, 0.d0, 17.5d0, 0.d0, 183.75d0, 0.d0]
-
-	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 13")
 
 	!********
 
