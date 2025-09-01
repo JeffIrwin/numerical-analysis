@@ -479,7 +479,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!        return A, b, c, basis, x, status
 
 	if (size(nonzero_constraints) == 0 .and. size(basis) <= m) then
-		!print *, "TODO: already a basic feasible solution"
+		print *, "TODO: already a basic feasible solution"
 
 		! TODO:  this is not actually a problem.  We just need to
 		! _get_more_basis_columns(), set c 0, and skip the rest of
@@ -864,23 +864,48 @@ end function rand_perm
 function is_in_vec(needles, haystack)
 	integer, intent(in) :: needles(:), haystack(:)
 	logical, allocatable :: is_in_vec(:)
-
-	integer :: i, nn, nh
+	!********
+	integer :: i, nn, nh, hmin, hmax
+	logical, allocatable :: in_haystack(:)
 
 	nn = size(needles)
 	nh = size(haystack)
+
+	if (nh <= 0) then
+		print *, "haystack empty"
+		is_in_vec = [(.false., i = 1, nn)]
+		return
+	end if
+
+	! Pigeonhole array for O(nn + nh)
+	hmin = minval(haystack)
+	hmax = maxval(haystack)
+	allocate(in_haystack(hmin: hmax))
+	in_haystack = .false.
+	in_haystack(haystack) = .true.
+
 	allocate(is_in_vec(nn))
+
 	do i = 1, nn
 
-		! TODO: make this not O(n^2).  Maybe sort both? Or hash map or
-		! pigeonhole.  Pigeonhole might be effective and not explode memory
-		! usage for the revised simplex application -- inputs are expected to be
-		! in the range of matrix sizes
+		! There are several possible strategies to make this not O(n^2).  Maybe
+		! sort both? Or hash map or pigeonhole.  Pigeonhole might be effective
+		! and not explode memory usage for the revised simplex application --
+		! inputs are expected to be in the range of matrix sizes
 		!
-		! In the generate case, pigeonhole could use a *lot* of memory for a
+		! In the general case, pigeonhole could use a *lot* of memory for a
 		! wide range of possibly haystack values
 
-		is_in_vec(i) = any(haystack == needles(i))
+		!! O(n^2)
+		!is_in_vec(i) = any(haystack == needles(i))
+
+		! O(nn + nh)
+		if (hmin <= needles(i) .and. needles(i) <= hmax) then
+			is_in_vec(i) = in_haystack(needles(i))
+		else
+			is_in_vec(i) = .false.
+		end if
+
 	end do
 
 end function is_in_vec
@@ -896,7 +921,7 @@ subroutine lp_unique(vec, vals, idxs)
 
 	n = size(vec)
 
-	! Assume descending.  From my first revised simplex example, this may be ok
+	! Assume vec is descending.  From my test cases, this seems ok
 	!print *, "vec = ", vec
 	if (any(vec(1:n-1) - vec(2:n) < 0)) then
 		print *, "Error: vec is not sorted descending in lp_unique()"
@@ -915,6 +940,10 @@ subroutine lp_unique(vec, vals, idxs)
 			nu = nu + 1
 			vals(nu) = vec(i)
 			idxs(nu) = i
+		!else
+		!	! Unreachable.  Why does scipy call unique() at all?
+		!	print *, "non-unique elem"
+		!	stop
 		end if
 	end do
 

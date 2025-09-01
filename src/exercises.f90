@@ -3309,6 +3309,8 @@ integer function chapter_4_linprog() result(nfail)
 	!
 	! Surely there are other pathological cases where the tolerance workaround
 	! does not help.  Those cases would actually require redundancy removal
+	!
+	! No difference between LINPROG_SIMPLEX and LINPROG_REVISED_SIMPLEX
 
 	x = linprog(c, a_ub, b_ub, a_eq, b_eq, tol=1.d-5, method=method)
 	print *, "x = ", x
