@@ -46,6 +46,11 @@ module numa__blarg
 		procedure :: vstack_mat_vec
 	end interface vstack
 
+	interface mask_to_index
+		procedure :: mask_to_index_vec
+		procedure :: mask_to_index_mat
+	end interface mask_to_index
+
 contains
 
 !===============================================================================
@@ -113,6 +118,15 @@ double precision function rand_f64()
 	! TODO: move out of blarg
 	call random_number(rand_f64)
 end function rand_f64
+
+!********
+
+integer function rand_i32(n)
+	! Random integer 0 <= rand_i32 < n
+	! TODO: move out of blarg
+	integer, intent(in) :: n
+	rand_i32 = floor(n * rand_f64())
+end function rand_i32
 
 !********
 
@@ -464,7 +478,7 @@ end function hstack_mat_vec
 
 !===============================================================================
 
-function mask_to_index(mask) result(indices)
+function mask_to_index_vec(mask) result(indices)
 	! Convert a logical mask array to an index array `indices`
 	!
 	! For example:
@@ -493,7 +507,54 @@ function mask_to_index(mask) result(indices)
 	end do
 	indices = indices(:i)  ! trim
 
-end function mask_to_index
+end function mask_to_index_vec
+
+!===============================================================================
+
+function mask_to_index_mat(mask) result(indices)
+	! Convert a logical mask array to an index array `indices`
+	!
+	! For example:
+	!
+	!     mask_to_index([.true., .false., .false, .true.])
+	!     ==
+	!     [1, 4]
+	!
+	! This is useful if you actually need the index array.  If you just want the
+	! result of indexing the parent array by the returned index array, you can
+	! just use built-in pack(parent, mask) instead
+
+	logical, intent(in) :: mask(:,:)
+	integer, allocatable :: indices(:,:)
+	!********
+	integer :: i, j, k
+
+	! Overallocate and then trim.  Could make two passes, explicitly or
+	! implicitly using count()
+	allocate( indices(2, size(mask)) )
+	i = 0
+	do k = 1, size(mask,1)
+	do j = 1, size(mask,2)
+		if (.not. (mask(k,j))) cycle
+		i = i + 1
+		indices(:,i) = [k, j]
+	end do
+	end do
+	indices = indices(:, :i)  ! trim
+
+end function mask_to_index_mat
+
+!===============================================================================
+
+function reverse(a) result(r)
+	integer, intent(in) :: a(:)
+	integer, allocatable :: r(:)
+	!********
+	integer :: i
+
+	r = a([(i, i = size(a), 1, -1)])
+
+end function reverse
 
 !===============================================================================
 

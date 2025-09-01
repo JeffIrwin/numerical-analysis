@@ -672,8 +672,10 @@ integer function chapter_4_lu() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision :: t0, t, t_lu
-	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:)
+	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:), &
+		aexp(:,:)
 	integer :: i, n, nrng, irep, p0
+	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -705,7 +707,62 @@ integer function chapter_4_lu() result(nfail)
 	!print "(a,5es18.6)", "bx = ", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
-	deallocate(a, x, bx)
+	!********
+
+	a = reshape([ &
+		0.,   0.,   0.,   1.,     1.,     0., &
+		0.,   0.,   0.,   1.,     0.25,   0., &
+		1.,   0.,   0.,   1.,    -1.,     0., &
+		0.,   1.,   0.,  -0.25,  -1.,     0., &
+		0.,   0.,   0.,   1.,     1.,    -1., &
+		0.,   0.,   1.,  -1.,     1.,     0.  &
+		], &
+		[6, 6] &
+	)
+	x = [69.d0, 420.d0, 1337.d0, 690.d0, 4200.d0, 13370.d0]
+	bx = matmul(a, x)
+	bx = invmul(a, bx)
+	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 4")
+
+	!********
+	! Test a pivoting bug that went undetected for a surprisingly long time
+	! until it was found in revised simplex
+
+	a = reshape([ &
+		0.0000d+00,   2.0000d+00,   5.0000d+00, &
+		0.0000d+00,   3.0000d+00,   2.5000d+00, &
+		1.0000d+00,   8.0000d+00,   1.0000d+01  &
+		], &
+		[3, 3] &
+	)
+	a0 = a
+	pivot = [(i, i = 1, 3)]
+
+	aexp = transpose(reshape([ &
+		0.0000d+00,    0.0000d+00,    1.0000d+00, &
+		4.0000d-01,    2.0000d+00,    4.0000d+00, &
+		5.0000d+00,    2.5000d+00,    1.0000d+01  &
+		], &
+		[3, 3] &
+	))
+
+	call lu_factor(a, pivot)
+
+	!call print_mat(a, "lu(a) = ")
+	!print *, "pivot = ", pivot
+
+	call test(norm2(a - aexp), 0.d0, 1.d-11, nfail, "lu_factor 1")
+	call test(norm2(pivot - 1.d0*[3, 2, 1]), 0.d0, 1.d-11, nfail, "lu_factor 2")
+
+	a = a0
+	x = [69.d0, 420.d0, 1337.d0]
+	bx = matmul(a, x)
+	!print *, "bx = ", bx
+	bx = invmul(a, bx)
+	!print *, "bx = ", bx
+	!print *, "x  = ", x
+
+	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 3")
 
 	!********
 	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
@@ -714,6 +771,8 @@ integer function chapter_4_lu() result(nfail)
 	! TODO: add fuzz testing for some other problems, e.g. tridiagonal and
 	! banded solvers.  We will need special matmul() implementations to verify
 	! results
+
+	deallocate(a, x, bx)
 
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])
@@ -2903,14 +2962,76 @@ integer function chapter_4_linprog() result(nfail)
 	double precision :: fval, fexpect
 	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
 		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
-	integer :: n, p
+	integer, allocatable :: methods(:)
+	integer :: n, p, rank_, im, method
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
 	!********
-	! Standard form, using linprog_std()
+
+	! Test rank calculation, needed for revised simplex
+	!
+	! TODO: separate test fn
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 0, 1  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 3 = ", rank_
+	call test(1.d0 * rank_, 3.d0, 1.d-14, nfail, "qr_rank 1")
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 1, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 2 = ", rank_
+	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 2")
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 1, 0, &
+		0, 0, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 2 = ", rank_
+	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 3")
+
+	a = reshape([ &
+		1, 0, 0, &
+		1, 0, 0, &
+		1, 0, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 1 = ", rank_
+	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 4")
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 0, 0, &
+		1, 0, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 1 = ", rank_
+	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 5")
+
+	!********
+	! Standard form, using linprog_std() directly
 
 	c = [8, 6, 0, 0]
 	a = transpose(reshape([ &
@@ -2930,69 +3051,41 @@ integer function chapter_4_linprog() result(nfail)
 	call test(norm2(x - expect), 0.d0, 1.d-7, nfail, "linprog_std 1")
 
 	!********
-	! General, using linprog()
-	!
-	! This is the example from the scipy docs but without any non-default bounds
-	!
-	! By default there is still a lower bound at 0, but no upper bound
 
-	c = [-1, 4]
-	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
-	b_ub = [6, 4]
+	methods = [LINPROG_SIMPLEX, LINPROG_REVISED_SIMPLEX]
+	!methods = [LINPROG_REVISED_SIMPLEX, LINPROG_SIMPLEX]
+	do im = 1, size(methods)
+	method = methods(im)
 
-	expect = [4, 0]
-
-	x = linprog(c, a_ub, b_ub)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 2")
+	if (method == LINPROG_SIMPLEX) then
+		print *, "Testing method LINPROG_SIMPLEX"
+	else if (method == LINPROG_REVISED_SIMPLEX) then
+		print *, "Testing method LINPROG_REVISED_SIMPLEX"
+	end if
 
 	!********
-	! Scipy example including non-default bounds
 
-	c = [-1, 4]
-	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
-	b_ub = [6, 4]
-	lb = [-inf(), -3.d0]
-	!ub = [inf(), inf()]  ! still default
-	print *, "lb = ", lb
+	c = [4.d0, 8.d0, 3.d0, 0.d0, 0.d0, 0.d0]
+	a_eq = transpose(reshape([ &
+		2.d0, 5.d0, 3.d0, -1.d0, 0.d0, 0.d0,   &
+		3.d0, 2.5d0, 8.d0, 0.d0, -1.d0, 0.d0, &
+		8.d0, 10.d0, 4.d0, 0.d0, 0.d0, -1.d0   &
+		], &
+		[6, 3] &
+	))
+	b_eq = [185.d0, 155.d0, 600.d0]
 
-	expect = [10, -3]
+	if (allocated(a_ub)) deallocate(a_ub, b_ub)
+	allocate(a_ub(0,6), b_ub(0))
 
-	x = linprog(c, a_ub, b_ub, lb = lb)
+	expect = [66.25d0, 0.d0, 17.5d0, 0.d0, 183.75d0, 0.d0]
+
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, method=method)
 	print *, "x = ", x
 
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
-
-	!********
-	! Example from https://github.com/khalibartan/simplex-method/issues/2
-
-	c = [4, 1]
-	a_ub = transpose(reshape([-4, -3, 1, 2] , [2, 2]))
-	b_ub = [-6, 4]
-	a_eq = reshape([3, 1] , [1, 2])
-	b_eq = [3]
-
-	expect = [0.4d0, 1.8d0]
-
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 4")
-
-	!********
-	! Example from https://en.wikipedia.org/wiki/Simplex_algorithm#Example
-
-	c = [-2, -3, -4]
-	a_ub = transpose(reshape([3, 2, 1,   2, 5, 3] , [3, 2]))
-	b_ub = [10, 15]
-
-	expect = [0, 0, 5]
-
-	x = linprog(c, a_ub, b_ub)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 5")
+	! Revised simplex has slightly less accuracy here than than simplex
+	call test(norm2(x - expect), 0.d0, 1.d-12, nfail, "linprog 13")
+	!stop
 
 	!********
 	! Example from MATLAB docs:  https://www.mathworks.com/help/optim/ug/linprog.html
@@ -3012,10 +3105,81 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [2.d0/3, 4.d0/3]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 6")
+	!stop
+
+	!********
+	! Scipy example including non-default bounds
+
+	c = [-1, 4]
+	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
+	b_ub = [6, 4]
+	lb = [-inf(), -3.d0]
+	!ub = [inf(), inf()]  ! still default
+	print *, "lb = ", lb
+
+	expect = [10, -3]
+
+	x = linprog(c, a_ub, b_ub, lb = lb, fval = fval, method=method)
+	!x = linprog(c, a_ub, b_ub, lb = lb, fval = fval)  ! TODO
+
+	print *, "x = ", x
+	print *, "fval = ", fval
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
+
+	!stop
+
+	!********
+	! General, using linprog()
+	!
+	! This is the example from the scipy docs but without any non-default bounds
+	!
+	! By default there is still a lower bound at 0, but no upper bound
+
+	c = [-1, 4]
+	a_ub = transpose(reshape([-3, 1, 1, 2] , [2, 2]))
+	b_ub = [6, 4]
+
+	expect = [4, 0]
+
+	x = linprog(c, a_ub, b_ub, method=method)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 2")
+
+	!********
+	! Example from https://github.com/khalibartan/simplex-method/issues/2
+
+	c = [4, 1]
+	a_ub = transpose(reshape([-4, -3, 1, 2] , [2, 2]))
+	b_ub = [-6, 4]
+	a_eq = reshape([3, 1] , [1, 2])
+	b_eq = [3]
+
+	expect = [0.4d0, 1.8d0]
+
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, method=method)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 4")
+
+	!********
+	! Example from https://en.wikipedia.org/wiki/Simplex_algorithm#Example
+
+	c = [-2, -3, -4]
+	a_ub = transpose(reshape([3, 2, 1,   2, 5, 3] , [3, 2]))
+	b_ub = [10, 15]
+
+	expect = [0, 0, 5]
+
+	x = linprog(c, a_ub, b_ub, method=method)
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 5")
 
 	!********
 	! MATLAB example with an equality
@@ -3037,7 +3201,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 2]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 7")
@@ -3064,7 +3228,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0.1875d0, 1.25d0]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 8")
@@ -3084,7 +3248,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 15, 3]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 9")
@@ -3105,7 +3269,7 @@ integer function chapter_4_linprog() result(nfail)
 	fexpect = -18
 	expect = [2, 6]
 
-	x = linprog(c, a_ub, b_ub, fval = fval)
+	x = linprog(c, a_ub, b_ub, fval = fval, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 10")
@@ -3138,13 +3302,14 @@ integer function chapter_4_linprog() result(nfail)
 	!allocate(a_ub(0,0), b_ub(0))
 	allocate(a_ub(0,12), b_ub(0))
 
-	!x = linprog(c, a_ub, b_ub)
-	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, fval=fval)
+	!x = linprog(c, a_ub, b_ub, method=method)
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, fval=fval, method=method)
 	!print *, "x = ", x
 	print *, "fval = ", fval
 
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 11")
-	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 11")
+	call test(norm2(x - expect), 0.d0, 1.d-12, nfail, "linprog 11")
+	call test(fval - fexpect, 0.d0, 1.d-12, nfail, "linprog fval 11")
+	!stop
 
 	!********
 	! "nontrivial" test from scipy
@@ -3165,33 +3330,11 @@ integer function chapter_4_linprog() result(nfail)
 	expect = [101.d0 / 1391, 1462.d0 / 1391, 0.d0, 752.d0 / 1391]
 	fexpect = 7083.d0 / 1391
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq, fval=fval)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, fval=fval, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 12")
 	call test(fval - fexpect, 0.d0, 1.d-14, nfail, "linprog fval 12")
-
-	!********
-
-	c = [4, 8, 3, 0, 0, 0]
-	a_eq = transpose(reshape([ &
-		2., 5., 3., -1., 0., 0.,   &
-		3., 2.5, 8., 0., -1., 0., &
-		8., 10., 4., 0., 0., -1.   &
-		], &
-		[6, 3] &
-	))
-	b_eq = [185, 155, 600]
-
-	deallocate(a_ub, b_ub)
-	allocate(a_ub(0,6), b_ub(0))
-
-	expect = [66.25d0, 0.d0, 17.5d0, 0.d0, 183.75d0, 0.d0]
-
-	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 13")
 
 	!********
 
@@ -3225,9 +3368,10 @@ integer function chapter_4_linprog() result(nfail)
 	!
 	! Surely there are other pathological cases where the tolerance workaround
 	! does not help.  Those cases would actually require redundancy removal
+	!
+	! No difference between LINPROG_SIMPLEX and LINPROG_REVISED_SIMPLEX
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq, tol=1.d-5)
-	!x = linprog_std(c, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, tol=1.d-5, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-6, nfail, "linprog 13.1")
@@ -3255,7 +3399,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 0, 0, 0, 0, 0]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 14")
@@ -3271,13 +3415,15 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [-3, -3]
 
-	x = linprog(c, a_ub, b_ub, lb = lb)
+	x = linprog(c, a_ub, b_ub, lb = lb, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 15")
 
 	!********
 	print *, ""
+	end do  ! methods
+	!********
 
 end function chapter_4_linprog
 

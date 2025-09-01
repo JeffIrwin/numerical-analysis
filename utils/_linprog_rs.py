@@ -18,7 +18,10 @@ def _phase_one(A, b, x0, callback, postsolve_args, maxiter, tol, disp,
     status = 0
 
     # generate auxiliary problem to get initial BFS
+    #print("c = ", c)
     A, b, c, basis, x, status = _generate_auxiliary_problem(A, b, x0, tol)
+    print("c = ", c)
+    #exit(0)
 
     if status == 6:
         residual = c.dot(x)
@@ -61,6 +64,8 @@ def _phase_one(A, b, x0, callback, postsolve_args, maxiter, tol, disp,
         except LinAlgError:
             status = 4
 
+    print("keep_rows = ", keep_rows)
+
     # form solution to original problem
     A = A[keep_rows, :n]
     basis = basis[keep_rows]
@@ -79,10 +84,13 @@ def _get_more_basis_columns(A, basis):
     bl[basis] = 1
     options = a[~bl]
     options = options[options < n]  # and they have to be non-artificial
+    print("options = ", options)
 
     # form basis matrix
     B = np.zeros((m, m))
     B[:, 0:len(basis)] = A[:, basis]
+    print("B = ")
+    print(B)
 
     if (basis.size > 0 and
             np.linalg.matrix_rank(B[:, :len(basis)]) < len(basis)):
@@ -111,10 +119,14 @@ def _generate_auxiliary_problem(A, b, x0, tol):
         x = np.zeros(n)
 
     r = b - A@x  # residual; this must be all zeros for feasibility
+    print("r = ", r)
 
     A[r < 0] = -A[r < 0]  # express problem with RHS positive for trivial BFS
     b[r < 0] = -b[r < 0]  # to the auxiliary problem
     r[r < 0] *= -1
+    print("A after neg = ")
+    print(A)
+    print("r = ", r)
 
     # Rows which we will need to find a trivial way to zero.
     # This should just be the rows where there is a nonzero residual.
@@ -124,31 +136,46 @@ def _generate_auxiliary_problem(A, b, x0, tol):
         nonzero_constraints = np.arange(m)
     else:
         nonzero_constraints = np.where(r > tol)[0]
+    print("nonzero_constraints = ", nonzero_constraints)
 
     # these are (at least some of) the initial basis columns
     basis = np.where(np.abs(x) > tol)[0]
+    print("basis = ")
+    print(basis)
 
     if len(nonzero_constraints) == 0 and len(basis) <= m:  # already a BFS
         c = np.zeros(n)
         basis = _get_more_basis_columns(A, basis)
+        print("basis after getting more = ")
+        print(basis)
         return A, b, c, basis, x, status
     elif (len(nonzero_constraints) > m - len(basis) or
           np.any(x < 0)):  # can't get trivial BFS
         c = np.zeros(n)
         status = 6
+        print("status = 6")
         return A, b, c, basis, x, status
 
     # chooses existing columns appropriate for inclusion in initial basis
     cols, rows = _select_singleton_columns(A, r)
+    print("rows = ", rows)
+    print("cols = ", cols)
+    #exit(0)
 
     # find the rows we need to zero that we _can_ zero with column singletons
     i_tofix = np.isin(rows, nonzero_constraints)
+    print("rows = ", rows)
+    print("nonzero_constraints = ", nonzero_constraints)
+    print("i_tofix = ", i_tofix)
+
     # these columns can't already be in the basis, though
     # we are going to add them to the basis and change the corresponding x val
     i_notinbasis = np.logical_not(np.isin(cols, basis))
     i_fix_without_aux = np.logical_and(i_tofix, i_notinbasis)
     rows = rows[i_fix_without_aux]
     cols = cols[i_fix_without_aux]
+
+    print("i_notinbasis = ", i_notinbasis)
 
     # indices of the rows we can only zero with auxiliary variable
     # these rows will get a one in each auxiliary column
@@ -157,26 +184,44 @@ def _generate_auxiliary_problem(A, b, x0, tol):
     n_aux = len(arows)
     acols = n + np.arange(n_aux)          # indices of auxiliary columns
 
+    print("arows = ", arows)
+
     basis_ng = np.concatenate((cols, acols))   # basis columns not from guess
     basis_ng_rows = np.concatenate((rows, arows))  # rows we need to zero
+
+    print("basis_ng = ", basis_ng)
+    print("basis_ng_rows = ", basis_ng_rows)
 
     # add auxiliary singleton columns
     A = np.hstack((A, np.zeros((m, n_aux))))
     A[arows, acols] = 1
 
     # generate initial BFS
+    print("x before cat = ", x)
     x = np.concatenate((x, np.zeros(n_aux)))
+    print("x after  cat = ", x)
     x[basis_ng] = r[basis_ng_rows]/A[basis_ng_rows, basis_ng]
+    print("x bfs = ", x)
 
     # generate costs to minimize infeasibility
     c = np.zeros(n_aux + n)
     c[acols] = 1
+    print("c = ", c)
 
     # basis columns correspond with nonzeros in guess, those with column
     # singletons we used to zero remaining constraints, and any additional
     # columns to get a full set (m columns)
     basis = np.concatenate((basis, basis_ng))
+    print("basis after ng cat = ")
+    print(basis)
     basis = _get_more_basis_columns(A, basis)  # add columns as needed
+    print("basis after getting more = ")
+    print(basis)
+
+    print("x = ", x)
+    print("Ending _generate_auxiliary_problem")
+    print("=" * 60)
+    #exit(0)
 
     return A, b, c, basis, x, status
 
@@ -185,16 +230,37 @@ def _select_singleton_columns(A, b):
     print("Starting _select_singleton_columns()")
     # find indices of all singleton columns and corresponding row indices
     column_indices = np.nonzero(np.sum(np.abs(A) != 0, axis=0) == 1)[0]
+    print("column_indices = ", column_indices)
+
     columns = A[:, column_indices]          # array of singleton columns
+    print("columns = ")
+    print(columns)
+
     row_indices = np.zeros(len(column_indices), dtype=int)
     nonzero_rows, nonzero_columns = np.nonzero(columns)
     row_indices[nonzero_columns] = nonzero_rows   # corresponding row indices
+
+    print("nonzero_rows    = ", nonzero_rows)
+    print("nonzero_columns = ", nonzero_columns)
+    print("row_indices     = ", row_indices)
+
+    print("A slice = ")
+    print(A[row_indices, column_indices])
+    print("b slice = ")
+    print(b[row_indices])
+    print("mat = ")
+    print(A[row_indices, column_indices]*b[row_indices])
 
     # keep only singletons with entries that have same sign as RHS
     # this is necessary because all elements of BFS must be non-negative
     same_sign = A[row_indices, column_indices]*b[row_indices] >= 0
     column_indices = column_indices[same_sign][::-1]
     row_indices = row_indices[same_sign][::-1]
+
+    print("same_sign = ", same_sign)
+    print("column_indices (reversed) = ", column_indices)
+    print("row_indices = ", row_indices)
+
     # Reversing the order so that steps below select rightmost columns
     # for initial basis, which will tend to be slack variables. (If the
     # guess corresponds with a basic feasible solution but a constraint
@@ -215,16 +281,27 @@ def _select_enter_pivot(c_hat, bl, a, rule="bland", tol=1e-12):
 
 def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
                maxupdate, mast, pivot, iteration=0, phase_one_n=None):
+    print("=" * 60)
     print("Starting _phase_two()")
+    print("x = ", x)
     m, n = A.shape
     status = 0
     a = np.arange(n)                    # indices of columns of A
     ab = np.arange(m)                   # indices of columns of B
-    if maxupdate:
+    print("ab = ")
+    print(ab)
+
+    # BGLU works but I might want to port LU to Fortran instead first
+    if False and maxupdate:
         # basis matrix factorization object; similar to B = A[:, b]
         B = BGLU(A, b, maxupdate, mast)
     else:
         B = LU(A, b)
+    print("b = ", b)
+    print("A = ")
+    print(A)
+    print("B.B = ")
+    print(B.B)
 
     for iteration in range(iteration, maxiter):
 
@@ -237,6 +314,8 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
 
         xb = x[b]       # basic variables
         cb = c[b]       # basic costs
+        print("c = ", c)
+        print("cb = ", cb)
 
         try:
             v = B.solve(cb, transposed=True)    # similar to v = solve(B.T, cb)
@@ -244,19 +323,24 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
             status = 4
             break
 
-        # TODO: cythonize?
+        print("v = ", v)
+
         c_hat = c - v.dot(A)    # reduced cost
+        print("c_hat = ", c_hat)
         c_hat = c_hat[~bl]
         # Above is much faster than:
         # N = A[:, ~bl]                 # slow!
         # c_hat = c[~bl] - v.T.dot(N)
         # Can we perform the multiplication only on the nonbasic columns?
 
+        print("c_hat = ", c_hat)
+
         if np.all(c_hat >= -tol):  # all reduced costs positive -> terminate
             break
 
         j = _select_enter_pivot(c_hat, bl, a, rule=pivot, tol=tol)
         u = B.solve(A[:, j])        # similar to u = solve(B, A[:, j])
+        print("u = ", u)
 
         i = u > tol                 # if none of the u are positive, unbounded
         if not np.any(i):
@@ -270,7 +354,19 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
         x[b] = x[b] - th_star*u     # take step
         x[j] = th_star
         B.update(ab[i][l], j)       # modify basis
+
+        print("i = ", i)
+        print("th = ", th)
+        print("th_star = ", th_star)
+
+        #print("ab = ")
+        #print(ab)
+        #print("i, l = ", i, l)
+        #print("ab[i][l] = ", ab[i][l])
+        #exit(0)
+
         b = B.b                     # similar to b[ab[i][l]] =
+        print("b = ", b)
 
     else:
         # If the end of the for loop is reached (without a break statement),

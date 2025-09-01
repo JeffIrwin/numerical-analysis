@@ -496,6 +496,7 @@ function invmul_vec_c64(a, b) result(x)
 	! Initialize pivot to identity
 	pivot = [(i, i = 1, size(aa,1))]
 
+	! TODO: most calls to lu_factor() should check iostat
 	call lu_factor(aa, pivot)
 
 	!print *, "pivot = ", pivot
@@ -618,8 +619,6 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 	allow_singular_ = .false.
 	if (present(allow_singular)) allow_singular_ = allow_singular
 
-	!print *, "pivot = ", pivot
-
 	n = size(a, 1)
 
 	if (size(a, 2) /= n) then
@@ -639,18 +638,29 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 		iostat = 2
 		return
 	end if
+	!print *, "pivot init = ", pivot
 
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
 		!if (DO_PIVOT) then
 			do j = i+1, n
-				if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+				!print *, "aj, ai = ", a(j,i), a(i,i)
+				if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
 			end do
 		!end if
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
+
+		!print *, "swapping ", i, max_index
+		!print *, "i = ", i
+		!call print_mat(a, "a unpiv = ")
+		!call print_mat(a(pivot,:), "a pivot = ")
+		!print *, "ap = ", a(pivot(i), i)
+		!print *, "ai = ", a(i, i)
+		!print *, "pivot = ", pivot
+		!print *, ""
 
 		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
 			msg = "matrix is singular in lu_factor_f64()"
@@ -722,7 +732,7 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 		! Find max value in column i
 		max_index = i
 		do j = i+1, n
-			if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+			if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
 		end do
 
 		! Swap rows
@@ -842,6 +852,71 @@ subroutine qr_factor_gram_schmidt(a, r)
 	end do
 
 end subroutine qr_factor_gram_schmidt
+
+!********
+
+integer function qr_rank(a, allow_rect, iostat) result(rank_)
+	! Get the rank of `a` using QR factorization with Householder transformations
+	!
+	! TODO: tol?  Also I don't think this is always correct because it doesn't
+	! pivot, but I think it can at least tell you whether the matrix is full
+	! rank or not, which is good enough for its application in the revised
+	! simplex algorithm.  See "rank-revealing QR factorization"
+	!
+	! Matrix `a` is modified in the process
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+
+	logical, optional, intent(in) :: allow_rect
+	integer, optional, intent(out) :: iostat
+
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: s, normx, u1, wa, diag_
+	integer :: j, k, n
+	logical :: allow_rect_
+
+	allow_rect_ = .false.
+	if (present(iostat)) iostat = 0
+	if (present(allow_rect)) allow_rect_ = allow_rect
+
+	n = min(size(a,1), size(a,2))
+
+	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
+		msg = "matrix is not square in qr_factor_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	do j = 1, n
+		rank_ = j
+
+		normx = norm2(a(j:, j))
+		!print *, "normx = ", normx
+		if (normx <= 0) then
+		!if (normx <= 1.d-10) then
+			rank_ = rank_ - 1
+			exit
+		end if
+
+		s = -sign_(a(j,j))
+		u1 = a(j,j) - s * normx
+		a(j+1:, j) = a(j+1:, j) / u1
+		a(j,j) = s * normx
+		diag_ = -s * u1 / normx
+
+		do k = j+1, n
+			wa = diag_ * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
+			a(j,k) = a(j,k) - wa
+			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
+		end do
+
+	end do
+
+end function qr_rank
 
 !********
 
@@ -1468,7 +1543,7 @@ function qr_solve_f64(a, b, allow_rect, iostat) result(x)
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(in) :: b(:)
-	logical, intent(in) :: allow_rect
+	logical, optional, intent(in) :: allow_rect
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
 	!********
@@ -1476,10 +1551,14 @@ function qr_solve_f64(a, b, allow_rect, iostat) result(x)
 	character(len = :), allocatable :: msg
 	double precision, allocatable :: diag_(:)
 	integer :: io
+	logical :: allow_rect_
 
 	if (present(iostat)) iostat = 0
 
-	call qr_factor(a, diag_, allow_rect, io)
+	allow_rect_ = .false.
+	if (present(allow_rect)) allow_rect_ = allow_rect
+
+	call qr_factor(a, diag_, allow_rect_, io)
 	if (io /= 0) then
 		msg = "qr_factor() failed in qr_solve_f64()"
 		call PANIC(msg, present(iostat))

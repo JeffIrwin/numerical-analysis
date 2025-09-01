@@ -4,10 +4,15 @@
 !> Module for linear programming, i.e. linear optimization
 module numa__linprog
 
-	!use numa__core
 	use numa__blarg
+	use numa__linalg
+	use numa__utils
 
 	implicit none
+
+	integer, parameter :: &
+		LINPROG_SIMPLEX = 1, &
+		LINPROG_REVISED_SIMPLEX = 2
 
 	private :: linprog_solve_simplex
 
@@ -176,7 +181,11 @@ end subroutine linprog_get_abc
 
 !===============================================================================
 
-function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) result(x)
+function linprog &
+	( &
+		c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, method, fval, iostat &
+	) result(x)
+
 	! Solve a general linear programming problem:
 	!
 	! Minimize:
@@ -204,6 +213,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) re
 
 	double precision, optional, intent(in) :: tol
 	integer, optional, intent(in) :: iters
+	integer, optional, intent(in) :: method
 	double precision, optional, intent(out) :: fval
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: x(:)
@@ -213,7 +223,7 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) re
 	double precision :: lbi, ubi, tol_
 	double precision, allocatable :: a(:,:), b(:), a_eq_(:,:), b_eq_(:), &
 		lb_(:), ub_(:), c_(:), lbs0(:), ubs0(:)
-	integer :: i, nx, n_unbounded, io, iters_
+	integer :: i, nx, n_unbounded, io, iters_, method_
 
 	if (present(iostat)) iostat = 0
 
@@ -222,6 +232,9 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) re
 
 	iters_ = 1000
 	if (present(iters)) iters_ = iters
+
+	method_ = LINPROG_SIMPLEX
+	if (present(method)) method_ = method
 
 	x = [0]
 
@@ -316,13 +329,33 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) re
 
 	call linprog_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
-	x = linprog_std(c_, a, b, tol_, iters_, io)
-	if (io /= 0) then
-		msg = "linprog_std() failed in linprog()"
+	select case (method_)
+	case (LINPROG_SIMPLEX)
+		x = linprog_std(c_, a, b, tol_, iters_, io)
+		if (io /= 0) then
+			msg = "linprog_std() failed in linprog()"
+			call PANIC(msg, present(iostat))
+			iostat = 8
+			return
+		end if
+
+	case (LINPROG_REVISED_SIMPLEX)
+		!print *, "NOT IMPLEMENTED"
+		x = linprog_rs(c_, a, b, tol_, iters_, io)
+		if (io /= 0) then
+			msg = "linprog_rs() failed in linprog()"
+			call PANIC(msg, present(iostat))
+			iostat = 10
+			return
+		end if
+
+	case default
+		msg = "bad method in linprog()"
 		call PANIC(msg, present(iostat))
-		iostat = 8
+		iostat = 9
 		return
-	end if
+
+	end select
 	!print *, "x with slack = ", x
 
 	!********
@@ -355,6 +388,569 @@ function linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, tol, iters, fval, iostat) re
 	if (present(fval)) fval = dot_product(x, c)
 
 end function linprog
+
+!===============================================================================
+
+function linprog_rs(c, a, b, tol, iters, iostat) result(x)
+	! Revised simplex method
+	!
+	! Minimize:
+	!
+	!     dot_product(c, x)
+	!
+	! Subject to:
+	!
+	!     matmul(a, x) == b
+	!     all(x >= 0)
+	!
+	! Note that *standard* form is different from *canonical* form
+
+	use numa__blarg
+	use numa__utils
+
+	double precision, allocatable, intent(inout) :: c(:)
+	double precision, allocatable, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: b(:)
+
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(in) :: iters
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable :: x(:)
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: tol_, residual, dmax
+	double precision, allocatable :: r(:), bb(:,:), basis_finder(:,:), c0(:)
+	integer :: i, m, n, iters_, i1(1), n_aux, ib, basis_column, &
+		pertinent_row, new_basis_column
+	integer, allocatable :: basis(:), cols(:), rows(:), ineg(:), &
+		nonzero_constraints(:), i_fix_without_aux(:), arows(:), acols(:), &
+		basis_ng(:), basis_ng_rows(:)
+	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:), &
+		keep_rows(:), eligible_columns(:)
+
+	if (present(iostat)) iostat = 0
+	x = [0]
+
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
+
+	iters_ = 1000
+	if (present(iters)) iters_ = iters
+
+	! Backup before overwriting with aux problem
+	c0 = c
+	!print *, "c = ", c
+	!stop
+
+	!********
+	! Generate auxiliary problem
+
+	m = size(a, 1)
+	n = size(a, 2)
+
+	x = zeros(n)
+	r = b - matmul(a, x)
+	!print *, "r = ", r
+
+	!call print_mat(a, "a before neg = ")
+	ineg = mask_to_index(r < 0)
+	a(ineg, :) = -a(ineg, :)
+	b(ineg) = -b(ineg)
+	r(ineg) = -r(ineg)
+	!call print_mat(a, "a after neg = ")
+
+	nonzero_constraints = [(i, i = 1, m)]
+	!print *, "nonzero_constraints = ", nonzero_constraints
+
+	basis = mask_to_index(abs(x) > tol)
+	!print *, "basis = ", basis
+
+	!    if len(nonzero_constraints) == 0 and len(basis) <= m:  # already a BFS
+	!        c = np.zeros(n)
+	!        basis = _get_more_basis_columns(A, basis)
+	!        return A, b, c, basis, x, status
+	!    elif (len(nonzero_constraints) > m - len(basis) or
+	!          np.any(x < 0)):  # can't get trivial BFS
+	!        c = np.zeros(n)
+	!        status = 6
+	!        return A, b, c, basis, x, status
+
+	if (size(nonzero_constraints) == 0 .and. size(basis) <= m) then
+		print *, "TODO: already a basic feasible solution"
+
+		! TODO:  this is not actually a problem.  We just need to
+		! _get_more_basis_columns(), set c 0, and skip the rest of
+		! _generate_auxiliary_problem().  Could use goto, but should probably
+		! refactor auxiliary probably as an actual routine so I can just return
+		! early
+
+		stop
+
+	else if (size(nonzero_constraints) > m - size(basis) .or. &
+		any(x < 0)) then
+
+		msg = "infeasible solution for trivial basis in linprog_rs()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+	!********
+	! Select singleton columns
+	block
+
+	double precision, allocatable :: columns(:,:), anz(:)
+	integer, allocatable :: column_indices(:), row_indices(:), idx2(:,:), &
+		nonzero_rows(:), nonzero_cols(:), same_sign(:), &
+		unique_row_indices(:), first_columns(:)
+
+	! Find indices of all singleton columns and corresponding row indices
+	column_indices = mask_to_index(count(abs(a) /= 0, dim = 1) == 1)
+	!print *, "column_indices = ", column_indices
+
+	columns = a(:, column_indices)  ! array of singleton columns
+	!call print_mat(columns, "columns = ")
+
+	row_indices = zeros_i32(size(column_indices))
+	idx2 = mask_to_index(columns /= 0)
+	nonzero_rows = idx2(1,:)
+	nonzero_cols = idx2(2,:)
+	!call print_mat(idx2, "idx2 = ")
+	!print *, "nonzero_rows = ", nonzero_rows
+	!print *, "nonzero_cols = ", nonzero_cols
+
+	row_indices(nonzero_cols) = nonzero_rows
+	!print *, "row_indices = ", row_indices
+	!call print_mat(a(row_indices, column_indices), "a(rows, cols) = ")
+
+	allocate(anz( size(idx2, 2) ))
+	do i = 1, size(idx2, 2)
+		anz(i) = columns(idx2(1,i), idx2(2,i))
+	end do
+	!print *, "anz = ", anz
+
+	! Keep only singletons with entries that have the same sign as RHS
+	same_sign = mask_to_index(anz * b(row_indices) >= 0)
+	column_indices = reverse(column_indices(same_sign))
+	row_indices = reverse(row_indices(same_sign))
+
+	!print *, "same_sign = ", same_sign
+	!!print *, "column_indices slice = ", column_indices(same_sign)
+	!print *, "column_indices reversed = ", column_indices
+	!print *, "row_indices = ", row_indices
+
+	! For each row, keep the rightmost singleton column_indices with an entry in
+	! that row
+	call lp_unique(row_indices, unique_row_indices, first_columns)
+
+	! End select singleton columns
+	cols = column_indices(first_columns)
+	rows = unique_row_indices
+
+	! Scipy actually reverses cols and rows compared to what I have, but I don't
+	! think that actually matters.  Probably because np.unique() does an
+	! expensive and maybe unnecessary sorting operation
+
+	end block
+	!********
+
+	!print *, "rows = ", rows
+	!print *, "cols = ", cols
+
+	l_tofix = is_in_vec(rows, nonzero_constraints)
+	!print *, "l_tofix = ", l_tofix
+
+	l_notinbasis = .not. is_in_vec(cols, basis)
+	l_fix_without_aux = l_tofix .and. l_notinbasis
+	i_fix_without_aux = mask_to_index(l_fix_without_aux)
+	rows = rows(i_fix_without_aux)
+	cols = cols(i_fix_without_aux)
+
+	!print *, "l_notinbasis = ", l_notinbasis
+	!print *, "l_fix_without_aux = ", l_fix_without_aux
+
+	arows = nonzero_constraints( &
+		mask_to_index(.not. is_in_vec(nonzero_constraints, rows)) &
+	)
+	n_aux = size(arows)
+	acols = n + [(i, i = 1, n_aux)]
+
+	!print *, "arows = ", arows
+	!print *, "acols = ", acols
+
+	basis_ng = [cols, acols]
+	basis_ng_rows = [rows, arows]
+	!print *, "basis_ng = ", basis_ng
+	!print *, "basis_ng_rows = ", basis_ng_rows
+
+	! Add auxiliary singleton columns
+	a = hstack(a, zeros(m, n_aux))
+	do i = 1, size(arows)
+		a(arows(i), acols(i)) = 1
+	end do
+
+	! Generate initial basic feasible solution (BFS)
+	x = [x, zeros(n_aux)]
+	do i = 1, size(basis_ng)
+		x(basis_ng(i)) = r(basis_ng_rows(i)) / a(basis_ng_rows(i), basis_ng(i))
+	end do
+	!print *, "x bfs = ", x
+
+	! Generate costs to minimize infeasibility
+	c = zeros(n_aux + n)
+	c(acols) = 1
+	!print *, "c = ", c
+
+	basis = [basis, basis_ng]
+	!print *, "basis after ng cat       = ", basis
+	basis = linprog_get_more_basis_cols(a, basis)
+	!print *, "basis after getting more = ", basis
+	!print *, "x = ", x
+
+	! End generate auxiliary problem
+	!********
+
+	! Note: this is just phase 2 to solve the auxiliary problem inside phase 1.
+	! We still have to do a bunch of other stuff and then the actual phase 2
+	! later
+	call rs_phase_two(c, a, x, basis, iters_, tol_)
+
+	! Check for infeasibility
+	residual = dot_product(c, x)
+	if (residual > tol_) then
+		print *, "Error: problem is infeasible in linprog_rs()"
+		! TODO: panic
+		stop
+	end if
+
+	! Drive artificial variables out of basis
+	keep_rows = [(.true., i = 1, m)]
+	do ib = 1, size(basis)
+		if (basis(ib) <= n) cycle
+
+		basis_column = basis(ib)
+		bb = a(:, basis)
+		basis_finder = abs(invmul(bb, a))
+
+		i1 = maxloc(basis_finder(:, basis_column))
+		pertinent_row = i1(1)
+
+		eligible_columns = [(.true., i = 1, n)]
+		eligible_columns(basis(mask_to_index(basis < n))) = .false.
+
+		new_basis_column = 0
+		dmax = -huge(dmax)
+		do i = 1, n
+			if (.not. eligible_columns(i)) cycle
+			if (basis_finder(pertinent_row, i) > dmax) then
+				dmax = basis_finder(pertinent_row, i)
+				new_basis_column = i
+			end if
+		end do
+		!print *, "new_basis_column = ", new_basis_column
+
+		if (basis_finder(pertinent_row, new_basis_column) < tol_) then
+			keep_rows(pertinent_row) = .false.
+		else
+			basis(mask_to_index(basis == basis_column)) = new_basis_column
+		end if
+
+	end do
+	!print *, "keep_rows = ", keep_rows
+
+	! Form solution to original problem
+	a = a(mask_to_index(keep_rows), :n)
+	basis = basis(mask_to_index(keep_rows))
+	x = x(:n)
+
+	! Phase 2, for real this time
+	c = c0  ! restore
+	call rs_phase_two(c, a, x, basis, iters_, tol_)
+
+end function linprog_rs
+
+!===============================================================================
+
+subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
+	! TODO: private, other routines too
+
+	double precision, intent(inout) :: c(:), aa(:,:), x(:)
+	integer, intent(inout) :: b(:)  ! basis
+	integer, intent(in) :: maxiter
+	double precision, intent(in) :: tol
+	!********
+	double precision :: th_star
+	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
+		u(:), th(:)!, bbt(:,:)
+	integer :: i, j, l, i1(1), m, n, iteration
+	integer, allocatable :: a(:), ab(:), ipos(:)
+	logical :: converged
+	logical, allocatable :: bl(:)
+
+	!print *, repeat("=", 60)
+	!print *, "Starting rs_phase_two()"
+	!print *, "b = ", b
+	!print *, "x = ", x
+
+	m = size(aa, 1)
+	n = size(aa, 2)
+	a = [(i, i = 1, n)]
+	ab = [(i, i = 1, m)]
+
+	bb = aa(:, b)
+	!call print_mat(aa, "aa = ")
+	!call print_mat(bb, "bb = ")
+
+	converged = .false.
+	do iteration = 1, maxiter
+
+		bl = [(.false., i = 1, size(a))]
+		bl(b) = .true.
+
+		xb = x(b)
+		cb = c(b)
+
+		!bbt = transpose(bb)
+		!call print_mat(bb, "bb = ")
+		!v = invmul(bbt, cb)
+		v = invmul(transpose(bb), cb)
+		!v = qr_solve(transpose(bb), cb)
+		!v = qr_solve(bbt, cb)
+
+		c_hat = c - matmul(v, aa)
+
+		!print *, "c = ", c
+		!print *, "cb = ", cb
+		!print *, "v = ", v
+		!print *, "c_hat = ", c_hat
+		!!print *, "bl = ", bl
+		!print *, "c_hat (unmasked) = ", c_hat
+		!print *, "size(bl)    = ", size(bl)
+		!print *, "size(c_hat) = ", size(c_hat)
+
+		if (all(c_hat >= -tol .or. bl)) then
+			!print *, "converged"
+			converged = .true.
+			exit
+		end if
+
+		! Select enter pivot `j`
+		j = 0
+		do i = 1, size(a)
+			if (bl(i)) cycle
+			if (c_hat(i) >= -tol) cycle
+			j = i
+			exit
+		end do
+		!print *, "j = ", j
+
+		u = invmul(bb, aa(:,j))
+		!u = qr_solve(bb, aa(:,j))
+		!print *, "u = ", u
+
+		! If none of `u` are positive, unbounded
+		ipos = mask_to_index(u > tol)
+		if (size(ipos) <= 0) then
+			print *, "Error: problem is unbounded in rs_phase_two()"
+			! TODO: panic
+			stop
+		end if
+
+		th = xb(ipos) / u(ipos)
+		i1 = minloc(th)
+		l = i1(1)
+		th_star = th(l)
+
+		x(b) = x(b) - th_star * u
+		x(j) = th_star
+
+		!print *, "u > tol = ", u > tol
+		!print *, "th = ", th
+		!print *, "th_star = ", th_star
+
+		! Update (modify) basis and basis matrix
+		i = ab(ipos(l))
+		b(i: m-1) = b(i+1: m)
+		b(size(b)) = j
+		bb = aa(:, b)
+		!print *, "b = ", b
+
+	end do
+	if (.not. converged) then
+		print *, "Error: rs_phase_two() did not converge"
+		! TODO: panic
+		stop
+	end if
+
+end subroutine rs_phase_two
+
+!===============================================================================
+
+function linprog_get_more_basis_cols(aa, basis) result(res)
+	use numa__linalg
+	double precision, intent(in) :: aa(:,:)
+	integer, intent(in) :: basis(:)
+	integer, allocatable :: res(:)
+	!********
+	double precision, allocatable :: b(:,:)
+	integer :: i, m, n, rank_
+	integer, allocatable :: a(:), options(:), perm(:), new_basis(:)
+	logical, allocatable :: bl(:)
+
+	m = size(aa, 1)
+	n = size(aa, 2)
+
+	a = [(i, i = 1, m+n)]
+	bl = [(.false., i = 1, m+n)]
+	bl(basis) = .true.
+	options = a(mask_to_index(.not. bl))
+	options = options(mask_to_index(options <= n))
+	!print *, "options = ", options
+
+	! Form basis matrix
+	b = zeros(m, m)
+	b(:, 1: size(basis)) = aa(:, basis)
+	!call print_mat(b, "b = ")
+
+	if (size(basis) > 0 .and. &
+		qr_rank(b(:, :size(basis))) < size(basis)) then
+		print *, "Error: basis has dependent columns"
+		! TODO: panic
+		stop
+	end if
+	!print *, "ok"
+
+	rank_ = 0
+	do i = 1, n
+		perm = rand_perm(size(options))
+		new_basis = options(perm(: m - size(basis)))
+
+		!print *, "new_basis = ", new_basis
+		if (size(new_basis) > 0) then
+			b(:, size(basis):) = aa(:, new_basis)
+		end if
+
+		rank_ = qr_rank(b)
+		!print *, "rank_ = ", rank_
+		!if (i > 1) stop  ! unreachable in tests
+		if (rank_ == m) exit
+	end do
+
+	res = [basis, new_basis]
+
+end function linprog_get_more_basis_cols
+
+!===============================================================================
+
+function rand_perm(n)
+	! Fisher-Yates shuffle
+	integer, intent(in) :: n
+	integer, allocatable :: rand_perm(:)
+	!********
+	integer :: i, j
+
+	rand_perm = [(i, i = 1, n)]  ! initially identity
+	do i = 1, n-1
+		j = i + rand_i32(n-i+1)
+		rand_perm([i, j]) = rand_perm([j, i])
+	end do
+
+end function rand_perm
+
+!===============================================================================
+
+function is_in_vec(needles, haystack)
+	integer, intent(in) :: needles(:), haystack(:)
+	logical, allocatable :: is_in_vec(:)
+	!********
+	integer :: i, nn, nh, hmin, hmax
+	logical, allocatable :: in_haystack(:)
+
+	nn = size(needles)
+	nh = size(haystack)
+
+	if (nh <= 0) then
+		!print *, "haystack empty"
+		is_in_vec = [(.false., i = 1, nn)]
+		return
+	end if
+
+	! Pigeonhole array for O(nn + nh)
+	hmin = minval(haystack)
+	hmax = maxval(haystack)
+	allocate(in_haystack(hmin: hmax))
+	in_haystack = .false.
+	in_haystack(haystack) = .true.
+
+	allocate(is_in_vec(nn))
+
+	do i = 1, nn
+
+		! There are several possible strategies to make this not O(n^2).  Maybe
+		! sort both? Or hash map or pigeonhole.  Pigeonhole might be effective
+		! and not explode memory usage for the revised simplex application --
+		! inputs are expected to be in the range of matrix sizes
+		!
+		! In the general case, pigeonhole could use a *lot* of memory for a
+		! wide range of possibly haystack values
+
+		!! O(n^2)
+		!is_in_vec(i) = any(haystack == needles(i))
+
+		! O(nn + nh)
+		if (hmin <= needles(i) .and. needles(i) <= hmax) then
+			is_in_vec(i) = in_haystack(needles(i))
+		else
+			is_in_vec(i) = .false.
+		end if
+
+	end do
+
+end function is_in_vec
+
+!===============================================================================
+
+subroutine lp_unique(vec, vals, idxs)
+	integer, intent(in) :: vec(:)
+	integer, allocatable, intent(out) :: vals(:)
+	integer, allocatable, intent(out) :: idxs(:)
+	!********
+	integer :: i, n, nu
+
+	n = size(vec)
+
+	! Assume vec is descending.  From my test cases, this seems ok
+	!print *, "vec = ", vec
+	if (any(vec(1:n-1) - vec(2:n) < 0)) then
+		print *, "Error: vec is not sorted descending in lp_unique()"
+		! TODO: panic
+		stop
+	end if
+
+	allocate(vals(n), idxs(n))
+	if (n <= 0) return
+
+	vals(1) = vec(1)
+	idxs(1) = 1
+	nu = 1
+	do i = 2, n
+		if (vec(i) /= vec(i-1)) then
+			nu = nu + 1
+			vals(nu) = vec(i)
+			idxs(nu) = i
+		!else
+		!	! Unreachable.  Why does scipy call unique() at all?
+		!	print *, "non-unique elem"
+		!	stop
+		end if
+	end do
+
+	!! Not necessary, but helpful for comparison with scipy
+	!vals = reverse(vals)
+	!idxs = reverse(idxs)
+
+end subroutine lp_unique
 
 !===============================================================================
 
