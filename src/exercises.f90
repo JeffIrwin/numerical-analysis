@@ -2903,7 +2903,8 @@ integer function chapter_4_linprog() result(nfail)
 	double precision :: fval, fexpect
 	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
 		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
-	integer :: n, p, rank_
+	integer, allocatable :: methods(:)
+	integer :: n, p, rank_, im, method
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2971,25 +2972,53 @@ integer function chapter_4_linprog() result(nfail)
 	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 5")
 
 	!********
+	! Standard form, using linprog_std() directly
 
-	c = [4, 8, 3, 0, 0, 0]
+	c = [8, 6, 0, 0]
+	a = transpose(reshape([ &
+	        1.0, 1.0, -1.0, 0.0, &
+	        -0.05, 0.07, 0.0, 1.0  &
+		], [4, 2]))
+	b = [1, 0]
+	expect = [0.58333333d0, 0.41666667d0, 0.d0, 0.d0]
+
+	print *, "a = "
+	print "(4es13.3)", transpose(a)
+
+	x = linprog_std(c, a, b)
+
+	print *, "x = ", x
+
+	call test(norm2(x - expect), 0.d0, 1.d-7, nfail, "linprog_std 1")
+
+	!********
+
+	methods = [LINPROG_SIMPLEX, LINPROG_REVISED_SIMPLEX]
+	!methods = [LINPROG_REVISED_SIMPLEX, LINPROG_SIMPLEX]
+	do im = 1, size(methods)
+	method = methods(im)
+
+	!********
+
+	c = [4.d0, 8.d0, 3.d0, 0.d0, 0.d0, 0.d0]
 	a_eq = transpose(reshape([ &
-		2., 5., 3., -1., 0., 0.,   &
-		3., 2.5, 8., 0., -1., 0., &
-		8., 10., 4., 0., 0., -1.   &
+		2.d0, 5.d0, 3.d0, -1.d0, 0.d0, 0.d0,   &
+		3.d0, 2.5d0, 8.d0, 0.d0, -1.d0, 0.d0, &
+		8.d0, 10.d0, 4.d0, 0.d0, 0.d0, -1.d0   &
 		], &
 		[6, 3] &
 	))
-	b_eq = [185, 155, 600]
+	b_eq = [185.d0, 155.d0, 600.d0]
 
 	if (allocated(a_ub)) deallocate(a_ub, b_ub)
 	allocate(a_ub(0,6), b_ub(0))
 
 	expect = [66.25d0, 0.d0, 17.5d0, 0.d0, 183.75d0, 0.d0]
 
-	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, method=method)
 	print *, "x = ", x
 
+	! Revised simplex has slightly less accuracy here than than simplex
 	call test(norm2(x - expect), 0.d0, 1.d-12, nfail, "linprog 13")
 	!stop
 
@@ -3011,7 +3040,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [2.d0/3, 4.d0/3]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 6")
@@ -3029,7 +3058,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [10, -3]
 
-	x = linprog(c, a_ub, b_ub, lb = lb, fval = fval, method = LINPROG_REVISED_SIMPLEX)
+	x = linprog(c, a_ub, b_ub, lb = lb, fval = fval, method=method)
 	!x = linprog(c, a_ub, b_ub, lb = lb, fval = fval)  ! TODO
 
 	print *, "x = ", x
@@ -3038,26 +3067,6 @@ integer function chapter_4_linprog() result(nfail)
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
 
 	!stop
-
-	!********
-	! Standard form, using linprog_std()
-
-	c = [8, 6, 0, 0]
-	a = transpose(reshape([ &
-	        1.0, 1.0, -1.0, 0.0, &
-	        -0.05, 0.07, 0.0, 1.0  &
-		], [4, 2]))
-	b = [1, 0]
-	expect = [0.58333333d0, 0.41666667d0, 0.d0, 0.d0]
-
-	print *, "a = "
-	print "(4es13.3)", transpose(a)
-
-	x = linprog_std(c, a, b)
-
-	print *, "x = ", x
-
-	call test(norm2(x - expect), 0.d0, 1.d-7, nfail, "linprog_std 1")
 
 	!********
 	! General, using linprog()
@@ -3072,7 +3081,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [4, 0]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 2")
@@ -3088,7 +3097,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0.4d0, 1.8d0]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 4")
@@ -3102,7 +3111,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 0, 5]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 5")
@@ -3127,7 +3136,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 2]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 7")
@@ -3154,7 +3163,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0.1875d0, 1.25d0]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, lb, ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 8")
@@ -3174,7 +3183,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 15, 3]
 
-	x = linprog(c, a_ub, b_ub)
+	x = linprog(c, a_ub, b_ub, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 9")
@@ -3195,7 +3204,7 @@ integer function chapter_4_linprog() result(nfail)
 	fexpect = -18
 	expect = [2, 6]
 
-	x = linprog(c, a_ub, b_ub, fval = fval)
+	x = linprog(c, a_ub, b_ub, fval = fval, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 10")
@@ -3228,8 +3237,8 @@ integer function chapter_4_linprog() result(nfail)
 	!allocate(a_ub(0,0), b_ub(0))
 	allocate(a_ub(0,12), b_ub(0))
 
-	!x = linprog(c, a_ub, b_ub)
-	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, fval=fval)
+	!x = linprog(c, a_ub, b_ub, method=method)
+	x = linprog(c, a_ub, b_ub, a_eq=a_eq, b_eq=b_eq, fval=fval, method=method)
 	!print *, "x = ", x
 	print *, "fval = ", fval
 
@@ -3256,7 +3265,7 @@ integer function chapter_4_linprog() result(nfail)
 	expect = [101.d0 / 1391, 1462.d0 / 1391, 0.d0, 752.d0 / 1391]
 	fexpect = 7083.d0 / 1391
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq, fval=fval)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, fval=fval, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 12")
@@ -3295,8 +3304,7 @@ integer function chapter_4_linprog() result(nfail)
 	! Surely there are other pathological cases where the tolerance workaround
 	! does not help.  Those cases would actually require redundancy removal
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq, tol=1.d-5)
-	!x = linprog_std(c, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, tol=1.d-5, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-6, nfail, "linprog 13.1")
@@ -3324,7 +3332,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [0, 0, 0, 0, 0, 0]
 
-	x = linprog(c, a_ub, b_ub, a_eq, b_eq)
+	x = linprog(c, a_ub, b_ub, a_eq, b_eq, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 14")
@@ -3340,11 +3348,13 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [-3, -3]
 
-	x = linprog(c, a_ub, b_ub, lb = lb)
+	x = linprog(c, a_ub, b_ub, lb = lb, method=method)
 	print *, "x = ", x
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 15")
 
+	!********
+	end do  ! methods
 	!********
 	print *, ""
 

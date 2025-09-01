@@ -524,7 +524,6 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 		stop
 	end if
 
-
 	!********
 	! Select singleton columns
 
@@ -771,6 +770,8 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!        try:
 	!            basis_finder = np.abs(solve(B, A))  # inefficient
 
+		! TODO: might want to replace this (LU) invmul() with qr_solve() like I
+		! did below, unless I can fix the LU pivotting issue
 		basis_finder = abs(invmul(bb, a))
 
 	!            pertinent_row = np.argmax(basis_finder[:, basis_column])
@@ -852,6 +853,7 @@ function rs_lu(aa, b) result(bb)
 	bb = aa(:, b)
 
 end function rs_lu
+
 !===============================================================================
 
 subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
@@ -932,7 +934,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		!v = invmul(bbt, cb)
 		!v = invmul(transpose(bb), cb)
 		!v = qr_solve(transpose(bb), cb)
-		v = qr_solve_f64(bbt, cb)
+		v = qr_solve(bbt, cb)
 
 		print *, "c = ", c
 		print *, "cb = ", cb
@@ -1222,9 +1224,9 @@ subroutine lp_unique(vec, vals, idxs)
 		end if
 	end do
 
-	! TODO: not necessary, but helpful for comparison with scipy
-	vals = reverse(vals)
-	idxs = reverse(idxs)
+	!! Not necessary, but helpful for comparison with scipy
+	!vals = reverse(vals)
+	!idxs = reverse(idxs)
 
 end subroutine lp_unique
 
