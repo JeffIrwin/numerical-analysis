@@ -849,7 +849,10 @@ end subroutine qr_factor_gram_schmidt
 integer function qr_rank(a, allow_rect, iostat) result(rank_)
 	! Get the rank of `a` using QR factorization with Householder transformations
 	!
-	! TODO: tol?
+	! TODO: tol?  Also I don't think this is always correct because it doesn't
+	! pivot, but I think it can at least tell you whether the matrix is full
+	! rank or not, which is good enough for its application in the revised
+	! simplex algorithm.  See "rank-revealing QR factorization"
 	!
 	! Matrix `a` is modified in the process
 	use numa__utils
