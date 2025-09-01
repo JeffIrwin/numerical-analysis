@@ -419,21 +419,30 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision, parameter :: c0 = 0  ! opt arg in scipy but never changed here
-	double precision :: tol_
-	double precision, allocatable :: r(:)
+	!double precision, parameter :: c0 = 0  ! opt arg in scipy but never changed here
+	double precision :: tol_, residual, dmax
+	double precision, allocatable :: r(:), bb(:,:), basis_finder(:,:), c0(:), &
+		x0(:)
 	!double precision, allocatable :: row_constraints(:,:), t(:,:)
 	!double precision, allocatable :: row_objective(:)
 	!double precision, allocatable :: row_pseudo_objective(:), solution(:)
-	integer :: i, m, n, io, iters_, i1(1), n_aux
+	integer :: i, m, n, io, iters_, i1(1), n_aux, ib, basis_column, &
+		pertinent_row, new_basis_column
 	!integer, allocatable :: av(:), basis(:)
 	integer, allocatable :: basis(:), cols(:), rows(:), ineg(:), &
 		nonzero_constraints(:), i_fix_without_aux(:), arows(:), acols(:), &
 		basis_ng(:), basis_ng_rows(:)
-	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:)
+	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:), &
+		keep_rows(:), eligible_columns(:)
 
 	if (present(iostat)) iostat = 0
 	x = [0]
+
+	! Backup before overwriting with aux problem
+	c0 = c
+	x0 = x  ! TODO unused
+	!print *, "c = ", c
+	!stop
 
 	!********
 	! Generate auxiliary problem
@@ -660,6 +669,9 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	basis_ng = [cols, acols]
 	basis_ng_rows = [rows, arows]
+	print *, "basis_ng = ", basis_ng
+	print *, "basis_ng_rows = ", basis_ng_rows
+	!stop
 
 	!    # add auxiliary singleton columns
 	!    A = np.hstack((A, np.zeros((m, n_aux))))
@@ -678,9 +690,10 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	! Generate initial basic feasible solution
 	x = [x, zeros(n_aux)]
 	do i = 1, size(basis_ng)
-		x(i) = r(basis_ng_rows(i)) / a(basis_ng_rows(i), basis_ng(i))
+		!x(i) = r(basis_ng_rows(i)) / a(basis_ng_rows(i), basis_ng(i))
+		x(basis_ng(i)) = r(basis_ng_rows(i)) / a(basis_ng_rows(i), basis_ng(i))
 	end do
-	print *, "x = ", x
+	print *, "x bfs = ", x
 
 	!    # generate costs to minimize infeasibility
 	!    c = np.zeros(n_aux + n)
@@ -704,6 +717,9 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	!    return A, b, c, basis, x, status
 
+	print *, "x = ", x
+	!stop
+
 	! End generate auxiliary problem
 	!********
 
@@ -726,27 +742,78 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!    if status == 0 and residual > tol:
 	!        status = 2
 
+	! Check for infeasibility
+	residual = dot_product(c, x)
+	if (residual > tol) then
+		print *, "Error: problem is infeasible in linprog_rs()"
+		! TODO: panic
+		stop
+	end if
+
 	!    # drive artificial variables out of basis
 	!    # TODO: test redundant row removal better
 	!    # TODO: make solve more efficient with BGLU? This could take a while.
 	!    keep_rows = np.ones(m, dtype=bool)
 	!    for basis_column in basis[basis >= n]:
+
+	! Drive artificial variables out of basis
+	keep_rows = [(.true., i = 1, m)]
+	do ib = 1, size(basis)
+		if (basis(ib) <= n) cycle
+		basis_column = basis(ib)
+
 	!        B = A[:, basis]
+
+		bb = a(:, basis)
+
 	!        try:
 	!            basis_finder = np.abs(solve(B, A))  # inefficient
+
+		basis_finder = abs(invmul(bb, a))
+
 	!            pertinent_row = np.argmax(basis_finder[:, basis_column])
+
+		i1 = maxloc(basis_finder(:, basis_column))
+		pertinent_row = i1(1)
+
 	!            eligible_columns = np.ones(n, dtype=bool)
 	!            eligible_columns[basis[basis < n]] = 0
 	!            eligible_column_indices = np.where(eligible_columns)[0]
 	!            index = np.argmax(basis_finder[:, :n]
 	!                              [pertinent_row, eligible_columns])
+
+		eligible_columns = [(.true., i = 1, n)]
+		eligible_columns(basis(mask_to_index(basis < n))) = .false.
+
 	!            new_basis_column = eligible_column_indices[index]
+
+		!i1 = maxloc(basis_finder(pertinent_row))
+		new_basis_column = 0
+		dmax = -huge(dmax)
+		do i = 1, n
+			if (.not. eligible_columns(i)) cycle
+			if (basis_finder(pertinent_row, i) > dmax) then
+				dmax = basis_finder(pertinent_row, i)
+				new_basis_column = i
+			end if
+		end do
+		print *, "new_basis_column = ", new_basis_column
+
 	!            if basis_finder[pertinent_row, new_basis_column] < tol:
 	!                keep_rows[pertinent_row] = False
 	!            else:
 	!                basis[basis == basis_column] = new_basis_column
+
+		if (basis_finder(pertinent_row, new_basis_column) < tol) then
+			keep_rows(pertinent_row) = .false.
+		else
+			basis(mask_to_index(basis == basis_column)) = new_basis_column
+		end if
 	!        except LinAlgError:
 	!            status = 4
+
+	end do
+	print *, "keep_rows = ", keep_rows
 
 	!    # form solution to original problem
 	!    A = A[keep_rows, :n]
@@ -754,6 +821,17 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!    x = x[:n]
 	!    m = A.shape[0]
 	!    return x, basis, A, b, residual, status, iter_k
+
+	! Form solution to original problem
+	a = a(mask_to_index(keep_rows), :n)
+	basis = basis(mask_to_index(keep_rows))
+	x = x(:n)
+	!m = size(a, 1)  ! unused
+
+	! Phase 2, for real this time
+	c = c0  ! restore
+	!x = x0
+	call rs_phase_two(c, a, x, basis, iters, tol)
 
 end function linprog_rs
 
@@ -781,10 +859,17 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	integer, intent(in) :: maxiter
 	double precision, intent(in) :: tol
 	!********
-	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:)
-	integer :: i, m, n, iteration
-	integer, allocatable :: a(:), ab(:)
+	double precision :: th_star
+	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
+		u(:), th(:)
+	integer :: i, j, k, l, i1(1), m, n, iteration
+	integer, allocatable :: a(:), ab(:), ipos(:)
+	logical :: converged
 	logical, allocatable :: bl(:)
+
+	print *, repeat("=", 60)
+	print *, "Starting rs_phase_two()"
+	print *, "x = ", x
 
 !def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
 !               maxupdate, mast, pivot, iteration=0, phase_one_n=None):
@@ -806,9 +891,11 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 !    else:
 !        B = LU(A, b)
 	bb = rs_lu(aa, b)
+	call print_mat(aa, "aa = ")
 	call print_mat(bb, "bb = ")
 
 !    for iteration in range(iteration, maxiter):
+	converged = .false.
 	do iteration = 1, maxiter
 
 !        #if disp or callback is not None:
@@ -834,9 +921,9 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 !            break
 
 		v = invmul(transpose(bb), cb)
+		print *, "c = ", c
 		print *, "cb = ", cb
 		print *, "v = ", v
-		stop
 
 !        # TODO: cythonize?
 !        c_hat = c - v.dot(A)    # reduced cost
@@ -846,25 +933,92 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 !        # c_hat = c[~bl] - v.T.dot(N)
 !        # Can we perform the multiplication only on the nonbasic columns?
 
+		c_hat = c - matmul(v, aa)
+		print *, "c_hat = ", c_hat
+		c_hat = c_hat(mask_to_index(.not. bl))
+		!print *, "bl = ", bl
+		print *, "c_hat = ", c_hat
+
+		print *, "size(bl)    = ", size(bl)
+		print *, "size(c_hat) = ", size(c_hat)
 !        if np.all(c_hat >= -tol):  # all reduced costs positive -> terminate
 !            break
+		if (all(c_hat >= -tol)) then
+			print *, "converged"
+			converged = .true.
+			exit
+		end if
 
 !        j = _select_enter_pivot(c_hat, bl, a, rule=pivot, tol=tol)
 !        u = B.solve(A[:, j])        # similar to u = solve(B, A[:, j])
+
+		!def _select_enter_pivot(c_hat, bl, a, rule="bland", tol=1e-12):
+		!    print("Starting _select_enter_pivot()")
+		!    if rule.lower() == "mrc":  # index with minimum reduced cost
+		!        return a[~bl][np.argmin(c_hat)]
+		!    else:  # smallest index w/ negative reduced cost
+		!        return a[~bl][c_hat < -tol][0]
+
+		! Select enter pivot `j`
+		j = 0
+		do i = 1, size(a)
+			if (bl(i)) cycle
+			if (c_hat(i) >= -tol) cycle
+			j = i
+			exit
+		end do
+
+		u = invmul(bb, aa(:,j))
+		print *, "u = ", u
 
 !        i = u > tol                 # if none of the u are positive, unbounded
 !        if not np.any(i):
 !            status = 3
 !            break
 
+		! If none of `u` are positive, unbounded
+		ipos = mask_to_index(u > tol)
+		!if (.not. any(u > tol)) then
+		if (size(ipos) <= 0) then
+			print *, "Error: problem is unbounded in rs_phase_two()"
+			! TODO: panic
+			stop
+		end if
+
 !        th = xb[i]/u[i]
 !        l = np.argmin(th)           # implicitly selects smallest subscript
 !        th_star = th[l]             # step size
 
+		th = xb(ipos) / u(ipos)
+		i1 = minloc(th)
+		l = i1(1)
+		th_star = th(l)
+
 !        x[b] = x[b] - th_star*u     # take step
 !        x[j] = th_star
+
+		x(b) = x(b) - th_star * u
+		x(j) = th_star
+
+		print *, "u > tol = ", u > tol
+		print *, "th = ", th
+		print *, "th_star = ", th_star
+
 !        B.update(ab[i][l], j)       # modify basis
 !        b = B.b                     # similar to b[ab[i][l]] =
+	!    def update(self, i, j):
+	!        """ Rank-one update to basis and basis matrix """
+	!        self.b[i:self.m-1] = self.b[i+1:self.m]
+	!        self.b[-1] = j
+	!        self.B = self.A[:, self.b]
+
+		! Update (modify) basis and basis matrix
+		!i = ab(i,l)
+		i = ab(ipos(l))
+		j = j
+		b(i: m-1) = b(i+1: m)
+		b(size(b)) = j
+		bb = aa(:, b)
 
 	end do
 !    else:
@@ -876,6 +1030,12 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 !        #if disp or callback is not None:
 !        #    _display_and_callback(phase_one_n, x, postsolve_args, status,
 !        #                          iteration, disp, callback)
+
+	if (.not. converged) then
+		print *, "Error: rs_phase_two() did not converge"
+		! TODO: panic
+		stop
+	end if
 
 !    return x, b, status, iteration
 
@@ -1040,6 +1200,10 @@ subroutine lp_unique(vec, vals, idxs)
 			idxs(nu) = i
 		end if
 	end do
+
+	! TODO: not necessary, but helpful for comparison with scipy
+	vals = reverse(vals)
+	idxs = reverse(idxs)
 
 end subroutine lp_unique
 

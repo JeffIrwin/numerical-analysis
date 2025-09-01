@@ -2982,7 +2982,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	expect = [10, -3]
 
-	x = linprog(c, a_ub, b_ub, lb = lb, method = LINPROG_REVISED_SIMPLEX)
+	x = linprog(c, a_ub, b_ub, lb = lb, fval = fval, method = LINPROG_REVISED_SIMPLEX)
 	!x = linprog(c, a_ub, b_ub, lb = lb, fval = fval)  ! TODO
 
 	print *, "x = ", x
@@ -2990,7 +2990,7 @@ integer function chapter_4_linprog() result(nfail)
 
 	call test(norm2(x - expect), 0.d0, 1.d-14, nfail, "linprog 3")
 
-	stop
+	!stop
 
 	!********
 	! Standard form, using linprog_std()

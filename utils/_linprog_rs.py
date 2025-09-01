@@ -18,7 +18,10 @@ def _phase_one(A, b, x0, callback, postsolve_args, maxiter, tol, disp,
     status = 0
 
     # generate auxiliary problem to get initial BFS
+    #print("c = ", c)
     A, b, c, basis, x, status = _generate_auxiliary_problem(A, b, x0, tol)
+    print("c = ", c)
+    #exit(0)
 
     if status == 6:
         residual = c.dot(x)
@@ -60,6 +63,8 @@ def _phase_one(A, b, x0, callback, postsolve_args, maxiter, tol, disp,
                 basis[basis == basis_column] = new_basis_column
         except LinAlgError:
             status = 4
+
+    print("keep_rows = ", keep_rows)
 
     # form solution to original problem
     A = A[keep_rows, :n]
@@ -184,14 +189,19 @@ def _generate_auxiliary_problem(A, b, x0, tol):
     basis_ng = np.concatenate((cols, acols))   # basis columns not from guess
     basis_ng_rows = np.concatenate((rows, arows))  # rows we need to zero
 
+    print("basis_ng = ", basis_ng)
+    print("basis_ng_rows = ", basis_ng_rows)
+
     # add auxiliary singleton columns
     A = np.hstack((A, np.zeros((m, n_aux))))
     A[arows, acols] = 1
 
     # generate initial BFS
+    print("x before cat = ", x)
     x = np.concatenate((x, np.zeros(n_aux)))
+    print("x after  cat = ", x)
     x[basis_ng] = r[basis_ng_rows]/A[basis_ng_rows, basis_ng]
-    print("x = ", x)
+    print("x bfs = ", x)
 
     # generate costs to minimize infeasibility
     c = np.zeros(n_aux + n)
@@ -208,8 +218,10 @@ def _generate_auxiliary_problem(A, b, x0, tol):
     print("basis after getting more = ")
     print(basis)
 
+    print("x = ", x)
     print("Ending _generate_auxiliary_problem")
     print("=" * 60)
+    #exit(0)
 
     return A, b, c, basis, x, status
 
@@ -269,11 +281,15 @@ def _select_enter_pivot(c_hat, bl, a, rule="bland", tol=1e-12):
 
 def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
                maxupdate, mast, pivot, iteration=0, phase_one_n=None):
+    print("=" * 60)
     print("Starting _phase_two()")
+    print("x = ", x)
     m, n = A.shape
     status = 0
     a = np.arange(n)                    # indices of columns of A
     ab = np.arange(m)                   # indices of columns of B
+    print("ab = ")
+    print(ab)
 
     # BGLU works but I might want to port LU to Fortran instead first
     if False and maxupdate:
@@ -298,6 +314,8 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
 
         xb = x[b]       # basic variables
         cb = c[b]       # basic costs
+        print("c = ", c)
+        print("cb = ", cb)
 
         try:
             v = B.solve(cb, transposed=True)    # similar to v = solve(B.T, cb)
@@ -305,19 +323,24 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
             status = 4
             break
 
-        # TODO: cythonize?
+        print("v = ", v)
+
         c_hat = c - v.dot(A)    # reduced cost
+        print("c_hat = ", c_hat)
         c_hat = c_hat[~bl]
         # Above is much faster than:
         # N = A[:, ~bl]                 # slow!
         # c_hat = c[~bl] - v.T.dot(N)
         # Can we perform the multiplication only on the nonbasic columns?
 
+        print("c_hat = ", c_hat)
+
         if np.all(c_hat >= -tol):  # all reduced costs positive -> terminate
             break
 
         j = _select_enter_pivot(c_hat, bl, a, rule=pivot, tol=tol)
         u = B.solve(A[:, j])        # similar to u = solve(B, A[:, j])
+        print("u = ", u)
 
         i = u > tol                 # if none of the u are positive, unbounded
         if not np.any(i):
@@ -331,6 +354,17 @@ def _phase_two(c, A, x, b, callback, postsolve_args, maxiter, tol, disp,
         x[b] = x[b] - th_star*u     # take step
         x[j] = th_star
         B.update(ab[i][l], j)       # modify basis
+
+        print("i = ", i)
+        print("th = ", th)
+        print("th_star = ", th_star)
+
+        #print("ab = ")
+        #print(ab)
+        #print("i, l = ", i, l)
+        #print("ab[i][l] = ", ab[i][l])
+        #exit(0)
+
         b = B.b                     # similar to b[ab[i][l]] =
 
     else:
