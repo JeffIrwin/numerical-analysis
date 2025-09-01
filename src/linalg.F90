@@ -496,6 +496,7 @@ function invmul_vec_c64(a, b) result(x)
 	! Initialize pivot to identity
 	pivot = [(i, i = 1, size(aa,1))]
 
+	! TODO: most calls to lu_factor() should check iostat
 	call lu_factor(aa, pivot)
 
 	!print *, "pivot = ", pivot

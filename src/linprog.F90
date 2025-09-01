@@ -234,7 +234,7 @@ function linprog &
 	if (present(iters)) iters_ = iters
 
 	method_ = LINPROG_SIMPLEX
-	method_ = LINPROG_REVISED_SIMPLEX
+	!method_ = LINPROG_REVISED_SIMPLEX
 	if (present(method)) method_ = method
 
 	x = [0]
@@ -420,14 +420,9 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!********
 
 	character(len = :), allocatable :: msg
-	!double precision, parameter :: c0 = 0  ! opt arg in scipy but never changed here
 	double precision :: tol_, residual, dmax
-	double precision, allocatable :: r(:), bb(:,:), basis_finder(:,:), c0(:), &
-		x0(:)
-	!double precision, allocatable :: row_constraints(:,:), t(:,:)
-	!double precision, allocatable :: row_objective(:)
-	!double precision, allocatable :: row_pseudo_objective(:), solution(:)
-	integer :: i, m, n, io, iters_, i1(1), n_aux, ib, basis_column, &
+	double precision, allocatable :: r(:), bb(:,:), basis_finder(:,:), c0(:)
+	integer :: i, m, n, iters_, i1(1), n_aux, ib, basis_column, &
 		pertinent_row, new_basis_column
 	!integer, allocatable :: av(:), basis(:)
 	integer, allocatable :: basis(:), cols(:), rows(:), ineg(:), &
@@ -439,9 +434,16 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	if (present(iostat)) iostat = 0
 	x = [0]
 
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
+
+	iters_ = 1000
+	if (present(iters)) iters_ = iters
+
+	msg = ""  ! TODO
+
 	! Backup before overwriting with aux problem
 	c0 = c
-	x0 = x  ! TODO unused
 	!print *, "c = ", c
 	!stop
 
@@ -495,7 +497,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!! TODO: not sure if `basis` is supposed to be all >tol locations or just
 	!! the first
 	!basis = mask_to_index(abs(x) > tol)
-	i1 = findloc(abs(x) > tol, .true.)
+	i1 = findloc(abs(x) > tol_, .true.)
 	if (i1(1) > 0) then
 		basis = [i1(1)]
 	else
@@ -736,7 +738,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	! Note: this is just phase 2 to solve the auxiliary problem inside phase 1.
 	! We still have to do a bunch of other stuff and then the actual phase 2
 	! later
-	call rs_phase_two(c, a, x, basis, iters, tol)
+	call rs_phase_two(c, a, x, basis, iters_, tol_)
 
 	!    # check for infeasibility
 	!    residual = c.dot(x)
@@ -745,7 +747,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	! Check for infeasibility
 	residual = dot_product(c, x)
-	if (residual > tol) then
+	if (residual > tol_) then
 		print *, "Error: problem is infeasible in linprog_rs()"
 		! TODO: panic
 		stop
@@ -807,7 +809,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!            else:
 	!                basis[basis == basis_column] = new_basis_column
 
-		if (basis_finder(pertinent_row, new_basis_column) < tol) then
+		if (basis_finder(pertinent_row, new_basis_column) < tol_) then
 			keep_rows(pertinent_row) = .false.
 		else
 			basis(mask_to_index(basis == basis_column)) = new_basis_column
@@ -834,7 +836,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	! Phase 2, for real this time
 	c = c0  ! restore
 	!x = x0
-	call rs_phase_two(c, a, x, basis, iters, tol)
+	call rs_phase_two(c, a, x, basis, iters_, tol_)
 
 end function linprog_rs
 
@@ -866,8 +868,8 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	double precision :: th_star
 	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
 		u(:), th(:), bbt(:,:)
-	integer :: i, j, k, l, i1(1), m, n, iteration
-	integer, allocatable :: a(:), ab(:), ipos(:), ibl(:)
+	integer :: i, j, l, i1(1), m, n, iteration
+	integer, allocatable :: a(:), ab(:), ipos(:)
 	logical :: converged
 	logical, allocatable :: bl(:)
 
@@ -951,9 +953,6 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		c_hat = c - matmul(v, aa)
 		print *, "c_hat = ", c_hat
 
-		!ibl = mask_to_index(.not. bl)
-		!c_hat = c_hat(ibl)
-
 		!print *, "bl = ", bl
 		print *, "c_hat (unmasked) = ", c_hat
 
@@ -982,7 +981,6 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		do i = 1, size(a)
 			if (bl(i)) cycle
 			if (c_hat(i) >= -tol) cycle
-			!if (c_hat(ibl(i)) >= -tol) cycle
 			j = i
 			exit
 		end do
