@@ -672,8 +672,10 @@ integer function chapter_4_lu() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision :: t0, t, t_lu
-	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:)
+	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:), &
+		aexp(:,:)
 	integer :: i, n, nrng, irep, p0
+	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -705,7 +707,45 @@ integer function chapter_4_lu() result(nfail)
 	!print "(a,5es18.6)", "bx = ", bx
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
-	deallocate(a, x, bx)
+	!********
+	! Test a pivoting bug that went undetected for a surprisingly long time
+	! until it was found in revised simplex
+
+	a = reshape([ &
+		0.0000d+00,   2.0000d+00,   5.0000d+00, &
+		0.0000d+00,   3.0000d+00,   2.5000d+00, &
+		1.0000d+00,   8.0000d+00,   1.0000d+01  &
+		], &
+		[3, 3] &
+	)
+	a0 = a
+	pivot = [(i, i = 1, 3)]
+
+	aexp = transpose(reshape([ &
+		0.0000d+00,    0.0000d+00,    1.0000d+00, &
+		4.0000d-01,    2.0000d+00,    4.0000d+00, &
+		5.0000d+00,    2.5000d+00,    1.0000d+01  &
+		], &
+		[3, 3] &
+	))
+
+	call lu_factor(a, pivot)
+
+	!call print_mat(a, "lu(a) = ")
+	!print *, "pivot = ", pivot
+
+	call test(norm2(a - aexp), 0.d0, 1.d-11, nfail, "lu_factor 1")
+	call test(norm2(pivot - 1.d0*[3, 2, 1]), 0.d0, 1.d-11, nfail, "lu_factor 2")
+
+	a = a0
+	x = [69.d0, 420.d0, 1337.d0]
+	bx = matmul(a, x)
+	!print *, "bx = ", bx
+	bx = invmul(a, bx)
+	!print *, "bx = ", bx
+	!print *, "x  = ", x
+
+	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 3")
 
 	!********
 	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
@@ -714,6 +754,8 @@ integer function chapter_4_lu() result(nfail)
 	! TODO: add fuzz testing for some other problems, e.g. tridiagonal and
 	! banded solvers.  We will need special matmul() implementations to verify
 	! results
+
+	deallocate(a, x, bx)
 
 	call random_seed(size = nrng)
 	call random_seed(put = [(0, i = 1, nrng)])

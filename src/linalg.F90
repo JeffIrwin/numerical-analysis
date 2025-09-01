@@ -619,8 +619,6 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 	allow_singular_ = .false.
 	if (present(allow_singular)) allow_singular_ = allow_singular
 
-	!print *, "pivot = ", pivot
-
 	n = size(a, 1)
 
 	if (size(a, 2) /= n) then
@@ -640,20 +638,35 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 		iostat = 2
 		return
 	end if
+	!print *, "pivot init = ", pivot
 
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
 		!if (DO_PIVOT) then
 			do j = i+1, n
-				if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+				!print *, "aj, ai = ", a(j,i), a(i,i)
+
+				!if (abs(a(j,i)) > abs(a(i,i))) max_index = j
+				if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
+
 			end do
 		!end if
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
 
+		!print *, "swapping ", i, max_index
+		!print *, "i = ", i
+		!call print_mat(a, "a unpiv = ")
+		!call print_mat(a(pivot,:), "a pivot = ")
+		!print *, "ap = ", a(pivot(i), i)
+		!print *, "ai = ", a(i, i)
+		!print *, "pivot = ", pivot
+		!print *, ""
+
 		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
+		!if (.not. allow_singular_ .and. a(i, i) == 0) then
 			msg = "matrix is singular in lu_factor_f64()"
 			call PANIC(msg, present(iostat))
 			iostat = 3
@@ -663,6 +676,7 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 		do j = i+1, n
 			a    (pivot(j), i) = &
 				a(pivot(j), i) / &
+				!a(i, i)
 				a(pivot(i), i)
 			do k = i+1, n
 				a    (pivot(j), k) = &

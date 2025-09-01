@@ -713,13 +713,14 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 
 		xb = x(b)
 		cb = c(b)
-		!call print_mat(bb, "bb = ")
 
 		! TODO: is there a bug in my lu_factor_f64() pivoting? It says this is
 		! singular for the simple MATLAB example, but qr_solve_f64() works
 
 		bbt = transpose(bb)
-		!v = invmul(bbt, cb)
+
+		call print_mat(bb, "bb = ")
+		v = invmul(bbt, cb)
 		!v = invmul(transpose(bb), cb)
 		!v = qr_solve(transpose(bb), cb)
 		v = qr_solve(bbt, cb)
