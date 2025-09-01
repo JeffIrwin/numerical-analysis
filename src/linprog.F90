@@ -438,8 +438,6 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	iters_ = 1000
 	if (present(iters)) iters_ = iters
 
-	msg = ""  ! TODO
-
 	! Backup before overwriting with aux problem
 	c0 = c
 	!print *, "c = ", c
@@ -491,9 +489,11 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	else if (size(nonzero_constraints) > m - size(basis) .or. &
 		any(x < 0)) then
-		print *, "TODO: can't get trivial basis feasible solution"
-		! TODO: panic
-		stop
+
+		msg = "infeasible solution for trivial basis in linprog_rs()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
 	end if
 
 	!********
@@ -831,7 +831,12 @@ function linprog_get_more_basis_cols(aa, basis) result(res)
 	do i = 1, n
 		perm = rand_perm(size(options))
 		new_basis = options(perm(: m - size(basis)))
-		b(:, size(basis):) = aa(:, new_basis)
+
+		!print *, "new_basis = ", new_basis
+		if (size(new_basis) > 0) then
+			b(:, size(basis):) = aa(:, new_basis)
+		end if
+
 		rank_ = qr_rank(b)
 		!print *, "rank_ = ", rank_
 		!if (i > 1) stop  ! unreachable in tests
@@ -872,7 +877,7 @@ function is_in_vec(needles, haystack)
 	nh = size(haystack)
 
 	if (nh <= 0) then
-		print *, "haystack empty"
+		!print *, "haystack empty"
 		is_in_vec = [(.false., i = 1, nn)]
 		return
 	end if
