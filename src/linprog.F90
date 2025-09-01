@@ -628,12 +628,9 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	keep_rows = [(.true., i = 1, m)]
 	do ib = 1, size(basis)
 		if (basis(ib) <= n) cycle
+
 		basis_column = basis(ib)
-
 		bb = a(:, basis)
-
-		! TODO: might want to replace this (LU) invmul() with qr_solve() like I
-		! did below, unless I can fix the LU pivotting issue
 		basis_finder = abs(invmul(bb, a))
 
 		i1 = maxloc(basis_finder(:, basis_column))
@@ -685,7 +682,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	!********
 	double precision :: th_star
 	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
-		u(:), th(:), bbt(:,:)
+		u(:), th(:)!, bbt(:,:)
 	integer :: i, j, l, i1(1), m, n, iteration
 	integer, allocatable :: a(:), ab(:), ipos(:)
 	logical :: converged
@@ -714,16 +711,12 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		xb = x(b)
 		cb = c(b)
 
-		! TODO: is there a bug in my lu_factor_f64() pivoting? It says this is
-		! singular for the simple MATLAB example, but qr_solve_f64() works
-
-		bbt = transpose(bb)
-
-		call print_mat(bb, "bb = ")
-		v = invmul(bbt, cb)
-		!v = invmul(transpose(bb), cb)
+		!bbt = transpose(bb)
+		!call print_mat(bb, "bb = ")
+		!v = invmul(bbt, cb)
+		v = invmul(transpose(bb), cb)
 		!v = qr_solve(transpose(bb), cb)
-		v = qr_solve(bbt, cb)
+		!v = qr_solve(bbt, cb)
 
 		c_hat = c - matmul(v, aa)
 
@@ -752,8 +745,8 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		end do
 		!print *, "j = ", j
 
-		!u = invmul(bb, aa(:,j))
-		u = qr_solve(bb, aa(:,j))
+		u = invmul(bb, aa(:,j))
+		!u = qr_solve(bb, aa(:,j))
 		!print *, "u = ", u
 
 		! If none of `u` are positive, unbounded

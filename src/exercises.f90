@@ -708,6 +708,23 @@ integer function chapter_4_lu() result(nfail)
 	call test(norm2(bx - x), 0.d0, 1.d-11, nfail, "lu_invmul() 5x5")
 
 	!********
+
+	a = reshape([ &
+		0.,   0.,   0.,   1.,     1.,     0., &
+		0.,   0.,   0.,   1.,     0.25,   0., &
+		1.,   0.,   0.,   1.,    -1.,     0., &
+		0.,   1.,   0.,  -0.25,  -1.,     0., &
+		0.,   0.,   0.,   1.,     1.,    -1., &
+		0.,   0.,   1.,  -1.,     1.,     0.  &
+		], &
+		[6, 6] &
+	)
+	x = [69.d0, 420.d0, 1337.d0, 690.d0, 4200.d0, 13370.d0]
+	bx = matmul(a, x)
+	bx = invmul(a, bx)
+	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 4")
+
+	!********
 	! Test a pivoting bug that went undetected for a surprisingly long time
 	! until it was found in revised simplex
 
