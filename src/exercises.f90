@@ -765,19 +765,6 @@ integer function chapter_4_lu() result(nfail)
 	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 3")
 
 	!********
-
-
-
-	!************************
-	! TODO: fuzz test with a randomly permuted diagonal matrix.  My pivoting bug
-	! went undetected because my existing fuzz-tests have *too many* non-zeros.
-	! A more spares matrix poses more of a pivoting challenge
-	!************************
-
-
-
-
-	!********
 	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
 	! creating a singular matrix
 	!
@@ -823,6 +810,22 @@ integer function chapter_4_lu() result(nfail)
 			call test(norm2(bx - x), 0.d0, 1.d-9 * n, nfail, "lu_invmul() fuzz n x n")
 
 		end do
+
+		! Fuzz test with a randomly permuted diagonal matrix.  My pivoting bug
+		! went undetected because my existing fuzz-tests have *too many*
+		! non-zeros. A more spares matrix poses more of a pivoting challenge
+
+		call random_number(x)
+		a = diag(x)
+		a = a(:, rand_perm(n))
+		!call print_mat(a, "a = ")
+
+		call random_number(x)
+		bx = matmul(a, x)      ! calculate rhs
+
+		call lu_invmul(a, bx)
+		call test(norm2(bx - x), 0.d0, 1.d-9 * n, nfail, "lu_invmul() fuzz n x n")
+		!print "(a,6es15.5)", "bx = ", bx
 
 		deallocate(a, x, bx)
 	end do
