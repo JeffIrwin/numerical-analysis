@@ -66,9 +66,9 @@ jobs:
     - name: Test fynth on ${{ matrix.os }}
       run: |
         echo "find bin:"
-        find /opt/homebrew/bin -name "libgfort*"
+        find /opt/homebrew/bin -name "libgfort*" || true
         echo "find Cellar:"
-        find /opt/homebrew/Cellar -name "libgfort*"
+        find /opt/homebrew/Cellar -name "libgfort*" || true
         fpm run --example --profile debug
         fpm run --example --profile release
         fpm test --profile debug
