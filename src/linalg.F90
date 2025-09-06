@@ -885,10 +885,66 @@ function kernel(a, tol, allow_rect, iostat)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision :: s, normx, normj, u1, wa, tol_
+	double precision :: tol_
 	double precision, allocatable :: diag_(:)
-	integer :: i, j, k, n, max_index, rank_
+	integer :: n, rank_, io
 	integer, allocatable :: pivot(:)
+	logical :: allow_rect_
+
+	allow_rect_ = .false.
+	tol_ = 1.d-12
+	if (present(iostat)) iostat = 0
+	if (present(allow_rect)) allow_rect_ = allow_rect ! TODO unused
+	if (present(tol)) tol_ = tol
+
+	n = min(size(a,1), size(a,2))
+
+	! TODO: size check is redundant because it also happens in qr_core()
+	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
+		msg = "matrix is not square in kernel()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+	! For the right kernel, a transposition is needed.  Otherwise the result is
+	! the left kernel
+	a = transpose(a)
+
+	call qr_core(a, diag_, tol_, rank_ = rank_, pivot = pivot, iostat = io)
+	!print *, "rank_ = ", rank_
+	if (io /= 0) then
+		msg = "qr factorization failed in kernel()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+
+	kernel = qr_get_q_expl(a, diag_, pivot)
+	kernel = kernel(:, rank_+1:)
+
+end function kernel
+
+!********
+
+subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+
+	double precision, optional, allocatable, intent(out) :: diag_(:)
+	double precision, optional, intent(in) :: tol
+	logical, optional, intent(in) :: allow_rect
+	integer, optional, allocatable, intent(out) :: pivot(:)
+	integer, optional, intent(out) :: rank_
+	integer, optional, intent(out) :: iostat
+	!double precision, allocatable :: kernel(:,:)
+
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: s, normx, normj, u1, wa, tol_
+	double precision, allocatable :: diag__(:)
+	integer :: i, j, k, ip, kp, n, max_index, rank__
 	logical :: allow_rect_
 
 	allow_rect_ = .false.
@@ -900,73 +956,76 @@ function kernel(a, tol, allow_rect, iostat)
 	n = min(size(a,1), size(a,2))
 
 	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
-		msg = "matrix is not square in kernel()"
+		msg = "matrix is not square in qr_core()"
 		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
 
-	allocate(diag_(n))
-
-	! For the right kernel, a transposition is needed.  Otherwise the result is
-	! the left kernel
-	a = transpose(a)
+	allocate(diag__(n))
 
 	! Column pivot, not row pivot unlike LU factor.  Could just transpose
 	! everything, might not matter much
-	pivot = [(i, i = 1, n)]
+	if (present(pivot)) pivot = [(i, i = 1, n)]
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
-	rank_ = 0
+	rank__ = 0
 	do i = 1, n
-		rank_ = rank_ + 1
+		rank__ = rank__ + 1
 
-		max_index = i
-		normx = norm2(a(i:, pivot(i)))
-		!print *, "normx = ", normx
-		do j = i+1, n
-			normj = norm2(a(i:, pivot(j)))
-			if (normj > normx) then
-				max_index = j
-				normx = normj
-			end if
-		end do
-		!print *, "normx = ", normx
+		if (present(pivot)) then
+			normx = norm2(a(i:, pivot(i)))
+			max_index = i
+			!print *, "normx = ", normx
+			do j = i+1, n
+				normj = norm2(a(i:, pivot(j)))
+				if (normj > normx) then
+					max_index = j
+					normx = normj
+				end if
+			end do
+			!print *, "normx = ", normx
 
-		! Swap cols
-		pivot([i, max_index]) = pivot([max_index, i])
-
-		!if (normx <= 0) then
-		if (normx <= tol_) then
-			rank_ = rank_ - 1
-			cycle
-			!exit
+			! Swap cols
+			pivot([i, max_index]) = pivot([max_index, i])
+		else
+			normx = norm2(a(i:, i))
 		end if
 
-		s = -sign_(a(i, pivot(i)))
-		u1 = a(i, pivot(i)) - s * normx
-		a(i+1:, pivot(i)) = a(i+1:, pivot(i)) / u1
-		a(i, pivot(i)) = s * normx
-		diag_(i) = -s * u1 / normx
+		if (normx <= tol_) then
+			rank__ = rank__ - 1
+			cycle
+		end if
+
+		if (present(pivot)) then
+			ip = pivot(i)
+		else
+			ip = i
+		end if
+
+		s = -sign_(a(i, ip))
+		u1 = a(i, ip) - s * normx
+		a(i+1:, ip) = a(i+1:, ip) / u1
+		a(i, ip) = s * normx
+		diag__(i) = -s * u1 / normx
 
 		do k = i+1, n
-			wa = diag_(i) * (dot_product(a(i+1:, pivot(i)), a(i+1:, pivot(k))) + a(i, pivot(k)))
-			a(i, pivot(k)) = a(i, pivot(k)) - wa
-			a(i+1:, pivot(k)) = a(i+1:, pivot(k)) - a(i+1:, pivot(i)) * wa
+			if (present(pivot)) then
+				kp = pivot(k)
+			else
+				kp = k
+			end if
+			wa = diag__(i) * (dot_product(a(i+1:, ip), a(i+1:, kp)) + a(i, kp))
+			a(i, kp) = a(i, kp) - wa
+			a(i+1:, kp) = a(i+1:, kp) - a(i+1:, ip) * wa
 		end do
 
 	end do
 
-	!! TODO
-	!call qr_factor_f64(a, diag_, allow_singular = .true.)
-	!kr = qr_get_q_expl(a, diag_)
-	!kr = kr(:, rank_+1:)
-	!call print_mat(kr, "kr = ")
+	if (present(diag_)) diag_ = diag__
+	if (present(rank_)) rank_ = rank__
 
-	kernel = qr_get_q_expl(a, diag_, pivot)
-	kernel = kernel(:, rank_+1:)
-
-end function kernel
+end subroutine qr_core
 
 !********
 
@@ -990,9 +1049,8 @@ integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 
 	!********
 
-	character(len = :), allocatable :: msg
-	double precision :: s, normx, normj, u1, wa, diag_, tol_
-	integer :: i, j, k, n, max_index
+	double precision :: tol_
+	integer :: io
 	integer, allocatable :: pivot(:)
 	logical :: allow_rect_
 
@@ -1002,59 +1060,8 @@ integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 	if (present(allow_rect)) allow_rect_ = allow_rect
 	if (present(tol)) tol_ = tol
 
-	n = min(size(a,1), size(a,2))
-
-	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
-		msg = "matrix is not square in qr_rank()"
-		call PANIC(msg, present(iostat))
-		iostat = 1
-		return
-	end if
-
-	! Column pivot, not row pivot unlike LU factor.  Could just transpose
-	! everything, might not matter much
-	pivot = [(i, i = 1, n)]
-
-	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
-	rank_ = 0
-	do i = 1, n
-		rank_ = rank_ + 1
-
-		max_index = i
-		normx = norm2(a(i:, pivot(i)))
-		!print *, "normx = ", normx
-		do j = i+1, n
-			normj = norm2(a(i:, pivot(j)))
-			if (normj > normx) then
-				max_index = j
-				normx = normj
-			end if
-		end do
-		!print *, "normx = ", normx
-
-		! Swap cols
-		pivot([i, max_index]) = pivot([max_index, i])
-
-		!if (normx <= 0) then
-		if (normx <= tol_) then
-			rank_ = rank_ - 1
-			cycle
-			!exit
-		end if
-
-		s = -sign_(a(i, pivot(i)))
-		u1 = a(i, pivot(i)) - s * normx
-		a(i+1:, pivot(i)) = a(i+1:, pivot(i)) / u1
-		a(i, pivot(i)) = s * normx
-		diag_ = -s * u1 / normx
-
-		do k = i+1, n
-			wa = diag_ * (dot_product(a(i+1:, pivot(i)), a(i+1:, pivot(k))) + a(i, pivot(k)))
-			a(i, pivot(k)) = a(i, pivot(k)) - wa
-			a(i+1:, pivot(k)) = a(i+1:, pivot(k)) - a(i+1:, pivot(i)) * wa
-		end do
-
-	end do
+	call qr_core(a, tol = tol_, rank_ = rank_, pivot = pivot, iostat = io)
+	if (present(iostat)) iostat = io
 
 end function qr_rank
 
@@ -1200,7 +1207,7 @@ function qr_mul_mat_f64(qr, diag_, x, pivot) result(qx)
 	!********
 	double precision :: wq
 
-	integer :: j, k, n
+	integer :: j, jp, k, n
 
 	!print *, "qr = "
 	!print "(5es15.5)", qr
@@ -1208,25 +1215,18 @@ function qr_mul_mat_f64(qr, diag_, x, pivot) result(qx)
 	n = min(size(qr,1), size(qr,2))
 	qx = x  ! could make a subroutine version which replaces x instead
 
-	if (present(pivot)) then
-		do j = n, 1, -1
-			do k = 1, size(qr, 2)
-				wq = diag_(j) * (dot_product(qr(j+1:, pivot(j)), qx(j+1:, k)) + qx(j,k))
-				qx(j, k) = qx(j, k) - wq
-				qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, pivot(j)) * wq
-			end do
+	do j = n, 1, -1
+		if (present(pivot)) then
+			jp = pivot(j)
+		else
+			jp = j
+		end if
+		do k = 1, size(qr, 2)
+			wq = diag_(j) * (dot_product(qr(j+1:, jp), qx(j+1:, k)) + qx(j,k))
+			qx(j, k) = qx(j, k) - wq
+			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, jp) * wq
 		end do
-
-	else
-		do j = n, 1, -1
-			do k = 1, size(qr, 2)
-				wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
-				qx(j, k) = qx(j, k) - wq
-				qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
-			end do
-		end do
-
-	end if
+	end do
 
 	!print *, "qx = "
 	!print "(5es15.5)", qx
