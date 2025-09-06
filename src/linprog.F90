@@ -412,6 +412,8 @@ subroutine rs_gen_aux(c, a, b, x, basis, tol, iostat)
 		basis_ng(:), basis_ng_rows(:)
 	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:)
 
+	iostat = 0
+
 	m = size(a, 1)
 	n = size(a, 2)
 
