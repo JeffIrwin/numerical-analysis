@@ -68,6 +68,16 @@ jobs:
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
+
+    - if: matrix.os == 'macOS-latest'
+      name: Brew install gcc on mac
+      run: |
+        echo "find Cellar 1:"
+        find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib" || true
+        sudo cp $(find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib") /usr/local/lib
+        echo "find /usr/:"
+        find /usr/local/lib -name "libgfort*" || true
+
     - name: Test fynth on ${{ matrix.os }}
       run: |
         echo "find bin:"
