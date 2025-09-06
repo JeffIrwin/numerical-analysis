@@ -887,7 +887,7 @@ integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision :: s, normx, normj, u1, wa, diag_, amax, tol_
+	double precision :: s, normx, normj, u1, wa, diag_, tol_
 	integer :: i, j, k, n, max_index
 	integer, allocatable :: pivot(:)
 	logical :: allow_rect_
