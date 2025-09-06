@@ -34,13 +34,6 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    #- uses: rscohn2/setup-oneapi@v0
-    #  with:
-    #    list: true
-    #    components: |
-    #      ifx@2024.0.0
-    #      mkl@2024.0.0
-    #
 
     - if: matrix.os == 'ubuntu-latest'
       name: Test numerical-analysis on ubuntu-latest
@@ -73,6 +66,12 @@ jobs:
 
     - if: matrix.toolchain.compiler == 'intel'
       name: Test numa on ${{ matrix.os }}
+      uses: rscohn2/setup-oneapi@v0
+      with:
+        list: true
+        components: |
+          ifx@2024.2.0
+          mkl@2024.2.0
       run: |
         fpm run --example --profile debug --flag "-qmkl -standard-semantics"
         fpm run --example --profile release --flag "-qmkl -standard-semantics"
