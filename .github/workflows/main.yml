@@ -42,7 +42,6 @@ jobs:
       run: |
         brew install gcc@12
         brew reinstall gcc@12
-        find /opt/homebrew/bin -name "libgfort*"
 
     - if: matrix.os == 'ubuntu-latest'
       name: Test numerical-analysis on ubuntu-latest
@@ -66,6 +65,10 @@ jobs:
         version: ${{ matrix.toolchain.version }}
     - name: Test fynth on ${{ matrix.os }}
       run: |
+        echo "find bin:"
+        find /opt/homebrew/bin -name "libgfort*"
+        echo "find Cellar:"
+        find /opt/homebrew/Cellar -name "libgfort*"
         fpm run --example --profile debug
         fpm run --example --profile release
         fpm test --profile debug
