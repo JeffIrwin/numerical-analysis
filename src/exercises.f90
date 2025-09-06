@@ -3079,23 +3079,29 @@ integer function chapter_4_rank() result(nfail)
 		], &
 		[4, 4] &
 	)
+
 	a0 = a
 	rank_ = qr_rank(a)
 	print *, "qr_rank 4x4 = ", rank_
 	call test(1.d0 * rank_, 3.d0, 1.d-14, nfail, "qr_rank 8")
 
 	a = a0
-
-	a = transpose(a)
-	call qr_factor_f64(a, diag_, allow_singular = .true.)
-	kr = qr_get_q_expl(a, diag_)
-	kr = kr(:, rank_+1:)
+	kr = kernel(a)
 	call print_mat(kr, "kr = ")
-
 	delta = norm2(matmul(a0, kr))
+	call test(delta, 0.d0, 1.d-9, nfail, "kernel 4x4 1")
 
-	!! TODO: needs pivoting
-	!call test(delta, 0.d0, 1.d-9, nfail, "kernel 4x4")
+	a = transpose(a0)
+	a0 = a
+	rank_ = qr_rank(a)
+	print *, "qr_rank 4x4 = ", rank_
+	call test(1.d0 * rank_, 3.d0, 1.d-14, nfail, "qr_rank 9")
+
+	a = a0
+	kr = kernel(a)
+	call print_mat(kr, "kr = ")
+	delta = norm2(matmul(a0, kr))
+	call test(delta, 0.d0, 1.d-9, nfail, "kernel 4x4 2")
 
 	!********
 
@@ -3169,25 +3175,9 @@ integer function chapter_4_rank() result(nfail)
 		!********
 		a = a0
 
-		! TODO: make this a kernel() fn.  It's better than lu_kernel() because
-		! it can return the whole kernel, not just one dimension of it. Maybe
-		! include a left/right option to determine whether to transpose?
-		a = transpose(a)
-		!call qr_factor(a, diag_)
-		!call qr_factor(a, diag_, allow_singular = .true.)
-		call qr_factor_f64(a, diag_, allow_singular = .true.)
-
-		kr = qr_get_q_expl(a, diag_)
-		!kr = qr_mul_transpose(a, diag_, eye(n))
-		kr = kr(:, rank_+1:)
-		!call print_mat(kr, "kr = ")
-		kr1 = kr(:, size(kr,2))
-
-		!kr1 = kr(n,:)
-		!print *, "kr1 = ", kr1
+		kr = kernel(a)
 
 		call test(norm2(matmul(a0, kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
-		!call test(norm2(matmul(transpose(a0), kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
 
 		delta = norm2(matmul(a0, kr))
 		call test(delta, 0.d0, 1.d-9, nfail, "kernel fuzz()")
@@ -3198,8 +3188,6 @@ integer function chapter_4_rank() result(nfail)
 
 		!print *, "a * kr1 = ", matmul(a0, kr1)
 		!print *, "norm    = ", norm2(matmul(a0, kr1))
-
-		if (isnan(delta)) stop
 
 		!print *, ""
 	end do

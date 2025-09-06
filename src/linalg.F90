@@ -866,6 +866,110 @@ end subroutine qr_factor_gram_schmidt
 
 !********
 
+function kernel(a, tol, allow_rect, iostat)
+	! Get the kernel of `a` using QR factorization
+	!
+	! Matrix `a` is modified in the process
+	!
+	! TODO: DRY kernel(), qr_rank(), and qr_factor_f64().  Need to make an
+	! optional `pivot` arg, false by default, but true for rank and kernel.  A
+	! core routine should provide qr factorization and opt out-arg rank
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+
+	double precision, optional, intent(in) :: tol
+	logical, optional, intent(in) :: allow_rect
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable :: kernel(:,:)
+
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: s, normx, normj, u1, wa, tol_
+	double precision, allocatable :: diag_(:)
+	integer :: i, j, k, n, max_index, rank_
+	integer, allocatable :: pivot(:)
+	logical :: allow_rect_
+
+	allow_rect_ = .false.
+	tol_ = 1.d-12
+	if (present(iostat)) iostat = 0
+	if (present(allow_rect)) allow_rect_ = allow_rect
+	if (present(tol)) tol_ = tol
+
+	n = min(size(a,1), size(a,2))
+
+	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
+		msg = "matrix is not square in kernel()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+	allocate(diag_(n))
+
+	! For the right kernel, a transposition is needed.  Otherwise the result is
+	! the left kernel
+	a = transpose(a)
+
+	! Column pivot, not row pivot unlike LU factor.  Could just transpose
+	! everything, might not matter much
+	pivot = [(i, i = 1, n)]
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	rank_ = 0
+	do i = 1, n
+		rank_ = rank_ + 1
+
+		max_index = i
+		normx = norm2(a(i:, pivot(i)))
+		!print *, "normx = ", normx
+		do j = i+1, n
+			normj = norm2(a(i:, pivot(j)))
+			if (normj > normx) then
+				max_index = j
+				normx = normj
+			end if
+		end do
+		!print *, "normx = ", normx
+
+		! Swap cols
+		pivot([i, max_index]) = pivot([max_index, i])
+
+		!if (normx <= 0) then
+		if (normx <= tol_) then
+			rank_ = rank_ - 1
+			cycle
+			!exit
+		end if
+
+		s = -sign_(a(i, pivot(i)))
+		u1 = a(i, pivot(i)) - s * normx
+		a(i+1:, pivot(i)) = a(i+1:, pivot(i)) / u1
+		a(i, pivot(i)) = s * normx
+		diag_(i) = -s * u1 / normx
+
+		do k = i+1, n
+			wa = diag_(i) * (dot_product(a(i+1:, pivot(i)), a(i+1:, pivot(k))) + a(i, pivot(k)))
+			a(i, pivot(k)) = a(i, pivot(k)) - wa
+			a(i+1:, pivot(k)) = a(i+1:, pivot(k)) - a(i+1:, pivot(i)) * wa
+		end do
+
+	end do
+
+	!! TODO
+	!call qr_factor_f64(a, diag_, allow_singular = .true.)
+	!kr = qr_get_q_expl(a, diag_)
+	!kr = kr(:, rank_+1:)
+	!call print_mat(kr, "kr = ")
+
+	kernel = qr_get_q_expl(a, diag_, pivot)
+	kernel = kernel(:, rank_+1:)
+
+end function kernel
+
+!********
+
 integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 	! Get the rank of `a` using QR factorization with Householder transformations
 	!
@@ -1088,10 +1192,11 @@ subroutine qr_factor_f64(a, diag_, allow_rect, allow_singular, iostat)
 
 end subroutine qr_factor_f64
 
-function qr_mul_mat_f64(qr, diag_, x) result(qx)
+function qr_mul_mat_f64(qr, diag_, x, pivot) result(qx)
 	! Implicitly multiply Q * x with a previously computed QR factorization `qr`
 	double precision, intent(in) :: qr(:,:), diag_(:), x(:,:)
 	double precision, allocatable :: qx(:,:)
+	integer, optional, intent(in) :: pivot(:)
 	!********
 	double precision :: wq
 
@@ -1103,13 +1208,25 @@ function qr_mul_mat_f64(qr, diag_, x) result(qx)
 	n = min(size(qr,1), size(qr,2))
 	qx = x  ! could make a subroutine version which replaces x instead
 
-	do j = n, 1, -1
-		do k = 1, size(qr, 2)
-			wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
-			qx(j, k) = qx(j, k) - wq
-			qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+	if (present(pivot)) then
+		do j = n, 1, -1
+			do k = 1, size(qr, 2)
+				wq = diag_(j) * (dot_product(qr(j+1:, pivot(j)), qx(j+1:, k)) + qx(j,k))
+				qx(j, k) = qx(j, k) - wq
+				qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, pivot(j)) * wq
+			end do
 		end do
-	end do
+
+	else
+		do j = n, 1, -1
+			do k = 1, size(qr, 2)
+				wq = diag_(j) * (dot_product(qr(j+1:, j), qx(j+1:, k)) + qx(j,k))
+				qx(j, k) = qx(j, k) - wq
+				qx(j+1:, k) = qx(j+1:, k) - qr(j+1:, j) * wq
+			end do
+		end do
+
+	end if
 
 	!print *, "qx = "
 	!print "(5es15.5)", qx
@@ -1180,16 +1297,21 @@ end function qr_mul_transpose_vec_f64
 
 !********
 
-function qr_get_q_expl_f64(qr, diag_) result(q)
+function qr_get_q_expl_f64(qr, diag_, pivot) result(q)
 	! Explicitly get the unitary Q matrix from a previously QR-decomposed
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
 	use numa__blarg
 	use numa__utils
 	double precision, intent(in) :: qr(:,:), diag_(:)
+	integer, optional, intent(in) :: pivot(:)
 	double precision, allocatable :: q(:,:)
 
-	q = qr_mul(qr, diag_, eye(size(qr,1)))
+	if (present(pivot)) then
+		q = qr_mul(qr, diag_, eye(size(qr,1)), pivot)
+	else
+		q = qr_mul(qr, diag_, eye(size(qr,1)))
+	end if
 
 end function qr_get_q_expl_f64
 
