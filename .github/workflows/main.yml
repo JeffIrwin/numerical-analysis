@@ -14,9 +14,14 @@ jobs:
       # Having multiple matrices (e.g. os *and* gfortran) will test every
       # possible combination of those two matrices!
       matrix:
-        os: [ubuntu-latest]
+        #os: [ubuntu-latest]
         #os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, windows-latest]
         #os: [ubuntu-latest, windows-latest, macOS-latest]
+        toolchain:
+          - {compiler: gcc, version: 12}
+          #- {compiler: gcc, version: 13}
+          #- {compiler: lfortran, version: '0.51.0'}
 
     steps:
 
@@ -33,7 +38,7 @@ jobs:
     #      mkl@2024.0.0
 
     - if: matrix.os == 'ubuntu-latest'
-      name: Test numerical-analysis
+      name: Test numerical-analysis on ubuntu-latest
       #env:
       #  FPM_FC: "ifx"
       run: |
@@ -44,6 +49,20 @@ jobs:
         gfortran --version
         ./test.sh
         #source /opt/intel/oneapi/setvars.sh
+
+    - uses: actions/checkout@v3
+    - uses: fortran-lang/setup-fpm@v7
+    - uses: fortran-lang/setup-fortran@v1
+      id: setup-fortran
+      with:
+        compiler: ${{ matrix.toolchain.compiler }}
+        version: ${{ matrix.toolchain.version }}
+    - name: Test fynth on ${{ matrix.os }}
+      run: |
+        fpm run --example --profile debug
+        fpm run --example --profile release
+        fpm test --profile debug
+        fpm test --profile release
 
   test-docker:
 
