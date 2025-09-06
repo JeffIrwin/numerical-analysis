@@ -44,7 +44,7 @@ jobs:
         brew reinstall gcc@12
         echo "find Cellar 1:"
         find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib" || true
-        cp $(find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib") /usr/local/lib
+        sudo cp $(find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib") /usr/local/lib
         echo "find /usr/:"
         find /usr/local/lib -name "libgfort*" || true
 
