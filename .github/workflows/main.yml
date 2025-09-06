@@ -63,12 +63,21 @@ jobs:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
 
-    - name: Test fynth on ${{ matrix.os }}
+    - if: matrix.toolchain.compiler != 'intel'
+      name: Test numa on ${{ matrix.os }}
       run: |
         fpm run --example --profile debug
         fpm run --example --profile release
         fpm test --profile debug
         fpm test --profile release
+
+    - if: matrix.toolchain.compiler == 'intel'
+      name: Test numa on ${{ matrix.os }}
+      run: |
+        fpm run --example --profile debug --flag "-qmkl -standard-semantics"
+        fpm run --example --profile release --flag "-qmkl -standard-semantics"
+        fpm test --profile debug --flag "-qmkl -standard-semantics"
+        fpm test --profile release --flag "-qmkl -standard-semantics"
 
   test-docker:
 
