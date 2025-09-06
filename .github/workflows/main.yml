@@ -44,14 +44,20 @@ jobs:
         gfortran --version
         ./test.sh
 
+    - if: matrix.os == 'windows-latest'
+      name: Setup fpm on windows-latest
+      run: |
+        winget install FortranLang.fpm
+        fpm --version
+
     - uses: actions/checkout@v3
     - uses: fortran-lang/setup-fpm@v7
-    - uses: fortran-lang/setup-fortran@v1
+    #- uses: fortran-lang/setup-fortran@v1
       id: setup-fortran
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
-    - if: true
+    - if: true  # yaml gets mad if you remove this because indentation is a dumb way to organize code
       name: Test numa on ${{ matrix.os }}
       run: |
         fpm run --example --profile debug
