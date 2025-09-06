@@ -51,6 +51,7 @@ jobs:
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
+    - if: true
       name: Test numa on ${{ matrix.os }}
       run: |
         fpm run --example --profile debug
