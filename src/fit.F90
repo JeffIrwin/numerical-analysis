@@ -29,7 +29,7 @@ function polyfit_lu(x, y, n, iostat) result(p)
 
 	character(len = :), allocatable :: msg
 	double precision, allocatable :: xx(:,:), xtx(:,:)
-	integer :: i, nx
+	integer :: i, nx, io
 
 	if (present(iostat)) iostat = 0
 
@@ -63,7 +63,13 @@ function polyfit_lu(x, y, n, iostat) result(p)
 	xtx = matmul(transpose(xx), xx)
 	p   = matmul(transpose(xx), y)
 
-	call lu_invmul(xtx, p)
+	call lu_invmul(xtx, p, io)
+	if (io /= 0) then
+		msg = "lu_invmul() failed in polyfit_lu()"
+		call PANIC(msg, present(iostat))
+		iostat = 4
+		return
+	end if
 	!print *, "p = ", p
 	!print *, "y = ", y
 

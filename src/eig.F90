@@ -132,7 +132,7 @@ end function eig_basic_qr
 
 !===============================================================================
 
-function eig_hess_qr(a, iters, eigvecs) result(eigvals)
+function eig_hess_qr(a, iters, eigvecs, iostat) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
 	! QR algorithm
 
@@ -142,13 +142,16 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	double precision, allocatable :: eigvals(:)
 	integer, intent(in) :: iters
 	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: h1, h2, rad, givens(2,2)
 	double precision, allocatable :: c(:), s(:), &
 		pq(:,:), r(:,:)
-	integer :: i, k, n
+	integer :: i, k, n, io
 
+	if (present(iostat)) iostat = 0
 	n = size(a, 1)
 	allocate(c(n-1), s(n-1))
 
@@ -226,7 +229,14 @@ function eig_hess_qr(a, iters, eigvecs) result(eigvals)
 	eigvecs = eye(n)
 	do i = 2, n
 		! scalar * eye could be optimized here to skip zeros
-		eigvecs(1: i-1, i) = invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i))
+		eigvecs(1: i-1, i) = invmul(r(i,i) * eye(i-1) - r(:i-1, :i-1), r(:i-1, i), io)
+
+		if (io /= 0) then
+			msg = "invmul() failed in eig_hess_qr()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
+		end if
 	end do
 	!print *, "R eigvecs = "
 	!print "(4es15.5)", eigvecs
@@ -314,7 +324,7 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 	double complex, allocatable :: ca(:,:), cq(:,:)
 	double precision, parameter :: eps = 1.d-10
 	double precision, allocatable :: pq(:,:)
-	integer :: i, n
+	integer :: i, n, io
 
 	if (present(iostat)) iostat = 0
 
@@ -391,7 +401,13 @@ function eig_lapack(aa, eigvecs, iostat) result(eigvals)
 	! Find the eigenvectors of triangular `ca`
 	eigvecs = eye(n)
 	do i = 2, n
-		eigvecs(1: i-1, i) = invmul(ca(i,i) * eye(i-1) - ca(:i-1, :i-1) , ca(:i-1, i))
+		eigvecs(1: i-1, i) = invmul(ca(i,i) * eye(i-1) - ca(:i-1, :i-1), ca(:i-1, i), io)
+		if (io /= 0) then
+			msg = "invmul() failed in eig_lapack()"
+			call PANIC(msg, present(iostat))
+			iostat = 2
+			return
+		end if
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
@@ -644,7 +660,13 @@ function eig_francis_qr(aa, eigvecs, iostat) result(eigvals)
 		!
 		!     https://netlib.org/lapack/explore-html/d2/d98/group__trevc3_gaee05b7252c5a3b2b935d5a4a6101033d.html
 		!
-		eigvecs(1: i-1, i) = invmul(ca(i,i) * eye(i-1) - ca(:i-1, :i-1) , ca(:i-1, i))
+		eigvecs(1: i-1, i) = invmul(ca(i,i) * eye(i-1) - ca(:i-1, :i-1), ca(:i-1, i), io)
+		if (io /= 0) then
+			msg = "invmul() failed in eig_francis_qr()"
+			call PANIC(msg, present(iostat))
+			iostat = 4
+			return
+		end if
 	end do
 	!print *, "R eigvecs = "
 	!print "("//to_str(n)//"es19.9)", eigvecs
@@ -734,7 +756,7 @@ end subroutine real_schur_to_complex
 
 !===============================================================================
 
-function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
+function eig_hess_qr_kernel(a, iters, eigvecs, iostat) result(eigvals)
 	! Get the real eigenvalues of `a` using `iters` iterations of the Hessenberg
 	! QR algorithm
 	!
@@ -746,12 +768,16 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 	double precision, allocatable :: eigvals(:)
 	integer, intent(in) :: iters
 	double precision, optional, allocatable, intent(out) :: eigvecs(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double precision :: h1, h2, rad, givens(2,2), eigval
 	double precision, allocatable :: c(:), s(:), a0(:,:), &
 		eigvec(:)
-	integer :: i, j, k, n
+	integer :: i, j, k, n, io
+
+	if (present(iostat)) iostat = 0
 
 	a0 = a
 
@@ -821,7 +847,13 @@ function eig_hess_qr_kernel(a, iters, eigvecs) result(eigvals)
 		!print *, "a = "
 		!print "(4es15.5)", a
 
-		eigvec = lu_kernel(a)
+		eigvec = lu_kernel(a, io)
+		if (io /= 0) then
+			msg = "lu_kernel() failed in eig_hess_qr_kernel()"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
+		end if
 
 		!********
 		!! Find null-space using QR decomposition.  This also works

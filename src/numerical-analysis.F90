@@ -36,11 +36,11 @@ module numa
 	!   * exercises need split up too
 	!   * consider using submodules to avoid recompilation cascades.  see
 	!     syntran's use of submodules in parse.f90 for example
-	! - Add ci/cd testing with ifx.  There are a couple workarounds in here
-	!   specifically for Intel, e.g. initialization of complex arrays
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
 	!   public fn.  See `lagrange_interpolator()` which has an example doc
 	!   string
+	! - Make a few more examples for interesting cases. Doesn't need to be
+	!   exhaustive, that's what the tests are for
 
 	integer, parameter :: &
 		NUMA_MAJOR = 0, &

@@ -9,6 +9,7 @@ module numa__linalg
 
 	!use numa__core
 	use numa__blarg
+	use numa__utils
 
 	implicit none
 
@@ -88,7 +89,6 @@ subroutine tridiag_factor(a, iostat)
 	!
 	!     https://github.com/JeffIrwin/ribbit/blob/ec868aa3db96258b95909f3101434128fc42428f/src/ribbit.f90#L1722
 
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	integer, optional, intent(out) :: iostat
 	!********
@@ -186,7 +186,6 @@ subroutine tridiag_invmul(a, bx, iostat)
 	!
 	! See exercises.f90 for an example of how to pack the `a` matrix
 
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: bx(:)  ! could be extended to rank-2 for multiple RHS's
 	integer, optional, intent(out) :: iostat
@@ -225,7 +224,6 @@ subroutine tridiag_corner_invmul(aa, bx, iostat)
 	!   - https://www.cfd-online.com/Wiki/Tridiagonal_matrix_algorithm_-_TDMA_(Thomas_algorithm)
 	!   - https://sachinashanbhag.blogspot.com/2014/03/cyclic-tridiagonal-matrices.html
 
-	use numa__utils
 	double precision, intent(inout) :: aa(:,:)
 	double precision, intent(inout) :: bx(:)
 	integer, optional, intent(out)  :: iostat
@@ -293,8 +291,6 @@ subroutine banded_factor(a, al, indx, nl, nu, iostat)
 	!
 	! Compare the interface of lapack routines dgbtrf() (factor) and dgbtrs()
 	! (solve) vs dgbsv() (combined factor-solve)
-
-	use numa__utils
 
 	! Reconsider the order of arguments -- maybe in(out) first and out last.  Or
 	! perhaps it's better to leave as-is for consistency with banded_solve()
@@ -474,7 +470,7 @@ end subroutine banded_invmul
 
 !===============================================================================
 
-function invmul_vec_c64(a, b) result(x)
+function invmul_vec_c64(a, b, iostat) result(x)
 	! Solve the linear algebra problem for `x`:
 	!
 	!     a * x = b
@@ -482,13 +478,15 @@ function invmul_vec_c64(a, b) result(x)
 	double complex, intent(in) :: a(:,:)
 	double complex, intent(in) :: b(:)
 	double complex, allocatable :: x(:)
-
+	integer, optional, intent(out) :: iostat
 	!********
 
+	character(len = :), allocatable :: msg
 	double complex, allocatable :: aa(:,:)
-
-	integer :: i
+	integer :: i, io
 	integer, allocatable :: pivot(:)
+
+	if (present(iostat)) iostat = 0
 
 	x = b
 	aa = a
@@ -496,8 +494,13 @@ function invmul_vec_c64(a, b) result(x)
 	! Initialize pivot to identity
 	pivot = [(i, i = 1, size(aa,1))]
 
-	! TODO: most calls to lu_factor() should check iostat
-	call lu_factor(aa, pivot)
+	call lu_factor(aa, pivot, iostat = io)
+	if (io /= 0) then
+		msg = "lu_factor() failed in invmul_vec_c64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	!print *, "pivot = ", pivot
 	!print *, "lu_factor(aa) = "
@@ -508,23 +511,33 @@ function invmul_vec_c64(a, b) result(x)
 
 end function invmul_vec_c64
 
-subroutine lu_invmul_vec(a, bx)
+subroutine lu_invmul_vec(a, bx, iostat)
 	! Solve the linear algebra problem for `x`:
 	!
 	!     a * x = b
 
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: bx(:)
+	integer, optional, intent(out) :: iostat
 
 	!********
 
-	integer :: i
+	character(len = :), allocatable :: msg
+	integer :: i, io
 	integer, allocatable :: pivot(:)
+
+	if (present(iostat)) iostat = 0
 
 	! Initialize pivot to identity
 	pivot = [(i, i = 1, size(a,1))]
 
-	call lu_factor(a, pivot)
+	call lu_factor(a, pivot, iostat = io)
+	if (io /= 0) then
+		msg = "lu_factor() failed in lu_invmul_vec()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	!print *, "pivot = ", pivot
 	!print *, "lu_factor(a) = "
@@ -537,51 +550,81 @@ end subroutine lu_invmul_vec
 
 !********
 
-function invmul_vec_f64(a, b) result(x)
+function invmul_vec_f64(a, b, iostat) result(x)
 	double precision, intent(in)  :: a(:,:)
 	double precision, intent(in)  :: b(:)
 	double precision, allocatable :: x(:)
+	integer, optional, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	double precision, allocatable :: aa(:,:)
+	integer :: io
 
+	if (present(iostat)) iostat = 0
 	x = b
 	aa = a
-	call lu_invmul(aa, x)
+	call lu_invmul(aa, x, io)
+	if (io /= 0) then
+		msg = "lu_invmul() failed in invmul_vec_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 end function invmul_vec_f64
 
-function invmul_mat_f64(a, b) result(x)
+function invmul_mat_f64(a, b, iostat) result(x)
 	double precision, intent(in)  :: a(:,:)
 	double precision, intent(in)  :: b(:,:)
 	double precision, allocatable :: x(:,:)
+	integer, optional, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	double precision, allocatable :: aa(:,:)
+	integer :: io
 
+	if (present(iostat)) iostat = 0
 	x = b
 	aa = a
-	call lu_invmul(aa, x)
+	call lu_invmul(aa, x, io)
+	if (io /= 0) then
+		msg = "lu_invmul() failed in invmul_mat_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 end function invmul_mat_f64
 
 !********
 
-subroutine lu_invmul_mat(a, bx)
+subroutine lu_invmul_mat(a, bx, iostat)
 	! Solve the linear algebra problem for `x`:
 	!
 	!     a * x = b
 
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: bx(:,:)
+	integer, optional, intent(out) :: iostat
 
 	!********
 
-	integer :: i, nrhs
+	character(len = :), allocatable :: msg
+	integer :: i, nrhs, io
 	integer, allocatable :: pivot(:)
+
+	if (present(iostat)) iostat = 0
 
 	! Initialize pivot to identity
 	pivot = [(i, i = 1, size(a,1))]
 
-	call lu_factor(a, pivot)
+	call lu_factor(a, pivot, iostat = io)
+	if (io /= 0) then
+		msg = "lu_factor() failed in lu_invmul_mat()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	!print *, "pivot = ", pivot
 	!print *, "lu_factor(a) = "
@@ -602,7 +645,6 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 	!! Make pivoting optional (for comparison to other solvers)
 	!logical, parameter :: DO_PIVOT = .false.
 
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	integer, allocatable, intent(inout) :: pivot(:)
 	integer, optional, intent(out) :: iostat
@@ -694,7 +736,6 @@ end subroutine lu_factor_f64
 
 subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 
-	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 	integer, allocatable, intent(inout) :: pivot(:)
 	logical, optional, intent(in) :: allow_singular
@@ -778,7 +819,6 @@ subroutine cholesky_factor(a, allow_singular, iostat)
 	! Cholesky factorization is only possible for positive definite matrices
 	! `a`!  There is no enforcement here
 
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	logical, optional, intent(in) :: allow_singular
 	integer, optional, intent(out) :: iostat
@@ -871,7 +911,6 @@ function kernel(a, tol, iostat)
 	! in any particular way
 	!
 	! Matrix `a` is modified in the process
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, optional, intent(in) :: tol
@@ -914,7 +953,6 @@ end function kernel
 !********
 
 subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, optional, allocatable, intent(out) :: diag_(:)
@@ -1025,10 +1063,10 @@ integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 	! confused with the Fortran intrinsic sense of "rank", which is a built-in
 	! fn being 2 for all matrices
 	!
-	! TODO: rename just rank_?
+	! TODO: rename just rank_? Then there will probably be `rank_` vars which
+	! clash with the fn -- worth it
 	!
 	! Matrix `a` is modified in the process
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, optional, intent(in) :: tol
@@ -1062,7 +1100,6 @@ logical function is_full_rank(a, allow_rect, iostat)
 	!
 	! This uses 0 tolerance.  If you want rank calculation with a tolerance, use
 	! qr_rank() instead
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	logical, optional, intent(in) :: allow_rect
@@ -1120,7 +1157,6 @@ end function is_full_rank
 
 subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, allocatable, intent(out) :: diag_(:)
@@ -1251,7 +1287,6 @@ function qr_get_q_expl_f64(qr, diag_, pivot) result(q)
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
 	use numa__blarg
-	use numa__utils
 	double precision, intent(in) :: qr(:,:), diag_(:)
 	integer, optional, intent(in) :: pivot(:)
 	double precision, allocatable :: q(:,:)
@@ -1269,7 +1304,6 @@ end function qr_get_q_expl_f64
 subroutine qr_factor_c64(a, diag_, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
 	use numa__blarg
-	use numa__utils
 	double complex, intent(inout) :: a(:,:)
 
 	double complex, allocatable, intent(out) :: diag_(:)
@@ -1356,7 +1390,6 @@ function qr_get_q_expl_c64(qr, diag_) result(q)
 	! matrix.  In most cases you will want to avoid using this fn and just
 	! implicitly multiply something by Q instead using qr_mul()
 	use numa__blarg
-	use numa__utils
 	double complex, intent(in) :: qr(:,:), diag_(:)
 	double complex, allocatable :: q(:,:)
 
@@ -1531,7 +1564,6 @@ end subroutine invert
 
 subroutine gauss_jordan(a, iostat)
 	! Use the Gauss-Jordan method to replace matrix `a` with its inverse
-	use numa__utils
 	double precision, allocatable, intent(inout) :: a(:,:)
 	integer, optional, intent(out) :: iostat
 
@@ -1612,7 +1644,6 @@ end subroutine gauss_jordan
 
 function matmul_triu_ge(upper, ge, iostat) result(res)
 	! Multiply an upper-triangular matrix by a general dense matrix
-	use numa__utils
 	double precision, intent(in) :: upper(:,:), ge(:,:)
 	double precision, allocatable :: res(:,:)
 	integer, optional, intent(out) :: iostat
@@ -1651,57 +1682,73 @@ end function matmul_triu_ge
 
 !===============================================================================
 
-function lu_kernel_f64(a) result(kernel)
-	! Find the kernel or null-space of `a` using LU decomposition.  This only
+function lu_kernel_f64(a, iostat) result(kr)
+	! Find the kernel `kr` or null-space of `a` using LU decomposition.  This only
 	! returns 1 vector of the kernel, not the whole kernel basis
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
-	double precision, allocatable :: kernel(:)
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable :: kr(:)
 
-	integer :: i, n
+	character(len = :), allocatable :: msg
+	integer :: i, n, io
 	integer, allocatable :: pivot(:)
 
+	if (present(iostat)) iostat = 0
 	n = size(a, 1)
-	kernel = zeros(n)
+	kr = zeros(n)
 
 	! The kernel of `a` is the same as `u`
 
 	pivot = [(i, i = 1, size(a,1))]
-	call lu_factor(a, pivot, allow_singular = .true.)
+	call lu_factor(a, pivot, allow_singular = .true., iostat = io)
+	if (io /= 0) then
+		msg = "lu_factor() failed in lu_kernel_f64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	! Partial backsub
-	kernel(n) = 1.d0
+	kr(n) = 1.d0
 	do i = n-1, 1, -1
-		kernel(i) = &
-			-dot_product(kernel(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
+		kr(i) = &
+			-dot_product(kr(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
 	end do
 
 end function lu_kernel_f64
 
 !===============================================================================
 
-function lu_kernel_c64(a) result(kernel)
+function lu_kernel_c64(a, iostat) result(kr)
 	! Find the kernel or null-space of `a` using LU decomposition
-	use numa__utils
 	double complex, intent(inout) :: a(:,:)
-	double complex, allocatable :: kernel(:)
+	integer, optional, intent(out) :: iostat
+	double complex, allocatable :: kr(:)
 
-	integer :: i, n
+	character(len = :), allocatable :: msg
+	integer :: i, n, io
 	integer, allocatable :: pivot(:)
 
+	if (present(iostat)) iostat = 0
 	n = size(a, 1)
-	kernel = zeros(n)
+	kr = zeros(n)
 
 	! The kernel of `a` is the same as `u`
 
 	pivot = [(i, i = 1, size(a,1))]
-	call lu_factor(a, pivot, allow_singular = .true.)
+	call lu_factor(a, pivot, allow_singular = .true., iostat = io)
+	if (io /= 0) then
+		msg = "lu_factor() failed in lu_kernel_c64()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
 
 	! Partial backsub
-	kernel(n) = 1.d0
+	kr(n) = 1.d0
 	do i = n-1, 1, -1
-		kernel(i) = &
-			-dot_product(conjg(kernel(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i), i)
+		kr(i) = &
+			-dot_product(conjg(kr(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i), i)
 	end do
 
 end function lu_kernel_c64
@@ -1711,7 +1758,6 @@ end function lu_kernel_c64
 function qr_solve_f64(a, b, allow_rect, iostat) result(x)
 	! This can be a regular linear system solver, or with allow_rect, a
 	! least-squares solver
-	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(in) :: b(:)
 	logical, optional, intent(in) :: allow_rect

@@ -682,7 +682,13 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 		basis_column = basis(ib)
 		bb = a(:, basis)
-		basis_finder = abs(invmul(bb, a))
+		basis_finder = abs(invmul(bb, a, io))
+		if (io /= 0) then
+			msg = "invmul() failed in revised simplex"
+			call PANIC(msg, present(iostat))
+			iostat = 1
+			return
+		end if
 
 		i1 = maxloc(basis_finder(:, basis_column))
 		pertinent_row = i1(1)
@@ -741,7 +747,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 	double precision :: th_star
 	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
 		u(:), th(:)
-	integer :: i, j, l, i1(1), m, n, iteration
+	integer :: i, j, l, i1(1), m, n, iteration, io
 	integer, allocatable :: a(:), ab(:), ipos(:)
 	logical :: converged
 	logical, allocatable :: bl(:)
@@ -771,7 +777,14 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 		xb = x(b)
 		cb = c(b)
 
-		v = invmul(transpose(bb), cb)
+		v = invmul(transpose(bb), cb, io)
+		if (io /= 0) then
+			msg = "invmul() failed in revised simplex phase 2"
+			call PANIC(msg, .true.)
+			iostat = 1
+			return
+		end if
+
 		c_hat = c - matmul(v, aa)
 
 		!print *, "c = ", c
@@ -799,7 +812,13 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 		end do
 		!print *, "j = ", j
 
-		u = invmul(bb, aa(:,j))
+		u = invmul(bb, aa(:,j), io)
+		if (io /= 0) then
+			msg = "invmul() failed in revised simplex phase 2"
+			call PANIC(msg, .true.)
+			iostat = 1
+			return
+		end if
 		!print *, "u = ", u
 
 		! If none of `u` are positive, unbounded
