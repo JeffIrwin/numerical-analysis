@@ -62,8 +62,8 @@ jobs:
     - if: matrix.os == 'macOS-latest'
       name: Brew install gcc on mac
       run: |
-        #brew install gcc@12
-        #brew reinstall gcc@12
+        brew install gcc@12
+        brew reinstall gcc@12
         echo "find Cellar 1:"
         find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib" || true
         echo "find opt 1:"
