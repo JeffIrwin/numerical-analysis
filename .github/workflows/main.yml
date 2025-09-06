@@ -21,11 +21,11 @@ jobs:
         toolchain:
           - {compiler: gcc, version: 12}
           - {compiler: gcc, version: 13}
-          - {compiler: intel, version: 2024.2}
+          #- {compiler: intel, version: 2024.2}
           #- {compiler: lfortran, version: '0.51.0'}
-        exclude:
-          - os: windows-latest
-            toolchain: {compiler: intel, version: 2024.2}
+        #exclude:
+        #  - os: windows-latest
+        #    toolchain: {compiler: intel, version: 2024.2}
 
     steps:
 
@@ -34,11 +34,8 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
-
     - if: matrix.os == 'ubuntu-latest'
       name: Test numerical-analysis on ubuntu-latest
-      #env:
-      #  FPM_FC: "ifx"
       run: |
         curl -L -o ./fpm https://github.com/fortran-lang/fpm/releases/download/current/fpm-linux-x86_64-gcc-12
         chmod +x fpm
@@ -46,7 +43,6 @@ jobs:
         fpm --version
         gfortran --version
         ./test.sh
-        #source /opt/intel/oneapi/setvars.sh
 
     - uses: actions/checkout@v3
     - uses: fortran-lang/setup-fpm@v7
@@ -55,9 +51,6 @@ jobs:
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
-        install_mkl: "true"
-
-    - if: matrix.toolchain.compiler != 'intel'
       name: Test numa on ${{ matrix.os }}
       run: |
         fpm run --example --profile debug
@@ -65,27 +58,23 @@ jobs:
         fpm test --profile debug
         fpm test --profile release
 
-    - if: matrix.toolchain.compiler == 'intel'
-      name: Test numa on ${{ matrix.os }}
-      #uses: rscohn2/setup-oneapi@v0
-      #with:
-      #  list: true
-      #  components: |
-      #    ifx@2024.2.0
-      #    mkl@2024.2.0
-      run: |
-        fpm run --example --profile debug --flag "-qmkl -standard-semantics"
-        fpm run --example --profile release --flag "-qmkl -standard-semantics"
-        fpm test --profile debug --flag "-qmkl -standard-semantics"
-        fpm test --profile release --flag "-qmkl -standard-semantics"
+  test-docker-gfortran:
 
-  test-docker:
-
-    name: Test in docker
+    name: Test gfortran in docker
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Test in docker
       run: |
-        docker build . -t rocky
+        docker build . -t numa
+
+  test-docker-ifx:
+
+    name: Test ifx in docker
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Test in docker
+      run: |
+        docker build . -t numa --file Dockerfile.ifx
 

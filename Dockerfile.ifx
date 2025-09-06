@@ -1,0 +1,37 @@
+
+#FROM intel/oneapi-hpckit:latest
+FROM intel/oneapi-hpckit:2025.2.2-0-devel-rockylinux9
+
+WORKDIR /workdir
+
+#RUN apt update -y && \
+#	apt install -y \
+#	git
+
+RUN dnf update -y && \
+	dnf install -y \
+	git
+
+#RUN gfortran --version
+RUN ifx --version
+
+ADD https://github.com/fortran-lang/fpm/releases/download/current/fpm-linux-x86_64-gcc-12 ./fpm
+RUN chmod +x fpm
+RUN mv fpm /usr/local/bin
+RUN fpm --version
+
+ARG BRANCH="main"
+RUN echo "BRANCH = $BRANCH"
+
+RUN echo 2
+RUN git clone https://github.com/jeffirwin/numerical-analysis --branch "$BRANCH"
+WORKDIR /workdir/numerical-analysis
+
+ENV FLAGS="-qmkl -standard-semantics"
+
+RUN fpm run --example --profile debug --compiler ifx --flag "${FLAGS}"
+RUN fpm run --example --profile release --compiler ifx --flag "${FLAGS}"
+
+RUN fpm test --profile debug --compiler ifx --flag "${FLAGS}"
+RUN fpm test --profile release --compiler ifx --flag "${FLAGS}"
+
