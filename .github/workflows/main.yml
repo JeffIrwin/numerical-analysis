@@ -46,8 +46,9 @@ jobs:
 
     - if: matrix.os == 'windows-latest'
       name: Setup fpm on windows-latest
+      shell: cmd
       run: |
-        winget install FortranLang.fpm
+        %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\winget install FortranLang.fpm
         fpm --version
 
     - uses: actions/checkout@v3
