@@ -866,7 +866,7 @@ end subroutine qr_factor_gram_schmidt
 
 !********
 
-function kernel(a, tol, allow_rect, iostat)
+function kernel(a, tol, iostat)
 	! Get the kernel of `a` using QR factorization
 	!
 	! Matrix `a` is modified in the process
@@ -878,7 +878,6 @@ function kernel(a, tol, allow_rect, iostat)
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, optional, intent(in) :: tol
-	logical, optional, intent(in) :: allow_rect
 	integer, optional, intent(out) :: iostat
 	double precision, allocatable :: kernel(:,:)
 
@@ -889,23 +888,12 @@ function kernel(a, tol, allow_rect, iostat)
 	double precision, allocatable :: diag_(:)
 	integer :: n, rank_, io
 	integer, allocatable :: pivot(:)
-	logical :: allow_rect_
 
-	allow_rect_ = .false.
 	tol_ = 1.d-12
 	if (present(iostat)) iostat = 0
-	if (present(allow_rect)) allow_rect_ = allow_rect ! TODO unused
 	if (present(tol)) tol_ = tol
 
 	n = min(size(a,1), size(a,2))
-
-	! TODO: size check is redundant because it also happens in qr_core()
-	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
-		msg = "matrix is not square in kernel()"
-		call PANIC(msg, present(iostat))
-		iostat = 1
-		return
-	end if
 
 	! For the right kernel, a transposition is needed.  Otherwise the result is
 	! the left kernel
@@ -1060,7 +1048,7 @@ integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 	if (present(allow_rect)) allow_rect_ = allow_rect
 	if (present(tol)) tol_ = tol
 
-	call qr_core(a, tol = tol_, rank_ = rank_, pivot = pivot, iostat = io)
+	call qr_core(a, tol = tol_, rank_ = rank_, allow_rect = allow_rect_, pivot = pivot, iostat = io)
 	if (present(iostat)) iostat = io
 
 end function qr_rank
@@ -1129,66 +1117,24 @@ end function is_full_rank
 
 !********
 
-subroutine qr_factor_f64(a, diag_, allow_rect, allow_singular, iostat)
+subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, allocatable, intent(out) :: diag_(:)
-	logical, optional, intent(in) :: allow_rect, allow_singular
+	logical, optional, intent(in) :: allow_rect
 	integer, optional, intent(out) :: iostat
 
 	!********
 
-	character(len = :), allocatable :: msg
-	double precision :: s, normx, u1, wa
-	integer :: j, k, n
-	logical :: allow_rect_, allow_singular_
+	logical :: allow_rect_
 
 	allow_rect_ = .false.
-	allow_singular_ = .false.
 	if (present(iostat)) iostat = 0
 	if (present(allow_rect)) allow_rect_ = allow_rect
-	if (present(allow_singular)) allow_singular_ = allow_singular
 
-	n = min(size(a,1), size(a,2))
-
-	allocate(diag_(n))
-	diag_ = 0.d0
-
-	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
-		msg = "matrix is not square in qr_factor_f64()"
-		call PANIC(msg, present(iostat))
-		iostat = 1
-		return
-	end if
-
-	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
-	do j = 1, n
-
-		normx = norm2(a(j:, j))
-		if (normx <= 0 .and. .not. allow_singular_) then
-			msg = "matrix is singular in qr_factor_f64()"
-			call PANIC(msg, present(iostat))
-			iostat = 2
-			return
-		end if
-
-		s = -sign_(a(j,j))
-		u1 = a(j,j) - s * normx
-		a(j+1:, j) = a(j+1:, j) / u1
-		a(j,j) = s * normx
-		diag_(j) = -s * u1 / normx
-
-		do k = j+1, n
-			wa = diag_(j) * (dot_product(a(j+1:, j), a(j+1:, k)) + a(j,k))
-			a(j,k) = a(j,k) - wa
-			a(j+1:, k) = a(j+1:, k) - a(j+1:, j) * wa
-		end do
-
-	end do
-	!print *, "diag_ = "
-	!print "(es15.5)", diag_
+	call qr_core(a, diag_, allow_rect = allow_rect_, iostat = iostat)
 
 	! In the end, `R` is formed by zeroing appropriate elements of `a`
 	!

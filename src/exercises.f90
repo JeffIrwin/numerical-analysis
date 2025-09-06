@@ -2973,7 +2973,7 @@ integer function chapter_4_rank() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_rank"
 
 	double precision :: delta
-	double precision, allocatable :: a(:,:), a0(:,:), kr1(:), kr(:,:)
+	double precision, allocatable :: a(:,:), a0(:,:), kr(:,:)
 	integer :: i, n, rank_, rank_expect, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -3123,14 +3123,10 @@ integer function chapter_4_rank() result(nfail)
 		call random_number(a)  ! fully random a
 		!call print_mat(a, "a = ")
 
-		! TODO: rank < 2 doesn't work for kernel(). Might need pivoting or early
-		! exit
-		rank_expect = max(rand_i32(n), 2)
-		!rank_expect = rand_i32(n)
+		rank_expect = rand_i32(n)
 
 		!rank_expect = n  ! edge cases work
 		!rank_expect = 0
-		!rank_expect = n - 2  ! TODO
 
 		!print *, "n            = ", n
 		!print *, "rank_expect  = ", rank_expect
@@ -3163,21 +3159,8 @@ integer function chapter_4_rank() result(nfail)
 
 		!********
 		a = a0
-		kr1 = lu_kernel(a)
-		!print *, "kr1 = ", kr1
-
-		call test(norm2(matmul(a0, kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
-
-		!print *, "a * kr1 = ", matmul(a0, kr1)
-		!print *, "norm    = ", norm2(matmul(a0, kr1))
-		!print *, ""
-
-		!********
-		a = a0
 
 		kr = kernel(a)
-
-		call test(norm2(matmul(a0, kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
 
 		delta = norm2(matmul(a0, kr))
 		call test(delta, 0.d0, 1.d-9, nfail, "kernel fuzz()")
@@ -3185,9 +3168,6 @@ integer function chapter_4_rank() result(nfail)
 		!call print_mat(matmul(a0, kr), "a * kr = ")
 		!print *, "a * kr = ", matmul(a0, kr)
 		!print *, "norm    = ", norm2(matmul(a0, kr))
-
-		!print *, "a * kr1 = ", matmul(a0, kr1)
-		!print *, "norm    = ", norm2(matmul(a0, kr1))
 
 		!print *, ""
 	end do
