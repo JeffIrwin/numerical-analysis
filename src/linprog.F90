@@ -392,60 +392,25 @@ end function linprog
 
 !===============================================================================
 
-function linprog_rs(c, a, b, tol, iters, iostat) result(x)
-	! Revised simplex method
-	!
-	! Minimize:
-	!
-	!     dot_product(c, x)
-	!
-	! Subject to:
-	!
-	!     matmul(a, x) == b
-	!     all(x >= 0)
-	!
-	! Note that *standard* form is different from *canonical* form
-
-	use numa__blarg
-	use numa__utils
-
+subroutine rs_gen_aux(c, a, b, x, basis, tol, iostat)
+	! Generate auxiliary problem for revised simplex
 	double precision, allocatable, intent(inout) :: c(:)
 	double precision, allocatable, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: b(:)
+	double precision, allocatable, intent(inout) :: x(:)
+	integer, allocatable, intent(out) :: basis(:)
+	double precision, intent(in) :: tol
+	integer, intent(out) :: iostat
 
-	double precision, optional, intent(in) :: tol
-	integer, optional, intent(in) :: iters
-	integer, optional, intent(out) :: iostat
-	double precision, allocatable :: x(:)
 	!********
 
 	character(len = :), allocatable :: msg
-	double precision :: tol_, residual, dmax
-	double precision, allocatable :: r(:), bb(:,:), basis_finder(:,:), c0(:)
-	integer :: i, m, n, iters_, i1(1), n_aux, ib, basis_column, &
-		pertinent_row, new_basis_column, io
-	integer, allocatable :: basis(:), cols(:), rows(:), ineg(:), &
+	double precision, allocatable :: r(:)
+	integer :: i, m, n, n_aux, io
+	integer, allocatable :: cols(:), rows(:), ineg(:), &
 		nonzero_constraints(:), i_fix_without_aux(:), arows(:), acols(:), &
 		basis_ng(:), basis_ng_rows(:)
-	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:), &
-		keep_rows(:), eligible_columns(:)
-
-	if (present(iostat)) iostat = 0
-	x = [0]
-
-	tol_ = 1.d-10
-	if (present(tol)) tol_ = tol
-
-	iters_ = 1000
-	if (present(iters)) iters_ = iters
-
-	! Backup before overwriting with aux problem
-	c0 = c
-	!print *, "c = ", c
-	!stop
-
-	!********
-	! Generate auxiliary problem
+	logical, allocatable :: l_tofix(:), l_notinbasis(:), l_fix_without_aux(:)
 
 	m = size(a, 1)
 	n = size(a, 2)
@@ -467,32 +432,26 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	basis = mask_to_index(abs(x) > tol)
 	!print *, "basis = ", basis
 
-	!    if len(nonzero_constraints) == 0 and len(basis) <= m:  # already a BFS
-	!        c = np.zeros(n)
-	!        basis = _get_more_basis_columns(A, basis)
-	!        return A, b, c, basis, x, status
-	!    elif (len(nonzero_constraints) > m - len(basis) or
-	!          np.any(x < 0)):  # can't get trivial BFS
-	!        c = np.zeros(n)
-	!        status = 6
-	!        return A, b, c, basis, x, status
-
 	if (size(nonzero_constraints) == 0 .and. size(basis) <= m) then
-		print *, "TODO: already a basic feasible solution"
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": untested execution path. Auxiliary problem is already a basic" &
+			// " feasible solution in revised simplex"
 
-		! TODO:  this is not actually a problem.  We just need to
-		! _get_more_basis_columns(), set c 0, and skip the rest of
-		! _generate_auxiliary_problem().  Could use goto, but should probably
-		! refactor auxiliary probably as an actual routine so I can just return
-		! early
-
-		stop
+		c = zeros(n)
+		basis = lp_get_more_cols(a, basis, io)
+		if (io /= 0) then
+			msg = "lp_get_more_cols() failed in revised simplex"
+			call PANIC(msg, .true.)
+			iostat = 11
+			return
+		end if
+		return
 
 	else if (size(nonzero_constraints) > m - size(basis) .or. &
 		any(x < 0)) then
 
 		msg = "problem is infeasible for trivial basis in linprog_rs()"
-		call PANIC(msg, present(iostat))
+		call PANIC(msg, .true.)
 		iostat = 1
 		return
 	end if
@@ -546,7 +505,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	call lp_unique(row_indices, unique_row_indices, first_columns, io)
 	if (io /= 0) then
 		msg = "lp_unique() failed in revised simplex"
-		call PANIC(msg, present(iostat))
+		call PANIC(msg, .true.)
 		iostat = 10
 		return
 	end if
@@ -614,14 +573,86 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	basis = lp_get_more_cols(a, basis, io)
 	if (io /= 0) then
 		msg = "lp_get_more_cols() failed in revised simplex"
-		call PANIC(msg, present(iostat))
+		call PANIC(msg, .true.)
 		iostat = 11
 		return
 	end if
 	!print *, "basis after getting more = ", basis
 	!print *, "x = ", x
 
-	! End generate auxiliary problem
+	!print *, "ending rs_gen_aux()"
+	!print *, "basis = ", basis
+	!print *, "c = ", c
+	!print *, repeat("=", 60)
+
+end subroutine rs_gen_aux
+
+!===============================================================================
+
+function linprog_rs(c, a, b, tol, iters, iostat) result(x)
+	! Revised simplex method
+	!
+	! Minimize:
+	!
+	!     dot_product(c, x)
+	!
+	! Subject to:
+	!
+	!     matmul(a, x) == b
+	!     all(x >= 0)
+	!
+	! Note that *standard* form is different from *canonical* form
+
+	use numa__blarg
+	use numa__utils
+
+	double precision, allocatable, intent(inout) :: c(:)
+	double precision, allocatable, intent(inout) :: a(:,:)
+	double precision, intent(inout) :: b(:)
+
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(in) :: iters
+	integer, optional, intent(out) :: iostat
+	double precision, allocatable :: x(:)
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: tol_, residual, dmax
+	double precision, allocatable :: bb(:,:), basis_finder(:,:), c0(:)
+	integer :: i, m, n, iters_, i1(1), ib, basis_column, &
+		pertinent_row, new_basis_column, io
+	integer, allocatable :: basis(:)
+	logical, allocatable :: keep_rows(:), eligible_columns(:)
+
+	if (present(iostat)) iostat = 0
+	x = [0]
+
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
+
+	iters_ = 1000
+	if (present(iters)) iters_ = iters
+
+	! Backup before overwriting with aux problem
+	c0 = c
+	!print *, "c = ", c
+	!stop
+
+	m = size(a, 1)
+	n = size(a, 2)
+
+	call rs_gen_aux(c, a, b, x, basis, tol_, io)
+	!print *, "c = ", c
+	!print *, "basis = ", basis
+	!print *, "size a = ", size(a,1), size(a,2)
+	!print *, "x = ", x
+
+	if (io /= 0) then
+		msg = "auxiliary generation failed in revised simplex"
+		call PANIC(msg, present(iostat))
+		iostat = 12
+		return
+	end if
 	!********
 
 	! Note: this is just phase 2 to solve the auxiliary problem inside phase 1.
@@ -685,6 +716,8 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	x = x(:n)
 
 	! Phase 2, for real this time
+	!print *, "c  = ", c
+	!print *, "c0 = ", c0
 	c = c0  ! restore
 	call rs_phase_two(c, a, x, basis, iters_, tol_, io)
 	if (io /= 0) then
@@ -709,7 +742,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 	character(len = :), allocatable :: msg
 	double precision :: th_star
 	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
-		u(:), th(:)!, bbt(:,:)
+		u(:), th(:)
 	integer :: i, j, l, i1(1), m, n, iteration
 	integer, allocatable :: a(:), ab(:), ipos(:)
 	logical :: converged
@@ -740,12 +773,13 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 		xb = x(b)
 		cb = c(b)
 
-		!bbt = transpose(bb)
-		!call print_mat(bb, "bb = ")
-		!v = invmul(bbt, cb)
 		v = invmul(transpose(bb), cb)
-		!v = qr_solve(transpose(bb), cb)
-		!v = qr_solve(bbt, cb)
+
+		!print *, "b = ", b
+		!print *, "size c = ", size(c)
+		!print *, "size v = ", size(v)
+		!print *, "size aa = ", size(aa,1), size(aa,2)
+		!print *, ""
 
 		c_hat = c - matmul(v, aa)
 
