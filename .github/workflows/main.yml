@@ -25,7 +25,7 @@ jobs:
           #- {compiler: lfortran, version: '0.51.0'}
         exclude:
           - os: windows-latest
-            toolchain: [intel]
+            toolchain: {compiler: intel, version: 2024.2}
 
     steps:
 
