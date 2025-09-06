@@ -15,170 +15,9 @@ module numa__linprog
 		LINPROG_REVISED_SIMPLEX_METH = 2
 
 	private :: lp_solve_simplex, rs_phase_two, lp_get_abc, &
-		lp_get_more_cols, lp_unique, lp_is_in_vec
+		lp_get_more_cols, lp_unique, lp_is_in_vec, rs_gen_aux
 
 contains
-
-!===============================================================================
-
-subroutine lp_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
-	! Convert a general linprog problem to the standard form taken by
-	! `linprog_simplex()`
-	!
-	! This is based on scipy:
-	!
-	!     https://github.com/scipy/scipy/blob/5f112b048b552e8788027dec7e95fb112daeeec1/scipy/optimize/_linprog_util.py#L1030
-
-	use ieee_arithmetic
-	use numa__blarg
-	use numa__utils
-
-	double precision, allocatable, intent(inout) :: c(:)
-	double precision, allocatable, intent(inout) :: a_ub(:,:)
-	double precision, allocatable, intent(inout) :: b_ub(:)
-	double precision, intent(inout) :: a_eq(:,:)
-	double precision, intent(inout) :: b_eq(:)  ! could be intent in
-	double precision, intent(inout) :: lbs(:)
-	double precision, intent(inout) :: ubs(:)   ! could be intent in
-
-	double precision, allocatable, intent(out) :: a(:,:)
-	double precision, allocatable, intent(out) :: b(:)
-
-	!********
-	double precision, allocatable :: ub_newub(:), a1(:,:), a2(:,:), lb_shift(:)
-	integer :: m_ub, n_ub, n_bounds, n_free
-	integer, allocatable :: i_nolb(:), i_newub(:), shape_(:), i_free(:), &
-		i_shift(:)
-	logical, allocatable :: lb_none(:), ub_none(:), lb_some(:), ub_some(:), &
-		l_nolb_someub(:), l_free(:)
-
-	!print *, "starting lp_get_abc()"
-	!print *, "a_ub = "
-	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
-
-	m_ub = size(a_ub, 1)
-	n_ub = size(a_ub, 2)
-	!print *, "m_ub, n_ub = ", m_ub, n_ub
-
-	lb_none = lbs == -inf()
-	ub_none = ubs == inf()
-	ub_some = .not. ub_none
-
-	!print *, "lb_none = ", lb_none
-	!print *, "ub_none = ", ub_none
-
-	! Unbounded below: substitute xi = -xi' (unbounded above)
-	l_nolb_someub = lb_none .and. ub_some
-	i_nolb = mask_to_index(l_nolb_someub)
-	!print *, "l_nolb_someub = ", l_nolb_someub
-	!print *, "i_nolb = ", i_nolb
-
-	lbs(i_nolb) = -ubs(i_nolb)
-	!print *, "lbs = ", lbs
-	!print *, "ubs = ", ubs
-	!print *, "c initial = ", c
-
-	lb_none = lbs == -inf()
-	ub_none = ubs == inf()
-	lb_some = .not. lb_none
-	ub_some = .not. ub_none
-	c(i_nolb) = -c(i_nolb)
-	!print *, "c after *-1 = ", c
-
-	a_ub(:, i_nolb) = -a_ub(:, i_nolb)
-	a_eq(:, i_nolb) = -a_eq(:, i_nolb)
-	!print *, "a_eq = ", a_eq
-
-	! Upper bound: add inequality constraint
-	i_newub = mask_to_index(ub_some)
-	ub_newub = ubs(i_newub)
-	!print *, "i_newub = ", i_newub
-	!print *, "ub_newub = ", ub_newub
-
-	n_bounds = size(i_newub)
-	if (n_bounds > 0) then
-		! This condition seems unnecessary, but doesn't hurt
-
-		shape_ = [n_bounds, size(a_ub, 2)]
-		!print *, "shape_ = ", shape_
-
-		! a_ub and b_ub change size here, thus they need to be allocatable
-		a_ub = vstack(a_ub, zeros(shape_(1), shape_(2)))
-
-		a_ub(m_ub+1:, i_newub) = eye(size(i_newub))
-
-		!print *, "size(b_ub) = ", size(b_ub)
-		b_ub = [b_ub, zeros(n_bounds)]
-		!print *, "size(b_ub) = ", size(b_ub)
-
-		!print *, "n_bounds = ", n_bounds
-		!print *, "b_ub = ", b_ub
-		!print *, "m_ub = ", m_ub
-
-		b_ub(m_ub+1:) = ub_newub
-
-	end if
-	!call print_mat(a_ub, "a_ub after n bound > 0 = ")
-	!print *, "b_ub = ", b_ub
-
-	a1 = vstack(a_ub, a_eq)
-	!print *, "a1 = "
-	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
-
-	!print *, "b_ub = ", b_ub
-	!print *, "b_eq = ", b_eq
-	!print *, "size(b_eq) = ", size(b_eq)
-	!print *, "allocated(b_eq) = ", allocated(b_eq)
-
-	b = [b_ub, b_eq]
-	c = [c, zeros(size(a_ub, 1))]
-	!print *, "b = ", b
-	!print *, "c after cat = ", c
-
-	! Unbounded: substitute xi = xi+ + xi-
-	l_free = lb_none .and. ub_none
-	i_free = mask_to_index(l_free)
-	n_free = size(i_free)
-	c = [c, zeros(n_free)]
-	!print *, "c = ", c
-
-	a1 = hstack(a1(:, :n_ub), -a1(:, i_free))
-	!print *, "i_free = ", i_free
-
-	c(n_ub+1: n_ub+n_free) = -c(i_free)
-
-	!print *, "a1 = "
-	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
-	!print *, "n_ub, n_free = ", n_ub, n_free
-	!print *, "c after i_free = ", c
-
-	! Add slack variables
-	a2 = vstack(eye(size(a_ub,1)), zeros(size(a_eq, 1), size(a_ub, 1)))
-
-	a = hstack(a1, a2)
-	!print *, "a = "
-	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
-
-	! Lower bound: substitute xi = xi' + lb
-	i_shift = mask_to_index(lb_some)
-	lb_shift = lbs(i_shift)
-	!print *, "lb_some = ", lb_some
-	!print *, "lb_shift = ", lb_shift
-
-	!print *, "b = ", b
-	!print *, "size(a) = ", size(a)
-	b = b - sum(matmul(a(:, i_shift), diag(lb_shift)), 2)
-
-	!print *, "****************"
-	!print *, "lp_get_abc() return values:"
-	!print *, "a = "
-	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
-	!print *, "b = ", b
-	!print *, "c = ", c
-	!stop
-	!print *, "****************"
-
-end subroutine lp_get_abc
 
 !===============================================================================
 
@@ -392,6 +231,167 @@ end function linprog
 
 !===============================================================================
 
+subroutine lp_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
+	! Convert a general linprog problem to the standard form taken by
+	! `linprog_simplex()`
+	!
+	! This is based on scipy:
+	!
+	!     https://github.com/scipy/scipy/blob/5f112b048b552e8788027dec7e95fb112daeeec1/scipy/optimize/_linprog_util.py#L1030
+
+	use ieee_arithmetic
+	use numa__blarg
+	use numa__utils
+
+	double precision, allocatable, intent(inout) :: c(:)
+	double precision, allocatable, intent(inout) :: a_ub(:,:)
+	double precision, allocatable, intent(inout) :: b_ub(:)
+	double precision, intent(inout) :: a_eq(:,:)
+	double precision, intent(inout) :: b_eq(:)  ! could be intent in
+	double precision, intent(inout) :: lbs(:)
+	double precision, intent(inout) :: ubs(:)   ! could be intent in
+
+	double precision, allocatable, intent(out) :: a(:,:)
+	double precision, allocatable, intent(out) :: b(:)
+
+	!********
+	double precision, allocatable :: ub_newub(:), a1(:,:), a2(:,:), lb_shift(:)
+	integer :: m_ub, n_ub, n_bounds, n_free
+	integer, allocatable :: i_nolb(:), i_newub(:), shape_(:), i_free(:), &
+		i_shift(:)
+	logical, allocatable :: lb_none(:), ub_none(:), lb_some(:), ub_some(:), &
+		l_nolb_someub(:), l_free(:)
+
+	!print *, "starting lp_get_abc()"
+	!print *, "a_ub = "
+	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
+
+	m_ub = size(a_ub, 1)
+	n_ub = size(a_ub, 2)
+	!print *, "m_ub, n_ub = ", m_ub, n_ub
+
+	lb_none = lbs == -inf()
+	ub_none = ubs == inf()
+	ub_some = .not. ub_none
+
+	!print *, "lb_none = ", lb_none
+	!print *, "ub_none = ", ub_none
+
+	! Unbounded below: substitute xi = -xi' (unbounded above)
+	l_nolb_someub = lb_none .and. ub_some
+	i_nolb = mask_to_index(l_nolb_someub)
+	!print *, "l_nolb_someub = ", l_nolb_someub
+	!print *, "i_nolb = ", i_nolb
+
+	lbs(i_nolb) = -ubs(i_nolb)
+	!print *, "lbs = ", lbs
+	!print *, "ubs = ", ubs
+	!print *, "c initial = ", c
+
+	lb_none = lbs == -inf()
+	ub_none = ubs == inf()
+	lb_some = .not. lb_none
+	ub_some = .not. ub_none
+	c(i_nolb) = -c(i_nolb)
+	!print *, "c after *-1 = ", c
+
+	a_ub(:, i_nolb) = -a_ub(:, i_nolb)
+	a_eq(:, i_nolb) = -a_eq(:, i_nolb)
+	!print *, "a_eq = ", a_eq
+
+	! Upper bound: add inequality constraint
+	i_newub = mask_to_index(ub_some)
+	ub_newub = ubs(i_newub)
+	!print *, "i_newub = ", i_newub
+	!print *, "ub_newub = ", ub_newub
+
+	n_bounds = size(i_newub)
+	if (n_bounds > 0) then
+		! This condition seems unnecessary, but doesn't hurt
+
+		shape_ = [n_bounds, size(a_ub, 2)]
+		!print *, "shape_ = ", shape_
+
+		! a_ub and b_ub change size here, thus they need to be allocatable
+		a_ub = vstack(a_ub, zeros(shape_(1), shape_(2)))
+
+		a_ub(m_ub+1:, i_newub) = eye(size(i_newub))
+
+		!print *, "size(b_ub) = ", size(b_ub)
+		b_ub = [b_ub, zeros(n_bounds)]
+		!print *, "size(b_ub) = ", size(b_ub)
+
+		!print *, "n_bounds = ", n_bounds
+		!print *, "b_ub = ", b_ub
+		!print *, "m_ub = ", m_ub
+
+		b_ub(m_ub+1:) = ub_newub
+
+	end if
+	!call print_mat(a_ub, "a_ub after n bound > 0 = ")
+	!print *, "b_ub = ", b_ub
+
+	a1 = vstack(a_ub, a_eq)
+	!print *, "a1 = "
+	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
+
+	!print *, "b_ub = ", b_ub
+	!print *, "b_eq = ", b_eq
+	!print *, "size(b_eq) = ", size(b_eq)
+	!print *, "allocated(b_eq) = ", allocated(b_eq)
+
+	b = [b_ub, b_eq]
+	c = [c, zeros(size(a_ub, 1))]
+	!print *, "b = ", b
+	!print *, "c after cat = ", c
+
+	! Unbounded: substitute xi = xi+ + xi-
+	l_free = lb_none .and. ub_none
+	i_free = mask_to_index(l_free)
+	n_free = size(i_free)
+	c = [c, zeros(n_free)]
+	!print *, "c = ", c
+
+	a1 = hstack(a1(:, :n_ub), -a1(:, i_free))
+	!print *, "i_free = ", i_free
+
+	c(n_ub+1: n_ub+n_free) = -c(i_free)
+
+	!print *, "a1 = "
+	!print "("//to_str(size(a1,2))//"es14.4)", transpose(a1)
+	!print *, "n_ub, n_free = ", n_ub, n_free
+	!print *, "c after i_free = ", c
+
+	! Add slack variables
+	a2 = vstack(eye(size(a_ub,1)), zeros(size(a_eq, 1), size(a_ub, 1)))
+
+	a = hstack(a1, a2)
+	!print *, "a = "
+	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
+
+	! Lower bound: substitute xi = xi' + lb
+	i_shift = mask_to_index(lb_some)
+	lb_shift = lbs(i_shift)
+	!print *, "lb_some = ", lb_some
+	!print *, "lb_shift = ", lb_shift
+
+	!print *, "b = ", b
+	!print *, "size(a) = ", size(a)
+	b = b - sum(matmul(a(:, i_shift), diag(lb_shift)), 2)
+
+	!print *, "****************"
+	!print *, "lp_get_abc() return values:"
+	!print *, "a = "
+	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
+	!print *, "b = ", b
+	!print *, "c = ", c
+	!stop
+	!print *, "****************"
+
+end subroutine lp_get_abc
+
+!===============================================================================
+
 subroutine rs_gen_aux(c, a, b, x, basis, tol, iostat)
 	! Generate auxiliary problem for revised simplex
 	double precision, allocatable, intent(inout) :: c(:)
@@ -600,8 +600,6 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!
 	!     matmul(a, x) == b
 	!     all(x >= 0)
-	!
-	! Note that *standard* form is different from *canonical* form
 
 	use numa__blarg
 	use numa__utils
@@ -646,13 +644,13 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!print *, "basis = ", basis
 	!print *, "size a = ", size(a,1), size(a,2)
 	!print *, "x = ", x
-
 	if (io /= 0) then
 		msg = "auxiliary generation failed in revised simplex"
 		call PANIC(msg, present(iostat))
 		iostat = 12
 		return
 	end if
+
 	!********
 
 	! Note: this is just phase 2 to solve the auxiliary problem inside phase 1.
@@ -716,8 +714,6 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	x = x(:n)
 
 	! Phase 2, for real this time
-	!print *, "c  = ", c
-	!print *, "c0 = ", c0
 	c = c0  ! restore
 	call rs_phase_two(c, a, x, basis, iters_, tol_, io)
 	if (io /= 0) then
@@ -774,13 +770,6 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 		cb = c(b)
 
 		v = invmul(transpose(bb), cb)
-
-		!print *, "b = ", b
-		!print *, "size c = ", size(c)
-		!print *, "size v = ", size(v)
-		!print *, "size aa = ", size(aa,1), size(aa,2)
-		!print *, ""
-
 		c_hat = c - matmul(v, aa)
 
 		!print *, "c = ", c
@@ -809,7 +798,6 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 		!print *, "j = ", j
 
 		u = invmul(bb, aa(:,j))
-		!u = qr_solve(bb, aa(:,j))
 		!print *, "u = ", u
 
 		! If none of `u` are positive, unbounded
@@ -882,7 +870,6 @@ function lp_get_more_cols(aa, basis, iostat) result(res)
 	!call print_mat(b, "b = ")
 
 	if (size(basis) > 0 .and. &
-		!qr_rank(b(:, :size(basis))) < size(basis)) then
 		.not. is_full_rank(b(:, :size(basis)))) then
 
 		msg = "basis has dependent columns"
@@ -902,10 +889,7 @@ function lp_get_more_cols(aa, basis, iostat) result(res)
 			b(:, size(basis):) = aa(:, new_basis)
 		end if
 
-		!rank_ = qr_rank(b)
-		!!print *, "rank_ = ", rank_
 		!!if (i > 1) stop  ! unreachable in tests
-		!if (rank_ == m) exit
 		if (is_full_rank(b)) exit
 	end do
 
