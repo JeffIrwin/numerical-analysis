@@ -23,6 +23,9 @@ jobs:
           - {compiler: gcc, version: 13}
           - {compiler: intel, version: 2024.2}
           #- {compiler: lfortran, version: '0.51.0'}
+        exclude:
+          - os: windows-latest
+            compiler: [intel]
 
     steps:
 
