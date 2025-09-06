@@ -37,19 +37,6 @@ jobs:
     #      ifx@2024.0.0
     #      mkl@2024.0.0
     #
-    - if: matrix.os == 'macOS-latest'
-      name: Brew install gcc on mac
-      run: |
-        brew install gcc@12
-        brew reinstall gcc@12
-        echo "find Cellar 1:"
-        find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib" || true
-        echo "find opt 1:"
-        find /opt/homebrew/opt/gcc@12/ -name "libgfortran.5.dylib" || true
-        sudo mkdir -p /usr/local/lib/ || true
-        sudo cp $(find /opt/homebrew/opt/gcc@12/ -name "libgfortran.5.dylib") /usr/local/lib
-        echo "find /usr/:"
-        find /usr/local/lib -name "libgfort*" || true
 
     - if: matrix.os == 'ubuntu-latest'
       name: Test numerical-analysis on ubuntu-latest
@@ -71,6 +58,20 @@ jobs:
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
+
+    - if: matrix.os == 'macOS-latest'
+      name: Brew install gcc on mac
+      run: |
+        #brew install gcc@12
+        #brew reinstall gcc@12
+        echo "find Cellar 1:"
+        find /opt/homebrew/Cellar/gcc@12/ -name "libgfortran.5.dylib" || true
+        echo "find opt 1:"
+        find /opt/homebrew/opt/gcc@12/ -name "libgfortran.5.dylib" || true
+        sudo mkdir -p /usr/local/lib/ || true
+        sudo cp $(find /opt/homebrew/opt/gcc@12/ -name "libgfortran.5.dylib") /usr/local/lib
+        echo "find /usr/:"
+        find /usr/local/lib -name "libgfort*" || true
 
     #- if: matrix.os == 'macOS-latest'
     #  name: Copy dylib on mac
