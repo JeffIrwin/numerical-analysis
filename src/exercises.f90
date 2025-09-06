@@ -494,7 +494,7 @@ integer function chapter_2_fft_2() result(nfail)
 
 	double complex, allocatable :: x(:), y(:), xr(:)
 
-	integer :: i, l, ny, fid, nrng
+	integer :: i, l, ny, fid
 	integer, allocatable :: iy_max(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -523,9 +523,9 @@ integer function chapter_2_fft_2() result(nfail)
 	t = [(i, i = 0, l-1)] * dt
 	!print *, "t = ", t(1: 5), " ... ", t(l-5: l)
 
+	call rand_seed_determ()
+
 	allocate(r(l))
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
 	call random_number(r)
 
 	! Tests expect these amplitudes to be in descending order
@@ -703,7 +703,7 @@ integer function chapter_4_lu() result(nfail)
 	double precision :: t0, t, t_lu
 	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:), &
 		aexp(:,:)
-	integer :: i, n, nrng, irep, p0
+	integer :: i, n, irep, p0
 	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -803,8 +803,7 @@ integer function chapter_4_lu() result(nfail)
 
 	deallocate(a, x, bx)
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	t_lu = 0.d0
 	do n = 2, 90, 2
@@ -912,7 +911,7 @@ integer function chapter_4_modify() result(nfail)
 	double precision :: aij, aij0
 	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), &
 		u(:), b(:), b0(:)
-	integer :: i, n, nrng, irep, row, col
+	integer :: i, n, irep, row, col
 	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -983,8 +982,7 @@ integer function chapter_4_modify() result(nfail)
 	!********
 	! Fuzz
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	do n = 2, 30, 3
 
@@ -1044,7 +1042,7 @@ integer function chapter_4_lu_c64() result(nfail)
 
 	double precision, allocatable :: ar(:,:), ai(:,:), xr(:), xi(:)
 	double complex, allocatable :: a0(:,:), a(:,:), bx(:), x(:), kernel(:)
-	integer :: i, n, nrng, irep, p0
+	integer :: n, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -1053,8 +1051,7 @@ integer function chapter_4_lu_c64() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	p0 = -1
 	do n = 2, 30, 3
@@ -1166,13 +1163,12 @@ integer function chapter_2_tridiag_corner() result(nfail)
 
 	! Dense LU version for comparison
 	allocate(ad(6, 6))
-	ad(:,1) = [ 2,  1,  0,  0,  0, 11]
-	ad(:,2) = [ 3,  5,  4,  0,  0,  0]
-	ad(:,3) = [ 0,  6,  7,  5,  0,  0]
-	ad(:,4) = [ 0,  0,  8,  9,  4,  0]
-	ad(:,5) = [ 0,  0,  0,  7,  9,  5]
-	ad(:,6) = [12,  0,  0,  0,  7,  8]
-	ad = transpose(ad)  ! TODO: i think all my tridiag algos are transposed. Actually just change the assignment above
+	ad(1,:) = [ 2,  1,  0,  0,  0, 11]
+	ad(2,:) = [ 3,  5,  4,  0,  0,  0]
+	ad(3,:) = [ 0,  6,  7,  5,  0,  0]
+	ad(4,:) = [ 0,  0,  8,  9,  4,  0]
+	ad(5,:) = [ 0,  0,  0,  7,  9,  5]
+	ad(6,:) = [12,  0,  0,  0,  7,  8]
 	print *, "ad = "
 	print "(6es15.5)", transpose(ad)
 
@@ -2241,7 +2237,7 @@ integer function chapter_4_inv() result(nfail)
 	double precision :: t_gj
 	double precision, allocatable :: a0(:,:), a(:,:), bx(:,:), x(:,:), ainv(:,:)
 
-	integer :: i, n, nrng, irep
+	integer :: n, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2330,8 +2326,7 @@ integer function chapter_4_inv() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	t_gj = 0.d0
 
@@ -2377,7 +2372,7 @@ integer function chapter_4_cholesky() result(nfail)
 	double precision, allocatable :: a0(:,:), a(:,:), bx(:), x(:), &
 		tmp_mat(:,:), lmat(:,:)
 
-	integer :: i, j, n, nrng, irep
+	integer :: i, j, n, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2386,8 +2381,7 @@ integer function chapter_4_cholesky() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	do n = 2, 90, 4
 
@@ -2466,7 +2460,7 @@ integer function chapter_4_qr() result(nfail)
 
 	double precision, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), diag_(:)
 
-	integer :: i, n, nrng, irep, p0
+	integer :: n, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2475,8 +2469,7 @@ integer function chapter_4_qr() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	p0 = -1
 	do n = 2, 70, 5
@@ -2529,7 +2522,7 @@ integer function chapter_4_gram_schmidt() result(nfail)
 
 	double precision, allocatable :: a0(:,:), a(:,:), r(:,:)
 
-	integer :: i, n, nrng, irep, p0
+	integer :: n, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2538,8 +2531,7 @@ integer function chapter_4_gram_schmidt() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	p0 = -1
 	do n = 2, 25, 5
@@ -2592,11 +2584,10 @@ integer function chapter_4_lls() result(nfail)
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
+	call rand_seed_determ()
 
 	!********
 	! polyfit_lu().  should be avoided in favor of polyfit()
-
-	! TODO: seed
 
 	nx = 100
 	allocate(x(nx), y(nx))
@@ -2858,7 +2849,7 @@ integer function chapter_4_qr_c64() result(nfail)
 	double precision, allocatable :: ar(:,:), ai(:,:)
 	double complex, allocatable :: a0(:,:), a(:,:), q(:,:), r(:,:), diag_(:)
 
-	integer :: i, n, nrng, irep, p0
+	integer :: n, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2935,13 +2926,10 @@ integer function chapter_4_qr_c64() result(nfail)
 	call test(norm2(abs(matmul(transpose(conjg(q)), q) - dcmplx(eye(n)))), 0.d0, 1.d-12 * n, nfail, "qr_factor_c64() q'*q 3x3")
 	deallocate(a0)
 
-	!stop
-
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	p0 = -1
 	do n = 2, 70, 3
@@ -2957,6 +2945,7 @@ integer function chapter_4_qr_c64() result(nfail)
 
 			call random_number(ar)  ! random matrix
 			call random_number(ai)  ! random matrix
+			!call print_mat(ar, "ar = ")
 			a0 = ar + IMAG_ * ai
 
 			!print *, "a0 = "
@@ -3707,7 +3696,7 @@ integer function chapter_6_basic_qr() result(nfail)
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
 		expect(:)
 
-	integer :: i, n, nrng, irep
+	integer :: n, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -3716,8 +3705,7 @@ integer function chapter_6_basic_qr() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	! There are fewer tests here and with smaller matrices compared to
 	! qr_factor() because eig_basic_qr() is an expensive iterative algorithm,
@@ -3779,7 +3767,7 @@ integer function chapter_6_hessenberg_qr() result(nfail)
 	double precision, allocatable :: a(:,:), d(:,:), s(:,:), eigvals(:), &
 		expect(:), eigvecs(:,:), a0(:,:)
 
-	integer :: i, n, nrng, irep, iters
+	integer :: n, irep, iters
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -3788,8 +3776,7 @@ integer function chapter_6_hessenberg_qr() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	t_pq = 0.d0
 	t_kr = 0.d0
@@ -3984,7 +3971,7 @@ integer function chapter_6_francis_qr() result(nfail)
 		expect(:), a0(:,:)!, ar(:,:), ai(:,:)
 	double complex, allocatable :: eigvals(:), eigvals2(:), eigvecs(:,:)
 
-	integer :: i, n, nrng, irep, p0
+	integer :: n, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -4055,8 +4042,7 @@ integer function chapter_6_francis_qr() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	p0 = -1
 	do n = 5, 35, 3
@@ -4208,7 +4194,7 @@ integer function chapter_6_eig_lapack() result(nfail)
 		expect(:), a0(:,:)!, ar(:,:), ai(:,:)
 	double complex, allocatable :: eigvals(:), eigvals2(:), eigvecs(:,:)
 
-	integer :: i, n, nrng, irep, p0
+	integer :: n, irep, p0
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -4263,8 +4249,7 @@ integer function chapter_6_eig_lapack() result(nfail)
 	!********
 	! Fuzz test
 
-	call random_seed(size = nrng)
-	call random_seed(put = [(0, i = 1, nrng)])
+	call rand_seed_determ()
 
 	p0 = -1
 	do n = 5, 25, 5

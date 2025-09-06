@@ -881,25 +881,6 @@ end function lp_get_more_cols
 
 !===============================================================================
 
-function rand_perm(n)
-	! Fisher-Yates shuffle
-	!
-	! TODO: move out of linprog
-	integer, intent(in) :: n
-	integer, allocatable :: rand_perm(:)
-	!********
-	integer :: i, j
-
-	rand_perm = [(i, i = 1, n)]  ! initially identity
-	do i = 1, n-1
-		j = i + rand_i32(n-i+1)
-		rand_perm([i, j]) = rand_perm([j, i])
-	end do
-
-end function rand_perm
-
-!===============================================================================
-
 function lp_is_in_vec(needles, haystack)
 	integer, intent(in) :: needles(:), haystack(:)
 	logical, allocatable :: lp_is_in_vec(:)

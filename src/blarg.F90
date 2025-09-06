@@ -114,22 +114,6 @@ end function eye
 
 !********
 
-double precision function rand_f64()
-	! TODO: move out of blarg
-	call random_number(rand_f64)
-end function rand_f64
-
-!********
-
-!> Random integer in the range 0 <= rand_i32() < n
-integer function rand_i32(n)
-	! TODO: move out of blarg
-	integer, intent(in) :: n
-	rand_i32 = floor(n * rand_f64())
-end function rand_i32
-
-!********
-
 subroutine house_c64(alpha, x, diag_, iostat)
 	! Return the Householder reflector represting `pp` such that pp * x == [1, 0, 0, ...]
 	!

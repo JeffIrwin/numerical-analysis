@@ -624,5 +624,45 @@ end subroutine print_mat_i32
 
 !===============================================================================
 
+subroutine rand_seed_determ()
+	integer :: i, nrng
+	! Seed the default RNG with 0's for repeatable tests
+	call random_seed(size = nrng)
+	call random_seed(put = [(0, i = 1, nrng)])
+end subroutine rand_seed_determ
+
+!********
+
+double precision function rand_f64()
+	call random_number(rand_f64)
+end function rand_f64
+
+!********
+
+!> Random integer in the range 0 <= rand_i32() < n
+integer function rand_i32(n)
+	integer, intent(in) :: n
+	rand_i32 = floor(n * rand_f64())
+end function rand_i32
+
+!===============================================================================
+
+function rand_perm(n)
+	! Fisher-Yates shuffle
+	integer, intent(in) :: n
+	integer, allocatable :: rand_perm(:)
+	!********
+	integer :: i, j
+
+	rand_perm = [(i, i = 1, n)]  ! initially identity
+	do i = 1, n-1
+		j = i + rand_i32(n-i+1)
+		rand_perm([i, j]) = rand_perm([j, i])
+	end do
+
+end function rand_perm
+
+!===============================================================================
+
 end module numa__utils
 
