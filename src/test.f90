@@ -83,6 +83,7 @@ program main
 	nfail = nfail + chapter_4_nelder_mead()
 	nfail = nfail + chapter_4_modify()
 	nfail = nfail + chapter_4_linprog()
+	nfail = nfail + chapter_4_rank()  ! TODO: test before linprog
 	! TODO: sparse cholesky?  covered briefly in chapter 4 appendix
 
 	!-------------------------------------------------------

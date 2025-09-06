@@ -11,18 +11,19 @@ module numa__linprog
 	implicit none
 
 	integer, parameter :: &
-		LINPROG_SIMPLEX = 1, &
-		LINPROG_REVISED_SIMPLEX = 2
+		LINPROG_SIMPLEX_METH = 1, &
+		LINPROG_REVISED_SIMPLEX_METH = 2
 
-	private :: linprog_solve_simplex
+	private :: lp_solve_simplex, rs_phase_two, lp_get_abc, &
+		lp_get_more_cols, lp_unique, lp_is_in_vec
 
 contains
 
 !===============================================================================
 
-subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
+subroutine lp_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	! Convert a general linprog problem to the standard form taken by
-	! `linprog_std()`
+	! `linprog_simplex()`
 	!
 	! This is based on scipy:
 	!
@@ -51,7 +52,7 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	logical, allocatable :: lb_none(:), ub_none(:), lb_some(:), ub_some(:), &
 		l_nolb_someub(:), l_free(:)
 
-	!print *, "starting linprog_get_abc()"
+	!print *, "starting lp_get_abc()"
 	!print *, "a_ub = "
 	!print "("//to_str(size(a_ub,2))//"es14.4)", transpose(a_ub)
 
@@ -169,7 +170,7 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	b = b - sum(matmul(a(:, i_shift), diag(lb_shift)), 2)
 
 	!print *, "****************"
-	!print *, "linprog_get_abc() return values:"
+	!print *, "lp_get_abc() return values:"
 	!print *, "a = "
 	!print "("//to_str(size(a,2))//"es14.4)", transpose(a)
 	!print *, "b = ", b
@@ -177,7 +178,7 @@ subroutine linprog_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	!stop
 	!print *, "****************"
 
-end subroutine linprog_get_abc
+end subroutine lp_get_abc
 
 !===============================================================================
 
@@ -233,7 +234,7 @@ function linprog &
 	iters_ = 1000
 	if (present(iters)) iters_ = iters
 
-	method_ = LINPROG_SIMPLEX
+	method_ = LINPROG_SIMPLEX_METH
 	if (present(method)) method_ = method
 
 	x = [0]
@@ -327,19 +328,19 @@ function linprog &
 	lbs0 = lb_
 	ubs0 = ub_
 
-	call linprog_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
+	call lp_get_abc(c_, a_ub, b_ub, a_eq_, b_eq_, lb_, ub_, a, b)
 
 	select case (method_)
-	case (LINPROG_SIMPLEX)
-		x = linprog_std(c_, a, b, tol_, iters_, io)
+	case (LINPROG_SIMPLEX_METH)
+		x = linprog_simplex(c_, a, b, tol_, iters_, io)
 		if (io /= 0) then
-			msg = "linprog_std() failed in linprog()"
+			msg = "linprog_simplex() failed in linprog()"
 			call PANIC(msg, present(iostat))
 			iostat = 8
 			return
 		end if
 
-	case (LINPROG_REVISED_SIMPLEX)
+	case (LINPROG_REVISED_SIMPLEX_METH)
 		!print *, "NOT IMPLEMENTED"
 		x = linprog_rs(c_, a, b, tol_, iters_, io)
 		if (io /= 0) then
@@ -361,7 +362,7 @@ function linprog &
 	!********
 	! Post-solve
 
-	! Undo variable substitutions of linprog_get_abc()
+	! Undo variable substitutions of lp_get_abc()
 	n_unbounded = 0
 	do i = 1, nx
 		lbi = lbs0(i)
@@ -422,7 +423,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	double precision :: tol_, residual, dmax
 	double precision, allocatable :: r(:), bb(:,:), basis_finder(:,:), c0(:)
 	integer :: i, m, n, iters_, i1(1), n_aux, ib, basis_column, &
-		pertinent_row, new_basis_column
+		pertinent_row, new_basis_column, io
 	integer, allocatable :: basis(:), cols(:), rows(:), ineg(:), &
 		nonzero_constraints(:), i_fix_without_aux(:), arows(:), acols(:), &
 		basis_ng(:), basis_ng_rows(:)
@@ -490,7 +491,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	else if (size(nonzero_constraints) > m - size(basis) .or. &
 		any(x < 0)) then
 
-		msg = "infeasible solution for trivial basis in linprog_rs()"
+		msg = "problem is infeasible for trivial basis in linprog_rs()"
 		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
@@ -542,7 +543,13 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	! For each row, keep the rightmost singleton column_indices with an entry in
 	! that row
-	call lp_unique(row_indices, unique_row_indices, first_columns)
+	call lp_unique(row_indices, unique_row_indices, first_columns, io)
+	if (io /= 0) then
+		msg = "lp_unique() failed in revised simplex"
+		call PANIC(msg, present(iostat))
+		iostat = 10
+		return
+	end if
 
 	! End select singleton columns
 	cols = column_indices(first_columns)
@@ -558,10 +565,10 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!print *, "rows = ", rows
 	!print *, "cols = ", cols
 
-	l_tofix = is_in_vec(rows, nonzero_constraints)
+	l_tofix = lp_is_in_vec(rows, nonzero_constraints)
 	!print *, "l_tofix = ", l_tofix
 
-	l_notinbasis = .not. is_in_vec(cols, basis)
+	l_notinbasis = .not. lp_is_in_vec(cols, basis)
 	l_fix_without_aux = l_tofix .and. l_notinbasis
 	i_fix_without_aux = mask_to_index(l_fix_without_aux)
 	rows = rows(i_fix_without_aux)
@@ -571,7 +578,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!print *, "l_fix_without_aux = ", l_fix_without_aux
 
 	arows = nonzero_constraints( &
-		mask_to_index(.not. is_in_vec(nonzero_constraints, rows)) &
+		mask_to_index(.not. lp_is_in_vec(nonzero_constraints, rows)) &
 	)
 	n_aux = size(arows)
 	acols = n + [(i, i = 1, n_aux)]
@@ -604,7 +611,13 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	basis = [basis, basis_ng]
 	!print *, "basis after ng cat       = ", basis
-	basis = linprog_get_more_basis_cols(a, basis)
+	basis = lp_get_more_cols(a, basis, io)
+	if (io /= 0) then
+		msg = "lp_get_more_cols() failed in revised simplex"
+		call PANIC(msg, present(iostat))
+		iostat = 11
+		return
+	end if
 	!print *, "basis after getting more = ", basis
 	!print *, "x = ", x
 
@@ -614,14 +627,21 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	! Note: this is just phase 2 to solve the auxiliary problem inside phase 1.
 	! We still have to do a bunch of other stuff and then the actual phase 2
 	! later
-	call rs_phase_two(c, a, x, basis, iters_, tol_)
+	call rs_phase_two(c, a, x, basis, iters_, tol_, io)
+	if (io /= 0) then
+		msg = "auxiliary phase 2 failed in revised simplex"
+		call PANIC(msg, present(iostat))
+		iostat = 9
+		return
+	end if
 
 	! Check for infeasibility
 	residual = dot_product(c, x)
 	if (residual > tol_) then
-		print *, "Error: problem is infeasible in linprog_rs()"
-		! TODO: panic
-		stop
+		msg = "auxiliary problem is infeasible in revised simplex"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
 	end if
 
 	! Drive artificial variables out of basis
@@ -666,20 +686,27 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 
 	! Phase 2, for real this time
 	c = c0  ! restore
-	call rs_phase_two(c, a, x, basis, iters_, tol_)
+	call rs_phase_two(c, a, x, basis, iters_, tol_, io)
+	if (io /= 0) then
+		msg = "phase 2 failed in revised simplex"
+		call PANIC(msg, present(iostat))
+		iostat = 9
+		return
+	end if
 
 end function linprog_rs
 
 !===============================================================================
 
-subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
-	! TODO: private, other routines too
+subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 
 	double precision, intent(inout) :: c(:), aa(:,:), x(:)
 	integer, intent(inout) :: b(:)  ! basis
 	integer, intent(in) :: maxiter
 	double precision, intent(in) :: tol
+	integer, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	double precision :: th_star
 	double precision, allocatable :: bb(:,:), xb(:), cb(:), v(:), c_hat(:), &
 		u(:), th(:)!, bbt(:,:)
@@ -687,6 +714,8 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 	integer, allocatable :: a(:), ab(:), ipos(:)
 	logical :: converged
 	logical, allocatable :: bl(:)
+
+	iostat = 0
 
 	!print *, repeat("=", 60)
 	!print *, "Starting rs_phase_two()"
@@ -752,9 +781,10 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 		! If none of `u` are positive, unbounded
 		ipos = mask_to_index(u > tol)
 		if (size(ipos) <= 0) then
-			print *, "Error: problem is unbounded in rs_phase_two()"
-			! TODO: panic
-			stop
+			msg = "problem is unbounded in revised simplex"
+			call PANIC(msg, .true.)
+			iostat = 1
+			return
 		end if
 
 		th = xb(ipos) / u(ipos)
@@ -778,21 +808,25 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol)
 
 	end do
 	if (.not. converged) then
-		print *, "Error: rs_phase_two() did not converge"
-		! TODO: panic
-		stop
+		msg = "revised simplex phase 2 did not converge"
+		call PANIC(msg, .true.)
+		iostat = 1
+		return
 	end if
 
 end subroutine rs_phase_two
 
 !===============================================================================
 
-function linprog_get_more_basis_cols(aa, basis) result(res)
+function lp_get_more_cols(aa, basis, iostat) result(res)
+	! Get more basis columns
 	use numa__linalg
 	double precision, intent(in) :: aa(:,:)
 	integer, intent(in) :: basis(:)
 	integer, allocatable :: res(:)
+	integer, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	double precision, allocatable :: b(:,:)
 	integer :: i, m, n, rank_
 	integer, allocatable :: a(:), options(:), perm(:), new_basis(:)
@@ -814,10 +848,13 @@ function linprog_get_more_basis_cols(aa, basis) result(res)
 	!call print_mat(b, "b = ")
 
 	if (size(basis) > 0 .and. &
-		qr_rank(b(:, :size(basis))) < size(basis)) then
-		print *, "Error: basis has dependent columns"
-		! TODO: panic
-		stop
+		!qr_rank(b(:, :size(basis))) < size(basis)) then
+		.not. is_full_rank(b(:, :size(basis)))) then
+
+		msg = "basis has dependent columns"
+		call PANIC(msg, .true.)
+		iostat = 1
+		return
 	end if
 	!print *, "ok"
 
@@ -831,20 +868,23 @@ function linprog_get_more_basis_cols(aa, basis) result(res)
 			b(:, size(basis):) = aa(:, new_basis)
 		end if
 
-		rank_ = qr_rank(b)
-		!print *, "rank_ = ", rank_
-		!if (i > 1) stop  ! unreachable in tests
-		if (rank_ == m) exit
+		!rank_ = qr_rank(b)
+		!!print *, "rank_ = ", rank_
+		!!if (i > 1) stop  ! unreachable in tests
+		!if (rank_ == m) exit
+		if (is_full_rank(b)) exit
 	end do
 
 	res = [basis, new_basis]
 
-end function linprog_get_more_basis_cols
+end function lp_get_more_cols
 
 !===============================================================================
 
 function rand_perm(n)
 	! Fisher-Yates shuffle
+	!
+	! TODO: move out of linprog
 	integer, intent(in) :: n
 	integer, allocatable :: rand_perm(:)
 	!********
@@ -860,9 +900,9 @@ end function rand_perm
 
 !===============================================================================
 
-function is_in_vec(needles, haystack)
+function lp_is_in_vec(needles, haystack)
 	integer, intent(in) :: needles(:), haystack(:)
-	logical, allocatable :: is_in_vec(:)
+	logical, allocatable :: lp_is_in_vec(:)
 	!********
 	integer :: i, nn, nh, hmin, hmax
 	logical, allocatable :: in_haystack(:)
@@ -872,7 +912,7 @@ function is_in_vec(needles, haystack)
 
 	if (nh <= 0) then
 		!print *, "haystack empty"
-		is_in_vec = [(.false., i = 1, nn)]
+		lp_is_in_vec = [(.false., i = 1, nn)]
 		return
 	end if
 
@@ -883,7 +923,7 @@ function is_in_vec(needles, haystack)
 	in_haystack = .false.
 	in_haystack(haystack) = .true.
 
-	allocate(is_in_vec(nn))
+	allocate(lp_is_in_vec(nn))
 
 	do i = 1, nn
 
@@ -896,36 +936,40 @@ function is_in_vec(needles, haystack)
 		! wide range of possibly haystack values
 
 		!! O(n^2)
-		!is_in_vec(i) = any(haystack == needles(i))
+		!lp_is_in_vec(i) = any(haystack == needles(i))
 
 		! O(nn + nh)
 		if (hmin <= needles(i) .and. needles(i) <= hmax) then
-			is_in_vec(i) = in_haystack(needles(i))
+			lp_is_in_vec(i) = in_haystack(needles(i))
 		else
-			is_in_vec(i) = .false.
+			lp_is_in_vec(i) = .false.
 		end if
 
 	end do
 
-end function is_in_vec
+end function lp_is_in_vec
 
 !===============================================================================
 
-subroutine lp_unique(vec, vals, idxs)
+subroutine lp_unique(vec, vals, idxs, iostat)
 	integer, intent(in) :: vec(:)
 	integer, allocatable, intent(out) :: vals(:)
 	integer, allocatable, intent(out) :: idxs(:)
+	integer, intent(out) :: iostat
 	!********
+	character(len = :), allocatable :: msg
 	integer :: i, n, nu
 
+	iostat = 0
 	n = size(vec)
 
 	! Assume vec is descending.  From my test cases, this seems ok
 	!print *, "vec = ", vec
 	if (any(vec(1:n-1) - vec(2:n) < 0)) then
-		print *, "Error: vec is not sorted descending in lp_unique()"
-		! TODO: panic
-		stop
+		msg = "vec is not sorted descending in lp_unique()"
+		call PANIC(msg, .true.)
+		iostat = 1
+		return
 	end if
 
 	allocate(vals(n), idxs(n))
@@ -954,7 +998,7 @@ end subroutine lp_unique
 
 !===============================================================================
 
-function linprog_std(c, a, b, tol, iters, iostat) result(x)
+function linprog_simplex(c, a, b, tol, iters, iostat) result(x)
 	! Solve a linear programming problem in standard form (?):
 	!
 	! Minimize:
@@ -1004,13 +1048,13 @@ function linprog_std(c, a, b, tol, iters, iostat) result(x)
 	if (present(iters)) iters_ = iters
 
 	if (size(c) /= size(a,2)) then
-		msg = "size(c) does not match size(a,2) in linprog_std()"
+		msg = "size(c) does not match size(a,2) in linprog_simplex()"
 		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
 	if (size(a,1) /= size(b)) then
-		msg = "size(a,1) does not match size(b) in linprog_std()"
+		msg = "size(a,1) does not match size(b) in linprog_simplex()"
 		call PANIC(msg, present(iostat))
 		iostat = 5
 		return
@@ -1056,9 +1100,9 @@ function linprog_std(c, a, b, tol, iters, iostat) result(x)
 	!print *, "t initial = "
 	!print "("//to_str(size(t,2))//"es14.4)", transpose(t)
 
-	call linprog_solve_simplex(t, basis, tol_, iters_, phase = 1, iostat = io)
+	call lp_solve_simplex(t, basis, tol_, iters_, phase = 1, iostat = io)
 	if (io /= 0) then
-		msg = "linprog_solve_simplex() phase 1 failed in linprog_std()"
+		msg = "phase 1 failed in linprog_simplex()"
 		call PANIC(msg, present(iostat))
 		iostat = 9
 		return
@@ -1070,7 +1114,7 @@ function linprog_std(c, a, b, tol, iters, iostat) result(x)
 	!********
 
 	if (abs(t(size(t,1), size(t,2))) >= tol_) then
-		msg = "solution is infeasible in linprog_std()"
+		msg = "problem is infeasible in linprog_simplex()"
 		call PANIC(msg, present(iostat))
 		iostat = 8
 		return
@@ -1090,9 +1134,9 @@ function linprog_std(c, a, b, tol, iters, iostat) result(x)
 
 	!********
 
-	call linprog_solve_simplex(t, basis, tol_, iters_, phase = 2, iostat = io)
+	call lp_solve_simplex(t, basis, tol_, iters_, phase = 2, iostat = io)
 	if (io /= 0) then
-		msg = "linprog_solve_simplex() phase 2 failed in linprog_std()"
+		msg = "phase 2 failed in linprog_simplex()"
 		call PANIC(msg, present(iostat))
 		iostat = 9
 		return
@@ -1102,7 +1146,7 @@ function linprog_std(c, a, b, tol, iters, iostat) result(x)
 	solution(basis(:n)) = t(:n, size(t,2))
 	x = solution(:m)
 
-end function linprog_std
+end function linprog_simplex
 
 !********
 
@@ -1134,7 +1178,7 @@ end subroutine rm_cols
 
 !********
 
-subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
+subroutine lp_solve_simplex(t, basis, tol, iters, phase, iostat)
 	! This is based on `_solve_simplex()` from scipy:
 	!
 	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L232
@@ -1155,7 +1199,7 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 
 	if (present(iostat)) iostat = 0
 
-	!print *, "starting linprog_solve_simplex(), phase = ", to_str(phase)
+	!print *, "starting lp_solve_simplex(), phase = ", to_str(phase)
 
 	if (phase == 1) then
 		m = size(t, 2) - 2
@@ -1241,7 +1285,7 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 		kr = i1(1)
 		!print *, "pivrow = ", kr
 		if (kr == 0) then
-			msg = "pivot row not found in linprog_solve_simplex()"
+			msg = "pivot row not found in lp_solve_simplex()"
 			call PANIC(msg, present(iostat))
 			iostat = 1
 			return
@@ -1263,14 +1307,14 @@ subroutine linprog_solve_simplex(t, basis, tol, iters, phase, iostat)
 		!print *, ""
 		!stop
 		if (iter >= iters) then
-			msg = "max iterations reached in linprog_solve_simplex()"
+			msg = "max iterations reached in lp_solve_simplex()"
 			call PANIC(msg, present(iostat))
 			iostat = 2
 			return
 		end if
 	end do
 
-end subroutine linprog_solve_simplex
+end subroutine lp_solve_simplex
 
 !===============================================================================
 

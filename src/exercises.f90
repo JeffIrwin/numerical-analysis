@@ -765,6 +765,19 @@ integer function chapter_4_lu() result(nfail)
 	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 3")
 
 	!********
+
+
+
+	!************************
+	! TODO: fuzz test with a randomly permuted diagonal matrix.  My pivoting bug
+	! went undetected because my existing fuzz-tests have *too many* non-zeros.
+	! A more spares matrix poses more of a pivoting challenge
+	!************************
+
+
+
+
+	!********
 	! Do some fuzz testing with random data.  Chances are almost 0 for randomly
 	! creating a singular matrix
 	!
@@ -2955,25 +2968,23 @@ end function chapter_4_qr_c64
 
 !===============================================================================
 
-integer function chapter_4_linprog() result(nfail)
+integer function chapter_4_rank() result(nfail)
 	use ieee_arithmetic
-	character(len = *), parameter :: label = "chapter_4_linprog"
+	character(len = *), parameter :: label = "chapter_4_rank"
 
-	double precision :: fval, fexpect
-	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
-		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
-	integer, allocatable :: methods(:)
-	integer :: n, p, rank_, im, method
+	double precision :: delta
+	double precision, allocatable :: a(:,:), a0(:,:), kr1(:), diag_(:), kr(:,:)
+	integer :: i, n, rank_, rank_expect, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
 
+	! TODO: test is_full_rank() here too
+
 	!********
 
-	! Test rank calculation, needed for revised simplex
-	!
-	! TODO: separate test fn
+	! Test rank calculation
 
 	a = reshape([ &
 		1, 0, 0, &
@@ -3031,7 +3042,191 @@ integer function chapter_4_linprog() result(nfail)
 	call test(1.d0 * rank_, 1.d0, 1.d-14, nfail, "qr_rank 5")
 
 	!********
-	! Standard form, using linprog_std() directly
+
+	! This one breaks without pivoting
+	a = reshape([ &
+		1, 0, 0, &
+		0, 0, 0, &
+		0, 1, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 2 = ", rank_
+	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 6")
+
+	!********
+
+	a = reshape([ &
+		0, 0, 0, &
+		1, 0, 0, &
+		0, 1, 0  &
+		], &
+		[3, 3] &
+	)
+	rank_ = qr_rank(a)
+	print *, "qr_rank 2 = ", rank_
+	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 7")
+
+	!********
+	! Source:  https://nhigham.com/2021/05/19/what-is-a-rank-revealing-factorization/
+
+	a = reshape([ &
+		0, 1, 0, 0, &
+		0, 0, 1, 0, &
+		0, 0, 0, 1, &
+		0, 0, 0, 0  &
+		], &
+		[4, 4] &
+	)
+	a0 = a
+	rank_ = qr_rank(a)
+	print *, "qr_rank 4x4 = ", rank_
+	call test(1.d0 * rank_, 3.d0, 1.d-14, nfail, "qr_rank 8")
+
+	a = a0
+
+	a = transpose(a)
+	call qr_factor_f64(a, diag_, allow_singular = .true.)
+	kr = qr_get_q_expl(a, diag_)
+	kr = kr(:, rank_+1:)
+	call print_mat(kr, "kr = ")
+
+	delta = norm2(matmul(a0, kr))
+
+	!! TODO: needs pivoting
+	!call test(delta, 0.d0, 1.d-9, nfail, "kernel 4x4")
+
+	!********
+
+	! Fuzz test
+	!
+	! Make a few random rows/cols in an n-by-n matrix, and then make the remaining
+	! rows as a linear combination of the first rows.  Finally, randomly permute
+	! the rows.  I might be loose with my row/col terminology, but it doesn't
+	! matter because the row rank is equivalent to the col rank
+	!
+	! These require a non-zero tolerance in qr_rank()
+
+	print *, "Fuzz testing rank ..."
+	!do n = 10, 20
+	do n = 6, 20 ! TODO
+	do irep = 1, 5
+		deallocate(a)
+		allocate(a(n,n))
+		call random_number(a)  ! fully random a
+		!call print_mat(a, "a = ")
+
+		! TODO: rank < 2 doesn't work for kernel(). Might need pivoting or early
+		! exit
+		rank_expect = max(rand_i32(n), 2)
+		!rank_expect = rand_i32(n)
+
+		!rank_expect = n  ! edge cases work
+		!rank_expect = 0
+		!rank_expect = n - 2  ! TODO
+
+		!print *, "n            = ", n
+		!print *, "rank_expect  = ", rank_expect
+
+		! Keep the original rank_expect cols.  Make the rest linear combos of the
+		! first rank_expect cols
+		do i = rank_expect+1, n
+			! Use the initial values of col i as the weights of the linear combo.
+			! Could be any random set of numbers
+			a(:,i) = matmul(a(:, 1:rank_expect), a(1:rank_expect, i))
+		end do
+		!call print_mat(a, "a = ")
+
+		! Permute
+		a = a(:, rand_perm(n))
+		!a = a(rand_perm(n), :)
+		!if (rank_expect == 0) call print_mat(a, "a = ")
+		!call print_mat(a, "a = ")
+		!call print_mat(a, "a = ", fmt = "es18.8")
+
+		a0 = a
+
+		! Finished setting `a`
+		!********
+
+		rank_ = qr_rank(a)
+		!print *, "qr_rank fuzz = ", rank_
+
+		call test(1.d0 * rank_, 1.d0 * rank_expect, 1.d-14, nfail, "qr_rank fuzz")
+
+		!********
+		a = a0
+		kr1 = lu_kernel(a)
+		!print *, "kr1 = ", kr1
+
+		call test(norm2(matmul(a0, kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
+
+		!print *, "a * kr1 = ", matmul(a0, kr1)
+		!print *, "norm    = ", norm2(matmul(a0, kr1))
+		!print *, ""
+
+		!********
+		a = a0
+
+		! TODO: make this a kernel() fn.  It's better than lu_kernel() because
+		! it can return the whole kernel, not just one dimension of it. Maybe
+		! include a left/right option to determine whether to transpose?
+		a = transpose(a)
+		!call qr_factor(a, diag_)
+		!call qr_factor(a, diag_, allow_singular = .true.)
+		call qr_factor_f64(a, diag_, allow_singular = .true.)
+
+		kr = qr_get_q_expl(a, diag_)
+		!kr = qr_mul_transpose(a, diag_, eye(n))
+		kr = kr(:, rank_+1:)
+		!call print_mat(kr, "kr = ")
+		kr1 = kr(:, size(kr,2))
+
+		!kr1 = kr(n,:)
+		!print *, "kr1 = ", kr1
+
+		call test(norm2(matmul(a0, kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
+		!call test(norm2(matmul(transpose(a0), kr1)), 0.d0, 1.d-9, nfail, "kernel fuzz()")
+
+		delta = norm2(matmul(a0, kr))
+		call test(delta, 0.d0, 1.d-9, nfail, "kernel fuzz()")
+
+		!call print_mat(matmul(a0, kr), "a * kr = ")
+		!print *, "a * kr = ", matmul(a0, kr)
+		!print *, "norm    = ", norm2(matmul(a0, kr))
+
+		!print *, "a * kr1 = ", matmul(a0, kr1)
+		!print *, "norm    = ", norm2(matmul(a0, kr1))
+
+		if (isnan(delta)) stop
+
+		!print *, ""
+	end do
+	end do
+	!********
+	print *, ""
+
+end function chapter_4_rank
+
+!===============================================================================
+
+integer function chapter_4_linprog() result(nfail)
+	use ieee_arithmetic
+	character(len = *), parameter :: label = "chapter_4_linprog"
+
+	double precision :: fval, fexpect
+	double precision, allocatable :: c(:), a(:,:), b(:), x(:), expect(:), &
+		a_ub(:,:), b_ub(:), lb(:), ub(:), a_eq(:,:), b_eq(:)
+	integer, allocatable :: methods(:)
+	integer :: n, p, im, method
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+
+	!********
+	! Standard form, using linprog_simplex() directly
 
 	c = [8, 6, 0, 0]
 	a = transpose(reshape([ &
@@ -3044,23 +3239,23 @@ integer function chapter_4_linprog() result(nfail)
 	print *, "a = "
 	print "(4es13.3)", transpose(a)
 
-	x = linprog_std(c, a, b)
+	x = linprog_simplex(c, a, b)
 
 	print *, "x = ", x
 
-	call test(norm2(x - expect), 0.d0, 1.d-7, nfail, "linprog_std 1")
+	call test(norm2(x - expect), 0.d0, 1.d-7, nfail, "linprog_simplex 1")
 
 	!********
 
-	methods = [LINPROG_SIMPLEX, LINPROG_REVISED_SIMPLEX]
-	!methods = [LINPROG_REVISED_SIMPLEX, LINPROG_SIMPLEX]
+	methods = [LINPROG_SIMPLEX_METH, LINPROG_REVISED_SIMPLEX_METH]
+	!methods = [LINPROG_REVISED_SIMPLEX_METH, LINPROG_SIMPLEX_METH]
 	do im = 1, size(methods)
 	method = methods(im)
 
-	if (method == LINPROG_SIMPLEX) then
-		print *, "Testing method LINPROG_SIMPLEX"
-	else if (method == LINPROG_REVISED_SIMPLEX) then
-		print *, "Testing method LINPROG_REVISED_SIMPLEX"
+	if (method == LINPROG_SIMPLEX_METH) then
+		print *, "Testing method LINPROG_SIMPLEX_METH"
+	else if (method == LINPROG_REVISED_SIMPLEX_METH) then
+		print *, "Testing method LINPROG_REVISED_SIMPLEX_METH"
 	end if
 
 	!********
@@ -3124,7 +3319,6 @@ integer function chapter_4_linprog() result(nfail)
 	expect = [10, -3]
 
 	x = linprog(c, a_ub, b_ub, lb = lb, fval = fval, method=method)
-	!x = linprog(c, a_ub, b_ub, lb = lb, fval = fval)  ! TODO
 
 	print *, "x = ", x
 	print *, "fval = ", fval
@@ -3282,7 +3476,7 @@ integer function chapter_4_linprog() result(nfail)
 	c = [2, 4, 9, 11, 4, 3, 8, 7, 0, 15, 16, 18]
 	n = -1
 	p = 1
-	A_eq = transpose(reshape([ &
+	a_eq = transpose(reshape([ &
 	    n, n, p, 0, p, 0, 0, 0, 0, p, 0, 0, &
 	    p, 0, 0, p, 0, p, 0, 0, 0, 0, 0, 0, &
 	    0, 0, n, n, 0, 0, 0, 0, 0, 0, 0, 0, &
@@ -3296,8 +3490,15 @@ integer function chapter_4_linprog() result(nfail)
 	expect = [19, 0, 16, 0, 0, 0, 0, 0, 0, 3, 33, 0]
 	fexpect = 755
 
-	! TODO: make [a_ub, b_ub] optional?  It's tricky now because you have to be
-	! very careful to get size(a_ub,2) correct even if size 1 is 0
+	! Make [a_ub, b_ub] optional?  It's tricky now because you have to be very
+	! careful to get size(a_ub,2) correct even if size 1 is 0.  This could be
+	! dangerous because ranks and types of a_ub/b_ub match a_eq/b_eq, so it
+	! could invite misuse if both are optional
+	!
+	! It's slightly less tricky now that there's a half-decent error message to
+	! notify you of a size mismatch (although, not what the size is or should
+	! be)
+
 	deallocate(a_ub, b_ub)
 	!allocate(a_ub(0,0), b_ub(0))
 	allocate(a_ub(0,12), b_ub(0))
@@ -3341,12 +3542,12 @@ integer function chapter_4_linprog() result(nfail)
 	! Scipy calls `_remove_redundancy_svd()` during presolve for this example,
 	! which is not implemented here
 	!
-	!     "A_eq does not appear to be of full row rank. To improve performance,
+	!     "a_eq does not appear to be of full row rank. To improve performance,
 	!     check the problem formulation for redundant equality constraints."
 	!
 
 	c = [2.8, 6.3, 10.8, -2.8, -6.3, -10.8]
-	A_eq = transpose(reshape([ &
+	a_eq = transpose(reshape([ &
 		-1, -1, -1, 0, 0, 0, &
 		0, 0, 0, 1, 1, 1, &
 		1, 0, 0, 1, 0, 0, &
@@ -3379,7 +3580,7 @@ integer function chapter_4_linprog() result(nfail)
 	!********
 
 	c = [-0.1, -0.07, 0.004, 0.004, 0.004, 0.004]
-	A_ub = transpose(reshape([ &
+	a_ub = transpose(reshape([ &
 		1.0, 0., 0., 0., 0., 0., &
 		-1.0, 0., 0., 0., 0., 0., &
 		0., -1.0, 0., 0., 0., 0., &
@@ -3389,7 +3590,7 @@ integer function chapter_4_linprog() result(nfail)
 		[6, 5] &
 	))
 	b_ub = [3.0, 3.0, 3.0, 3.0, 20.0]
-	A_eq = transpose(reshape([ &
+	a_eq = transpose(reshape([ &
 		1.0, 0., -1., 1., -1., 1., &
 		0., -1.0, -1., 1., -1., 1. &
 		], &

@@ -121,8 +121,8 @@ end function rand_f64
 
 !********
 
+!> Random integer in the range 0 <= rand_i32() < n
 integer function rand_i32(n)
-	! Random integer 0 <= rand_i32 < n
 	! TODO: move out of blarg
 	integer, intent(in) :: n
 	rand_i32 = floor(n * rand_f64())
@@ -533,8 +533,8 @@ function mask_to_index_mat(mask) result(indices)
 	! implicitly using count()
 	allocate( indices(2, size(mask)) )
 	i = 0
-	do k = 1, size(mask,1)
 	do j = 1, size(mask,2)
+	do k = 1, size(mask,1)
 		if (.not. (mask(k,j))) cycle
 		i = i + 1
 		indices(:,i) = [k, j]

@@ -611,6 +611,7 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 	!********
 
 	character(len = :), allocatable :: msg
+	double precision :: amax
 	integer :: i, j, k, n, max_index
 	logical :: allow_singular_
 
@@ -643,10 +644,14 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
+		amax = abs(a(pivot(i), i))
 		!if (DO_PIVOT) then
 			do j = i+1, n
 				!print *, "aj, ai = ", a(j,i), a(i,i)
-				if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
+				if (abs(a(pivot(j), i)) > amax) then
+					max_index = j
+					amax = abs(a(pivot(j), i))
+				end if
 			end do
 		!end if
 
@@ -698,6 +703,7 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 	!********
 
 	character(len = :), allocatable :: msg
+	double precision :: amax
 	integer :: i, j, k, n, max_index
 	logical :: allow_singular_
 
@@ -731,8 +737,13 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
+		amax = abs(a(pivot(i), i))
 		do j = i+1, n
-			if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
+			!if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
+			if (abs(a(pivot(j), i)) > amax) then
+				max_index = j
+				amax = abs(a(pivot(j), i))
+			end if
 		end do
 
 		! Swap rows
@@ -855,13 +866,100 @@ end subroutine qr_factor_gram_schmidt
 
 !********
 
-integer function qr_rank(a, allow_rect, iostat) result(rank_)
+integer function qr_rank(a, tol, allow_rect, iostat) result(rank_)
 	! Get the rank of `a` using QR factorization with Householder transformations
 	!
-	! TODO: tol?  Also I don't think this is always correct because it doesn't
-	! pivot, but I think it can at least tell you whether the matrix is full
-	! rank or not, which is good enough for its application in the revised
-	! simplex algorithm.  See "rank-revealing QR factorization"
+	! "Rank" here is the meaning in the linear algebra sense, i.e. the dimension
+	! of the vector space spanned by the columns of `a`.  This is not to be
+	! confused with the Fortran intrinsic sense of "rank", which is a built-in
+	! fn being 2 for all matrices
+	!
+	! TODO: rename just rank_?
+	!
+	! Matrix `a` is modified in the process
+	use numa__utils
+	double precision, intent(inout) :: a(:,:)
+
+	double precision, optional, intent(in) :: tol
+	logical, optional, intent(in) :: allow_rect
+	integer, optional, intent(out) :: iostat
+
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision :: s, normx, normj, u1, wa, diag_, amax, tol_
+	integer :: i, j, k, n, max_index
+	integer, allocatable :: pivot(:)
+	logical :: allow_rect_
+
+	allow_rect_ = .false.
+	tol_ = 1.d-12
+	if (present(iostat)) iostat = 0
+	if (present(allow_rect)) allow_rect_ = allow_rect
+	if (present(tol)) tol_ = tol
+
+	n = min(size(a,1), size(a,2))
+
+	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
+		msg = "matrix is not square in qr_rank()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+	! Column pivot, not row pivot unlike LU factor.  Could just transpose
+	! everything, might not matter much
+	pivot = [(i, i = 1, n)]
+
+	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	rank_ = 0
+	do i = 1, n
+		rank_ = rank_ + 1
+
+		max_index = i
+		normx = norm2(a(i:, pivot(i)))
+		!print *, "normx = ", normx
+		do j = i+1, n
+			normj = norm2(a(i:, pivot(j)))
+			if (normj > normx) then
+				max_index = j
+				normx = normj
+			end if
+		end do
+		!print *, "normx = ", normx
+
+		! Swap cols
+		pivot([i, max_index]) = pivot([max_index, i])
+
+		!if (normx <= 0) then
+		if (normx <= tol_) then
+			rank_ = rank_ - 1
+			cycle
+			!exit
+		end if
+
+		s = -sign_(a(i, pivot(i)))
+		u1 = a(i, pivot(i)) - s * normx
+		a(i+1:, pivot(i)) = a(i+1:, pivot(i)) / u1
+		a(i, pivot(i)) = s * normx
+		diag_ = -s * u1 / normx
+
+		do k = i+1, n
+			wa = diag_ * (dot_product(a(i+1:, pivot(i)), a(i+1:, pivot(k))) + a(i, pivot(k)))
+			a(i, pivot(k)) = a(i, pivot(k)) - wa
+			a(i+1:, pivot(k)) = a(i+1:, pivot(k)) - a(i+1:, pivot(i)) * wa
+		end do
+
+	end do
+
+end function qr_rank
+
+!********
+
+logical function is_full_rank(a, allow_rect, iostat)
+	! Determine if matrix `a` is full-rank
+	!
+	! TODO: tol?
 	!
 	! Matrix `a` is modified in the process
 	use numa__utils
@@ -884,22 +982,22 @@ integer function qr_rank(a, allow_rect, iostat) result(rank_)
 	n = min(size(a,1), size(a,2))
 
 	if (.not. allow_rect_ .and. size(a, 1) /= size(a, 2)) then
-		msg = "matrix is not square in qr_factor_f64()"
+		msg = "matrix is not square in is_full_rank()"
 		call PANIC(msg, present(iostat))
 		iostat = 1
 		return
 	end if
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
+	is_full_rank = .true.
 	do j = 1, n
-		rank_ = j
 
 		normx = norm2(a(j:, j))
 		!print *, "normx = ", normx
 		if (normx <= 0) then
 		!if (normx <= 1.d-10) then
-			rank_ = rank_ - 1
-			exit
+			is_full_rank = .false.
+			return
 		end if
 
 		s = -sign_(a(j,j))
@@ -916,17 +1014,17 @@ integer function qr_rank(a, allow_rect, iostat) result(rank_)
 
 	end do
 
-end function qr_rank
+end function is_full_rank
 
 !********
 
-subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
+subroutine qr_factor_f64(a, diag_, allow_rect, allow_singular, iostat)
 	! Replace `a` with its QR factorization using Householder transformations
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
 	double precision, allocatable, intent(out) :: diag_(:)
-	logical, optional, intent(in) :: allow_rect
+	logical, optional, intent(in) :: allow_rect, allow_singular
 	integer, optional, intent(out) :: iostat
 
 	!********
@@ -934,11 +1032,13 @@ subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	character(len = :), allocatable :: msg
 	double precision :: s, normx, u1, wa
 	integer :: j, k, n
-	logical :: allow_rect_
+	logical :: allow_rect_, allow_singular_
 
 	allow_rect_ = .false.
+	allow_singular_ = .false.
 	if (present(iostat)) iostat = 0
 	if (present(allow_rect)) allow_rect_ = allow_rect
+	if (present(allow_singular)) allow_singular_ = allow_singular
 
 	n = min(size(a,1), size(a,2))
 
@@ -956,7 +1056,7 @@ subroutine qr_factor_f64(a, diag_, allow_rect, iostat)
 	do j = 1, n
 
 		normx = norm2(a(j:, j))
-		if (normx <= 0) then
+		if (normx <= 0 .and. .not. allow_singular_) then
 			msg = "matrix is singular in qr_factor_f64()"
 			call PANIC(msg, present(iostat))
 			iostat = 2
@@ -1558,7 +1658,7 @@ function qr_solve_f64(a, b, allow_rect, iostat) result(x)
 	allow_rect_ = .false.
 	if (present(allow_rect)) allow_rect_ = allow_rect
 
-	call qr_factor(a, diag_, allow_rect_, io)
+	call qr_factor(a, diag_, allow_rect_, iostat = io)
 	if (io /= 0) then
 		msg = "qr_factor() failed in qr_solve_f64()"
 		call PANIC(msg, present(iostat))
