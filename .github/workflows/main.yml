@@ -55,6 +55,7 @@ jobs:
       with:
         compiler: ${{ matrix.toolchain.compiler }}
         version: ${{ matrix.toolchain.version }}
+        install_mkl: "true"
 
     - if: matrix.toolchain.compiler != 'intel'
       name: Test numa on ${{ matrix.os }}
@@ -66,12 +67,12 @@ jobs:
 
     - if: matrix.toolchain.compiler == 'intel'
       name: Test numa on ${{ matrix.os }}
-      uses: rscohn2/setup-oneapi@v0
-      with:
-        list: true
-        components: |
-          ifx@2024.2.0
-          mkl@2024.2.0
+      #uses: rscohn2/setup-oneapi@v0
+      #with:
+      #  list: true
+      #  components: |
+      #    ifx@2024.2.0
+      #    mkl@2024.2.0
       run: |
         fpm run --example --profile debug --flag "-qmkl -standard-semantics"
         fpm run --example --profile release --flag "-qmkl -standard-semantics"
