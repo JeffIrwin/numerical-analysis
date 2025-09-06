@@ -3102,9 +3102,74 @@ integer function chapter_4_rank() result(nfail)
 
 	a = a0
 	kr = kernel(a)
-	call print_mat(kr, "kr = ")
+	!call print_mat(kr, "kr = ")
 	delta = norm2(matmul(a0, kr))
 	call test(delta, 0.d0, 1.d-9, nfail, "kernel 4x4 2")
+
+	!********
+
+	a = reshape([ &
+		1, 0, 0, &
+		0, 0, 0, &
+		0, 0, 0  &
+		], &
+		[3, 3] &
+	)
+
+	a0 = a
+	kr = kernel(a)
+	call print_mat(kr, "kr = ")
+	delta = norm2(matmul(a0, kr))
+	call test(delta, 0.d0, 1.d-9, nfail, "kernel 3x3 3")
+
+	!********
+
+	a = reshape([ &
+		0, 0, 0, &
+		1, 0, 0, &
+		0, 0, 0  &
+		], &
+		[3, 3] &
+	)
+
+	a0 = a
+	kr = kernel(a)
+	!call print_mat(kr, "kr = ")
+	delta = norm2(matmul(a0, kr))
+	call test(delta, 0.d0, 1.d-9, nfail, "kernel 3x3 4")
+
+	!********
+
+	a = reshape([ &
+		1, 0, 0, &
+		1, 0, 0, &
+		0, 0, 0  &
+		], &
+		[3, 3] &
+	)
+
+	a0 = a
+	kr = kernel(a)
+	!call print_mat(kr, "kr = ")
+	delta = norm2(matmul(a0, kr))
+	call test(delta, 0.d0, 1.d-9, nfail, "kernel 3x3 5")
+
+	!********
+
+	a = reshape([ &
+		1, 0, 0, &
+		1, 0, 0, &
+		1, 0, 0  &
+		], &
+		[3, 3] &
+	)
+
+	a0 = a
+	kr = kernel(a)
+	!call print_mat(kr, "kr = ")
+	!print *, "kernel col norms = ", norm2(kr, 1)
+	delta = norm2(matmul(a0, kr))
+	call test(delta, 0.d0, 1.d-9, nfail, "kernel 3x3 6")
 
 	!********
 
@@ -3118,8 +3183,7 @@ integer function chapter_4_rank() result(nfail)
 	! These require a non-zero tolerance in qr_rank()
 
 	print *, "Fuzz testing rank ..."
-	!do n = 10, 20
-	do n = 6, 20 ! TODO
+	do n = 10, 20
 	do irep = 1, 5
 		deallocate(a)
 		allocate(a(n,n))
@@ -3168,6 +3232,7 @@ integer function chapter_4_rank() result(nfail)
 		delta = norm2(matmul(a0, kr))
 		call test(delta, 0.d0, 1.d-9, nfail, "kernel fuzz()")
 
+		!print *, "kernel col norms = ", norm2(kr, 1)
 		!call print_mat(matmul(a0, kr), "a * kr = ")
 		!print *, "a * kr = ", matmul(a0, kr)
 		!print *, "norm    = ", norm2(matmul(a0, kr))

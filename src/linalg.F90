@@ -867,13 +867,10 @@ end subroutine qr_factor_gram_schmidt
 !********
 
 function kernel(a, tol, iostat)
-	! Get the kernel of `a` using QR factorization
+	! Get the kernel of `a` using QR factorization.  Results are not normalized
+	! in any particular way
 	!
 	! Matrix `a` is modified in the process
-	!
-	! TODO: DRY kernel(), qr_rank(), and qr_factor_f64().  Need to make an
-	! optional `pivot` arg, false by default, but true for rank and kernel.  A
-	! core routine should provide qr factorization and opt out-arg rank
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
@@ -886,14 +883,12 @@ function kernel(a, tol, iostat)
 	character(len = :), allocatable :: msg
 	double precision :: tol_
 	double precision, allocatable :: diag_(:)
-	integer :: n, rank_, io
+	integer :: rank_, io
 	integer, allocatable :: pivot(:)
 
 	tol_ = 1.d-12
 	if (present(iostat)) iostat = 0
 	if (present(tol)) tol_ = tol
-
-	n = min(size(a,1), size(a,2))
 
 	! For the right kernel, a transposition is needed.  Otherwise the result is
 	! the left kernel
@@ -1058,9 +1053,10 @@ end function qr_rank
 logical function is_full_rank(a, allow_rect, iostat)
 	! Determine if matrix `a` is full-rank
 	!
-	! TODO: tol?
-	!
 	! Matrix `a` is modified in the process
+	!
+	! This uses 0 tolerance.  If you want rank calculation with a tolerance, use
+	! qr_rank() instead
 	use numa__utils
 	double precision, intent(inout) :: a(:,:)
 
