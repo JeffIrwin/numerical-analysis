@@ -7,6 +7,11 @@ module numa__exercises
 
 	implicit none
 
+	interface test
+		procedure :: test_f64
+		procedure :: test_bool
+	end interface test
+
 contains
 
 !===============================================================================
@@ -25,7 +30,7 @@ end function assert
 
 ! This could be a macro like PANIC, but it has so many arguments that there
 ! might be line truncation issues
-subroutine test(val, expect, tol, nfail, msg)
+subroutine test_f64(val, expect, tol, nfail, msg)
 	double precision, intent(in) :: val, expect, tol
 	integer, intent(inout) :: nfail
 	character(len = *), intent(in) :: msg
@@ -47,7 +52,31 @@ subroutine test(val, expect, tol, nfail, msg)
 
 	end if
 
-end subroutine test
+end subroutine test_f64
+
+subroutine test_bool(val, expect, nfail, msg)
+	logical, intent(in) :: val, expect
+	integer, intent(inout) :: nfail
+	character(len = *), intent(in) :: msg
+
+	!********
+	integer :: io
+
+	io = assert(val .eqv. expect)
+	nfail = nfail + io
+	if (io /= 0) then
+
+		write(*,*) ERROR // "assert failed for value " // &
+			to_str(val) // " in "// msg
+
+		!! Could be helpful sometimes, but maybe too noisy.  Maybe add a cmd arg
+		!! to enable backtrace for unit test failures.  Also this is gfortran
+		!! extension, intel has `tracebackqq()`
+		!call backtrace()
+
+	end if
+
+end subroutine test_bool
 
 !********
 
@@ -2983,8 +3012,6 @@ integer function chapter_4_rank() result(nfail)
 
 	nfail = 0
 
-	! TODO: test is_full_rank() here too
-
 	!********
 
 	! Test rank calculation
@@ -2996,9 +3023,11 @@ integer function chapter_4_rank() result(nfail)
 		], &
 		[3, 3] &
 	)
+	a0 = a
 	rank_ = qr_rank(a)
 	print *, "qr_rank 3 = ", rank_
 	call test(1.d0 * rank_, 3.d0, 1.d-14, nfail, "qr_rank 1")
+	call test(is_full_rank(a0), .true., nfail, "is_full_rank 1")
 
 	a = reshape([ &
 		1, 0, 0, &
@@ -3007,9 +3036,11 @@ integer function chapter_4_rank() result(nfail)
 		], &
 		[3, 3] &
 	)
+	a0 = a
 	rank_ = qr_rank(a)
 	print *, "qr_rank 2 = ", rank_
 	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 2")
+	call test(is_full_rank(a0), .false., nfail, "is_full_rank 2")
 
 	a = reshape([ &
 		1, 0, 0, &
@@ -3018,9 +3049,11 @@ integer function chapter_4_rank() result(nfail)
 		], &
 		[3, 3] &
 	)
+	a0 = a
 	rank_ = qr_rank(a)
 	print *, "qr_rank 2 = ", rank_
 	call test(1.d0 * rank_, 2.d0, 1.d-14, nfail, "qr_rank 3")
+	call test(is_full_rank(a0), .false., nfail, "is_full_rank 3")
 
 	a = reshape([ &
 		1, 0, 0, &

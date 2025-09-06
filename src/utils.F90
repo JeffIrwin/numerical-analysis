@@ -32,6 +32,7 @@ module numa__utils
 		ERROR = RED // "Error: " // COLOR_RESET
 
 	interface to_str
+		procedure :: to_str_bool
 		procedure :: to_str_i32
 		procedure :: to_str_i64
 		procedure :: to_str_f32
@@ -109,6 +110,15 @@ function select_max_n(v, n) result(iv)
 end function select_max_n
 
 !===============================================================================
+
+function to_str_bool(val) result(str)
+	logical, intent(in) :: val
+	character(len = :), allocatable :: str
+	str = "false"
+	if (val) str = "true"
+end function to_str_bool
+
+!********
 
 function to_str_i32(val) result(str)
 	integer(kind = 4), intent(in) :: val
