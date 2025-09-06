@@ -902,8 +902,11 @@ function kernel(a, tol, iostat)
 		iostat = 2
 		return
 	end if
+	!call print_mat(a, "qr(a) = ")
+	!print *, "diag_ = ", diag_
 
 	kernel = qr_get_q_expl(a, diag_, pivot)
+	!call print_mat(kernel, "q     = ")
 	kernel = kernel(:, rank_+1:)
 
 end function kernel
@@ -977,6 +980,7 @@ subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
 
 		if (normx <= tol_) then
 			rank__ = rank__ - 1
+			diag__(i) = 0
 			cycle
 		end if
 
@@ -990,6 +994,7 @@ subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
 		u1 = a(i, ip) - s * normx
 		a(i+1:, ip) = a(i+1:, ip) / u1
 		a(i, ip) = s * normx
+
 		diag__(i) = -s * u1 / normx
 
 		do k = i+1, n
@@ -1156,6 +1161,8 @@ function qr_mul_mat_f64(qr, diag_, x, pivot) result(qx)
 
 	n = min(size(qr,1), size(qr,2))
 	qx = x  ! could make a subroutine version which replaces x instead
+
+	!print *, "present(pivot) = ", present(pivot)
 
 	do j = n, 1, -1
 		if (present(pivot)) then

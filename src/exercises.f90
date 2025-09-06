@@ -3195,6 +3195,9 @@ integer function chapter_4_rank() result(nfail)
 
 	!********
 
+	!return  ! TODO
+	!stop
+
 	! Fuzz test
 	!
 	! Make a few random rows/cols in an n-by-n matrix, and then make the remaining
@@ -3253,6 +3256,10 @@ integer function chapter_4_rank() result(nfail)
 
 		delta = norm2(matmul(a0, kr))
 		call test(delta, 0.d0, 1.d-9, nfail, "kernel fuzz()")
+		!if (delta > 1.d-9) then
+		!	call print_mat(kr, "kr = ")
+		!	stop
+		!end if
 
 		!print *, "kernel col norms = ", norm2(kr, 1)
 		!call print_mat(matmul(a0, kr), "a * kr = ")
