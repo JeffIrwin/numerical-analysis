@@ -2973,7 +2973,7 @@ integer function chapter_4_rank() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_rank"
 
 	double precision :: delta
-	double precision, allocatable :: a(:,:), a0(:,:), kr1(:), diag_(:), kr(:,:)
+	double precision, allocatable :: a(:,:), a0(:,:), kr1(:), kr(:,:)
 	integer :: i, n, rank_, rank_expect, irep
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
