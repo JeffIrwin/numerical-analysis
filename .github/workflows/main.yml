@@ -36,6 +36,12 @@ jobs:
     #    components: |
     #      ifx@2024.0.0
     #      mkl@2024.0.0
+    #
+    - if: matrix.os == 'macOS-latest'
+      name: Brew install gcc on mac
+      run: |
+        brew install gcc@12
+        brew reinstall gcc@12
 
     - if: matrix.os == 'ubuntu-latest'
       name: Test numerical-analysis on ubuntu-latest
