@@ -533,12 +533,28 @@ end function mask_to_index_mat
 function reverse(a) result(r)
 	integer, intent(in) :: a(:)
 	integer, allocatable :: r(:)
+	r = a(range_i32(size(a), 1, -1))
+end function reverse
+
+!===============================================================================
+
+!> Return evenly spaced numbers over a specified interval
+!>
+!> Following the Fortran convention, the stop_ bound is inclusive.  Compare the
+!> similar functions linspace in MATLAB and arange in numpy
+function range_i32(start_, stop_, step_)
+	! I settled on the `range` name just because it's shorter than `linspace`
+	!
+	! TODO: overload with step_ optional (and even start_ option defaulting to 1)
+	!
+	! TODO: add f64 version and use it more widely.  DO NOT overload i32 and f64
+	! versions with each other as that could be confusing
+	integer, intent(in) :: start_, stop_, step_
+	integer, allocatable :: range_i32(:)
 	!********
 	integer :: i
-
-	r = a([(i, i = size(a), 1, -1)])
-
-end function reverse
+	range_i32 = [(i, i = start_, stop_, step_)]
+end function range_i32
 
 !===============================================================================
 
