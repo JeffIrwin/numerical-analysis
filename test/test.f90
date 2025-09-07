@@ -4,6 +4,7 @@ module numa__test
 
 	use numa
 	use numa__chapter_2
+	use numa__chapter_3
 	use numa__exercises
 	use numa__utils
 
