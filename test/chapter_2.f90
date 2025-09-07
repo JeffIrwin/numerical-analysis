@@ -252,9 +252,6 @@ integer function chapter_2_fft_2() result(nfail)
 	!print *, "t = ", t(1: 5), " ... ", t(l-5: l)
 
 	call rand_seed_determ()
-
-	!allocate(r(l))
-	!call random_number(r)
 	r = rand_f64(l)
 
 	! Tests expect these amplitudes to be in descending order

@@ -24,11 +24,11 @@ subroutine rand_seed_determ()
 	! numa__rng
 	call global_rng%seed(0)
 
-	print *, "seeded rng"
-	print *, "int = ", global_rng%int32()
-	print *, "int = ", global_rng%int32()
-	print *, "int = ", global_rng%int32()
-	print *, "int = ", global_rng%int32()
+	!print *, "seeded rng"
+	!print *, "int = ", global_rng%int32()
+	!print *, "int = ", global_rng%int32()
+	!print *, "int = ", global_rng%int32()
+	!print *, "int = ", global_rng%int32()
 
 	!! Built-in Fortran default rng
 	!call random_seed(size = nrng)
@@ -44,10 +44,11 @@ double precision function rand_sca_f64()
 	integer :: i
 
 	! numa__rng
-	!
-	! TODO: maybe do a mod(ulo) on ints instead of abs on double?
-	rand_sca_f64 = abs(1.d0 * global_rng%int32() / huge(i))
+
 	!rand_sca_f64 = abs(1.d0 * global_rng%int32() / huge(i))
+	!rand_sca_f64 = 1.d0 * mod(global_rng%int32(), huge(i)) / huge(i)
+	rand_sca_f64 = 1.d0 * modulo(global_rng%int32(), huge(i)) / huge(i)
+
 	!print *, "rand_sca_f64 = ", rand_sca_f64
 
 	!! Built-in Fortran default rng
@@ -93,9 +94,10 @@ end function rand_mat_f64
 integer function rand_i32(n)
 	integer, intent(in) :: n
 
-	! TODO: just use numa__rng directly instead of converting from int to double
-	! and back to int
-	rand_i32 = floor(n * rand_f64())
+	rand_i32 = modulo(global_rng%int32(), n)
+	!rand_i32 = mod(abs(global_rng%int32()), n)
+
+	!rand_i32 = floor(n * rand_f64())
 
 end function rand_i32
 

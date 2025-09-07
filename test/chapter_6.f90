@@ -158,7 +158,7 @@ integer function chapter_6_hessenberg_qr() result(nfail)
 			! the Q product algorithm for now.  It may be the better performer
 			! with shifting
 
-			iters = 5 * n**2
+			iters = 7 * n**2
 			!iters = n**2
 			!iters = n
 			!iters = 10*n

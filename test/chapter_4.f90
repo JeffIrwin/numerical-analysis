@@ -326,6 +326,11 @@ integer function chapter_4_modify() result(nfail)
 
 			row = ceiling(rand_f64() * n)
 			col = ceiling(rand_f64() * n)
+			!print *, "n   = ",n
+			!print *, "row = ", row
+			!print *, "col = ", col
+			!print *, ""
+
 			aij0 = a0(row, col)
 			aij = rand_f64()
 			a0(row, col) = aij
