@@ -20,13 +20,15 @@ RUN fpm --version
 ARG BRANCH="main"
 RUN echo "BRANCH = $BRANCH"
 
-RUN echo 46
+RUN echo 47
 RUN git clone https://github.com/jeffirwin/numerical-analysis --branch "$BRANCH"
 WORKDIR /workdir/numerical-analysis
 
-RUN fpm test --profile debug
-RUN fpm test --profile release
+ENV FLAGS="-fno-range-check"
 
-RUN fpm run --example --profile debug
-RUN fpm run --example --profile release
+RUN fpm test --profile debug --flag "${FLAGS}"
+RUN fpm test --profile release --flag "${FLAGS}"
+
+RUN fpm run --example --profile debug --flag "${FLAGS}"
+RUN fpm run --example --profile release --flag "${FLAGS}"
 

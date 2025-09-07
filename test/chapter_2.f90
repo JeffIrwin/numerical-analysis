@@ -253,8 +253,9 @@ integer function chapter_2_fft_2() result(nfail)
 
 	call rand_seed_determ()
 
-	allocate(r(l))
-	call random_number(r)
+	!allocate(r(l))
+	!call random_number(r)
+	r = rand_f64(l)
 
 	! Tests expect these amplitudes to be in descending order
 	a1 = 0.8  ! DC offset

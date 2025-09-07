@@ -46,16 +46,16 @@ integer function chapter_6_basic_qr() result(nfail)
 			! Construct a random matrix `a` with known real eigenvalues
 
 			! Known eigenvalues
-			expect = zeros(n)
-			call random_number(expect)
+			expect = rand_f64(n)
 
 			d = diag(expect)
 			call sort(expect)
 			!print *, "expect  = ", expect
 			print "(a,*(es15.5))", " expect  = ...", expect(n-3: n)
 
-			!call random_number(s)  ! random matrix
 			s = rand_f64(n, n)
+			!call print_mat(s, "s = ")
+			!stop
 
 			a = matmul(matmul(s, d), inv(s))
 			!print *, "a = "
@@ -116,8 +116,7 @@ integer function chapter_6_hessenberg_qr() result(nfail)
 			! Construct a random matrix `a` with known real eigenvalues
 
 			! Known eigenvalues
-			expect = zeros(n)
-			call random_number(expect)
+			expect = rand_f64(n)
 
 			!expect(3) = expect(2)
 
@@ -126,9 +125,7 @@ integer function chapter_6_hessenberg_qr() result(nfail)
 			!print *, "expect  = ", expect
 			print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
 
-			!call random_number(s)  ! random matrix
 			s = rand_f64(n, n)
-			!call print_mat(s, "s = ")
 
 			a = matmul(matmul(s, d), inv(s))
 			!print *, "a = "
@@ -342,8 +339,7 @@ integer function chapter_6_francis_qr() result(nfail)
 			! Construct a random matrix `a` with known real eigenvalues
 
 			! Known eigenvalues
-			expect = zeros(n)
-			call random_number(expect)
+			expect = rand_f64(n)
 
 			!expect(3) = expect(2)
 
@@ -351,7 +347,7 @@ integer function chapter_6_francis_qr() result(nfail)
 			call sort(expect)
 			!print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
 
-			call random_number(s)  ! random matrix
+			s = rand_f64(n,n)
 			a = matmul(matmul(s, d), inv(s))
 			!print *, "a = "
 			!print "("//to_str(n)//"es19.9)", a
@@ -420,7 +416,7 @@ integer function chapter_6_francis_qr() result(nfail)
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,
 			! most likely a mixture of real and complex eigenvalues
-			call random_number(a)
+			a = rand_f64(n,n)
 			!print *, "a = "
 			!print "("//to_str(n)//"es19.9)", a
 			a0 = a
@@ -549,13 +545,12 @@ integer function chapter_6_eig_lapack() result(nfail)
 			! Construct a random matrix `a` with known real eigenvalues
 
 			! Known eigenvalues
-			expect = zeros(n)
-			call random_number(expect)
+			expect = rand_f64(n)
 
 			d = diag(expect)
 			call sort(expect)
 
-			call random_number(s)  ! random matrix
+			s = rand_f64(n,n)
 			a = matmul(matmul(s, d), inv(s))
 			!print *, "a = "
 			!print "("//to_str(n)//"es19.9)", a
@@ -604,7 +599,7 @@ integer function chapter_6_eig_lapack() result(nfail)
 
 			! Construct a random matrix `a`.  It can have complex eigenvalues,
 			! most likely a mixture of real and complex eigenvalues
-			call random_number(a)
+			a = rand_f64(n,n)
 			!print *, "a = "
 			!print "("//to_str(n)//"es19.9)", a
 			a0 = a

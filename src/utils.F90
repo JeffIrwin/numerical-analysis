@@ -69,11 +69,6 @@ module numa__utils
 		procedure :: print_mat_i32
 	end interface print_mat
 
-	interface rand_f64
-		procedure :: rand_sca_f64
-		procedure :: rand_mat_f64  ! TODO: rand_vec_f64
-	end interface rand_f64
-
 	integer, parameter :: &
 		COMPARE_LESS_ = -1, &
 		COMPARE_EQUAL_ = 0, &
@@ -623,66 +618,6 @@ subroutine print_mat_i32(mat, msg, fmt)
 	write(UNIT, "(a)") " ]"
 
 end subroutine print_mat_i32
-
-!===============================================================================
-
-subroutine rand_seed_determ()
-	integer :: i, nrng
-	! Seed the default RNG with 0's for repeatable tests
-	call random_seed(size = nrng)
-
-	!call random_seed(put = [1, (0, i = 2, nrng)])  ! nvfortran complains with all 0's
-	call random_seed(put = [(0, i = 1, nrng)])
-
-end subroutine rand_seed_determ
-
-!********
-
-double precision function rand_sca_f64()
-	call random_number(rand_sca_f64)
-end function rand_sca_f64
-function rand_mat_f64(m, n)
-	integer, intent(in) :: m, n
-	double precision, allocatable :: rand_mat_f64(:,:)
-	!integer :: i, j
-
-	allocate(rand_mat_f64(m,n))
-	call random_number(rand_mat_f64)
-
-	!! nvfortran rng sucks and this doesn't help. could roll my own rng, see
-	!! rfng.f90
-	!do j = 1, n
-	!do i = 1, m
-	!	rand_mat_f64(i,j) = rand_f64()
-	!end do
-	!end do
-
-end function rand_mat_f64
-
-!********
-
-!> Random integer in the range 0 <= rand_i32() < n
-integer function rand_i32(n)
-	integer, intent(in) :: n
-	rand_i32 = floor(n * rand_f64())
-end function rand_i32
-
-!===============================================================================
-
-function rand_perm(n)
-	! Fisher-Yates shuffle
-	integer, intent(in) :: n
-	integer, allocatable :: rand_perm(:)
-	!********
-	integer :: i, j
-
-	rand_perm = [(i, i = 1, n)]  ! initially identity
-	do i = 1, n-1
-		j = i + rand_i32(n-i+1)
-		rand_perm([i, j]) = rand_perm([j, i])
-	end do
-
-end function rand_perm
 
 !===============================================================================
 

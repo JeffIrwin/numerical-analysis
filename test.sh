@@ -10,6 +10,7 @@ flags+=" -Wno-tabs "
 #flags+=" -O3 "
 
 flags+=" -fbounds-check "
+flags+=" -fno-range-check "
 flags+=" -Wall -Wextra "
 flags+=" -Werror "
 #flags+=" -Wno-unused-variable "

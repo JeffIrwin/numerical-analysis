@@ -54,10 +54,11 @@ jobs:
     - if: true  # yaml gets mad if you remove this because indentation is a dumb way to organize code
       name: Test numa on ${{ matrix.os }}
       run: |
-        fpm run --example --profile debug
-        fpm run --example --profile release
-        fpm test --profile debug
-        fpm test --profile release
+        # TODO: use a variable for flags
+        fpm run --example --profile debug --flag "-fno-range-check"
+        fpm run --example --profile release --flag "-fno-range-check"
+        fpm test --profile debug --flag "-fno-range-check"
+        fpm test --profile release --flag "-fno-range-check"
 
   test-docker-gfortran:
 

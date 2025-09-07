@@ -7,6 +7,7 @@ module numa__linprog
 	use numa__blarg
 	use numa__linalg
 	use numa__utils
+	use numa__rand
 
 	implicit none
 

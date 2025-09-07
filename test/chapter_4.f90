@@ -127,15 +127,15 @@ integer function chapter_4_lu() result(nfail)
 		! LU decomposition is still fast for n >> 90, but maybe not fast enough
 		! for multiple reps in a unit test
 
-		allocate(a(n, n), x(n))
+		!allocate(a(n, n), x(n))
 
 		if (mod(n, 10) == 0) then
 			print *, "Testing lu_invmul() with n = " // to_str(n) // " ..."
 		end if
 
 		do irep = 1, 6
-			call random_number(a)  ! random matrix
-			call random_number(x)  ! random expected answer
+			a = rand_f64(n,n)  ! random matrix
+			x = rand_f64(n)    ! random expected answer
 
 			bx = matmul(a, x)      ! calculate rhs
 
@@ -159,12 +159,12 @@ integer function chapter_4_lu() result(nfail)
 		! went undetected because my existing fuzz-tests have *too many*
 		! non-zeros. A more spares matrix poses more of a pivoting challenge
 
-		call random_number(x)
+		x = rand_f64(n)
 		a = diag(x)
 		a = a(:, rand_perm(n))
 		!call print_mat(a, "a = ")
 
-		call random_number(x)
+		x = rand_f64(n)
 		bx = matmul(a, x)      ! calculate rhs
 
 		call lu_invmul(a, bx)
@@ -193,7 +193,7 @@ integer function chapter_4_lu() result(nfail)
 		end if
 
 		do irep = 1, 1
-			call random_number(a)  ! random matrix
+			a = rand_f64(n,n)
 
 			! Make the last column a linear combination of the other columns
 			a(:,n) = matmul(a(:, :n-1), a(:n-1, n))
@@ -312,8 +312,8 @@ integer function chapter_4_modify() result(nfail)
 		!end if
 
 		do irep = 1, 1
-			call random_number(a)  ! random matrix
-			call random_number(x)  ! random expected answer (not used for Sherman-Morrison)
+			a = rand_f64(n,n)
+			x = rand_f64(n)
 			a0 = a
 
 			b = matmul(a, x)      ! calculate rhs
@@ -327,7 +327,7 @@ integer function chapter_4_modify() result(nfail)
 			row = ceiling(rand_f64() * n)
 			col = ceiling(rand_f64() * n)
 			aij0 = a0(row, col)
-			call random_number(aij)
+			aij = rand_f64()
 			a0(row, col) = aij
 			print *, "a["//to_str(row)//","//to_str(col)//"]: ", &
 				aij0, " -> ", aij, "(n = "//to_str(n)//")"
@@ -380,11 +380,10 @@ integer function chapter_4_lu_c64() result(nfail)
 		end if
 
 		do irep = 1, 2
-
-			call random_number(ar)  ! random matrix
-			call random_number(ai)  ! random matrix
-			call random_number(xr)
-			call random_number(xi)
+			ar = rand_f64(n,n)
+			ai = rand_f64(n,n)
+			xr = rand_f64(n)
+			xi = rand_f64(n)
 			a0 = ar + IMAG_ * ai
 			x  = xr + IMAG_ * xi
 
@@ -424,8 +423,8 @@ integer function chapter_4_lu_c64() result(nfail)
 		end if
 
 		do irep = 1, 2
-			call random_number(ar)  ! random matrix
-			call random_number(ai)  ! random matrix
+			ar = rand_f64(n,n)
+			ai = rand_f64(n,n)
 			a0 = ar + IMAG_ * ai
 			a = a0
 
@@ -562,7 +561,7 @@ integer function chapter_4_inv() result(nfail)
 		end if
 
 		do irep = 1, 3
-			call random_number(a0)  ! random matrix
+			a0 = rand_f64(n,n)
 
 			!print *, "a0 = "
 			!print "(6es15.5)", a0
@@ -617,8 +616,8 @@ integer function chapter_4_cholesky() result(nfail)
 
 		do irep = 1, 3
 
-			call random_number(tmp_mat)  ! random matrix
-			call random_number(x)  ! random matrix
+			tmp_mat = rand_f64(n,n)
+			x = rand_f64(n)
 
 			! Use tmp_mat to make a symmetric (and probably positive definite)
 			! matrix a0
@@ -706,7 +705,7 @@ integer function chapter_4_qr() result(nfail)
 
 		do irep = 1, 3
 
-			call random_number(a0)  ! random matrix
+			a0 = rand_f64(n,n)
 			!print *, "a0 = "
 			!print "(5es15.5)", a0
 
@@ -759,8 +758,6 @@ integer function chapter_4_gram_schmidt() result(nfail)
 	p0 = -1
 	do n = 2, 25, 5
 
-		allocate(a0(n, n))
-
 		if (n/10 > p0) then
 			p0 = n/10
 			print *, "Testing Gram-Schmidt QR with n = " // to_str(n) // " ..."
@@ -768,7 +765,7 @@ integer function chapter_4_gram_schmidt() result(nfail)
 
 		do irep = 1, 1
 
-			call random_number(a0)  ! random matrix
+			a0 = rand_f64(n,n)
 			!print *, "a0 = "
 			!print "(5es15.5)", a0
 
@@ -813,13 +810,8 @@ integer function chapter_4_lls() result(nfail)
 	! polyfit_lu().  should be avoided in favor of polyfit()
 
 	nx = 100
-	allocate(x(nx), y(nx))
-
-	call random_number(x)
-	x = x * 5 - 2.5
-
-	call random_number(y)
-	y = 2*(y - 0.5d0) * 0.1d0
+	x = 5 *  rand_f64(nx) - 2.5
+	y = 2 * (rand_f64(nx) - 0.5d0) * 0.1d0
 
 	pk = [3, 5, -2, 2]  ! known polynomial coefficients
 
@@ -838,11 +830,9 @@ integer function chapter_4_lls() result(nfail)
 	nx = 100
 	allocate(x(nx), y(nx))
 
-	call random_number(x)
-	x = x * 5 - 2.5
+	x = rand_f64(nx) * 5 - 2.5
 
-	call random_number(y)
-	y = 2*(y - 0.5d0) * 0.1d0
+	y = 2*(rand_f64(nx) - 0.5d0) * 0.1d0
 
 	pk = [3, 5, -2, 2]  ! known polynomial coefficients
 
@@ -1164,8 +1154,8 @@ integer function chapter_4_qr_c64() result(nfail)
 
 		do irep = 1, 3
 
-			call random_number(ar)  ! random matrix
-			call random_number(ai)  ! random matrix
+			ar = rand_f64(n,n)
+			ai = rand_f64(n,n)
 			!call print_mat(ar, "ar = ")
 			a0 = ar + IMAG_ * ai
 
@@ -1430,9 +1420,7 @@ integer function chapter_4_rank() result(nfail)
 	print *, "Fuzz testing rank ..."
 	do n = 10, 20
 	do irep = 1, 5
-		deallocate(a)
-		allocate(a(n,n))
-		call random_number(a)  ! fully random a
+		a = rand_f64(n,n)
 		!call print_mat(a, "a = ")
 
 		rank_expect = rand_i32(n)
