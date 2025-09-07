@@ -31,6 +31,7 @@ program main
 	! numerical analysis
 	nfail = nfail + test_compiler_sanity()
 	nfail = nfail + test_bad_numa_usage()
+	nfail = nfail + test_basics()
 
 	!-------------------------------------------------------
 	! Chapter 1: Error Analysis (no exercises here)

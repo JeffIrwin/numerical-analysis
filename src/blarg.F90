@@ -51,6 +51,15 @@ module numa__blarg
 		procedure :: mask_to_index_mat
 	end interface mask_to_index
 
+	interface range_f64
+		procedure :: range_f64_count
+		procedure :: range_f64_step
+	end interface range_f64
+	interface range_i32
+		procedure :: range_i32_start_stop
+		procedure :: range_i32_step
+	end interface range_i32
+
 contains
 
 !===============================================================================
@@ -538,23 +547,68 @@ end function reverse
 
 !===============================================================================
 
-!> Return evenly spaced numbers over a specified interval
+!> Return evenly spaced integers over a specified interval
 !>
 !> Following the Fortran convention, the stop_ bound is inclusive.  Compare the
 !> similar functions linspace in MATLAB and arange in numpy
-function range_i32(start_, stop_, step_)
+function range_i32_step(start_, stop_, step_) result(range_)
 	! I settled on the `range` name just because it's shorter than `linspace`
-	!
-	! TODO: overload with step_ optional (and even start_ option defaulting to 1)
-	!
-	! TODO: add f64 version and use it more widely.  DO NOT overload i32 and f64
-	! versions with each other as that could be confusing
 	integer, intent(in) :: start_, stop_, step_
-	integer, allocatable :: range_i32(:)
+	integer, allocatable :: range_(:)
 	!********
 	integer :: i
-	range_i32 = [(i, i = start_, stop_, step_)]
-end function range_i32
+	range_ = [(i, i = start_, stop_, step_)]
+end function range_i32_step
+
+!> Return evenly spaced integers over a specified interval
+!>
+!> Following the Fortran convention, the stop_ bound is inclusive.  Compare the
+!> similar functions linspace in MATLAB and arange in numpy
+function range_i32_start_stop(start_, stop_) result(range_)
+	! I settled on the `range` name just because it's shorter than `linspace`
+	!
+	! TODO: overload with stop_ optional too? Default start at 1. Pivots and
+	! identity permutations are often initialized like this
+	integer, intent(in) :: start_, stop_
+	integer, allocatable :: range_(:)
+	!********
+	integer, parameter :: step_ = 1
+	range_ = range_i32_step(start_, stop_, step_)
+end function range_i32_start_stop
+
+!********
+
+!> Return evenly spaced doubles over a specified interval
+!>
+!> Following the Fortran convention, the stop_ bound is inclusive.  Compare the
+!> similar functions linspace in MATLAB and arange in numpy
+function range_f64_step(start_, stop_, step_) result(range_)
+	! Might also want a range_f64() with start, step, and count (but no stop).
+	! Will either need a non-overloaded name or a weird arg order
+	double precision, intent(in) :: start_, stop_, step_
+	double precision, allocatable :: range_(:)
+	!********
+	integer :: count_
+	count_ = ceiling((stop_ - start_) / step_) + 1
+	range_ = start_ + step_ * range_i32(0, count_ - 1)
+	if (range_(count_) > stop_) then
+		range_ = range_(: count_ - 1)
+	end if
+end function range_f64_step
+
+!> Return evenly spaced doubles over a specified interval
+!>
+!> Following the Fortran convention, the stop_ bound is inclusive.  Compare the
+!> similar functions linspace in MATLAB and arange in numpy
+function range_f64_count(start_, stop_, count_) result(range_)
+	double precision, intent(in) :: start_, stop_
+	integer, intent(in) :: count_
+	double precision, allocatable :: range_(:)
+	!********
+	double precision :: step_
+	step_ = (stop_ - start_) / (count_ - 1)
+	range_ = start_ + step_ * range_i32(0, count_ - 1)
+end function range_f64_count
 
 !===============================================================================
 

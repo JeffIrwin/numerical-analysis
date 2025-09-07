@@ -9,6 +9,7 @@ module numa__exercises
 
 	interface test
 		procedure :: test_f64
+		procedure :: test_i32
 		procedure :: test_bool
 	end interface test
 
@@ -53,6 +54,30 @@ subroutine test_f64(val, expect, tol, nfail, msg)
 	end if
 
 end subroutine test_f64
+
+subroutine test_i32(val, expect, nfail, msg)
+	integer, intent(in) :: val, expect
+	integer, intent(inout) :: nfail
+	character(len = *), intent(in) :: msg
+
+	!********
+	integer :: io
+
+	io = assert(val == expect)
+	nfail = nfail + io
+	if (io /= 0) then
+
+		write(*,*) ERROR // "assert failed for value " // &
+			to_str(val) // " in "// msg
+
+		!! Could be helpful sometimes, but maybe too noisy.  Maybe add a cmd arg
+		!! to enable backtrace for unit test failures.  Also this is gfortran
+		!! extension, intel has `tracebackqq()`
+		!call backtrace()
+
+	end if
+
+end subroutine test_i32
 
 subroutine test_bool(val, expect, nfail, msg)
 	logical, intent(in) :: val, expect
@@ -151,6 +176,94 @@ integer function test_compiler_sanity() result(nfail)
 	end if
 
 end function test_compiler_sanity
+
+!===============================================================================
+
+integer function test_basics() result(nfail)
+
+	character(len = *), parameter :: label = "test_basics"
+
+	double precision, allocatable :: v(:)
+
+	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
+
+	nfail = 0
+	!-----------------------------------
+	! Test range (linspace) with count and step overloads
+
+	! Counts
+
+	v = range_f64(0.d0, 10.d0, 11)
+	call test(v(1), 0.d0, 1.d-6, nfail, "range_f64 1.1")
+	call test(v(size(v)), 10.d0, 1.d-6, nfail, "range_f64 1.2")
+	call test(size(v), 11, nfail, "range_f64 1.3")
+
+	v = range_f64(4.d0, 10.d0, 7)
+	call test(v(1), 4.d0, 1.d-6, nfail, "range_f64 2.1")
+	call test(v(size(v)), 10.d0, 1.d-6, nfail, "range_f64 2.2")
+	call test(size(v), 7, nfail, "range_f64 2.3")
+
+	v = range_f64(0.d0, 1.d0, 11)
+	call test(v(1), 0.d0, 1.d-6, nfail, "range_f64 3.1")
+	call test(v(size(v)), 1.d0, 1.d-6, nfail, "range_f64 3.2")
+	call test(size(v), 11, nfail, "range_f64 3.3")
+
+	v = range_f64(0.4d0, 1.d0, 7)
+	call test(v(1), 0.4d0, 1.d-6, nfail, "range_f64 4.1")
+	call test(v(size(v)), 1.d0, 1.d-6, nfail, "range_f64 4.2")
+	call test(size(v), 7, nfail, "range_f64 4.3")
+
+	!********
+	! Steps
+
+	v = range_f64(0.d0, 10.d0, 1.d0)
+	call test(v(1), 0.d0, 1.d-6, nfail, "range_f64 5.1")
+	call test(v(size(v)), 10.d0, 1.d-6, nfail, "range_f64 5.2")
+	call test(v(2) - v(1), 1.d0, 1.d-6, nfail, "range_f64 5.3")
+
+	v = range_f64(4.d0, 10.d0, 1.d0)
+	call test(v(1), 4.d0, 1.d-6, nfail, "range_f64 6.1")
+	call test(v(size(v)), 10.d0, 1.d-6, nfail, "range_f64 6.2")
+	call test(v(2) - v(1), 1.d0, 1.d-6, nfail, "range_f64 6.3")
+
+	v = range_f64(0.d0, 1.d0, 0.1d0)
+	call test(v(1), 0.d0, 1.d-6, nfail, "range_f64 7.1")
+	call test(v(size(v)), 1.d0, 1.d-6, nfail, "range_f64 7.2")
+	call test(v(2) - v(1), 0.1d0, 1.d-6, nfail, "range_f64 7.3")
+
+	v = range_f64(0.4d0, 1.d0, 0.1d0)
+	call test(v(1), 0.4d0, 1.d-6, nfail, "range_f64 8.1")
+	call test(v(size(v)), 1.d0, 1.d-6, nfail, "range_f64 8.2")
+	call test(v(2) - v(1), 0.1d0, 1.d-6, nfail, "range_f64 8.3")
+
+	!********
+	! Steps with step sizes such that the last element does not always exactly
+	! hit the stop value
+
+	v = range_f64(0.d0, 10.d0, 3.d0)
+	call test(v(1), 0.d0, 1.d-6, nfail, "range_f64 9.1")
+	call test(v(size(v)), 9.d0, 1.d-6, nfail, "range_f64 9.2")
+	call test(v(2) - v(1), 3.d0, 1.d-6, nfail, "range_f64 9.3")
+
+	v = range_f64(4.d0, 10.d0, 3.d0)
+	!print *, "v = ", v
+	call test(v(1), 4.d0, 1.d-6, nfail, "range_f64 10.1")
+	call test(v(size(v)), 10.d0, 1.d-6, nfail, "range_f64 10.2")
+	call test(v(2) - v(1), 3.d0, 1.d-6, nfail, "range_f64 10.3")
+
+	v = range_f64(0.d0, 1.d0, 0.3d0)
+	call test(v(1), 0.d0, 1.d-6, nfail, "range_f64 11.1")
+	call test(v(size(v)), 0.9d0, 1.d-6, nfail, "range_f64 11.2")
+	call test(v(2) - v(1), 0.3d0, 1.d-6, nfail, "range_f64 11.3")
+
+	v = range_f64(0.4d0, 1.d0, 0.3d0)
+	call test(v(1), 0.4d0, 1.d-6, nfail, "range_f64 12.1")
+	call test(v(size(v)), 1.d0, 1.d-6, nfail, "range_f64 12.2")
+	call test(v(2) - v(1), 0.3d0, 1.d-6, nfail, "range_f64 12.3")
+
+	!********
+
+end function test_basics
 
 !===============================================================================
 
@@ -424,7 +537,7 @@ integer function chapter_2_fft_1() result(nfail)
 	n = sr
 
 	ts = 1.0d0 / sr  ! sampling interval
-	t = [(i, i = 0, sr-1)] * ts
+	t = range_f64(0.d0, (sr-1) * ts, sr)
 	!print *, "t = ", t
 
 	freq = 1.d0 ; amp1 = 3.d0
@@ -520,7 +633,7 @@ integer function chapter_2_fft_2() result(nfail)
 	l = 15000
 
 	! Time vector
-	t = [(i, i = 0, l-1)] * dt
+	t = range_f64(0.d0, (l-1) * dt, l)
 	!print *, "t = ", t(1: 5), " ... ", t(l-5: l)
 
 	call rand_seed_determ()
@@ -565,7 +678,7 @@ integer function chapter_2_fft_2() result(nfail)
 	! Frequency resolution
 	df = fs / ny
 
-	freqs = df * [(i, i = 0, ny-1)]
+	freqs = range_f64(0.d0, (ny-1) * df, ny)
 
 	! Normalize amplitudes to account for zero-padding
 	ymag = abs(y) * size(y) / size(x)
@@ -765,7 +878,7 @@ integer function chapter_4_lu() result(nfail)
 		[3, 3] &
 	)
 	a0 = a
-	pivot = [(i, i = 1, 3)]
+	pivot = range_i32(1, 3)
 
 	aexp = transpose(reshape([ &
 		0.0000d+00,    0.0000d+00,    1.0000d+00, &
@@ -939,7 +1052,7 @@ integer function chapter_4_modify() result(nfail)
 	!print *, "a = "
 	!print "(5es18.6)", a
 
-	pivot = [(i, i = 1, size(a,1))]
+	pivot = range_i32(1, size(a,1))
 	call lu_factor(a, pivot)
 	call lu_solve(a, bx, pivot)
 
@@ -1005,7 +1118,7 @@ integer function chapter_4_modify() result(nfail)
 
 			!********
 
-			pivot = [(i, i = 1, size(a,1))]
+			pivot = range_i32(1, size(a,1))
 			call lu_factor(a, pivot)
 
 			row = ceiling(rand_f64() * n)
@@ -1418,7 +1531,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	!print *, "xi = ", xi
 	!print *, "yi = ", yi
 
-	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 3.1415d0, 101)
 	fx = spline_no_curve(xi, yi, x)
 
 	diff = sum(abs(fx - sin(x)))
@@ -1437,6 +1550,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	xi = [0.d0, PI/5, 2*PI/5, 3*PI/5, 4*PI/5, PI]
 	yi = sin(xi)
 	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	! TODO: replace this and other range expressions ^
 	fx = spline_no_curve(xi, yi, x)
 
 	diff = sum(abs(fx - sin(x)))
