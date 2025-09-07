@@ -518,7 +518,7 @@ integer function chapter_2_fft_1() result(nfail)
 
 	double complex, allocatable :: x(:), xr(:), xx(:)
 
-	integer :: i, sr, n
+	integer :: sr, n
 
 	write(*,*) CYAN // "Starting chapter_2_fft_1()" // COLOR_RESET
 
@@ -814,9 +814,9 @@ integer function chapter_4_lu() result(nfail)
 	character(len = *), parameter :: label = "chapter_4_lu"
 
 	double precision :: t0, t, t_lu
-	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kernel(:), &
+	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), kr(:), &
 		aexp(:,:)
-	integer :: i, n, irep, p0
+	integer :: n, irep, p0
 	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -999,11 +999,11 @@ integer function chapter_4_lu() result(nfail)
 
 			a0 = a
 
-			kernel = lu_kernel(a)
+			kr = lu_kernel(a)
 			!print *, "kernel = ", kernel
 			!print *, "a * kernel = ", matmul(a0, kernel)
 
-			call test(norm2(matmul(a0, kernel)), 0.d0, 1.d-9 * n, nfail, "lu_kernel()")
+			call test(norm2(matmul(a0, kr)), 0.d0, 1.d-9 * n, nfail, "lu_kernel()")
 
 		end do
 
@@ -1024,7 +1024,7 @@ integer function chapter_4_modify() result(nfail)
 	double precision :: aij, aij0
 	double precision, allocatable :: a(:,:), a0(:,:), bx(:), x(:), &
 		u(:), b(:), b0(:)
-	integer :: i, n, irep, row, col
+	integer :: n, irep, row, col
 	integer, allocatable :: pivot(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
