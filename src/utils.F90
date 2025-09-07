@@ -52,15 +52,15 @@ module numa__utils
 	end interface sort
 
 	interface compare_lex
-		procedure :: compare_lex  ! TODO: rename routines that clash with the overload
+		procedure :: compare_lex_i32
 		procedure :: compare_lex_c64
 	end interface
 	interface lt_lex
-		procedure :: lt_lex
+		procedure :: lt_lex_i32
 		procedure :: lt_lex_c64
 	end interface lt_lex
 	interface lte_lex
-		procedure :: lte_lex
+		procedure :: lte_lex_i32
 		procedure :: lte_lex_c64
 	end interface lte_lex
 
@@ -68,6 +68,11 @@ module numa__utils
 		procedure :: print_mat_f64
 		procedure :: print_mat_i32
 	end interface print_mat
+
+	interface rand_f64
+		procedure :: rand_sca_f64
+		procedure :: rand_mat_f64  ! TODO: rand_vec_f64
+	end interface rand_f64
 
 	integer, parameter :: &
 		COMPARE_LESS_ = -1, &
@@ -160,13 +165,10 @@ end function to_str_f64
 
 !===============================================================================
 
-integer function compare_lex(a, b) result(compare)
+integer function compare_lex_i32(a, b) result(compare)
 
 	! Lexicographically compare int vectors a and b.  Return COMPARE_LESS_ if a < b,
 	! COMPARE_EQUAL_ if a == b, or COMPARE_GREATER_ if a > b.
-	!
-	! TODO: rename `compare_lex` and related routines like `lt_lex` with type in
-	! name for possible future overloading
 
 	integer, intent(in) :: a(:), b(:)
 	!integer, intent(in) :: a, b
@@ -174,7 +176,7 @@ integer function compare_lex(a, b) result(compare)
 	integer :: i
 
 	if (size(a) /= size(b)) then
-		write(*,*) 'Error: incompatible sizes of args in compare_lex()'
+		write(*,*) 'Error: incompatible sizes of args in compare_lex_i32()'
 		! TODO: panic
 		stop
 	end if
@@ -191,7 +193,7 @@ integer function compare_lex(a, b) result(compare)
 
 	compare = COMPARE_EQUAL_
 
-end function compare_lex
+end function compare_lex_i32
 
 integer function compare_lex_c64(a, b) result(compare)
 
@@ -221,10 +223,10 @@ end function compare_lex_c64
 
 !===============================================================================
 
-logical function lt_lex(a, b) result(lt)
+logical function lt_lex_i32(a, b) result(lt)
 	integer, intent(in) :: a(:), b(:)
 	lt = compare_lex(a, b) == COMPARE_LESS_
-end function lt_lex
+end function lt_lex_i32
 
 logical function lt_lex_c64(a, b) result(lt)
 	double complex, intent(in) :: a, b
@@ -233,12 +235,12 @@ end function lt_lex_c64
 
 !===============================================================================
 
-logical function lte_lex(a, b) result(lte)
+logical function lte_lex_i32(a, b) result(lte)
 	integer, intent(in) :: a(:), b(:)
 	integer :: comp
 	comp = compare_lex(a, b)
 	lte = comp == COMPARE_LESS_ .or. comp == COMPARE_EQUAL_
-end function lte_lex
+end function lte_lex_i32
 
 logical function lte_lex_c64(a, b) result(lte)
 	double complex, intent(in) :: a, b
@@ -628,14 +630,34 @@ subroutine rand_seed_determ()
 	integer :: i, nrng
 	! Seed the default RNG with 0's for repeatable tests
 	call random_seed(size = nrng)
+
+	!call random_seed(put = [1, (0, i = 2, nrng)])  ! nvfortran complains with all 0's
 	call random_seed(put = [(0, i = 1, nrng)])
+
 end subroutine rand_seed_determ
 
 !********
 
-double precision function rand_f64()
-	call random_number(rand_f64)
-end function rand_f64
+double precision function rand_sca_f64()
+	call random_number(rand_sca_f64)
+end function rand_sca_f64
+function rand_mat_f64(m, n)
+	integer, intent(in) :: m, n
+	double precision, allocatable :: rand_mat_f64(:,:)
+	!integer :: i, j
+
+	allocate(rand_mat_f64(m,n))
+	call random_number(rand_mat_f64)
+
+	!! nvfortran rng sucks and this doesn't help. could roll my own rng, see
+	!! rfng.f90
+	!do j = 1, n
+	!do i = 1, m
+	!	rand_mat_f64(i,j) = rand_f64()
+	!end do
+	!end do
+
+end function rand_mat_f64
 
 !********
 

@@ -521,6 +521,7 @@ function spline_general(xi, yi, x, case_, dy_start, dy_end, iostat) result(fx)
 
 	n = size(xi)
 
+	allocate(h(n-1))  ! nvfortran makes h wrong size without this
 	h = xi(2:) - xi(1: size(xi) - 1)
 
 	!print *, "n = ", n

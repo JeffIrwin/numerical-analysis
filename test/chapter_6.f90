@@ -54,7 +54,9 @@ integer function chapter_6_basic_qr() result(nfail)
 			!print *, "expect  = ", expect
 			print "(a,*(es15.5))", " expect  = ...", expect(n-3: n)
 
-			call random_number(s)  ! random matrix
+			!call random_number(s)  ! random matrix
+			s = rand_f64(n, n)
+
 			a = matmul(matmul(s, d), inv(s))
 			!print *, "a = "
 			!print "(4es15.5)", a
@@ -124,7 +126,10 @@ integer function chapter_6_hessenberg_qr() result(nfail)
 			!print *, "expect  = ", expect
 			print "(a,*(es18.8))", " expect  = ...", expect(n-3: n)
 
-			call random_number(s)  ! random matrix
+			!call random_number(s)  ! random matrix
+			s = rand_f64(n, n)
+			!call print_mat(s, "s = ")
+
 			a = matmul(matmul(s, d), inv(s))
 			!print *, "a = "
 			!print "(4es18.8)", a

@@ -33,7 +33,8 @@ module numa
 	! TODO:
 	!
 	! - split up large files
-	!   * exercises need split up too
+	!   * linalg.F90 and associated chapter 4 tests are both long enough that
+	!     they could be split further
 	!   * consider using submodules to avoid recompilation cascades.  see
 	!     syntran's use of submodules in parse.f90 for example
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
