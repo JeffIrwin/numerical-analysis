@@ -58,6 +58,7 @@ module numa__blarg
 	interface range_i32
 		procedure :: range_i32_start_stop
 		procedure :: range_i32_step
+		procedure :: range_i32_stop
 	end interface range_i32
 
 contains
@@ -566,15 +567,25 @@ end function range_i32_step
 !> similar functions linspace in MATLAB and arange in numpy
 function range_i32_start_stop(start_, stop_) result(range_)
 	! I settled on the `range` name just because it's shorter than `linspace`
-	!
-	! TODO: overload with stop_ optional too? Default start at 1. Pivots and
-	! identity permutations are often initialized like this
 	integer, intent(in) :: start_, stop_
 	integer, allocatable :: range_(:)
 	!********
 	integer, parameter :: step_ = 1
 	range_ = range_i32_step(start_, stop_, step_)
 end function range_i32_start_stop
+
+!> Return evenly spaced integers over a specified interval
+!>
+!> Following the Fortran convention, the stop_ bound is inclusive.  Compare the
+!> similar functions linspace in MATLAB and arange in numpy
+function range_i32_stop(stop_) result(range_)
+	! I settled on the `range` name just because it's shorter than `linspace`
+	integer, intent(in) :: stop_
+	integer, allocatable :: range_(:)
+	!********
+	integer, parameter :: start_ = 1, step_ = 1
+	range_ = range_i32_step(start_, stop_, step_)
+end function range_i32_stop
 
 !********
 

@@ -878,7 +878,7 @@ integer function chapter_4_lu() result(nfail)
 		[3, 3] &
 	)
 	a0 = a
-	pivot = range_i32(1, 3)
+	pivot = range_i32(3)
 
 	aexp = transpose(reshape([ &
 		0.0000d+00,    0.0000d+00,    1.0000d+00, &
@@ -1052,7 +1052,7 @@ integer function chapter_4_modify() result(nfail)
 	!print *, "a = "
 	!print "(5es18.6)", a
 
-	pivot = range_i32(1, size(a,1))
+	pivot = range_i32(size(a,1))
 	call lu_factor(a, pivot)
 	call lu_solve(a, bx, pivot)
 
@@ -1118,7 +1118,7 @@ integer function chapter_4_modify() result(nfail)
 
 			!********
 
-			pivot = range_i32(1, size(a,1))
+			pivot = range_i32(size(a,1))
 			call lu_factor(a, pivot)
 
 			row = ceiling(rand_f64() * n)
