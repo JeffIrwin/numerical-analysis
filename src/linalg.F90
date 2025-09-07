@@ -483,7 +483,7 @@ function invmul_vec_c64(a, b, iostat) result(x)
 
 	character(len = :), allocatable :: msg
 	double complex, allocatable :: aa(:,:)
-	integer :: i, io
+	integer :: io
 	integer, allocatable :: pivot(:)
 
 	if (present(iostat)) iostat = 0
@@ -492,7 +492,7 @@ function invmul_vec_c64(a, b, iostat) result(x)
 	aa = a
 
 	! Initialize pivot to identity
-	pivot = [(i, i = 1, size(aa,1))]
+	pivot = range_i32(size(aa,1))
 
 	call lu_factor(aa, pivot, iostat = io)
 	if (io /= 0) then
@@ -523,13 +523,13 @@ subroutine lu_invmul_vec(a, bx, iostat)
 	!********
 
 	character(len = :), allocatable :: msg
-	integer :: i, io
+	integer :: io
 	integer, allocatable :: pivot(:)
 
 	if (present(iostat)) iostat = 0
 
 	! Initialize pivot to identity
-	pivot = [(i, i = 1, size(a,1))]
+	pivot = range_i32(size(a,1))
 
 	call lu_factor(a, pivot, iostat = io)
 	if (io /= 0) then
@@ -616,7 +616,7 @@ subroutine lu_invmul_mat(a, bx, iostat)
 	if (present(iostat)) iostat = 0
 
 	! Initialize pivot to identity
-	pivot = [(i, i = 1, size(a,1))]
+	pivot = range_i32(size(a,1))
 
 	call lu_factor(a, pivot, iostat = io)
 	if (io /= 0) then
@@ -990,7 +990,7 @@ subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
 
 	! Column pivot, not row pivot unlike LU factor.  Could just transpose
 	! everything, might not matter much
-	if (present(pivot)) pivot = [(i, i = 1, n)]
+	if (present(pivot)) pivot = range_i32(n)
 
 	! Ref:  https://www.cs.cornell.edu/~bindel/class/cs6210-f09/lec18.pdf
 	rank__ = 0
@@ -1578,7 +1578,7 @@ subroutine gauss_jordan(a, iostat)
 
 	n = size(a, 1)
 	!print *, "n = ", n
-	p = [(i, i = 1, n)]  ! pivot
+	p = range_i32(n)
 
 	if (size(a, 2) /= n) then
 		msg = "matrix is not square in gauss_jordan()"
@@ -1699,7 +1699,7 @@ function lu_kernel_f64(a, iostat) result(kr)
 
 	! The kernel of `a` is the same as `u`
 
-	pivot = [(i, i = 1, size(a,1))]
+	pivot = range_i32(n)
 	call lu_factor(a, pivot, allow_singular = .true., iostat = io)
 	if (io /= 0) then
 		msg = "lu_factor() failed in lu_kernel_f64()"
@@ -1735,7 +1735,7 @@ function lu_kernel_c64(a, iostat) result(kr)
 
 	! The kernel of `a` is the same as `u`
 
-	pivot = [(i, i = 1, size(a,1))]
+	pivot = range_i32(n)
 	call lu_factor(a, pivot, allow_singular = .true., iostat = io)
 	if (io /= 0) then
 		msg = "lu_factor() failed in lu_kernel_c64()"

@@ -94,7 +94,7 @@ function select_max_n(v, n) result(iv)
 	integer :: i, j, nv
 
 	nv = size(v)
-	iv = [(i, i = 1, nv)]
+	iv = [(i, i = 1, nv)]  ! could use range_i32() but i don't want to add blarg dependency
 
 	do i = 1, n
 	do j = nv-1, i, -1

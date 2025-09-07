@@ -428,7 +428,7 @@ subroutine rs_gen_aux(c, a, b, x, basis, tol, iostat)
 	r(ineg) = -r(ineg)
 	!call print_mat(a, "a after neg = ")
 
-	nonzero_constraints = [(i, i = 1, m)]
+	nonzero_constraints = range_i32(m)
 	!print *, "nonzero_constraints = ", nonzero_constraints
 
 	basis = mask_to_index(abs(x) > tol)
@@ -542,7 +542,7 @@ subroutine rs_gen_aux(c, a, b, x, basis, tol, iostat)
 		mask_to_index(.not. lp_is_in_vec(nonzero_constraints, rows)) &
 	)
 	n_aux = size(arows)
-	acols = n + [(i, i = 1, n_aux)]
+	acols = n + range_i32(n_aux)
 
 	!print *, "arows = ", arows
 	!print *, "acols = ", acols
@@ -761,8 +761,8 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 
 	m = size(aa, 1)
 	n = size(aa, 2)
-	a = [(i, i = 1, n)]
-	ab = [(i, i = 1, m)]
+	a = range_i32(n)
+	ab = range_i32(m)
 
 	bb = aa(:, b)
 	!call print_mat(aa, "aa = ")
@@ -878,8 +878,8 @@ function lp_get_more_cols(aa, basis, iostat) result(res)
 	m = size(aa, 1)
 	n = size(aa, 2)
 
-	a = [(i, i = 1, m+n)]
-	bl = [(.false., i = 1, m+n)]
+	a = range_i32(m+n)
+	bl = [(.false., i = 1, m+n)]  ! TODO: make falses() fn (like zeros()) and trues()
 	bl(basis) = .true.
 	options = a(mask_to_index(.not. bl))
 	options = options(mask_to_index(options <= n))
@@ -1093,7 +1093,7 @@ function linprog_simplex(c, a, b, tol, iters, iostat) result(x)
 
 	! As all constraints are equality constraints, the artificial variables `av`
 	! will also be initial basic variables
-	av = [(i, i = 1, n)] + m
+	av = m + range_i32(n)
 	basis = av
 
 	!print *, "av    = ", av

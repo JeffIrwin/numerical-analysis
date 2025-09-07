@@ -1815,8 +1815,6 @@ integer function chapter_3_newton_cotes() result(nfail)
 	double precision :: area
 	double precision, allocatable :: xi(:), yi(:)
 
-	integer :: i
-
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
 	nfail = 0
@@ -1873,56 +1871,55 @@ integer function chapter_3_newton_cotes() result(nfail)
 	print *, "area = ", area
 	call test(area, 2.0943951023931953d0, 1.d-12, nfail, "simpson_integrator_vals 7")
 
-	xi = PI * [(i, i = 0, 3)] / 3.d0
-	! TODO: ^ range()
+	xi = range_f64(0.d0, PI, 4)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0405242847634950d0, 1.d-12, nfail, "simpson_integrator_vals 8")
 
-	xi = PI * [(i, i = 0, 4)] / 4.d0
+	xi = range_f64(0.d0, PI, 5)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0045597549844207d0, 1.d-12, nfail, "simpson_integrator_vals 9")
 
-	xi = PI * [(i, i = 0, 5)] / 5.d0
+	xi = range_f64(0.d0, PI, 6)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0034411937297119d0, 1.d-12, nfail, "simpson_integrator_vals 10")
 
-	xi = PI * [(i, i = 0, 6)] / 6.d0
+	xi = range_f64(0.d0, PI, 7)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0008631896735367d0, 1.d-12, nfail, "simpson_integrator_vals 11")
 
-	xi = PI * [(i, i = 0, 7)] / 7.d0
+	xi = range_f64(0.d0, PI, 8)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0006963918546892d0, 1.d-12, nfail, "simpson_integrator_vals 12")
 
-	xi = PI * [(i, i = 0, 30)] / 30.d0
+	xi = range_f64(0.d0, PI, 31)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0000013379479498d0, 1.d-12, nfail, "simpson_integrator_vals 13")
 
-	xi = PI * [(i, i = 0, 31)] / 31.d0
+	xi = range_f64(0.d0, PI, 32)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0000012070944040d0, 1.d-12, nfail, "simpson_integrator_vals 14")
 
-	xi = PI * [(i, i = 0, 32)] / 32.d0
+	xi = range_f64(0.d0, PI, 33)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0000010333694127d0, 1.d-12, nfail, "simpson_integrator_vals 15")
 
-	xi = PI * [(i, i = 0, 33)] / 33.d0
+	xi = range_f64(0.d0, PI, 34)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
@@ -2747,8 +2744,7 @@ integer function chapter_4_lls() result(nfail)
 	ni = 100
 	xmin = minval(x)
 	xmax = maxval(x)
-	allocate(xi(ni))
-	xi(:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
+	xi = range_f64(xmin, xmax, ni)
 	yi = polyval(p, xi)
 
 	open(file = "plot-poly-1.txt", newunit = fid)
@@ -2801,7 +2797,7 @@ integer function chapter_4_gauss_newton() result(nfail)
 	xmin = minval(x)
 	xmax = maxval(x)
 	allocate(xi(ni), yi(ni))
-	xi(:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
+	xi = range_f64(xmin, xmax, ni)
 	do i = 1, ni
 		!yi(i) = rate_fn(xi(i), pk)
 		yi(i) = rate_fn(xi(i), p)
@@ -2833,7 +2829,7 @@ integer function chapter_4_nelder_mead() result(nfail)
 
 	double precision :: xmin, xmax
 	double precision, allocatable :: x(:), y(:), p(:), pk(:)!, xi(:), yi(:)
-	integer :: i, nx
+	integer :: nx
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -2857,7 +2853,7 @@ integer function chapter_4_nelder_mead() result(nfail)
 	!xmin = minval(x)
 	!xmax = maxval(x)
 	!allocate(xi(ni), yi(ni))
-	!xi(:) = (xmax - xmin) / (ni-1) * [(i, i = 0, ni-1)] + xmin
+	!xi = range_f64(xmin, xmax, ni)
 	!do i = 1, ni
 	!	!yi(i) = rate_fn(xi(i), pk)
 	!	yi(i) = rate_fn(xi(i), p)
@@ -2934,8 +2930,7 @@ integer function chapter_4_nelder_mead() result(nfail)
 	xmin = -10.d0
 	xmax =  10.d0
 	allocate(x(nx), y(nx))
-	x(:) = (xmax - xmin) / (nx-1) * [(i, i = 0, nx-1)] + xmin
-	! TODO: make a linspace() fn, overload with n version and dx version
+	x = range_f64(xmin, xmax, nx)
 
 	pk = [1.4d0, 1.0d0, 2.0d0, 1.0d0, 0.2d0, -1.d0]
 	y = pk(1) * exp(-pk(2) * (x - pk(3))**2) &
@@ -3844,7 +3839,6 @@ integer function chapter_6_basic_qr() result(nfail)
 			! Construct a random matrix `a` with known real eigenvalues
 
 			! Known eigenvalues
-			!expect = [(i, i = n, 1, -1)]
 			expect = zeros(n)
 			call random_number(expect)
 
