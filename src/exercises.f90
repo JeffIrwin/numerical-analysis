@@ -3099,7 +3099,6 @@ end function chapter_4_qr_c64
 !===============================================================================
 
 integer function chapter_4_rank() result(nfail)
-	use ieee_arithmetic
 	character(len = *), parameter :: label = "chapter_4_rank"
 
 	double precision :: delta
@@ -3386,7 +3385,6 @@ end function chapter_4_rank
 !===============================================================================
 
 integer function chapter_4_linprog() result(nfail)
-	use ieee_arithmetic
 	character(len = *), parameter :: label = "chapter_4_linprog"
 
 	double precision :: fval, fexpect

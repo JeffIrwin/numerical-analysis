@@ -41,11 +41,6 @@ function linprog &
 	! A wrapper fn could be added which avoids modifying a_ub, b_ub, a_eq, and
 	! b_eq, like inv() vs invert(), by doing extra copying
 
-	use ieee_arithmetic
-
-	use numa__blarg
-	use numa__utils
-
 	double precision, allocatable, intent(in) :: c(:)
 	double precision, allocatable, intent(inout) :: a_ub(:,:), b_ub(:)
 	double precision, optional, allocatable, intent(inout) :: a_eq(:,:), b_eq(:)
@@ -238,10 +233,6 @@ subroutine lp_get_abc(c, a_ub, b_ub, a_eq, b_eq, lbs, ubs, a, b)
 	! This is based on scipy:
 	!
 	!     https://github.com/scipy/scipy/blob/5f112b048b552e8788027dec7e95fb112daeeec1/scipy/optimize/_linprog_util.py#L1030
-
-	use ieee_arithmetic
-	use numa__blarg
-	use numa__utils
 
 	double precision, allocatable, intent(inout) :: c(:)
 	double precision, allocatable, intent(inout) :: a_ub(:,:)
@@ -603,9 +594,6 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	!     matmul(a, x) == b
 	!     all(x >= 0)
 
-	use numa__blarg
-	use numa__utils
-
 	double precision, allocatable, intent(inout) :: c(:)
 	double precision, allocatable, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: b(:)
@@ -863,7 +851,6 @@ end subroutine rs_phase_two
 
 function lp_get_more_cols(aa, basis, iostat) result(res)
 	! Get more basis columns
-	use numa__linalg
 	double precision, intent(in) :: aa(:,:)
 	integer, intent(in) :: basis(:)
 	integer, allocatable :: res(:)
@@ -1036,9 +1023,6 @@ function linprog_simplex(c, a, b, tol, iters, iostat) result(x)
 	!
 	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L438C5-L438C21
 
-	use numa__blarg
-	use numa__utils
-
 	double precision, intent(in) :: c(:)
 	double precision, intent(inout) :: a(:,:)
 	double precision, intent(inout) :: b(:)
@@ -1172,7 +1156,6 @@ end function linprog_simplex
 
 subroutine rm_cols(a, indices)
 	! Remove columns at given `indices` from matrix `a`.  Shrink `a` on output
-	use numa__utils
 	double precision, allocatable, intent(inout) :: a(:,:)
 	integer, intent(in) :: indices(:)
 	!********
@@ -1203,7 +1186,6 @@ subroutine lp_solve_simplex(t, basis, tol, iters, phase, iostat)
 	!
 	!     https://github.com/scipy/scipy/blob/7d48c99615028935614943007fe61ce361dddebf/scipy/optimize/_linprog_simplex.py#L232
 	!
-	use numa__utils
 	double precision, intent(inout) :: t(:,:)
 	integer, intent(inout) :: basis(:)
 	double precision, intent(in) :: tol
