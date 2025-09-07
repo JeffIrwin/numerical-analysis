@@ -676,7 +676,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 	end if
 
 	! Drive artificial variables out of basis
-	keep_rows = [(.true., i = 1, m)]
+	keep_rows = trues(m)
 	do ib = 1, size(basis)
 		if (basis(ib) <= n) cycle
 
@@ -693,7 +693,7 @@ function linprog_rs(c, a, b, tol, iters, iostat) result(x)
 		i1 = maxloc(basis_finder(:, basis_column))
 		pertinent_row = i1(1)
 
-		eligible_columns = [(.true., i = 1, n)]
+		eligible_columns = trues(n)
 		eligible_columns(basis(mask_to_index(basis < n))) = .false.
 
 		new_basis_column = 0
@@ -771,7 +771,7 @@ subroutine rs_phase_two(c, aa, x, b, maxiter, tol, iostat)
 	converged = .false.
 	do iteration = 1, maxiter
 
-		bl = [(.false., i = 1, size(a))]
+		bl = falses(size(a))
 		bl(b) = .true.
 
 		xb = x(b)
@@ -879,7 +879,7 @@ function lp_get_more_cols(aa, basis, iostat) result(res)
 	n = size(aa, 2)
 
 	a = range_i32(m+n)
-	bl = [(.false., i = 1, m+n)]  ! TODO: make falses() fn (like zeros()) and trues()
+	bl = falses(m+n)
 	bl(basis) = .true.
 	options = a(mask_to_index(.not. bl))
 	options = options(mask_to_index(options <= n))
@@ -932,7 +932,7 @@ function lp_is_in_vec(needles, haystack)
 
 	if (nh <= 0) then
 		!print *, "haystack empty"
-		lp_is_in_vec = [(.false., i = 1, nn)]
+		lp_is_in_vec = falses(nn)
 		return
 	end if
 

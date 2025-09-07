@@ -25,6 +25,15 @@ module numa__blarg
 		!procedure :: zeros_mat_i32
 	end interface zeros_i32
 
+	interface falses
+		procedure :: falses_vec
+		! could add mat version too
+	end interface falses
+	interface trues
+		procedure :: trues_vec
+		! could add mat version too
+	end interface trues
+
 	interface diag
 		procedure :: diag_set
 		procedure :: diag_get
@@ -268,6 +277,22 @@ function zeros_vec_i32(n) result(a)
 	allocate(a(n))
 	a = 0
 end function zeros_vec_i32
+
+function falses_vec(n) result(a)
+	! Size n vector of .false.
+	integer, intent(in) :: n
+	logical, allocatable :: a(:)
+	allocate(a(n))
+	a = .false.
+end function falses_vec
+
+function trues_vec(n) result(a)
+	! Size n vector of .true.
+	integer, intent(in) :: n
+	logical, allocatable :: a(:)
+	allocate(a(n))
+	a = .true.
+end function trues_vec
 
 !********
 
