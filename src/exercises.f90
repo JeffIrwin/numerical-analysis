@@ -1549,8 +1549,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 
 	xi = [0.d0, PI/5, 2*PI/5, 3*PI/5, 4*PI/5, PI]
 	yi = sin(xi)
-	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
-	! TODO: replace this and other range expressions ^
+	x = range_f64(0.d0, 3.1415d0, 101)
 	fx = spline_no_curve(xi, yi, x)
 
 	diff = sum(abs(fx - sin(x)))
@@ -1567,7 +1566,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 
 	xi = [0.d0, PI/5, 2*PI/5, 4*PI/5, PI]
 	yi = sin(xi)
-	x = 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 3.1415d0, 101)
 	fx = spline_no_curve(xi, yi, x)
 
 	diff = sum(abs(fx - sin(x)))
@@ -1583,7 +1582,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	! Prescribed 1st derivatives
 	xi = [0.d0, PI/4, PI/2]
 	yi = sin(xi)
-	x = 0.5d0 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 3.1415d0/2, 101)
 	dy_start = 1.d0
 	dy_end   = 0.d0
 	fx = spline_prescribed(xi, yi, x, dy_start, dy_end)
@@ -1601,7 +1600,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	! Periodic spline with matching derivatives
 	xi = [0.d0, PI/2, PI, 3*PI/2, 2*PI]
 	yi = cos(xi)
-	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 2 * 3.1415d0, 101)
 	fx = spline_periodic(xi, yi, x)
 
 	diff = sum(abs(fx - cos(x)))
@@ -1617,7 +1616,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	! Periodic with more support points
 	xi = [0.d0, PI/4, PI/2, 3*PI/4, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
 	yi = cos(xi)
-	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 2 * 3.1415d0, 101)
 	fx = spline_periodic(xi, yi, x)
 
 	diff = sum(abs(fx - cos(x)))
@@ -1634,7 +1633,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	xi = [0.d0, PI/4, PI/2, 3*PI/4, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
 	phase = -PI/3
 	yi = cos(xi + phase)
-	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 2 * 3.1415d0, 101)
 	fx = spline_periodic(xi, yi, x)
 
 	diff = sum(abs(fx - cos(x + phase)))
@@ -1651,7 +1650,7 @@ integer function chapter_2_cubic_splines() result(nfail)
 	xi = [0.d0, PI/4, PI/2, PI, 5*PI/4, 3*PI/2, 7*PI/4, 2*PI]
 	phase = -PI/3
 	yi = cos(xi + phase)
-	x = 2 * 3.1415d0 * [(i, i = 0, 100)] / 100.d0
+	x = range_f64(0.d0, 2 * 3.1415d0, 101)
 	fx = spline_periodic(xi, yi, x)
 
 	diff = sum(abs(fx - cos(x + phase)))
@@ -1689,7 +1688,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	xyc(1,:) = [0, 0, 1, 1]  ! x control coordinates
 	xyc(2,:) = [0, 1, 1, 0]  ! y control coordinates (xyc can be n-dimensional)
 
-	t = [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
+	t = range_f64(0.d0, 1.d0, 101)  ! interpolation parameter in range [0, 1]
 
 	xy = bezier_curve(xyc, t)
 
@@ -1716,7 +1715,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	xyc(1,:) = [0, 0, 1, 1]  ! x control coordinates
 	xyc(2,:) = [0, 1, 1, 0]  ! y control coordinates (xyc can be n-dimensional)
 
-	t = (nc-1) * [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
+	t = range_f64(0.d0, 1.d0 * (nc-1), 101)
 
 	xy = cardinal_spline(xyc, t, 1.d0)
 	!xy = cardinal_spline(xyc, t, 1.5d0)
@@ -1751,7 +1750,7 @@ integer function chapter_2_bezier_splines() result(nfail)
 	xyc(1,:) = [0, 0, 1, 1,  1,  2, 2]  ! x control coordinates
 	xyc(2,:) = [0, 1, 1, 0, -1, -1, 0]  ! y control coordinates (xyc can be n-dimensional)
 
-	t = (nc-1) * [(i, i = 0, 100)] / 100.d0  ! interpolation parameter in range [0, 1]
+	t = range_f64(0.d0, 1.d0 * (nc-1), 101)
 	xy = cardinal_spline(xyc, t, 1.d0)
 	!xy = cardinal_spline(xyc, t, 0.5d0)
 	!print *, "xy = ", xy
@@ -1868,13 +1867,14 @@ integer function chapter_3_newton_cotes() result(nfail)
 
 	!print *, "value integrators:"
 
-	xi = PI * [(i, i = 0, 2)] / 2.d0
+	xi = range_f64(0.d0, PI, 3)
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
 	call test(area, 2.0943951023931953d0, 1.d-12, nfail, "simpson_integrator_vals 7")
 
 	xi = PI * [(i, i = 0, 3)] / 3.d0
+	! TODO: ^ range()
 	yi = sin(xi)
 	area = simpson_integrator_vals(yi, 0.d0, PI)
 	print *, "area = ", area
