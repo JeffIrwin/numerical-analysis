@@ -1,14 +1,20 @@
 var searchData=
 [
-  ['rand_5ff64_0',['rand_f64',['../namespacenuma____blarg.html#a10ad802496a5933ef6f79b9092d88a46',1,'numa__blarg']]],
-  ['rate_5fdx_5ffn_1',['rate_dx_fn',['../namespacenuma____functions.html#ae563121b3e881b11584701179a60cd31',1,'numa__functions']]],
-  ['rate_5ffn_2',['rate_fn',['../namespacenuma____functions.html#aa47e209f97bf805626cb92e36810c576',1,'numa__functions']]],
-  ['real_5fschur_5fto_5fcomplex_3',['real_schur_to_complex',['../namespacenuma____eig.html#ac2f8289ad209b651d2e5af2618e27cc1',1,'numa__eig']]],
-  ['red_4',['red',['../namespacenuma____utils.html#a856ad61918734d3cee52cd036f1785af',1,'numa__utils']]],
-  ['rm_5fcols_5',['rm_cols',['../namespacenuma____linprog.html#a198ae17e01792c08311b253ce678eda5',1,'numa__linprog']]],
-  ['romberg_5fintegrator_6',['romberg_integrator',['../namespacenuma____integrate.html#a594c3a5bfb51c1e4f2231d6f16c1c66e',1,'numa__integrate']]],
-  ['romberg_5fintegrator_5ffixed_7',['romberg_integrator_fixed',['../namespacenuma____integrate.html#a65beebcb63c6c46ca857197017cb9f84',1,'numa__integrate']]],
-  ['rosenbrock_5fbanana_8',['rosenbrock_banana',['../namespacenuma____functions.html#ab8a5817f988b9c2656314cf7925e8042',1,'numa__functions']]],
-  ['rosenbrock_5fbanana_5fbeta_9',['rosenbrock_banana_beta',['../namespacenuma____functions.html#a33689aff388bae206d49deae60f3d046',1,'numa__functions']]],
-  ['rosenbrock_5fbanana_5fnd_10',['rosenbrock_banana_nd',['../namespacenuma____functions.html#a76e08204f398e8b972d78393e659fa74',1,'numa__functions']]]
+  ['qr_5fcore_0',['qr_core',['../namespacenuma____linalg.html#ac7980494a83b79fd2f2e6e73006f8101',1,'numa__linalg']]],
+  ['qr_5ffactor_1',['qr_factor',['../interfacenuma____linalg_1_1qr__factor.html',1,'numa__linalg']]],
+  ['qr_5ffactor_5fc64_2',['qr_factor_c64',['../namespacenuma____linalg.html#a4fbc6d402d01ef69739384975d8a9386',1,'numa__linalg']]],
+  ['qr_5ffactor_5ff64_3',['qr_factor_f64',['../namespacenuma____linalg.html#a690d6c545c43cdebca917680a63c455d',1,'numa__linalg']]],
+  ['qr_5ffactor_5fgram_5fschmidt_4',['qr_factor_gram_schmidt',['../namespacenuma____linalg.html#acbb767815530b995c1ff977c48061281',1,'numa__linalg']]],
+  ['qr_5fget_5fq_5fexpl_5',['qr_get_q_expl',['../interfacenuma____linalg_1_1qr__get__q__expl.html',1,'numa__linalg']]],
+  ['qr_5fget_5fq_5fexpl_5fc64_6',['qr_get_q_expl_c64',['../namespacenuma____linalg.html#a5c653febce581f4efc9d7371f65fcfa6',1,'numa__linalg']]],
+  ['qr_5fget_5fq_5fexpl_5ff64_7',['qr_get_q_expl_f64',['../namespacenuma____linalg.html#a3de87939307f661b420cefb9b413c6c4',1,'numa__linalg']]],
+  ['qr_5fmul_8',['qr_mul',['../interfacenuma____linalg_1_1qr__mul.html',1,'numa__linalg']]],
+  ['qr_5fmul_5fmat_5fc64_9',['qr_mul_mat_c64',['../namespacenuma____linalg.html#ab1038b3d730eddd42d1b28a87b32255c',1,'numa__linalg']]],
+  ['qr_5fmul_5fmat_5ff64_10',['qr_mul_mat_f64',['../namespacenuma____linalg.html#a4c3a2658c14f7e64b8f3d5e9f88cc8d1',1,'numa__linalg']]],
+  ['qr_5fmul_5ftranspose_11',['qr_mul_transpose',['../interfacenuma____linalg_1_1qr__mul__transpose.html',1,'numa__linalg']]],
+  ['qr_5fmul_5ftranspose_5fmat_5ff64_12',['qr_mul_transpose_mat_f64',['../namespacenuma____linalg.html#af52aefd18fead036d08326dfe27ad7f1',1,'numa__linalg']]],
+  ['qr_5fmul_5ftranspose_5fvec_5ff64_13',['qr_mul_transpose_vec_f64',['../namespacenuma____linalg.html#a994df206f6fbe8f8d85c6239a1c1e692',1,'numa__linalg']]],
+  ['qr_5frank_14',['qr_rank',['../namespacenuma____linalg.html#a3346de95d900dd27e80ed8e1381d838d',1,'numa__linalg']]],
+  ['qr_5fsolve_15',['qr_solve',['../interfacenuma____linalg_1_1qr__solve.html',1,'numa__linalg']]],
+  ['qr_5fsolve_5ff64_16',['qr_solve_f64',['../namespacenuma____linalg.html#af2aa98c6a76a107949392fc97afc4251',1,'numa__linalg']]]
 ];

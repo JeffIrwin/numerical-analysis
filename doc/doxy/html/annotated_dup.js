@@ -4,8 +4,15 @@ var annotated_dup =
       [ "outer_product", "interfacenuma____blarg_1_1outer__product.html", null ],
       [ "zeros", "interfacenuma____blarg_1_1zeros.html", null ],
       [ "zeros_i32", "interfacenuma____blarg_1_1zeros__i32.html", null ],
+      [ "falses", "interfacenuma____blarg_1_1falses.html", null ],
+      [ "trues", "interfacenuma____blarg_1_1trues.html", null ],
       [ "diag", "interfacenuma____blarg_1_1diag.html", null ],
-      [ "triu", "interfacenuma____blarg_1_1triu.html", null ]
+      [ "triu", "interfacenuma____blarg_1_1triu.html", null ],
+      [ "hstack", "interfacenuma____blarg_1_1hstack.html", null ],
+      [ "vstack", "interfacenuma____blarg_1_1vstack.html", null ],
+      [ "mask_to_index", "interfacenuma____blarg_1_1mask__to__index.html", null ],
+      [ "range_f64", "interfacenuma____blarg_1_1range__f64.html", null ],
+      [ "range_i32", "interfacenuma____blarg_1_1range__i32.html", null ]
     ] ],
     [ "numa__core", "namespacenuma____core.html", [
       [ "fn_f64_to_f64", "interfacenuma____core_1_1fn__f64__to__f64.html", "interfacenuma____core_1_1fn__f64__to__f64" ],
@@ -26,9 +33,8 @@ var annotated_dup =
       [ "qr_mul", "interfacenuma____linalg_1_1qr__mul.html", null ],
       [ "qr_mul_transpose", "interfacenuma____linalg_1_1qr__mul__transpose.html", null ]
     ] ],
-    [ "numa__linprog", "namespacenuma____linprog.html", [
-      [ "hstack", "interfacenuma____linprog_1_1hstack.html", null ],
-      [ "vstack", "interfacenuma____linprog_1_1vstack.html", null ]
+    [ "numa__rand", "namespacenuma____rand.html", [
+      [ "rand_f64", "interfacenuma____rand_1_1rand__f64.html", null ]
     ] ],
     [ "numa__utils", "namespacenuma____utils.html", [
       [ "to_str", "interfacenuma____utils_1_1to__str.html", null ],

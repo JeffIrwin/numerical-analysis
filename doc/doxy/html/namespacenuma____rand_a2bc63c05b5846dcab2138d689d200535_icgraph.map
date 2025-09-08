@@ -1,0 +1,7 @@
+<map id="numa__rand::rand_i32" name="numa__rand::rand_i32">
+<area shape="rect" id="Node000001" title="Random integer in the range 0 &lt;= rand_i32() &lt; n." alt="" coords="233,29,400,55"/>
+<area shape="poly" id="edge1_Node000001_Node000001" title=" " alt="" coords="356,20,345,11,317,8,293,10,280,15,278,20,285,28,281,31,273,21,277,11,292,5,317,3,347,6,360,15"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____rand.html#ac90292cf05005cfdb573be4904215e89" title=" " alt="" coords="5,29,185,55"/>
+<area shape="poly" id="edge2_Node000001_Node000002" title=" " alt="" coords="220,45,185,45,185,39,220,39"/>
+<area shape="poly" id="edge3_Node000002_Node000002" title=" " alt="" coords="135,20,124,11,95,8,72,10,59,15,57,20,63,28,59,31,51,21,55,11,70,5,95,3,126,6,138,15"/>
+</map>

@@ -1,19 +1,10 @@
 var searchData=
 [
-  ['ifft_0',['ifft',['../namespacenuma____interp.html#afdf5c60bc7feeeccdc07bb9976f58cb2',1,'numa__interp']]],
-  ['imag_5f_1',['imag_',['../namespacenuma____core.html#a73467e8c5ba2f3a0fbc750884e5a1aea',1,'numa__core']]],
-  ['inf_2',['inf',['../namespacenuma____utils.html#a50e5f27a221858ee7172c85cc3cd15a8',1,'numa__utils']]],
-  ['integrate_2ef90_3',['integrate.F90',['../integrate_8F90.html',1,'']]],
-  ['interp_2ef90_4',['interp.F90',['../interp_8F90.html',1,'']]],
-  ['inv_5',['inv',['../namespacenuma____linalg.html#a080b11a4af74ccfe5734ba73863570f0',1,'numa__linalg']]],
-  ['inv_5f1px1p5_6',['inv_1px1p5',['../namespacenuma____functions.html#aaf2e0dcd142c0c77d5a18132fdeabf60',1,'numa__functions']]],
-  ['inv_5f1px2_7',['inv_1px2',['../namespacenuma____functions.html#ac927a32505a69965486ef2f8fda50ff2',1,'numa__functions']]],
-  ['inv_5f1px4_8',['inv_1px4',['../namespacenuma____functions.html#a68900373173c02cb58040cabb62337ea',1,'numa__functions']]],
-  ['inv_5fsqrt_5ffn_9',['inv_sqrt_fn',['../namespacenuma____functions.html#adbeb5e714f26440dfdf0a4770369fc4f',1,'numa__functions']]],
-  ['inv_5fsquare_5ffn_10',['inv_square_fn',['../namespacenuma____functions.html#a151bb9bc9e5257fd39b62122703d4fa7',1,'numa__functions']]],
-  ['invert_11',['invert',['../namespacenuma____linalg.html#a7c350daaf97591f45d76f2c10d0ffd4d',1,'numa__linalg']]],
-  ['invmul_12',['invmul',['../interfacenuma____linalg_1_1invmul.html',1,'numa__linalg']]],
-  ['invmul_5fmat_5ff64_13',['invmul_mat_f64',['../namespacenuma____linalg.html#a76277a10bd0fd66444e4747c3df5b9d9',1,'numa__linalg']]],
-  ['invmul_5fvec_5fc64_14',['invmul_vec_c64',['../namespacenuma____linalg.html#a53beac58761e685a2566b3ba042fbbdd',1,'numa__linalg']]],
-  ['invmul_5fvec_5ff64_15',['invmul_vec_f64',['../namespacenuma____linalg.html#aecef58e1dde2465871e414ba419d9263',1,'numa__linalg']]]
+  ['hess_0',['hess',['../namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c',1,'numa__eig']]],
+  ['house_1',['house',['../namespacenuma____eig.html#a42b25b90462d055242dfe9d1b037081f',1,'numa__eig']]],
+  ['house_5fc64_2',['house_c64',['../namespacenuma____blarg.html#a79cbebd531ee01b40a5b96f0049dfa93',1,'numa__blarg']]],
+  ['house_5ff64_3',['house_f64',['../namespacenuma____blarg.html#a072815a677b6d7627f9d082ebeb87de7',1,'numa__blarg']]],
+  ['hstack_4',['hstack',['../interfacenuma____blarg_1_1hstack.html',1,'numa__blarg']]],
+  ['hstack_5fmat_5fmat_5',['hstack_mat_mat',['../namespacenuma____blarg.html#a368ce232f33cfb65d03aeadad9b672b3',1,'numa__blarg']]],
+  ['hstack_5fmat_5fvec_6',['hstack_mat_vec',['../namespacenuma____blarg.html#a52fa998bc07430bfc5c9ceb27d554dba',1,'numa__blarg']]]
 ];

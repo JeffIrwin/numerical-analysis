@@ -1,0 +1,7 @@
+<map id="numa__rand::rand_perm" name="numa__rand::rand_perm">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,185,55"/>
+<area shape="poly" id="edge3_Node000001_Node000001" title=" " alt="" coords="59,31,51,21,55,11,70,5,95,3,126,6,138,15,135,20,124,11,95,8,72,10,59,15,57,20,63,28"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____rand.html#a2bc63c05b5846dcab2138d689d200535" title="Random integer in the range 0 &lt;= rand_i32() &lt; n." alt="" coords="233,29,400,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="186,39,220,39,220,45,186,45"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="281,31,273,21,277,11,292,5,317,3,347,6,360,15,356,20,345,11,317,8,293,10,280,15,278,20,285,28"/>
+</map>

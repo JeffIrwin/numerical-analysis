@@ -1,6 +1,11 @@
 var namespaces_dup =
 [
-    [ "numa", "namespacenuma.html", null ],
+    [ "numa", "namespacenuma.html", [
+      [ "print_version", "namespacenuma.html#abd1f9ed47847a865c58d12be823edae3", null ],
+      [ "numa_major", "namespacenuma.html#ad7b8aea8c7a51d68c5f29b0fc2e1b80d", null ],
+      [ "numa_minor", "namespacenuma.html#add50ae03b14e3f7850b0a14ccab5842f", null ],
+      [ "numa_patch", "namespacenuma.html#a5022417883ca3f80310f597afb2589da", null ]
+    ] ],
     [ "numa__blarg", "namespacenuma____blarg.html", "namespacenuma____blarg" ],
     [ "numa__core", "namespacenuma____core.html", "namespacenuma____core" ],
     [ "numa__dlahqr", "namespacenuma____dlahqr.html", [
@@ -10,50 +15,12 @@ var namespaces_dup =
     [ "numa__eig", "namespacenuma____eig.html", [
       [ "eig_basic_qr", "namespacenuma____eig.html#a32d89572359c6193bbe208375d66f853", null ],
       [ "eig_francis_qr", "namespacenuma____eig.html#a7c945ccb301d0b407189a22009d62dac", null ],
-      [ "eig_hess_qr", "namespacenuma____eig.html#a30fb433e80034efa92d74663abab925b", null ],
-      [ "eig_hess_qr_kernel", "namespacenuma____eig.html#a99acc801e3972b96c286debd457b7771", null ],
+      [ "eig_hess_qr", "namespacenuma____eig.html#afb97518dab66761491bd470c01379144", null ],
+      [ "eig_hess_qr_kernel", "namespacenuma____eig.html#a6127d9e200adf783f8b03fcea9e308c9", null ],
       [ "eig_lapack", "namespacenuma____eig.html#a4e82b9a2a0a30fd1f6315c38638161dc", null ],
       [ "hess", "namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c", null ],
       [ "house", "namespacenuma____eig.html#a42b25b90462d055242dfe9d1b037081f", null ],
       [ "real_schur_to_complex", "namespacenuma____eig.html#ac2f8289ad209b651d2e5af2618e27cc1", null ]
-    ] ],
-    [ "numa__exercises", "namespacenuma____exercises.html", [
-      [ "assert", "namespacenuma____exercises.html#aa496b352a0ef7d58877643423649e7ec", null ],
-      [ "chapter_2_banded", "namespacenuma____exercises.html#a509607e963cce84ad1615d634d6817e6", null ],
-      [ "chapter_2_bezier_splines", "namespacenuma____exercises.html#a08413164d188386dda3946d5bec50fd4", null ],
-      [ "chapter_2_cubic_splines", "namespacenuma____exercises.html#aa8b46d6d4c197927e2e141cfcbf23911", null ],
-      [ "chapter_2_example_2p2p4", "namespacenuma____exercises.html#ad59bfcce56ca2fdb97a19344ee6e21f1", null ],
-      [ "chapter_2_exercise_2", "namespacenuma____exercises.html#a810a12e9585d95da65507723ae4cba74", null ],
-      [ "chapter_2_fft_1", "namespacenuma____exercises.html#a83578ea94fe67d14f2f9888a5bcb8445", null ],
-      [ "chapter_2_fft_2", "namespacenuma____exercises.html#adb5a199aa5fbfe26bfa876418b92371d", null ],
-      [ "chapter_2_tridiag", "namespacenuma____exercises.html#a0e2881f671b73e0aced99ae64fdac131", null ],
-      [ "chapter_2_tridiag_corner", "namespacenuma____exercises.html#a44c077e257b59d383246fbe11b8bc2c7", null ],
-      [ "chapter_3_adaptive", "namespacenuma____exercises.html#a8f70daeb100c01644273d7344326a540", null ],
-      [ "chapter_3_gauss", "namespacenuma____exercises.html#acf06656fe2b434f1ffbbf0ba4e3b54d3", null ],
-      [ "chapter_3_newton_cotes", "namespacenuma____exercises.html#a73968566bd91091b3b473c73cc78ad6a", null ],
-      [ "chapter_3_romberg", "namespacenuma____exercises.html#aad35ac7830061b6a189dd112a43b70c3", null ],
-      [ "chapter_4_cholesky", "namespacenuma____exercises.html#ae99429cf231bf4e706fa4a50fff64449", null ],
-      [ "chapter_4_gauss_newton", "namespacenuma____exercises.html#a982becd25f21c63b5e13432464d8b6a2", null ],
-      [ "chapter_4_gram_schmidt", "namespacenuma____exercises.html#a3bb7364c661fee9c7f22c2d0c4bf89ff", null ],
-      [ "chapter_4_inv", "namespacenuma____exercises.html#a7445206a9d5cf89ab743a6e4c38fcd58", null ],
-      [ "chapter_4_linprog", "namespacenuma____exercises.html#accfcce5815b7392705fb39e8dfabb8d0", null ],
-      [ "chapter_4_lls", "namespacenuma____exercises.html#aa17eb6c1bd5524592a484b184773f052", null ],
-      [ "chapter_4_lu", "namespacenuma____exercises.html#adb3c0508a361716afff1d816eeddc6b8", null ],
-      [ "chapter_4_lu_c64", "namespacenuma____exercises.html#a6e19080f83b0300f98894c21e88ae167", null ],
-      [ "chapter_4_modify", "namespacenuma____exercises.html#abd8a791c530ba3d4643f98eb94546770", null ],
-      [ "chapter_4_nelder_mead", "namespacenuma____exercises.html#a20e35ad3980c97922336cd07fdd1f0c2", null ],
-      [ "chapter_4_qr", "namespacenuma____exercises.html#ae7d6a62bbce0ce64938739cd99d4aaec", null ],
-      [ "chapter_4_qr_c64", "namespacenuma____exercises.html#a0b08c55dbd9e7ea9d4ceb27bf8f9768c", null ],
-      [ "chapter_6_basic_qr", "namespacenuma____exercises.html#abe2ff90773182a35f995724ed53c8230", null ],
-      [ "chapter_6_eig_lapack", "namespacenuma____exercises.html#a4d511d9b37582a0ae588f446f5854872", null ],
-      [ "chapter_6_francis_qr", "namespacenuma____exercises.html#ab5b37a891f8826f3449413ee25b677d8", null ],
-      [ "chapter_6_hessenberg_qr", "namespacenuma____exercises.html#acbb53e512ebb071fb9c47793da1d237d", null ],
-      [ "diff_complex_vecs", "namespacenuma____exercises.html#a8a75bb95dea98eb112c9e0ca121a49f3", null ],
-      [ "test", "namespacenuma____exercises.html#ab8d02bd30223c4930913d3f1afc39626", null ],
-      [ "test_bad_numa_usage", "namespacenuma____exercises.html#af1ed546c954694a90b527df7622b9101", null ],
-      [ "test_compiler_sanity", "namespacenuma____exercises.html#a79709608820b0014168d2f95412e6ea7", null ],
-      [ "test_ne", "namespacenuma____exercises.html#abd3a9dfaf528728a53a01750d6d15c04", null ],
-      [ "tests", "namespacenuma____exercises.html#a8468eb348b236fdfe3b997557f2f6239", null ]
     ] ],
     [ "numa__fit", "namespacenuma____fit.html", [
       [ "gauss_newton", "namespacenuma____fit.html#add35af602e5d68d8288202c5a0719737", null ],
@@ -61,28 +28,6 @@ var namespaces_dup =
       [ "polyfit", "namespacenuma____fit.html#af65ec17ae518eade52a198b8c0202463", null ],
       [ "polyfit_lu", "namespacenuma____fit.html#a8b35b703843ca15df4aeb7cd26d2066f", null ],
       [ "polyval", "namespacenuma____fit.html#a02296fc3eceefd69befea44bc8392ea2", null ]
-    ] ],
-    [ "numa__functions", "namespacenuma____functions.html", [
-      [ "bessel_3_2p5", "namespacenuma____functions.html#ad4325c7d3487a3136d6d0d7b5d5512f2", null ],
-      [ "bimodal_fn", "namespacenuma____functions.html#a845c2aec2e11a1c7d7df9b71444bd2ca", null ],
-      [ "cotd_fn", "namespacenuma____functions.html#ab7bca4ece6893c6125bae18b3a8ae2d2", null ],
-      [ "exp_fn", "namespacenuma____functions.html#ac4dcdf169859ba802b6676587994ad2a", null ],
-      [ "exp_nx2", "namespacenuma____functions.html#a4290a84b12241fa2fdbb0981e7e15ac7", null ],
-      [ "fn_example_pg171", "namespacenuma____functions.html#aca6599e6e70608dbd75c5c5b51f20ea8", null ],
-      [ "inv_1px1p5", "namespacenuma____functions.html#aaf2e0dcd142c0c77d5a18132fdeabf60", null ],
-      [ "inv_1px2", "namespacenuma____functions.html#ac927a32505a69965486ef2f8fda50ff2", null ],
-      [ "inv_1px4", "namespacenuma____functions.html#a68900373173c02cb58040cabb62337ea", null ],
-      [ "inv_sqrt_fn", "namespacenuma____functions.html#adbeb5e714f26440dfdf0a4770369fc4f", null ],
-      [ "inv_square_fn", "namespacenuma____functions.html#a151bb9bc9e5257fd39b62122703d4fa7", null ],
-      [ "log_fn", "namespacenuma____functions.html#a37a29d42d99dbdc4edd15dd1c9ad38d0", null ],
-      [ "rate_dx_fn", "namespacenuma____functions.html#ae563121b3e881b11584701179a60cd31", null ],
-      [ "rate_fn", "namespacenuma____functions.html#aa47e209f97bf805626cb92e36810c576", null ],
-      [ "rosenbrock_banana", "namespacenuma____functions.html#ab8a5817f988b9c2656314cf7925e8042", null ],
-      [ "rosenbrock_banana_beta", "namespacenuma____functions.html#a33689aff388bae206d49deae60f3d046", null ],
-      [ "rosenbrock_banana_nd", "namespacenuma____functions.html#a76e08204f398e8b972d78393e659fa74", null ],
-      [ "sin_fn", "namespacenuma____functions.html#a2d5c62e4aeb215e34a5fd0732e108144", null ],
-      [ "sinx_x", "namespacenuma____functions.html#a4d8ddfd3480b04c865bbd769483537e9", null ],
-      [ "sqrt_fn", "namespacenuma____functions.html#a749164d5a22f001078f51556c0a0cec2", null ]
     ] ],
     [ "numa__integrate", "namespacenuma____integrate.html", [
       [ "gauss2_single", "namespacenuma____integrate.html#a1ca42e65f25b80ce33bf40e952e105a1", null ],
@@ -133,10 +78,17 @@ var namespaces_dup =
       [ "spline_case_prescribed", "namespacenuma____interp.html#a584b8275a49133e2eb6e150049d51bfe", null ]
     ] ],
     [ "numa__linalg", "namespacenuma____linalg.html", "namespacenuma____linalg" ],
-    [ "numa__linprog", "namespacenuma____linprog.html", "namespacenuma____linprog" ],
+    [ "numa__linprog", "namespacenuma____linprog.html", [
+      [ "linprog", "namespacenuma____linprog.html#a4094112534ada8faf0d6535636271def", null ],
+      [ "linprog_rs", "namespacenuma____linprog.html#a535b3541b79d0d7c79774b704986949e", null ],
+      [ "linprog_simplex", "namespacenuma____linprog.html#afda3cc8704f3ce113d2189cf08c4e353", null ],
+      [ "rm_cols", "namespacenuma____linprog.html#a198ae17e01792c08311b253ce678eda5", null ],
+      [ "linprog_revised_simplex_meth", "namespacenuma____linprog.html#aae6fae412322ee0130f9b587f08b3824", null ],
+      [ "linprog_simplex_meth", "namespacenuma____linprog.html#aaf235289e8a330b1eb1a50943724bae7", null ]
+    ] ],
     [ "numa__opt", "namespacenuma____opt.html", [
       [ "nelder_mead", "namespacenuma____opt.html#a8764b66d6ee9a9f2abc6037aa549445d", null ]
     ] ],
-    [ "numa__test", "namespacenuma____test.html", null ],
+    [ "numa__rand", "namespacenuma____rand.html", "namespacenuma____rand" ],
     [ "numa__utils", "namespacenuma____utils.html", "namespacenuma____utils" ]
 ];

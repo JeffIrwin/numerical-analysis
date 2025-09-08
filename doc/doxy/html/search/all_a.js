@@ -1,29 +1,5 @@
 var searchData=
 [
-  ['lagrange_5finterpolator_0',['lagrange_interpolator',['../namespacenuma____interp.html#a20a0164e375068ec1712f1a9bb734149',1,'numa__interp']]],
-  ['lagrange_5finterpolator_5fvals_1',['lagrange_interpolator_vals',['../namespacenuma____interp.html#a03409b401a51dcbb87e262e04918a41d',1,'numa__interp']]],
-  ['linalg_2ef90_2',['linalg.F90',['../linalg_8F90.html',1,'']]],
-  ['line_5ffeed_3',['line_feed',['../namespacenuma____utils.html#a4d7965e4df511f7dd98e34d12573043e',1,'numa__utils']]],
-  ['linprog_4',['linprog',['../namespacenuma____linprog.html#ad50e830915609f879b59068294a9bb53',1,'numa__linprog']]],
-  ['linprog_2ef90_5',['linprog.F90',['../linprog_8F90.html',1,'']]],
-  ['linprog_5fget_5fabc_6',['linprog_get_abc',['../namespacenuma____linprog.html#acef5c9baef86730e79dc42e91a07c216',1,'numa__linprog']]],
-  ['linprog_5fsolve_5fsimplex_7',['linprog_solve_simplex',['../namespacenuma____linprog.html#ab3f9fb1148c2ee87b3d02b65ffc99fec',1,'numa__linprog']]],
-  ['linprog_5fstd_8',['linprog_std',['../namespacenuma____linprog.html#a254e748bece10c1a5586c76e9d2dc46c',1,'numa__linprog']]],
-  ['log_5ffn_9',['log_fn',['../namespacenuma____functions.html#a37a29d42d99dbdc4edd15dd1c9ad38d0',1,'numa__functions']]],
-  ['lt_5flex_10',['lt_lex',['../interfacenuma____utils_1_1lt__lex.html',1,'numa__utils::lt_lex'],['../namespacenuma____utils.html#a9b0052ae4ff6eb80baa389e232a8e3e2',1,'numa__utils::lt_lex(a, b)']]],
-  ['lt_5flex_5fc64_11',['lt_lex_c64',['../namespacenuma____utils.html#a591728e44a246e14b2641f8aa1ef52fc',1,'numa__utils']]],
-  ['lte_5flex_12',['lte_lex',['../interfacenuma____utils_1_1lte__lex.html',1,'numa__utils::lte_lex'],['../namespacenuma____utils.html#ac62dc390e25d3c03ad10ff9f8055728b',1,'numa__utils::lte_lex(a, b)']]],
-  ['lte_5flex_5fc64_13',['lte_lex_c64',['../namespacenuma____utils.html#aff3000ada7f27f71f88bbf54885ac579',1,'numa__utils']]],
-  ['lu_5ffactor_14',['lu_factor',['../interfacenuma____linalg_1_1lu__factor.html',1,'numa__linalg']]],
-  ['lu_5ffactor_5fc64_15',['lu_factor_c64',['../namespacenuma____linalg.html#a39198a16e5e3fc093af0da6c39537d83',1,'numa__linalg']]],
-  ['lu_5ffactor_5ff64_16',['lu_factor_f64',['../namespacenuma____linalg.html#a49982eb1732bc2eaf021c21379a44062',1,'numa__linalg']]],
-  ['lu_5finvmul_17',['lu_invmul',['../interfacenuma____linalg_1_1lu__invmul.html',1,'numa__linalg']]],
-  ['lu_5finvmul_5fmat_18',['lu_invmul_mat',['../namespacenuma____linalg.html#a303035ecd5f2a764b738f2966ebafd26',1,'numa__linalg']]],
-  ['lu_5finvmul_5fvec_19',['lu_invmul_vec',['../namespacenuma____linalg.html#af0289e67e871f9d2f7680ca6ac409faf',1,'numa__linalg']]],
-  ['lu_5fkernel_20',['lu_kernel',['../interfacenuma____linalg_1_1lu__kernel.html',1,'numa__linalg']]],
-  ['lu_5fkernel_5fc64_21',['lu_kernel_c64',['../namespacenuma____linalg.html#a4366d595b21a898fc668e69421178cf1',1,'numa__linalg']]],
-  ['lu_5fkernel_5ff64_22',['lu_kernel_f64',['../namespacenuma____linalg.html#aaf38d18e6d9d39c22dc240eedacda959',1,'numa__linalg']]],
-  ['lu_5fsolve_23',['lu_solve',['../interfacenuma____linalg_1_1lu__solve.html',1,'numa__linalg']]],
-  ['lu_5fsolve_5fc64_24',['lu_solve_c64',['../namespacenuma____linalg.html#a4af3e6c4c4dde10ddfc62f55cd00b82b',1,'numa__linalg']]],
-  ['lu_5fsolve_5ff64_25',['lu_solve_f64',['../namespacenuma____linalg.html#a84fc684b599ff1ed546abf4a60c2cac7',1,'numa__linalg']]]
+  ['kernel_0',['kernel',['../namespacenuma____linalg.html#a7587d7eb4cacd2fd4092f1ec7aa5fffd',1,'numa__linalg']]],
+  ['kronrod15_5fsingle_1',['kronrod15_single',['../namespacenuma____integrate.html#ac2b8687f6a79aeeaebad8b02ecc911d5',1,'numa__integrate']]]
 ];

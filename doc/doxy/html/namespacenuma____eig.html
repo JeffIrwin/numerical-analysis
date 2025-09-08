@@ -100,12 +100,12 @@ $(function(){initNavTree('namespacenuma____eig.html','',''); });
 Functions/Subroutines</h2></td></tr>
 <tr class="memitem:a741ac13b6e95ed096d9ebcfd52767b3c" id="r_a741ac13b6e95ed096d9ebcfd52767b3c"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a741ac13b6e95ed096d9ebcfd52767b3c">hess</a> (a, u)</td></tr>
 <tr class="memitem:a32d89572359c6193bbe208375d66f853" id="r_a32d89572359c6193bbe208375d66f853"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a32d89572359c6193bbe208375d66f853">eig_basic_qr</a> (a, iters, iostat)</td></tr>
-<tr class="memitem:a30fb433e80034efa92d74663abab925b" id="r_a30fb433e80034efa92d74663abab925b"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a30fb433e80034efa92d74663abab925b">eig_hess_qr</a> (a, iters, eigvecs)</td></tr>
+<tr class="memitem:afb97518dab66761491bd470c01379144" id="r_afb97518dab66761491bd470c01379144"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afb97518dab66761491bd470c01379144">eig_hess_qr</a> (a, iters, eigvecs, iostat)</td></tr>
 <tr class="memitem:a42b25b90462d055242dfe9d1b037081f" id="r_a42b25b90462d055242dfe9d1b037081f"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:,:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42b25b90462d055242dfe9d1b037081f">house</a> (x, iostat)</td></tr>
 <tr class="memitem:a4e82b9a2a0a30fd1f6315c38638161dc" id="r_a4e82b9a2a0a30fd1f6315c38638161dc"><td class="memItemLeft" align="right" valign="top">double complex function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4e82b9a2a0a30fd1f6315c38638161dc">eig_lapack</a> (aa, eigvecs, iostat)</td></tr>
 <tr class="memitem:a7c945ccb301d0b407189a22009d62dac" id="r_a7c945ccb301d0b407189a22009d62dac"><td class="memItemLeft" align="right" valign="top">double complex function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7c945ccb301d0b407189a22009d62dac">eig_francis_qr</a> (aa, eigvecs, iostat)</td></tr>
 <tr class="memitem:ac2f8289ad209b651d2e5af2618e27cc1" id="r_ac2f8289ad209b651d2e5af2618e27cc1"><td class="memItemLeft" align="right" valign="top">subroutine&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac2f8289ad209b651d2e5af2618e27cc1">real_schur_to_complex</a> (r, q, cr, cq, eps)</td></tr>
-<tr class="memitem:a99acc801e3972b96c286debd457b7771" id="r_a99acc801e3972b96c286debd457b7771"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a99acc801e3972b96c286debd457b7771">eig_hess_qr_kernel</a> (a, iters, eigvecs)</td></tr>
+<tr class="memitem:a6127d9e200adf783f8b03fcea9e308c9" id="r_a6127d9e200adf783f8b03fcea9e308c9"><td class="memItemLeft" align="right" valign="top">double precision function, dimension(:), allocatable&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6127d9e200adf783f8b03fcea9e308c9">eig_hess_qr_kernel</a> (a, iters, eigvecs, iostat)</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Module for eigenvalue and eigenvector calculation. </p>
@@ -198,8 +198,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a30fb433e80034efa92d74663abab925b" name="a30fb433e80034efa92d74663abab925b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30fb433e80034efa92d74663abab925b">&#9670;&#160;</a></span>eig_hess_qr()</h2>
+<a id="afb97518dab66761491bd470c01379144" name="afb97518dab66761491bd470c01379144"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb97518dab66761491bd470c01379144">&#9670;&#160;</a></span>eig_hess_qr()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -217,15 +217,20 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double precision, dimension(:,:), intent(out), optional, allocatable</td>          <td class="paramname"><span class="paramname"><em>eigvecs</em></span>&#160;)</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(out), optional, allocatable</td>          <td class="paramname"><span class="paramname"><em>eigvecs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacenuma____eig_a30fb433e80034efa92d74663abab925b_cgraph.png" border="0" usemap="#anamespacenuma____eig_a30fb433e80034efa92d74663abab925b_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacenuma____eig_a30fb433e80034efa92d74663abab925b_cgraph" id="anamespacenuma____eig_a30fb433e80034efa92d74663abab925b_cgraph">
+<div class="center"><img src="namespacenuma____eig_afb97518dab66761491bd470c01379144_cgraph.png" border="0" usemap="#anamespacenuma____eig_afb97518dab66761491bd470c01379144_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____eig_afb97518dab66761491bd470c01379144_cgraph" id="anamespacenuma____eig_afb97518dab66761491bd470c01379144_cgraph">
 <area shape="rect" title=" " alt="" coords="5,55,184,80"/>
 <area shape="rect" href="namespacenuma____blarg.html#a9539aa9c5f69f7601c1aac21dcd71c71" title=" " alt="" coords="413,29,551,55"/>
 <area shape="poly" title=" " alt="" coords="184,59,399,45,399,50,184,64"/>
@@ -241,8 +246,8 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a id="a99acc801e3972b96c286debd457b7771" name="a99acc801e3972b96c286debd457b7771"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a99acc801e3972b96c286debd457b7771">&#9670;&#160;</a></span>eig_hess_qr_kernel()</h2>
+<a id="a6127d9e200adf783f8b03fcea9e308c9" name="a6127d9e200adf783f8b03fcea9e308c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6127d9e200adf783f8b03fcea9e308c9">&#9670;&#160;</a></span>eig_hess_qr_kernel()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -260,15 +265,20 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double precision, dimension(:,:), intent(out), optional, allocatable</td>          <td class="paramname"><span class="paramname"><em>eigvecs</em></span>&#160;)</td>
+          <td class="paramtype">double precision, dimension(:,:), intent(out), optional, allocatable</td>          <td class="paramname"><span class="paramname"><em>eigvecs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">integer, intent(out), optional</td>          <td class="paramname"><span class="paramname"><em>iostat</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="namespacenuma____eig_a99acc801e3972b96c286debd457b7771_cgraph.png" border="0" usemap="#anamespacenuma____eig_a99acc801e3972b96c286debd457b7771_cgraph" loading="lazy" alt=""/></div>
-<map name="anamespacenuma____eig_a99acc801e3972b96c286debd457b7771_cgraph" id="anamespacenuma____eig_a99acc801e3972b96c286debd457b7771_cgraph">
+<div class="center"><img src="namespacenuma____eig_a6127d9e200adf783f8b03fcea9e308c9_cgraph.png" border="0" usemap="#anamespacenuma____eig_a6127d9e200adf783f8b03fcea9e308c9_cgraph" loading="lazy" alt=""/></div>
+<map name="anamespacenuma____eig_a6127d9e200adf783f8b03fcea9e308c9_cgraph" id="anamespacenuma____eig_a6127d9e200adf783f8b03fcea9e308c9_cgraph">
 <area shape="rect" title=" " alt="" coords="5,59,164,99"/>
 <area shape="rect" href="namespacenuma____eig.html#a741ac13b6e95ed096d9ebcfd52767b3c" title=" " alt="" coords="212,67,343,92"/>
 <area shape="poly" title=" " alt="" coords="164,77,198,77,198,82,164,82"/>
@@ -379,9 +389,9 @@ Here is the caller graph for this function:</div>
 <area shape="rect" title=" " alt="" coords="245,84,376,109"/>
 <area shape="rect" href="namespacenuma____eig.html#a7c945ccb301d0b407189a22009d62dac" title=" " alt="" coords="5,5,197,31"/>
 <area shape="poly" title=" " alt="" coords="274,80,196,44,160,33,162,28,198,40,276,75"/>
-<area shape="rect" href="namespacenuma____eig.html#a30fb433e80034efa92d74663abab925b" title=" " alt="" coords="12,55,191,80"/>
+<area shape="rect" href="namespacenuma____eig.html#afb97518dab66761491bd470c01379144" title=" " alt="" coords="12,55,191,80"/>
 <area shape="poly" title=" " alt="" coords="231,88,190,82,191,77,232,83"/>
-<area shape="rect" href="namespacenuma____eig.html#a99acc801e3972b96c286debd457b7771" title=" " alt="" coords="22,105,181,145"/>
+<area shape="rect" href="namespacenuma____eig.html#a6127d9e200adf783f8b03fcea9e308c9" title=" " alt="" coords="22,105,181,145"/>
 <area shape="poly" title=" " alt="" coords="232,110,181,117,180,111,231,105"/>
 <area shape="rect" href="namespacenuma____eig.html#a4e82b9a2a0a30fd1f6315c38638161dc" title=" " alt="" coords="16,169,187,195"/>
 <area shape="poly" title=" " alt="" coords="278,119,241,140,198,159,160,172,158,167,196,154,238,135,276,114"/>

@@ -1,0 +1,10 @@
+<map id="numa__linalg::qr_core" name="numa__linalg::qr_core">
+<area shape="rect" id="Node000001" title=" " alt="" coords="256,79,421,104"/>
+<area shape="rect" id="Node000002" href="$namespacenuma____linalg.html#a7587d7eb4cacd2fd4092f1ec7aa5fffd" title=" " alt="" coords="28,29,185,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="265,78,167,57,168,52,266,73"/>
+<area shape="rect" id="Node000003" href="$namespacenuma____linalg.html#a690d6c545c43cdebca917680a63c455d" title=" " alt="" coords="5,79,208,104"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="242,94,208,94,208,89,242,89"/>
+<area shape="rect" id="Node000004" href="$namespacenuma____linalg.html#a3346de95d900dd27e80ed8e1381d838d" title=" " alt="" coords="23,128,190,153"/>
+<area shape="poly" id="edge4_Node000001_Node000004" title=" " alt="" coords="266,109,168,131,167,125,265,104"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="148,20,137,11,107,8,82,10,69,15,66,20,73,27,69,31,61,21,65,11,81,5,107,3,139,7,152,16"/>
+</map>

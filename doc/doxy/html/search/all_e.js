@@ -1,16 +1,7 @@
 var searchData=
 [
-  ['page_0',['Numerical analysis main page',['../index.html',1,'']]],
-  ['panic_1',['PANIC',['../panic_8F90.html#a7ab85b46e49caeee10801038f5b961cc',1,'panic.F90']]],
-  ['panic_2ef90_2',['panic.F90',['../panic_8F90.html',1,'']]],
-  ['panic_5fcore_3',['panic_core',['../namespacenuma____utils.html#a567d459dbf5deaece7b27b41c4179ddd',1,'numa__utils']]],
-  ['partition_5fc64_5f1_4',['partition_c64_1',['../namespacenuma____utils.html#a1163ebf47b9a403655ba5934edf78e43',1,'numa__utils']]],
-  ['partition_5ff64_5f1_5',['partition_f64_1',['../namespacenuma____utils.html#aa743df57005f55647002a6dbe4f7253b',1,'numa__utils']]],
-  ['partition_5fi32_5f2_6',['partition_i32_2',['../namespacenuma____utils.html#a5aeb3d226b4ff76b223d07d3b7500601',1,'numa__utils']]],
-  ['pi_7',['pi',['../namespacenuma____core.html#aff668445f2810c5be8e6279f81c43cd7',1,'numa__core']]],
-  ['polyfit_8',['polyfit',['../namespacenuma____fit.html#af65ec17ae518eade52a198b8c0202463',1,'numa__fit']]],
-  ['polyfit_5flu_9',['polyfit_lu',['../namespacenuma____fit.html#a8b35b703843ca15df4aeb7cd26d2066f',1,'numa__fit']]],
-  ['polyval_10',['polyval',['../namespacenuma____fit.html#a02296fc3eceefd69befea44bc8392ea2',1,'numa__fit']]],
-  ['print_5fmat_11',['print_mat',['../interfacenuma____utils_1_1print__mat.html',1,'numa__utils']]],
-  ['print_5fmat_5ff64_12',['print_mat_f64',['../namespacenuma____utils.html#aa79fead49ba5bc076af9ae0b9a26289b',1,'numa__utils']]]
+  ['opt_2ef90_0',['opt.F90',['../opt_8F90.html',1,'']]],
+  ['outer_5fproduct_1',['outer_product',['../interfacenuma____blarg_1_1outer__product.html',1,'numa__blarg']]],
+  ['outer_5fproduct_5fc64_2',['outer_product_c64',['../namespacenuma____blarg.html#adca741c5970c45d4e11efb02238e5a24',1,'numa__blarg']]],
+  ['outer_5fproduct_5ff64_3',['outer_product_f64',['../namespacenuma____blarg.html#ad51ddbd7faf72ed63c57d9ffcb70bc1d',1,'numa__blarg']]]
 ];
