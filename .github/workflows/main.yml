@@ -55,10 +55,10 @@ jobs:
       name: Test numa on ${{ matrix.os }}
       run: |
         # TODO: use a variable for flags
-        fpm run --example --profile debug --flag "-fno-range-check"
-        fpm run --example --profile release --flag "-fno-range-check"
-        fpm test --profile debug --flag "-fno-range-check"
-        fpm test --profile release --flag "-fno-range-check"
+        fpm run --example --profile debug
+        fpm run --example --profile release
+        fpm test --profile debug
+        fpm test --profile release
 
   test-docker-gfortran:
 

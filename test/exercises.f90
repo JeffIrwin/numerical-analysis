@@ -9,6 +9,7 @@ module numa__exercises
 	interface test
 		procedure :: test_f64
 		procedure :: test_i32
+		procedure :: test_i64
 		procedure :: test_bool
 	end interface test
 
@@ -77,6 +78,30 @@ subroutine test_i32(val, expect, nfail, msg)
 	end if
 
 end subroutine test_i32
+
+subroutine test_i64(val, expect, nfail, msg)
+	integer(kind = 8), intent(in) :: val, expect
+	integer, intent(inout) :: nfail
+	character(len = *), intent(in) :: msg
+
+	!********
+	integer :: io
+
+	io = assert(val == expect)
+	nfail = nfail + io
+	if (io /= 0) then
+
+		write(*,*) ERROR // "assert failed for value " // &
+			to_str(val) // " in "// msg
+
+		!! Could be helpful sometimes, but maybe too noisy.  Maybe add a cmd arg
+		!! to enable backtrace for unit test failures.  Also this is gfortran
+		!! extension, intel has `tracebackqq()`
+		!call backtrace()
+
+	end if
+
+end subroutine test_i64
 
 subroutine test_bool(val, expect, nfail, msg)
 	logical, intent(in) :: val, expect
@@ -260,6 +285,67 @@ integer function test_basics() result(nfail)
 	call test(v(size(v)), 1.d0, 1.d-6, nfail, "range_f64 12.2")
 	call test(v(2) - v(1), 0.3d0, 1.d-6, nfail, "range_f64 12.3")
 
+	!********
+
+	b_test_rng: block
+
+	use numa__rng
+	integer :: i
+	integer(kind = 8) :: dummy
+
+	type(rng_t) :: rng, ra, rb
+
+	! To compare results with reference C implementation, call init_genrand(0)
+	! instead of init_by_array() as in the original.  The reference C
+	! implementation is here:
+	!
+	!     http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/MT2002/CODES/mt19937ar.c
+	!
+	! It can be easier to print hex values instead of decimal-formatted ints
+	! because of signed vs unsigned differences with Fortran
+
+	!print *, rng%int32(), rng%int32(), rng%int32(), rng%int32(), rng%int32()
+
+	! Test default (not explicitly seeded) seed
+	call test(rng%uint32(), int(z"D091BB5C", 8), nfail, "rng 1")
+
+	! Test explicit seed
+	call rng%seed(0)
+	call test(rng%uint32(), int(z"8C7F0AAC", 8), nfail, "rng 2")
+	call test(rng%uint32(), int(z"97C4AA2F", 8), nfail, "rng 3")
+
+	! Test re-seeding.  Should get same number as before
+	call rng%seed(0)
+	call test(rng%uint32(), int(z"8C7F0AAC", 8), nfail, "rng 4")
+
+	! Test > 624 calls.  This will trigger another twist_mt19937() call
+	call rng%seed(0)
+	do i = 1, 997
+		dummy = rng%uint32()
+	end do
+	call test(rng%uint32(), 3814118674_8, nfail, "rng 5")
+	call test(rng%uint32(), 2172679577_8, nfail, "rng 6")
+	call test(rng%uint32(), 3043451800_8, nfail, "rng 7")
+
+	! Test multiple RNGs running concurrently
+	call ra%seed(0)
+	call rb%seed(0)
+	call test(ra%uint32(), 2357136044_8, nfail, "rng 8.1")
+	call test(rb%uint32(), 2357136044_8, nfail, "rng 8.2")
+	call test(ra%uint32(), 2546248239_8, nfail, "rng 8.3")
+	call test(rb%uint32(), 2546248239_8, nfail, "rng 8.4")
+	call test(ra%uint32(), 3071714933_8, nfail, "rng 8.5")
+	call test(rb%uint32(), 3071714933_8, nfail, "rng 8.6")
+
+	! Test (signed) int32 generation
+	call rng%seed(0)
+	call test(rng%int32(), -1937831252, nfail, "rng 9.1")
+	call test(rng%int32(), -1748719057, nfail, "rng 9.2")
+	call test(rng%int32(), -1223252363, nfail, "rng 9.3")
+	call test(rng%int32(), -668873536 , nfail, "rng 9.4")
+	call test(rng%int32(), -1706118333, nfail, "rng 9.5")
+
+	end block b_test_rng
 	!********
 
 end function test_basics

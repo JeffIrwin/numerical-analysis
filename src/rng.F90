@@ -231,14 +231,22 @@ subroutine twist_mt19937(rng)
 
 	int32_t, parameter :: &
 		a = int(z"9908b0df", int32), &
-		m = 397, &
-		r =  31
+		m = 397!, &
+		!r =  31
 
-	int32_t, parameter :: &
-		lower_mask = shiftl(1, r) - 1, &
-		upper_mask = not(lower_mask)
+	!! nvfortran doesn't like using shiftl() in parameter definition
+	!int32_t, parameter :: &
+	!	lower_mask = shiftl(1, r) - 1, &
+	!	upper_mask = not(lower_mask)
+	int32_t :: lower_mask, upper_mask
 
 	int32_t :: i, x, xa
+
+	!lower_mask = shiftl(1, r) - 1
+	!lower_mask = int(int(shiftl(1, r),8) - 1, 4)
+	lower_mask = int(z"7FFFFFFF")
+
+	upper_mask = not(lower_mask)
 
 	!print "(a,b0.32)", "lower_mask = ", lower_mask
 	!print "(a,b0.32)", "upper_mask = ", upper_mask

@@ -24,7 +24,8 @@ RUN echo 47
 RUN git clone https://github.com/jeffirwin/numerical-analysis --branch "$BRANCH"
 WORKDIR /workdir/numerical-analysis
 
-ENV FLAGS="-fno-range-check"
+#ENV FLAGS="-fno-range-check"
+ENV FLAGS=""
 
 RUN fpm test --profile debug --flag "${FLAGS}"
 RUN fpm test --profile release --flag "${FLAGS}"
