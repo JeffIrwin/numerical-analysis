@@ -1,7 +1,4 @@
 
-#define int32_t integer(kind = int32)
-#define int64_t integer(kind = int64)
-
 !> This is a Fortran module for Mersenne twister (MT) pseudo-random number
 !> generation (PRNG)
 !>
@@ -14,6 +11,9 @@
 !>
 !> From https://github.com/JeffIrwin/rfng
 module numa__rng
+
+#define int32_t integer(kind = int32)
+#define int64_t integer(kind = int64)
 
 	use iso_c_binding
 	use iso_fortran_env

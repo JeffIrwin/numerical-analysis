@@ -36,6 +36,10 @@ var annotated_dup =
     [ "numa__rand", "namespacenuma____rand.html", [
       [ "rand_f64", "interfacenuma____rand_1_1rand__f64.html", null ]
     ] ],
+    [ "numa__rng", "namespacenuma____rng.html", [
+      [ "rng_state_t", "structnuma____rng_1_1rng__state__t.html", "structnuma____rng_1_1rng__state__t" ],
+      [ "rng_t", "structnuma____rng_1_1rng__t.html", "structnuma____rng_1_1rng__t" ]
+    ] ],
     [ "numa__utils", "namespacenuma____utils.html", [
       [ "to_str", "interfacenuma____utils_1_1to__str.html", null ],
       [ "sorted", "interfacenuma____utils_1_1sorted.html", null ],

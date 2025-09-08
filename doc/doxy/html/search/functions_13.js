@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['vstack_5fmat_5fmat_0',['vstack_mat_mat',['../namespacenuma____blarg.html#a773d66f965205b0e615f08e3f1200ded',1,'numa__blarg']]],
-  ['vstack_5fmat_5fvec_1',['vstack_mat_vec',['../namespacenuma____blarg.html#a8dce8848e2059520f81ca746d4e35baa',1,'numa__blarg']]]
+  ['weddle_5fintegrator_0',['weddle_integrator',['../namespacenuma____integrate.html#a5ef55e56d27d8d6c8017540f478eaa9d',1,'numa__integrate']]]
 ];

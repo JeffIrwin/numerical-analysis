@@ -1,7 +1,8 @@
 var rng_8F90 =
 [
+    [ "numa__rng::rng_state_t", "structnuma____rng_1_1rng__state__t.html", "structnuma____rng_1_1rng__state__t" ],
+    [ "numa__rng::rng_t", "structnuma____rng_1_1rng__t.html", "structnuma____rng_1_1rng__t" ],
     [ "int32_t", "rng_8F90.html#a302de80f7777ea9d86184fcfbbc619eb", null ],
     [ "int64_t", "rng_8F90.html#aa028d750c854cd520247fcab322e276c", null ],
-    [ "__rng_f90__", "rng_8F90.html#a488224443582e728375fb6fea041964f", null ],
-    [ "seed_array", "rng_8F90.html#aedbbc604c74c09a5db35bbc897bafad7", null ]
+    [ "numa__rng::seed_array", "namespacenuma____rng.html#a860bb8ba9f17dc8ced9bbd91f69675fb", null ]
 ];

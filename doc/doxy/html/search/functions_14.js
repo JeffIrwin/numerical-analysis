@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['weddle_5fintegrator_0',['weddle_integrator',['../namespacenuma____integrate.html#a5ef55e56d27d8d6c8017540f478eaa9d',1,'numa__integrate']]]
+  ['zeros_5fmat_0',['zeros_mat',['../namespacenuma____blarg.html#ab653c2e2c9c13efd6e7ebc6687310a46',1,'numa__blarg']]],
+  ['zeros_5fvec_1',['zeros_vec',['../namespacenuma____blarg.html#abe889f6136a0e44693f7ba67ca07d233',1,'numa__blarg']]],
+  ['zeros_5fvec_5fi32_2',['zeros_vec_i32',['../namespacenuma____blarg.html#ae6a237b98a3e0ff2ae2944518b765855',1,'numa__blarg']]]
 ];

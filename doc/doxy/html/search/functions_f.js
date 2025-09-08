@@ -1,15 +1,19 @@
 var searchData=
 [
-  ['qr_5fcore_0',['qr_core',['../namespacenuma____linalg.html#ac7980494a83b79fd2f2e6e73006f8101',1,'numa__linalg']]],
-  ['qr_5ffactor_5fc64_1',['qr_factor_c64',['../namespacenuma____linalg.html#a4fbc6d402d01ef69739384975d8a9386',1,'numa__linalg']]],
-  ['qr_5ffactor_5ff64_2',['qr_factor_f64',['../namespacenuma____linalg.html#a690d6c545c43cdebca917680a63c455d',1,'numa__linalg']]],
-  ['qr_5ffactor_5fgram_5fschmidt_3',['qr_factor_gram_schmidt',['../namespacenuma____linalg.html#acbb767815530b995c1ff977c48061281',1,'numa__linalg']]],
-  ['qr_5fget_5fq_5fexpl_5fc64_4',['qr_get_q_expl_c64',['../namespacenuma____linalg.html#a5c653febce581f4efc9d7371f65fcfa6',1,'numa__linalg']]],
-  ['qr_5fget_5fq_5fexpl_5ff64_5',['qr_get_q_expl_f64',['../namespacenuma____linalg.html#a3de87939307f661b420cefb9b413c6c4',1,'numa__linalg']]],
-  ['qr_5fmul_5fmat_5fc64_6',['qr_mul_mat_c64',['../namespacenuma____linalg.html#ab1038b3d730eddd42d1b28a87b32255c',1,'numa__linalg']]],
-  ['qr_5fmul_5fmat_5ff64_7',['qr_mul_mat_f64',['../namespacenuma____linalg.html#a4c3a2658c14f7e64b8f3d5e9f88cc8d1',1,'numa__linalg']]],
-  ['qr_5fmul_5ftranspose_5fmat_5ff64_8',['qr_mul_transpose_mat_f64',['../namespacenuma____linalg.html#af52aefd18fead036d08326dfe27ad7f1',1,'numa__linalg']]],
-  ['qr_5fmul_5ftranspose_5fvec_5ff64_9',['qr_mul_transpose_vec_f64',['../namespacenuma____linalg.html#a994df206f6fbe8f8d85c6239a1c1e692',1,'numa__linalg']]],
-  ['qr_5frank_10',['qr_rank',['../namespacenuma____linalg.html#a3346de95d900dd27e80ed8e1381d838d',1,'numa__linalg']]],
-  ['qr_5fsolve_5ff64_11',['qr_solve_f64',['../namespacenuma____linalg.html#af2aa98c6a76a107949392fc97afc4251',1,'numa__linalg']]]
+  ['rand_5fi32_0',['rand_i32',['../namespacenuma____rand.html#a2bc63c05b5846dcab2138d689d200535',1,'numa__rand']]],
+  ['rand_5fmat_5ff64_1',['rand_mat_f64',['../namespacenuma____rand.html#aaf752d8145b3f7dcadf4c366c3a0cb8d',1,'numa__rand']]],
+  ['rand_5fperm_2',['rand_perm',['../namespacenuma____rand.html#ac90292cf05005cfdb573be4904215e89',1,'numa__rand']]],
+  ['rand_5fsca_5ff64_3',['rand_sca_f64',['../namespacenuma____rand.html#a0b2a95189e825f2d33ee0ccbc93c6672',1,'numa__rand']]],
+  ['rand_5fseed_5fdeterm_4',['rand_seed_determ',['../namespacenuma____rand.html#aec13f437375e77d83dd1db8b3b18f1e9',1,'numa__rand']]],
+  ['rand_5fvec_5ff64_5',['rand_vec_f64',['../namespacenuma____rand.html#a9850ff8c9df8187e8ab3db7fbc488089',1,'numa__rand']]],
+  ['range_5ff64_5fcount_6',['range_f64_count',['../namespacenuma____blarg.html#a27dbddf46f89949d32d25d57ff33b8b8',1,'numa__blarg']]],
+  ['range_5ff64_5fstep_7',['range_f64_step',['../namespacenuma____blarg.html#abb97814fa502e10cc86cf6c1dec90738',1,'numa__blarg']]],
+  ['range_5fi32_5fstart_5fstop_8',['range_i32_start_stop',['../namespacenuma____blarg.html#a1758f7485bb99bd33c2ea8c802fce634',1,'numa__blarg']]],
+  ['range_5fi32_5fstep_9',['range_i32_step',['../namespacenuma____blarg.html#ad03a52720cdb8caf7b596816153da655',1,'numa__blarg']]],
+  ['range_5fi32_5fstop_10',['range_i32_stop',['../namespacenuma____blarg.html#adc45435540f61afcc127220e9e8a077c',1,'numa__blarg']]],
+  ['real_5fschur_5fto_5fcomplex_11',['real_schur_to_complex',['../namespacenuma____eig.html#ac2f8289ad209b651d2e5af2618e27cc1',1,'numa__eig']]],
+  ['reverse_12',['reverse',['../namespacenuma____blarg.html#a17d10f3229713bcaa33325a8080f34a9',1,'numa__blarg']]],
+  ['rm_5fcols_13',['rm_cols',['../namespacenuma____linprog.html#a198ae17e01792c08311b253ce678eda5',1,'numa__linprog']]],
+  ['romberg_5fintegrator_14',['romberg_integrator',['../namespacenuma____integrate.html#a594c3a5bfb51c1e4f2231d6f16c1c66e',1,'numa__integrate']]],
+  ['romberg_5fintegrator_5ffixed_15',['romberg_integrator_fixed',['../namespacenuma____integrate.html#a65beebcb63c6c46ca857197017cb9f84',1,'numa__integrate']]]
 ];

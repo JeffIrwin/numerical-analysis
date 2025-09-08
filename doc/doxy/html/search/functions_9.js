@@ -1,5 +1,20 @@
 var searchData=
 [
-  ['kernel_0',['kernel',['../namespacenuma____linalg.html#a7587d7eb4cacd2fd4092f1ec7aa5fffd',1,'numa__linalg']]],
-  ['kronrod15_5fsingle_1',['kronrod15_single',['../namespacenuma____integrate.html#ac2b8687f6a79aeeaebad8b02ecc911d5',1,'numa__integrate']]]
+  ['lagrange_5finterpolator_0',['lagrange_interpolator',['../namespacenuma____interp.html#a20a0164e375068ec1712f1a9bb734149',1,'numa__interp']]],
+  ['lagrange_5finterpolator_5fvals_1',['lagrange_interpolator_vals',['../namespacenuma____interp.html#a03409b401a51dcbb87e262e04918a41d',1,'numa__interp']]],
+  ['linprog_2',['linprog',['../namespacenuma____linprog.html#a4094112534ada8faf0d6535636271def',1,'numa__linprog']]],
+  ['linprog_5frs_3',['linprog_rs',['../namespacenuma____linprog.html#a535b3541b79d0d7c79774b704986949e',1,'numa__linprog']]],
+  ['linprog_5fsimplex_4',['linprog_simplex',['../namespacenuma____linprog.html#afda3cc8704f3ce113d2189cf08c4e353',1,'numa__linprog']]],
+  ['lt_5flex_5fc64_5',['lt_lex_c64',['../namespacenuma____utils.html#a591728e44a246e14b2641f8aa1ef52fc',1,'numa__utils']]],
+  ['lt_5flex_5fi32_6',['lt_lex_i32',['../namespacenuma____utils.html#ae3a5bbd48834f41fe2f85b50f4a4a69a',1,'numa__utils']]],
+  ['lte_5flex_5fc64_7',['lte_lex_c64',['../namespacenuma____utils.html#aff3000ada7f27f71f88bbf54885ac579',1,'numa__utils']]],
+  ['lte_5flex_5fi32_8',['lte_lex_i32',['../namespacenuma____utils.html#a2d1a9b1adbc4e80d4ae3d112192629bd',1,'numa__utils']]],
+  ['lu_5ffactor_5fc64_9',['lu_factor_c64',['../namespacenuma____linalg.html#a39198a16e5e3fc093af0da6c39537d83',1,'numa__linalg']]],
+  ['lu_5ffactor_5ff64_10',['lu_factor_f64',['../namespacenuma____linalg.html#a49982eb1732bc2eaf021c21379a44062',1,'numa__linalg']]],
+  ['lu_5finvmul_5fmat_11',['lu_invmul_mat',['../namespacenuma____linalg.html#a417c8eef61ff7b311b9c2cbb941538aa',1,'numa__linalg']]],
+  ['lu_5finvmul_5fvec_12',['lu_invmul_vec',['../namespacenuma____linalg.html#ac040808819c7fbfea8b644559c9d4659',1,'numa__linalg']]],
+  ['lu_5fkernel_5fc64_13',['lu_kernel_c64',['../namespacenuma____linalg.html#ae693c70f857092eeb956d4de011bbf23',1,'numa__linalg']]],
+  ['lu_5fkernel_5ff64_14',['lu_kernel_f64',['../namespacenuma____linalg.html#a98a1d5840dabd3a69694d99145887236',1,'numa__linalg']]],
+  ['lu_5fsolve_5fc64_15',['lu_solve_c64',['../namespacenuma____linalg.html#a4af3e6c4c4dde10ddfc62f55cd00b82b',1,'numa__linalg']]],
+  ['lu_5fsolve_5ff64_16',['lu_solve_f64',['../namespacenuma____linalg.html#a84fc684b599ff1ed546abf4a60c2cac7',1,'numa__linalg']]]
 ];

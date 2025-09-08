@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['vert_5ftab_0',['vert_tab',['../namespacenuma____utils.html#a33281be72764128dd1b58afb3d0fad38',1,'numa__utils']]],
-  ['vstack_1',['vstack',['../interfacenuma____blarg_1_1vstack.html',1,'numa__blarg']]],
-  ['vstack_5fmat_5fmat_2',['vstack_mat_mat',['../namespacenuma____blarg.html#a773d66f965205b0e615f08e3f1200ded',1,'numa__blarg']]],
-  ['vstack_5fmat_5fvec_3',['vstack_mat_vec',['../namespacenuma____blarg.html#a8dce8848e2059520f81ca746d4e35baa',1,'numa__blarg']]]
+  ['weddle_5fintegrator_0',['weddle_integrator',['../namespacenuma____integrate.html#a5ef55e56d27d8d6c8017540f478eaa9d',1,'numa__integrate']]],
+  ['white_1',['white',['../namespacenuma____utils.html#af246a51a016c78c683a679f614ddec16',1,'numa__utils']]],
+  ['wxg_5fgk15_2',['wxg_gk15',['../namespacenuma____integrate.html#a7ed044214d8e37775268ee587f164da6',1,'numa__integrate']]],
+  ['wxk_5fgk15_3',['wxk_gk15',['../namespacenuma____integrate.html#abbcbaaafefc166ef2298aeddd249f4a8',1,'numa__integrate']]]
 ];

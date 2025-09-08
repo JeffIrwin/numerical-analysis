@@ -1,20 +1,15 @@
 var searchData=
 [
-  ['seed_5farray_0',['seed_array',['../rng_8F90.html#aedbbc604c74c09a5db35bbc897bafad7',1,'rng.F90']]],
-  ['select_5fmax_5fn_1',['select_max_n',['../namespacenuma____utils.html#a656d44b9d4efa4cb4be854515dfd3b2e',1,'numa__utils']]],
-  ['sign_5f_2',['sign_',['../namespacenuma____utils.html#a3e8cc3073d4df68887dbff4e13b313b0',1,'numa__utils']]],
-  ['simpson_5f13_5fintegrator_3',['simpson_13_integrator',['../namespacenuma____integrate.html#aff15563f68e438bd507b6aaad8d53be4',1,'numa__integrate']]],
-  ['simpson_5f38_5fintegrator_4',['simpson_38_integrator',['../namespacenuma____integrate.html#a3933872b1eab6160154dc17f0168af75',1,'numa__integrate']]],
-  ['simpson_5fadaptive_5fintegrator_5',['simpson_adaptive_integrator',['../namespacenuma____integrate.html#a7ea4aa0e5727b376da7bde26296f79ac',1,'numa__integrate']]],
-  ['simpson_5fintegrator_5fvals_6',['simpson_integrator_vals',['../namespacenuma____integrate.html#a928c1a4579fb903f06d9b5f06932bfa0',1,'numa__integrate']]],
-  ['sort_5fc64_7',['sort_c64',['../namespacenuma____utils.html#ac0fa38a990899fba300b008198c47400',1,'numa__utils']]],
-  ['sort_5ff64_8',['sort_f64',['../namespacenuma____utils.html#a77e294c4a9bc5b3b6e9bcfd1b0b2f08f',1,'numa__utils']]],
-  ['sorted_5fc64_9',['sorted_c64',['../namespacenuma____utils.html#aa89549567a73f000fb32b38db5e03070',1,'numa__utils']]],
-  ['sorted_5ff64_10',['sorted_f64',['../namespacenuma____utils.html#a637060b34cc081dfe5363142103bff5e',1,'numa__utils']]],
-  ['sortidx_5fc64_5f1_11',['sortidx_c64_1',['../namespacenuma____utils.html#a361d6677057b5989ce0ac3d716dc2908',1,'numa__utils']]],
-  ['sortidx_5ff64_5f1_12',['sortidx_f64_1',['../namespacenuma____utils.html#a3189455e849acdddba23c4944975e4e0',1,'numa__utils']]],
-  ['sortidx_5fi32_5f2_13',['sortidx_i32_2',['../namespacenuma____utils.html#adcc1939d35e0d2f859c832263a979853',1,'numa__utils']]],
-  ['spline_5fno_5fcurve_14',['spline_no_curve',['../namespacenuma____interp.html#a71374d8b3a6e2f065180d51a45735a3f',1,'numa__interp']]],
-  ['spline_5fperiodic_15',['spline_periodic',['../namespacenuma____interp.html#a167b41e75883e7e3f195b2f29c38f90f',1,'numa__interp']]],
-  ['spline_5fprescribed_16',['spline_prescribed',['../namespacenuma____interp.html#abfedb2e10ac56a55925fa9a811580ee4',1,'numa__interp']]]
+  ['to_5fstr_5fbool_0',['to_str_bool',['../namespacenuma____utils.html#a2446ac8da4048a6149b436600b38c72a',1,'numa__utils']]],
+  ['to_5fstr_5ff32_1',['to_str_f32',['../namespacenuma____utils.html#a1bedbb5231f6fcfebca1cacad19f8d5d',1,'numa__utils']]],
+  ['to_5fstr_5ff64_2',['to_str_f64',['../namespacenuma____utils.html#aa58fdcbafbb7e714b2ed62427bbae30c',1,'numa__utils']]],
+  ['to_5fstr_5fi32_3',['to_str_i32',['../namespacenuma____utils.html#abf6433de58461da9b88d0939bd40f635',1,'numa__utils']]],
+  ['to_5fstr_5fi64_4',['to_str_i64',['../namespacenuma____utils.html#a3dad17da13b928801ec35281a4759ddb',1,'numa__utils']]],
+  ['tridiag_5fcorner_5finvmul_5',['tridiag_corner_invmul',['../namespacenuma____linalg.html#a829701de86b62672bc29a03ef1d60c54',1,'numa__linalg']]],
+  ['tridiag_5ffactor_6',['tridiag_factor',['../namespacenuma____linalg.html#a79995b77354a1cc76288b0a246bdbc07',1,'numa__linalg']]],
+  ['tridiag_5finvmul_7',['tridiag_invmul',['../namespacenuma____linalg.html#a6252f86a488bf95cba6389682ac88645',1,'numa__linalg']]],
+  ['tridiag_5fsolve_8',['tridiag_solve',['../namespacenuma____linalg.html#a72478ed78bc4a3daaa200e6531357b35',1,'numa__linalg']]],
+  ['triu_5fc64_9',['triu_c64',['../namespacenuma____blarg.html#a988cc548a20cc120d34733cc11a1977f',1,'numa__blarg']]],
+  ['triu_5ff64_10',['triu_f64',['../namespacenuma____blarg.html#a62df4df52a554e683c45c9cf2ac2505e',1,'numa__blarg']]],
+  ['trues_5fvec_11',['trues_vec',['../namespacenuma____blarg.html#a3200fee98fdb48be9034663e16ae3121',1,'numa__blarg']]]
 ];

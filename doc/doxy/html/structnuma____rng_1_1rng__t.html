@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.15.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>numeric-analysis: src/rng.F90 File Reference</title>
+<title>numeric-analysis: numa__rng::rng_t Type Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(function(){initNavTree('rng_8F90.html','',''); });
+$(function(){initNavTree('structnuma____rng_1_1rng__t.html','','structnuma____rng_1_1rng__t-members'); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -89,58 +89,61 @@ $(function(){initNavTree('rng_8F90.html','',''); });
 </div>
 
 <div class="header">
-  <div class="headertitle"><div class="title">rng.F90 File Reference</div></div>
+  <div class="headertitle"><div class="title">numa__rng::rng_t Type Reference</div></div>
 </div><!--header-->
 <div class="contents">
+<div class="dynheader">
+Collaboration diagram for numa__rng::rng_t:</div>
+<div class="dyncontent">
+<div class="center"><img src="structnuma____rng_1_1rng__t__coll__graph.png" border="0" usemap="#anuma____rng_1_1rng__t_coll__map" loading="lazy" alt="Collaboration graph"/></div>
+<map name="anuma____rng_1_1rng__t_coll__map" id="anuma____rng_1_1rng__t_coll__map">
+<area shape="rect" title=" " alt="" coords="25,101,160,127"/>
+<area shape="rect" href="structnuma____rng_1_1rng__state__t.html" title=" " alt="" coords="5,5,180,31"/>
+<area shape="poly" title=" " alt="" coords="95,45,95,101,90,101,90,45"/>
+</map>
+<center><span class="legend">[<a target="top" href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-nested-classes" class="groupheader"><a id="nested-classes" name="nested-classes"></a>
-Data Types</h2></td></tr>
-<tr class="memitem:numa_5F_5Frng_3A_3Arng_5Fstate_5Ft" id="r_numa_5F_5Frng_3A_3Arng_5Fstate_5Ft"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnuma____rng_1_1rng__state__t.html">numa__rng::rng_state_t</a></td></tr>
-<tr class="memitem:numa_5F_5Frng_3A_3Arng_5Ft" id="r_numa_5F_5Frng_3A_3Arng_5Ft"><td class="memItemLeft" align="right" valign="top">type &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structnuma____rng_1_1rng__t.html">numa__rng::rng_t</a></td></tr>
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a0ebfa62736760eef285013eb0f96d1c0" id="r_a0ebfa62736760eef285013eb0f96d1c0"><td class="memItemLeft" align="right" valign="top">procedure&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ebfa62736760eef285013eb0f96d1c0">seed</a> seed_mt19937, int32=&gt; int32_mt19937, uint32=&gt; uint32_mt19937</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-namespaces" class="groupheader"><a id="namespaces" name="namespaces"></a>
-Modules</h2></td></tr>
-<tr class="memitem:numa_5F_5Frng" id="r_numa_5F_5Frng"><td class="memItemLeft" align="right" valign="top">module &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacenuma____rng.html">numa__rng</a></td></tr>
-<tr class="memdesc:namespacenuma____rng"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is a Fortran module for Mersenne twister (MT) pseudo-random number generation (PRNG). <br /></td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-define-members" class="groupheader"><a id="define-members" name="define-members"></a>
-Macros</h2></td></tr>
-<tr class="memitem:a302de80f7777ea9d86184fcfbbc619eb" id="r_a302de80f7777ea9d86184fcfbbc619eb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a302de80f7777ea9d86184fcfbbc619eb">int32_t</a>&#160;&#160;&#160;integer(kind = int32)</td></tr>
-<tr class="memitem:aa028d750c854cd520247fcab322e276c" id="r_aa028d750c854cd520247fcab322e276c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa028d750c854cd520247fcab322e276c">int64_t</a>&#160;&#160;&#160;integer(kind = int64)</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
-Functions/Subroutines</h2></td></tr>
-<tr class="memitem:a860bb8ba9f17dc8ced9bbd91f69675fb" id="r_a860bb8ba9f17dc8ced9bbd91f69675fb"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structnuma____rng_1_1rng__state__t.html">rng_state_t</a>) function&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacenuma____rng.html#a860bb8ba9f17dc8ced9bbd91f69675fb">numa__rng::seed_array</a> (seed_, len_)</td></tr>
+<tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a18a1bf69d10920371f5d6236f66d5535" id="r_a18a1bf69d10920371f5d6236f66d5535"><td class="memItemLeft" align="right" valign="top">type(<a class="el" href="structnuma____rng_1_1rng__state__t.html">rng_state_t</a>)&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a18a1bf69d10920371f5d6236f66d5535">s</a></td></tr>
 </table>
-<a name="doc-define-members" id="doc-define-members"></a><h2 id="header-doc-define-members" class="groupheader">Macro Definition Documentation</h2>
-<a id="a302de80f7777ea9d86184fcfbbc619eb" name="a302de80f7777ea9d86184fcfbbc619eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a302de80f7777ea9d86184fcfbbc619eb">&#9670;&#160;</a></span>int32_t</h2>
+<a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function/Subroutine Documentation</h2>
+<a id="a0ebfa62736760eef285013eb0f96d1c0" name="a0ebfa62736760eef285013eb0f96d1c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ebfa62736760eef285013eb0f96d1c0">&#9670;&#160;</a></span>seed()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define int32_t&#160;&#160;&#160;integer(kind = int32)</td>
+          <td class="memname">procedure numa__rng::rng_t::seed</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="aa028d750c854cd520247fcab322e276c" name="aa028d750c854cd520247fcab322e276c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa028d750c854cd520247fcab322e276c">&#9670;&#160;</a></span>int64_t</h2>
+<a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a18a1bf69d10920371f5d6236f66d5535" name="a18a1bf69d10920371f5d6236f66d5535"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a18a1bf69d10920371f5d6236f66d5535">&#9670;&#160;</a></span>s</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define int64_t&#160;&#160;&#160;integer(kind = int64)</td>
+          <td class="memname">type(<a class="el" href="structnuma____rng_1_1rng__state__t.html">rng_state_t</a>) numa__rng::rng_t::s</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
+<hr/>The documentation for this type was generated from the following file:<ul>
+<li>src/<a class="el" href="rng_8F90.html">rng.F90</a></li>
+</ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <div id="page-nav" class="page-nav-panel">
@@ -154,7 +157,7 @@ Functions/Subroutines</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a href="rng_8F90.html">rng.F90</a></li>
+    <li class="navelem"><a href="namespacenuma____rng.html">numa__rng</a></li><li class="navelem"><a href="structnuma____rng_1_1rng__t.html">rng_t</a></li>
     <li class="footer">Generated on <span class="timestamp"></span> for numeric-analysis by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.15.0 </li>
   </ul>
 </div>

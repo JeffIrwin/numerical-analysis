@@ -12,5 +12,6 @@ var searchData=
   ['numa_5f_5flinprog_9',['numa__linprog',['../namespacenuma____linprog.html',1,'']]],
   ['numa_5f_5fopt_10',['numa__opt',['../namespacenuma____opt.html',1,'']]],
   ['numa_5f_5frand_11',['numa__rand',['../namespacenuma____rand.html',1,'']]],
-  ['numa_5f_5futils_12',['numa__utils',['../namespacenuma____utils.html',1,'']]]
+  ['numa_5f_5frng_12',['numa__rng',['../namespacenuma____rng.html',1,'']]],
+  ['numa_5f_5futils_13',['numa__utils',['../namespacenuma____utils.html',1,'']]]
 ];
