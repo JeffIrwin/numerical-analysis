@@ -24,13 +24,10 @@ subroutine rand_seed_determ()
 	! numa__rng
 	call global_rng%seed(0)
 
-	!print *, "seeded rng"
-	!print *, "int = ", global_rng%int32()
-	!print *, "int = ", global_rng%int32()
-	!print *, "int = ", global_rng%int32()
-	!print *, "int = ", global_rng%int32()
-
-	!! Built-in Fortran default rng
+	!! Built-in Fortran default rng.  The built-in rng is excellent for most
+	!! compilers but nvfortran creates random matrices with many repeated
+	!! elements, which is the worst case scenario for my tests which depend on
+	!! randomly-generated non-singular matrices
 	!call random_seed(size = nrng)
 	!!call random_seed(put = [1, (0, i = 2, nrng)])  ! nvfortran complains with all 0's
 	!call random_seed(put = [(0, i = 1, nrng)])

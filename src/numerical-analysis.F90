@@ -43,6 +43,22 @@ module numa
 	! - Make a few more examples for interesting cases. Doesn't need to be
 	!   exhaustive, that's what the tests are for
 
+	!********
+
+	! Note on compiler support:
+	!
+	! GNU gfortran and Intel ifx both work well and are tested in ci/cd.
+	!
+	! NVIDIA nvfortran almost works.  NVIDIA is picky and requires explicit
+	! allocation sometimes instead of automatically re-allocating the LHS based
+	! on the RHS.  See the note in chapter 4.  If that workaround is implemented
+	! in other places, nvfortran might work.  It compiles and gets through some
+	! tests before eventually segfaulting
+	!
+	! Lfortran does not work as of 2025-09-07, because it lacks at least
+	! iso_fortran_env.  I tried removing uses of iso_fortran_env, but there were
+	! other issues that I can't remember
+
 	integer, parameter :: &
 		NUMA_MAJOR = 0, &
 		NUMA_MINOR = 1, &

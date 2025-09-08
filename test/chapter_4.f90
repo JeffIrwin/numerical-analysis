@@ -66,7 +66,9 @@ integer function chapter_4_lu() result(nfail)
 	)
 	x = [69.d0, 420.d0, 1337.d0, 690.d0, 4200.d0, 13370.d0]
 	bx = matmul(a, x)
+	!print *, "b = ", bx
 	bx = invmul(a, bx)
+	!print *, "x = ", x
 	call test(norm2(bx - x), 0.d0, 1.d-14, nfail, "lu_factor 4")
 
 	!********
@@ -83,6 +85,15 @@ integer function chapter_4_lu() result(nfail)
 	a0 = a
 	pivot = range_i32(3)
 
+	! nvfortran kinda works sometimes, but not others, requiring explicit alloc
+	! like here.  maybe it needs some arg like intel's "assume:realloc_lhs", or
+	! maybe it just doesn't support modern fortran
+	!
+	! it gets through this function but crashes later, probably due to the same
+	! issue. i've gone deep enough into the nvidia rabbit hole that i don't
+	! think it's worth proceeding
+	allocate(aexp(3, 3))
+
 	aexp = transpose(reshape([ &
 		0.0000d+00,    0.0000d+00,    1.0000d+00, &
 		4.0000d-01,    2.0000d+00,    4.0000d+00, &
@@ -93,14 +104,21 @@ integer function chapter_4_lu() result(nfail)
 
 	call lu_factor(a, pivot)
 
-	!call print_mat(a, "lu(a) = ")
+	call print_mat(a, "lu(a) = ")
 	!print *, "pivot = ", pivot
 
+	!print *, "test 1"
+	!print *, "size(a)    = ", size(a,1), size(a,2)
+	!print *, "size(aexp) = ", size(aexp,1), size(aexp,2)
 	call test(norm2(a - aexp), 0.d0, 1.d-11, nfail, "lu_factor 1")
+	!print *, "test 2"
 	call test(norm2(pivot - 1.d0*[3, 2, 1]), 0.d0, 1.d-11, nfail, "lu_factor 2")
+	!print *, "test 3"
 
 	a = a0
+	!print *, "test 4"
 	x = [69.d0, 420.d0, 1337.d0]
+	!print *, "test 5"
 	bx = matmul(a, x)
 	!print *, "bx = ", bx
 	bx = invmul(a, bx)
