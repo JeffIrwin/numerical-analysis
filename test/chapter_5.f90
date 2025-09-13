@@ -47,6 +47,17 @@ integer function chapter_5_nr() result(nfail)
 	print *, "xn = ", xn
 	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 3")
 
+	!********
+
+	! TODO: test different roots from different initial guesses
+	xe = [1.0989425808889501d0, 0.36761667884567795d0, 0.14493165687848802d0]
+	xn = newton_raphson_nd(f_nr_ex4, df_nr_ex4, nx = 3)
+	print *, "xn = ", xn
+	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
+
+	!********
+	print *, ""
+
 end function chapter_5_nr
 
 !===============================================================================

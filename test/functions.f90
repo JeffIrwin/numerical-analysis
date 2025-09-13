@@ -239,6 +239,29 @@ function df_nr_ex3(x) result(dy)
 	dy(3,:) = [-x(2) * exp(-x(1)*x(2)), -x(1) * exp(-x(1)*x(2)), 20.d0]
 end function df_nr_ex3
 
+!********
+
+function f_nr_ex4(x) result(y)
+	! Multi-dimensional example for Newton-Raphson
+	!
+	! Source:  https://pages.hmc.edu/ruye/MachineLearning/lectures/ch2/node7.html
+	double precision, intent(in) :: x(:)
+	double precision, allocatable :: y(:)
+	allocate(y(3))
+	y(1) = x(1)**2 - 2*x(1) + x(2)**2 - x(3) + 1.d0
+	y(2) = x(1) * x(2)**2 - x(1) - 3*x(2) + x(2)*x(3) + 2
+	y(3) = x(1) * x(3)**2 - 3*x(3) + x(2) * x(3)**2 + x(1) * x(2)
+end function f_nr_ex4
+function df_nr_ex4(x) result(dy)
+	! Derivative of f_nr_ex4()
+	double precision, intent(in) :: x(:)
+	double precision, allocatable :: dy(:,:)
+	allocate(dy(3,3))
+	dy(1,:) = [2*x(1) - 2.d0, 2 * x(2), -1.d0]
+	dy(2,:) = [x(2)**2 - 1.d0, 2*x(1)*x(2) - 3.d0 + x(3), x(2)]
+	dy(3,:) = [x(3)**2 + x(2), x(3)**2 + x(1), 2*x(1)*x(3) - 3.d0 + 2*x(2)*x(3)]
+end function df_nr_ex4
+
 !===============================================================================
 
 end module numa__functions

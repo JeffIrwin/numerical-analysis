@@ -28,6 +28,7 @@ module numa__core
 		function fn_vec_f64_to_vec_f64(x) result(fx)
 			double precision, intent(in) :: x(:)
 			double precision, allocatable :: fx(:)
+			!double precision :: fx(size(x))
 		end function
 
 		! Vector to matrix, e.g. for root-finding derivative/Jacobian

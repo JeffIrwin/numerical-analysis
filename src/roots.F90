@@ -23,7 +23,7 @@ contains
 !===============================================================================
 
 double precision function newton_raphson_1d(f, df, x0, maxiters, tol, iostat) result(x)
-
+	! Find the root of a scalar function `f` with derivative `df` using Newton-Raphson
 	procedure(fn_f64_to_f64) :: f, df
 	double precision, optional, intent(in) :: x0
 	integer, optional, intent(in) :: maxiters
@@ -43,6 +43,8 @@ double precision function newton_raphson_1d(f, df, x0, maxiters, tol, iostat) re
 	tol_ = 1.d-10
 	if (present(tol)) tol_ = tol
 
+	! TODO: maybe 1 should be default?  Derivative is sometimes 0 at 1 for many
+	! fns.  Same for newton_raphson_nd()
 	x0_ = 0.d0
 	if (present(x0)) x0_ = x0
 
@@ -81,7 +83,9 @@ end function newton_raphson_1d
 !===============================================================================
 
 function newton_raphson_nd(f, df, x0, nx, maxiters, tol, iostat) result(x)
-
+	! Find the root of a scalar function using Newton-Raphson
+	!
+	! df(i,j) is the derivative of fx(i) wrt x(j) for fx = f(x)
 	procedure(fn_vec_f64_to_vec_f64) :: f
 	procedure(fn_vec_f64_to_mat_f64) :: df
 	double precision, optional, intent(in) :: x0(:)
