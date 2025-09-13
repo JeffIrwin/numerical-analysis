@@ -201,6 +201,19 @@ double precision function df_nr_ex1(x) result(dy)
 	dy = 2 * x
 end function df_nr_ex1
 
+!********
+
+double precision function f_nr_ex2(x) result(y)
+	! Example for Newton-Raphson:  y = cos(x) - x**3
+	double precision, intent(in) :: x
+	y = cos(x) - x**3
+end function f_nr_ex2
+double precision function df_nr_ex2(x) result(dy)
+	! Derivative of f_nr_ex2()
+	double precision, intent(in) :: x
+	dy = -sin(x) - 3 * x**2
+end function df_nr_ex2
+
 !===============================================================================
 
 end module numa__functions
