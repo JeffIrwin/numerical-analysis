@@ -11,17 +11,29 @@ module numa__core
 	abstract interface
 		! These are function interfaces for passing callbacks
 
-		! Simple real scalar to scalar function, e.g. for interpolation or
-		! integration
+		! Simple real scalar to scalar function, e.g. for interpolation,
+		! integration, or scalar root-finding
 		function fn_f64_to_f64(x) result(fx)
 			double precision, intent(in) :: x
 			double precision :: fx
 		end function
 
-		! Vector to scalar
+		! Vector to scalar, e.g. for optimization
 		function fn_vec_f64_to_f64(x) result(fx)
 			double precision, intent(in) :: x(:)
 			double precision :: fx
+		end function
+
+		! Vector to vector, e.g. for multi-dimensional root-finding
+		function fn_vec_f64_to_vec_f64(x) result(fx)
+			double precision, intent(in) :: x(:)
+			double precision, allocatable :: fx(:)
+		end function
+
+		! Vector to matrix, e.g. for root-finding derivative/Jacobian
+		function fn_vec_f64_to_mat_f64(x) result(fx)
+			double precision, intent(in) :: x(:)
+			double precision, allocatable :: fx(:,:)
 		end function
 
 		! Scalar to scalar with additional parameters, e.g. for non-linear least
