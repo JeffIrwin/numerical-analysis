@@ -6,6 +6,7 @@ module numa__test
 	use numa__chapter_2
 	use numa__chapter_3
 	use numa__chapter_4
+	use numa__chapter_5
 	use numa__chapter_6
 	use numa__exercises
 	use numa__utils
@@ -87,12 +88,13 @@ program main
 	nfail = nfail + chapter_4_gauss_newton()
 	nfail = nfail + chapter_4_nelder_mead()
 	nfail = nfail + chapter_4_modify()
+	nfail = nfail + chapter_4_rank()
 	nfail = nfail + chapter_4_linprog()
-	nfail = nfail + chapter_4_rank()  ! TODO: test before linprog
 	! TODO: sparse cholesky?  covered briefly in chapter 4 appendix
 
 	!-------------------------------------------------------
 	! Chapter 5: Finding Zeros and Minimum Points by Iterative Methods
+	nfail = nfail + chapter_5_nr()
 
 	!-------------------------------------------------------
 	! Chapter 7: Ordinary Differential Equations

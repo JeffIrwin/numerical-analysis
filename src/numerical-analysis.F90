@@ -26,6 +26,7 @@ module numa
 	use numa__linalg
 	use numa__linprog
 	use numa__opt
+	use numa__roots
 	use numa__utils
 
 	implicit none

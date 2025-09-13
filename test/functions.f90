@@ -189,5 +189,19 @@ end function rosenbrock_banana_nd
 
 !===============================================================================
 
+double precision function f_nr_ex1(x) result(y)
+	! Example for Newton-Raphson:  y = x**2 - a
+	double precision, intent(in) :: x
+	double precision, parameter :: a = 612
+	y = x**2 - a
+end function f_nr_ex1
+double precision function df_nr_ex1(x) result(dy)
+	! Derivative of f_nr_ex1()
+	double precision, intent(in) :: x
+	dy = 2 * x
+end function df_nr_ex1
+
+!===============================================================================
+
 end module numa__functions
 
