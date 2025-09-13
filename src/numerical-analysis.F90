@@ -37,6 +37,8 @@ module numa
 	!     they could be split further
 	!   * consider using submodules to avoid recompilation cascades.  see
 	!     syntran's use of submodules in parse.f90 for example
+	!   * maybe rename chapter_* to reflect what they test rather than arbitrary
+	!     chapter numbers
 	! - Add more doxygen doc strings, maybe at least just a `brief` for each
 	!   public fn.  See `lagrange_interpolator()` which has an example doc
 	!   string

@@ -654,7 +654,7 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 
 	character(len = :), allocatable :: msg
 	double precision :: amax
-	integer :: i, j, k, n, max_index
+	integer :: i, j, k, ip, jp, n, max_index
 	logical :: allow_singular_
 
 	if (present(iostat)) iostat = 0
@@ -686,30 +686,33 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
-		amax = abs(a(pivot(i), i))
+		ip = pivot(i)
+		amax = abs(a(ip, i))
 		!if (DO_PIVOT) then
 			do j = i+1, n
+				jp = pivot(j)
 				!print *, "aj, ai = ", a(j,i), a(i,i)
-				if (abs(a(pivot(j), i)) > amax) then
+				if (abs(a(jp, i)) > amax) then
 					max_index = j
-					amax = abs(a(pivot(j), i))
+					amax = abs(a(jp, i))
 				end if
 			end do
 		!end if
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
+		ip = pivot(i)
 
 		!print *, "swapping ", i, max_index
 		!print *, "i = ", i
 		!call print_mat(a, "a unpiv = ")
 		!call print_mat(a(pivot,:), "a pivot = ")
-		!print *, "ap = ", a(pivot(i), i)
+		!print *, "ap = ", a(ip, i)
 		!print *, "ai = ", a(i, i)
 		!print *, "pivot = ", pivot
 		!print *, ""
 
-		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
+		if (.not. allow_singular_ .and. a(ip, i) == 0) then
 			msg = "matrix is singular in lu_factor_f64()"
 			call PANIC(msg, present(iostat))
 			iostat = 3
@@ -717,14 +720,10 @@ subroutine lu_factor_f64(a, pivot, allow_singular, iostat)
 		end if
 
 		do j = i+1, n
-			a    (pivot(j), i) = &
-				a(pivot(j), i) / &
-				a(pivot(i), i)
+			jp = pivot(j)
+			a(jp, i) = a(jp, i) / a(ip, i)
 			do k = i+1, n
-				a    (pivot(j), k) = &
-					a(pivot(j), k) - &
-					a(pivot(j), i) * &
-					a(pivot(i), k)
+				a(jp, k) = a(jp, k) - a(jp, i) * a(ip, k)
 			end do
 		end do
 
@@ -745,7 +744,7 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 
 	character(len = :), allocatable :: msg
 	double precision :: amax
-	integer :: i, j, k, n, max_index
+	integer :: i, j, k, ip, jp, n, max_index
 	logical :: allow_singular_
 
 	if (present(iostat)) iostat = 0
@@ -778,19 +777,21 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 	do i = 1, n
 		! Find max value in column i
 		max_index = i
-		amax = abs(a(pivot(i), i))
+		ip = pivot(i)
+		amax = abs(a(ip, i))
 		do j = i+1, n
-			!if (abs(a(pivot(j),i)) > abs(a(pivot(i),i))) max_index = j
-			if (abs(a(pivot(j), i)) > amax) then
+			jp = pivot(j)
+			if (abs(a(jp, i)) > amax) then
 				max_index = j
-				amax = abs(a(pivot(j), i))
+				amax = abs(a(jp, i))
 			end if
 		end do
 
 		! Swap rows
 		pivot([i, max_index]) = pivot([max_index, i])
+		ip = pivot(i)
 
-		if (.not. allow_singular_ .and. a(pivot(i), i) == 0) then
+		if (.not. allow_singular_ .and. a(ip, i) == 0) then
 			msg = "matrix is singular in lu_factor_c64()"
 			call PANIC(msg, present(iostat))
 			iostat = 3
@@ -798,14 +799,10 @@ subroutine lu_factor_c64(a, pivot, allow_singular, iostat)
 		end if
 
 		do j = i+1, n
-			a    (pivot(j), i) = &
-				a(pivot(j), i) / &
-				a(pivot(i), i)
+			jp = pivot(j)
+			a(jp, i) = a(jp, i) / a(ip, i)
 			do k = i+1, n
-				a    (pivot(j), k) = &
-					a(pivot(j), k) - &
-					a(pivot(j), i) * &
-					a(pivot(i), k)
+				a(jp, k) = a(jp, k) - a(jp, i) * a(ip, k)
 			end do
 		end do
 
@@ -961,14 +958,13 @@ subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
 	integer, optional, allocatable, intent(out) :: pivot(:)
 	integer, optional, intent(out) :: rank_
 	integer, optional, intent(out) :: iostat
-	!double precision, allocatable :: kernel(:,:)
 
 	!********
 
 	character(len = :), allocatable :: msg
 	double precision :: s, normx, normj, u1, wa, tol_
 	double precision, allocatable :: diag__(:)
-	integer :: i, j, k, ip, kp, n, max_index, rank__
+	integer :: i, j, k, ip, jp, kp, n, max_index, rank__
 	logical :: allow_rect_
 
 	allow_rect_ = .false.
@@ -998,11 +994,13 @@ subroutine qr_core(a, diag_, tol, allow_rect, pivot, rank_, iostat)
 		rank__ = rank__ + 1
 
 		if (present(pivot)) then
-			normx = norm2(a(i:, pivot(i)))
+			ip = pivot(i)
+			normx = norm2(a(i:, ip))
 			max_index = i
 			!print *, "normx = ", normx
 			do j = i+1, n
-				normj = norm2(a(i:, pivot(j)))
+				jp = pivot(j)
+				normj = norm2(a(i:, jp))
 				if (normj > normx) then
 					max_index = j
 					normx = normj
@@ -1429,7 +1427,7 @@ subroutine cholesky_solve(a, bx)
 			! Note `a` indices are transposed because its symmetric
 			bx(i) = bx(i) - a(j, i) * bx(j)
 		end do
-		bx(i) = bx(i) / a (i, i)
+		bx(i) = bx(i) / a(i, i)
 	end do
 	!print *, "bx back = ", bx
 
@@ -1445,7 +1443,7 @@ subroutine lu_solve_c64(a, bx, pivot)
 	double complex, intent(inout) :: bx(:)
 	integer, intent(in) :: pivot(:)
 
-	integer :: i, j, n
+	integer :: i, j, ip, jp, n
 
 	!print *, "pivot lu_solve_c64 = ", pivot
 
@@ -1454,11 +1452,10 @@ subroutine lu_solve_c64(a, bx, pivot)
 
 	! Forward substitution
 	do i = 1, n
+		ip = pivot(i)
 		do j = 1, i-1
-			bx    (pivot(i)) = &
-				bx(pivot(i)) - &
-				a (pivot(i), j) * &
-				bx(pivot(j))
+			jp = pivot(j)
+			bx(ip) = bx(ip) - a(ip, j) * bx(jp)
 		end do
 	end do
 	!print *, "bx forward = ", bx
@@ -1479,7 +1476,7 @@ subroutine lu_solve_f64(a, bx, pivot)
 	double precision, intent(inout) :: bx(:)
 	integer, intent(in) :: pivot(:)
 
-	integer :: i, j, n
+	integer :: i, j, ip, jp, n
 
 	!print *, "pivot lu_solve_f64 = ", pivot
 
@@ -1488,11 +1485,10 @@ subroutine lu_solve_f64(a, bx, pivot)
 
 	! Forward substitution
 	do i = 1, n
+		ip = pivot(i)
 		do j = 1, i-1
-			bx    (pivot(i)) = &
-				bx(pivot(i)) - &
-				a (pivot(i), j) * &
-				bx(pivot(j))
+			jp = pivot(j)
+			bx(ip) = bx(ip) - a(ip, j) * bx(jp)
 		end do
 	end do
 	!print *, "bx forward = ", bx
@@ -1690,7 +1686,7 @@ function lu_kernel_f64(a, iostat) result(kr)
 	double precision, allocatable :: kr(:)
 
 	character(len = :), allocatable :: msg
-	integer :: i, n, io
+	integer :: i, ip, n, io
 	integer, allocatable :: pivot(:)
 
 	if (present(iostat)) iostat = 0
@@ -1711,8 +1707,8 @@ function lu_kernel_f64(a, iostat) result(kr)
 	! Partial backsub
 	kr(n) = 1.d0
 	do i = n-1, 1, -1
-		kr(i) = &
-			-dot_product(kr(i+1:), a(pivot(i), i+1:n)) / a(pivot(i),i)
+		ip = pivot(i)
+		kr(i) = -dot_product(kr(i+1:), a(ip, i+1:n)) / a(ip,i)
 	end do
 
 end function lu_kernel_f64
@@ -1726,7 +1722,7 @@ function lu_kernel_c64(a, iostat) result(kr)
 	double complex, allocatable :: kr(:)
 
 	character(len = :), allocatable :: msg
-	integer :: i, n, io
+	integer :: i, ip, n, io
 	integer, allocatable :: pivot(:)
 
 	if (present(iostat)) iostat = 0
@@ -1747,8 +1743,8 @@ function lu_kernel_c64(a, iostat) result(kr)
 	! Partial backsub
 	kr(n) = 1.d0
 	do i = n-1, 1, -1
-		kr(i) = &
-			-dot_product(conjg(kr(i+1:)), a(pivot(i), i+1:n)) / a(pivot(i), i)
+		ip = pivot(i)
+		kr(i) = -dot_product(conjg(kr(i+1:)), a(ip, i+1:n)) / a(ip, i)
 	end do
 
 end function lu_kernel_c64
@@ -1800,21 +1796,18 @@ subroutine backsub_f64(a, bx, pivot)
 	double precision, intent(inout) :: bx(:)
 	integer, optional, intent(in) :: pivot(:)
 	!********
-	integer :: i, j, n
+	integer :: i, j, ip, jp, n
 
 	n = min(size(a,1), size(a,2))
 	if (present(pivot)) then
 
 		do i = n, 1, -1
+			ip = pivot(i)
 			do j = i+1, n
-				bx    (pivot(i)) = &
-					bx(pivot(i)) - &
-					a (pivot(i), j) * &
-					bx(pivot(j))
+				jp = pivot(j)
+				bx(ip) = bx(ip) - a(ip, j) * bx(jp)
 			end do
-			bx    (pivot(i)) = &
-				bx(pivot(i)) / &
-				a (pivot(i), i)
+			bx(ip) = bx(ip) / a(ip, i)
 		end do
 
 	else
@@ -1840,21 +1833,18 @@ subroutine backsub_c64(a, bx, pivot)
 	double complex, intent(inout) :: bx(:)
 	integer, optional, intent(in) :: pivot(:)
 	!********
-	integer :: i, j, n
+	integer :: i, j, ip, jp, n
 
 	n = min(size(a,1), size(a,2))
 	if (present(pivot)) then
 
 		do i = n, 1, -1
+			ip = pivot(i)
 			do j = i+1, n
-				bx    (pivot(i)) = &
-					bx(pivot(i)) - &
-					a (pivot(i), j) * &
-					bx(pivot(j))
+				jp = pivot(j)
+				bx(ip) = bx(ip) - a(ip, j) * bx(jp)
 			end do
-			bx    (pivot(i)) = &
-				bx(pivot(i)) / &
-				a (pivot(i), i)
+			bx(ip) = bx(ip) / a(ip, i)
 		end do
 
 	else
