@@ -43,6 +43,22 @@ integer function chapter_5_nr() result(nfail)
 	call test(x, 0.865474033d0, 1.d-7, nfail, "newton_raphson 2")
 
 	!********
+
+	x = bisect_root(sin_fn, 2.d0, 4.d0, tol = 1.d-7)
+	print *, "x = ", x
+	call test(x, PI, 1.d-6, nfail, "bisect_root 1.1")
+
+	x = bisect_root(sin_fn, 2.d0, 4.d0, maxiters = 35)
+	print *, "x = ", x
+	call test(x, PI, 1.d-8, nfail, "bisect_root 1.2")
+
+	!********
+
+	x = bisect_root(f_nr_ex2, 0.d0, 2.d0, tol = 1.d-7)
+	print *, "x = ", x
+	call test(x, 0.865474033d0, 1.d-6, nfail, "bisect_root 2.1")
+
+	!********
 	! Multi-dimensional
 
 	xe = [0.8332816, 3.533462e-002, -0.4985493]  ! expected root

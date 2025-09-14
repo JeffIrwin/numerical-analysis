@@ -22,6 +22,70 @@ contains
 
 !===============================================================================
 
+double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) result(x)
+	! Find the root of a scalar function `f` with between `xmin` and `xmax`
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	integer, optional, intent(in) :: maxiters
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(out) :: iostat
+	!********
+	character(len = :), allocatable :: msg
+	integer :: maxiters_, iter
+	double precision :: tol_, fx, xlo, xhi, flo, fhi
+	logical :: converged
+
+	if (present(iostat)) iostat = 0
+
+	if (xmin >= xmax) then
+		msg = "xmin must be less than xmax in bisect_root()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+
+	maxiters_ = 25
+	if (present(maxiters)) maxiters_ = maxiters
+
+	tol_ = 1.d-9
+	if (present(tol)) tol_ = tol
+
+	xlo = xmin
+	xhi = xmax
+	flo = f(xlo)
+	fhi = f(xhi)
+
+	converged = .false.
+	do iter = 1, maxiters_
+		x = 0.5d0 * (xlo + xhi)
+		fx = f(x)
+		if (abs(fx) < tol_) then
+			converged = .true.
+			exit
+		end if
+
+		!print *, "iter, xlo, x, xhi = ", iter, xlo, x, xhi
+
+		if (sign_(flo) == sign_(fx)) then
+			flo = fx
+			xlo = x
+		else
+			fhi = fx
+			xhi = x
+		end if
+	end do
+
+	if (.not. converged) then
+		msg = "bisect_root() did not converge"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+end function bisect_root
+
+!===============================================================================
+
 double precision function newton_raphson_1d(f, df, x0, maxiters, tol, iostat) result(x)
 	! Find the root of a scalar function `f` with derivative `df` using Newton-Raphson
 	procedure(fn_f64_to_f64) :: f, df
