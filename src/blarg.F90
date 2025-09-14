@@ -25,6 +25,11 @@ module numa__blarg
 		!procedure :: zeros_mat_i32
 	end interface zeros_i32
 
+	interface ones
+		procedure :: ones_vec
+		procedure :: ones_mat
+	end interface ones
+
 	interface falses
 		procedure :: falses_vec
 		! could add mat version too
@@ -269,6 +274,22 @@ function zeros_vec(n) result(a)
 	allocate(a(n))
 	a = 0
 end function zeros_vec
+
+function ones_mat(m, n) result(a)
+	! m x n matrix of 0
+	integer, intent(in) :: m, n
+	double precision, allocatable :: a(:,:)
+	allocate(a(m, n))
+	a = 1
+end function ones_mat
+
+function ones_vec(n) result(a)
+	! Size n vector of 0
+	integer, intent(in) :: n
+	double precision, allocatable :: a(:)
+	allocate(a(n))
+	a = 1
+end function ones_vec
 
 function zeros_vec_i32(n) result(a)
 	! Size n vector of 0

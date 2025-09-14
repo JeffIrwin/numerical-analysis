@@ -32,6 +32,12 @@ integer function chapter_5_nr() result(nfail)
 
 	!********
 
+	x = newton_raphson(sin_fn, cos_fn, x0 = 2.0d0)
+	print *, "x = ", x
+	call test(x, PI, 1.d-9, nfail, "newton_raphson 1.1")
+
+	!********
+
 	x = newton_raphson(f_nr_ex2, df_nr_ex2, x0 = 1.d0)
 	print *, "x = ", x
 	call test(x, 0.865474033d0, 1.d-7, nfail, "newton_raphson 2")
@@ -49,9 +55,17 @@ integer function chapter_5_nr() result(nfail)
 
 	!********
 
-	! TODO: test different roots from different initial guesses
 	xe = [1.0989425808889501d0, 0.36761667884567795d0, 0.14493165687848802d0]
 	xn = newton_raphson_nd(f_nr_ex4, df_nr_ex4, nx = 3)
+	print *, "xn = ", xn
+	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
+
+	!********
+	! Same as above but with different initial guess, and thus a different root
+	! solution
+
+	xe = ones(3)
+	xn = newton_raphson_nd(f_nr_ex4, df_nr_ex4, [1.d0, 2.d0, 3.d0])
 	print *, "xn = ", xn
 	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
 

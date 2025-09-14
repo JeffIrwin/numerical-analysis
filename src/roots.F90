@@ -97,7 +97,7 @@ function newton_raphson_nd(f, df, x0, nx, maxiters, tol, iostat) result(x)
 	double precision, allocatable :: x(:)
 	!********
 	character(len = :), allocatable :: msg
-	integer :: maxiters_, iter
+	integer :: maxiters_, iter, io
 	double precision :: tol_
 	double precision, allocatable :: fx(:), dfx(:,:), x0_(:)
 	logical :: converged
@@ -139,13 +139,19 @@ function newton_raphson_nd(f, df, x0, nx, maxiters, tol, iostat) result(x)
 		end if
 
 		!! Maybe add verbose option?
-		print *, "iter, norm(fx) = ", iter, norm2(fx)
+		!print *, "iter, norm(fx) = ", iter, norm2(fx)
 
 		dfx = df(x)
 
-		!! TODO: optimize to avoid mat/vec copies
-		!x = x - fx / dfx
-		x = x - invmul(dfx, fx)
+		call lu_invmul(dfx, fx, io)
+		if (io /= 0) then
+			msg = "lu_invmul() failed in newton_raphson_nd()"
+			call PANIC(msg, present(iostat))
+			iostat = 3
+			return
+		end if
+
+		x = x - fx
 
 	end do
 

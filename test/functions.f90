@@ -50,6 +50,13 @@ end function sin_fn
 
 !********
 
+double precision function cos_fn(x)
+	double precision, intent(in) :: x
+	cos_fn = cos(x)
+end function cos_fn
+
+!********
+
 double precision function sqrt_fn(x)
 	double precision, intent(in) :: x
 	sqrt_fn = sqrt(x)
