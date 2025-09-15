@@ -24,6 +24,12 @@ contains
 
 double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) result(x)
 	! Find the root of a scalar function `f` with between `xmin` and `xmax`
+	!
+	! TODO: MATLAB's fzero() docs have some references.  Check them to see if
+	! another bracketing root finder can be implemented:
+	!
+	!     https://github.com/dr-nikolai/FMM/blob/master/fmm/zeroin.f
+	!
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	integer, optional, intent(in) :: maxiters
@@ -54,6 +60,13 @@ double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) resu
 	xhi = xmax
 	flo = f(xlo)
 	fhi = f(xhi)
+
+	if (sign_(flo) == sign_(fhi)) then
+		msg = "f(xmin) and f(xmax) have the same sign in bisect_root()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
 
 	converged = .false.
 	do iter = 1, maxiters_
