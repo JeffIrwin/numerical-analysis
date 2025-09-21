@@ -44,6 +44,9 @@ double precision function fzero(f, xmin, xmax, tol)
 	iter = 0
 
 	do
+		iter = iter + 1
+		!print *, "iter = ", iter
+
 		if (do_begin) then
 			! `do_begin` could probably have a better name
 			c = a
@@ -52,8 +55,6 @@ double precision function fzero(f, xmin, xmax, tol)
 			e = d
 		end if
 
-		iter = iter + 1
-		!print *, "iter = ", iter
 		if (abs(fc) < abs(fb)) then
 			a = b
 			b = c
@@ -75,7 +76,7 @@ double precision function fzero(f, xmin, xmax, tol)
 		if (abs(e) >= tol1 .and. abs(fa) < abs(fb)) then
 
 			! is quadratic interpolation possible?
-			if (a .ne. c) then
+			if (a /= c) then
 				! inverse quadratic interpolation
 				!print *, "inverse quadratic interpolation"
 				q = fa/fc
@@ -92,7 +93,7 @@ double precision function fzero(f, xmin, xmax, tol)
 			end if
 
 			! adjust signs
-			if (p > 0.0d0) q = -q
+			if (p > 0.d0) q = -q
 			p = abs(p)
 
 			! is interpolation acceptable?
@@ -116,7 +117,7 @@ double precision function fzero(f, xmin, xmax, tol)
 		if (abs(d) <= tol1) b = b + sign(tol1, xm)
 		fb = f(b)
 
-		do_begin = (fb*(fc/abs(fc))) > 0
+		do_begin = fb*(fc/abs(fc)) > 0
 
 	end do
 
