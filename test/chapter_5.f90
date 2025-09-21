@@ -16,7 +16,7 @@ contains
 integer function chapter_5_nr() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_5_nr"
-	double precision :: x
+	double precision :: x, x2
 	double precision, allocatable :: xn(:), xe(:)
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -34,8 +34,10 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "bisect_root 1.1")
 
-	x = fzero(f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
+	x  = fzero  (f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
+	x2 = fzero77(f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
 	print *, "xf= ", x
+	print *, "x2= ", x2
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "fzero 1")
 	!stop
 
@@ -53,8 +55,10 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, 0.865474033d0, 1.d-6, nfail, "bisect_root 2.1")
 
-	x = fzero(f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
+	x  = fzero  (f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
+	x2 = fzero77(f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
 	print *, "xf= ", x
+	print *, "x2= ", x2
 	call test(x, 0.865474033d0, 1.d-7, nfail, "fzero 2")
 	!stop
 
@@ -72,8 +76,10 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, PI, 1.d-8, nfail, "bisect_root 1.2")
 
-	x = fzero(sin_fn, 2.d0, 4.d0, 1.d-8)
+	x  = fzero  (sin_fn, 2.d0, 4.d0, 1.d-8)
+	x2 = fzero77(sin_fn, 2.d0, 4.d0, 1.d-8)
 	print *, "xf= ", x
+	print *, "x2= ", x2
 	call test(x, PI, 1.d-8, nfail, "fzero 1.2")
 
 	!********
