@@ -30,6 +30,15 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, sqrt(612.d0), 1.d-9, nfail, "newton_raphson 1")
 
+	x = bisect_root(f_nr_ex1, 0.d0, 1000.d0, tol = 1.d-9, maxiters = 50)
+	print *, "x = ", x
+	call test(x, sqrt(612.d0), 1.d-8, nfail, "bisect_root 1.1")
+
+	x = fzero(f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
+	print *, "x = ", x
+	call test(x, sqrt(612.d0), 1.d-8, nfail, "fzero 1")
+	!stop
+
 	!********
 
 	x = newton_raphson(sin_fn, cos_fn, x0 = 2.0d0)
@@ -41,6 +50,15 @@ integer function chapter_5_nr() result(nfail)
 	x = newton_raphson(f_nr_ex2, df_nr_ex2, x0 = 1.d0)
 	print *, "x = ", x
 	call test(x, 0.865474033d0, 1.d-7, nfail, "newton_raphson 2")
+
+	x = bisect_root(f_nr_ex2, 0.d0, 1000.d0, tol = 1.d-9, maxiters = 50)
+	print *, "x = ", x
+	call test(x, 0.865474033d0, 1.d-7, nfail, "bisect_root 2")
+
+	x = fzero(f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
+	print *, "x = ", x
+	call test(x, 0.865474033d0, 1.d-7, nfail, "fzero 2")
+	!stop
 
 	!********
 

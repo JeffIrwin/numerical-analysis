@@ -22,14 +22,133 @@ contains
 
 !===============================================================================
 
+double precision function fzero(f, xmin, xmax, tol) result(zeroin)
+	! Source:  https://github.com/dr-nikolai/FMM/blob/master/fmm/zeroin.f
+	procedure(fn_f64_to_f64) :: f
+	double precision :: xmin, xmax, tol
+!      a zero of the function  f(x)  is computed in the interval [xmin, xmax]
+
+!  input..
+
+!  xmin     left endpoint of initial interval
+!  xmax     right endpoint of initial interval
+!  f      function subprogram which evaluates f(x) for any x in
+!         the interval  xmin,xmax
+!  tol    desired length of the interval of uncertainty of the
+!         final result ( >= 0.0d0)
+
+
+!  output..
+
+!  zeroin abcissa approximating a zero of  f  in the interval xmin,xmax
+
+!  fzero returns a zero  x  in the given interval
+
+!  xmin,xmax  to within a tolerance  4*macheps*abs(x) + tol, where macheps
+!  is the relative machine precision.
+!      this function subprogram is a slightly  modified  translation  of
+!  the algol 60 procedure  zero  given in  richard brent, algorithms for
+!  minimization without derivatives, prentice - hall, inc. (1973).
+
+	double precision, parameter :: eps = epsilon(eps)
+	double precision :: a,b,c,d,e,fa,fb,fc,tol1,xm,p,q,r,s
+	integer :: iter
+
+	! initialization
+	a = xmin
+	b = xmax
+	fa = f(a)
+	fb = f(b)
+	iter = 0
+
+	20 continue
+		! begin step (although some iterations skip this and go straight to 30)
+		c = a
+		fc = fa
+		d = b - a
+		e = d
+
+	30 continue
+		iter = iter + 1
+		print *, "iter = ", iter
+		if (abs(fc) >= abs(fb)) go to 40
+		a = b
+		b = c
+		c = a
+		fa = fb
+		fb = fc
+		fc = fa
+
+	40 continue
+		! convergence test
+		tol1 = 2.0d0*eps*abs(b) + 0.5d0*tol
+		xm = .5*(c - b)
+
+		if (abs(xm) <= tol1) go to 90
+		if (fb .eq. 0.0d0) go to 90
+
+		! is bisection necessary?
+		if (abs(e) < tol1) go to 70
+		if (abs(fa) <= abs(fb)) go to 70
+
+		! is quadratic interpolation possible?
+		if (a .ne. c) go to 50
+
+		! linear interpolation
+		print *, "linear interpolation"
+		s = fb/fa
+		p = 2.0d0*xm*s
+		q = 1.0d0 - s
+		go to 60
+
+	50 continue
+		! inverse quadratic interpolation
+		print *, "inverse quadratic interpolation"
+		q = fa/fc
+		r = fb/fc
+		s = fb/fa
+		p = s*(2.0d0*xm*q*(q - r) - (b - a)*(r - 1.0d0))
+		q = (q - 1.0d0)*(r - 1.0d0)*(s - 1.0d0)
+
+	60 continue
+		! adjust signs
+		if (p > 0.0d0) q = -q
+		p = abs(p)
+
+		! is interpolation acceptable?
+		if ((2.0d0*p) >= (3.0d0*xm*q - abs(tol1*q))) go to 70
+
+		if (p >= abs(0.5d0*e*q)) go to 70
+		e = d
+		d = p/q
+		go to 80
+
+	70 continue
+		! bisection
+		print *, "bisection"
+		d = xm
+		e = d
+
+	80 continue
+		! complete step
+		a = b
+		fa = fb
+		if (abs(d) > tol1) b = b + d
+		if (abs(d) <= tol1) b = b + sign(tol1, xm)
+		fb = f(b)
+		if ((fb*(fc/abs(fc))) > 0.0d0) go to 20
+		go to 30
+
+	90 continue
+	! done
+	zeroin = b
+
+end function fzero
+
+!===============================================================================
+
 double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) result(x)
 	! Find the root of a scalar function `f` with between `xmin` and `xmax`
-	!
-	! TODO: MATLAB's fzero() docs have some references.  Check them to see if
-	! another bracketing root finder can be implemented:
-	!
-	!     https://github.com/dr-nikolai/FMM/blob/master/fmm/zeroin.f
-	!
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	integer, optional, intent(in) :: maxiters
@@ -77,7 +196,7 @@ double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) resu
 			exit
 		end if
 
-		!print *, "iter, xlo, x, xhi = ", iter, xlo, x, xhi
+		print *, "iter, xlo, x, xhi = ", iter, xlo, x, xhi
 
 		if (sign_(flo) == sign_(fx)) then
 			flo = fx
@@ -101,6 +220,12 @@ end function bisect_root
 
 double precision function newton_raphson_1d(f, df, x0, maxiters, tol, iostat) result(x)
 	! Find the root of a scalar function `f` with derivative `df` using Newton-Raphson
+	!
+	! TODO: this tol is a y tol. Maybe take an x tol like fzero, but how can it
+	! be checked? Either difference between x iterations, or estimate
+	! xtol = ytol / (dy/dx) (or conservatively check both).  Same for bisect
+	! (although checking is easier there).  X tol makes more sense because the
+	! root-finding fn returns an X value, not Y
 	procedure(fn_f64_to_f64) :: f, df
 	double precision, optional, intent(in) :: x0
 	integer, optional, intent(in) :: maxiters
