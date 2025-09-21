@@ -27,13 +27,13 @@ double precision function fzero(f, xmin, xmax, tol)
 	procedure(fn_f64_to_f64) :: f
 	double precision :: xmin, xmax, tol
 	! This function subprogram is a slightly  modified  translation  of
-	! the algol 60 procedure  zero  given in  richard brent, algorithms for
-	! minimization without derivatives, prentice - hall, inc. (1973).
+	! the algol procedure zero  given in richard brent, algorithms for
+	! minimization without derivatives, prentice-hall, inc. (1973).
 
 	double precision, parameter :: eps = epsilon(eps)
 	double precision :: a, b, c, d, e, fa, fb, fc, tol1, xm, p, q, r, s
 	integer :: iter
-	logical :: do_begin
+	logical :: do_begin, do_bisect
 
 	! initialization
 	a = xmin
@@ -43,7 +43,6 @@ double precision function fzero(f, xmin, xmax, tol)
 	do_begin = .true.
 	iter = 0
 
-	!20 continue
 	do
 		if (do_begin) then
 			! `do_begin` could probably have a better name
@@ -72,48 +71,44 @@ double precision function fzero(f, xmin, xmax, tol)
 		if (fb == 0.d0) exit
 
 		! is bisection necessary?
-		if (abs(e) < tol1) go to 70
-		if (abs(fa) <= abs(fb)) go to 70
+		do_bisect = .true.
+		if (abs(e) >= tol1 .and. abs(fa) < abs(fb)) then
 
-		! is quadratic interpolation possible?
-		if (a .ne. c) go to 50
+			! is quadratic interpolation possible?
+			if (a .ne. c) then
+				! inverse quadratic interpolation
+				!print *, "inverse quadratic interpolation"
+				q = fa/fc
+				r = fb/fc
+				s = fb/fa
+				p = s*(2.d0*xm*q*(q - r) - (b - a)*(r - 1.d0))
+				q = (q - 1.d0)*(r - 1.d0)*(s - 1.d0)
+			else
+				! linear interpolation
+				!print *, "linear interpolation"
+				s = fb/fa
+				p = 2.d0*xm*s
+				q = 1.d0 - s
+			end if
 
-		! linear interpolation
-		!print *, "linear interpolation"
-		s = fb/fa
-		p = 2.d0*xm*s
-		q = 1.d0 - s
-		go to 60
+			! adjust signs
+			if (p > 0.0d0) q = -q
+			p = abs(p)
 
-	50 continue
-		! inverse quadratic interpolation
-		!print *, "inverse quadratic interpolation"
-		q = fa/fc
-		r = fb/fc
-		s = fb/fa
-		p = s*(2.d0*xm*q*(q - r) - (b - a)*(r - 1.d0))
-		q = (q - 1.d0)*(r - 1.d0)*(s - 1.d0)
+			! is interpolation acceptable?
+			do_bisect = 2.d0*p >= 3.d0*xm*q - abs(tol1*q) .or. p >= abs(0.5d0*e*q)
+			if (.not. do_bisect) then
+				e = d
+				d = p/q
+			end if
+		end if
 
-	60 continue
-		! adjust signs
-		if (p > 0.0d0) q = -q
-		p = abs(p)
+		if (do_bisect) then
+			! bisection
+			d = xm
+			e = d
+		end if
 
-		! is interpolation acceptable?
-		if ((2.d0*p) >= (3.d0*xm*q - abs(tol1*q))) go to 70
-
-		if (p >= abs(0.5d0*e*q)) go to 70
-		e = d
-		d = p/q
-		go to 80
-
-	70 continue
-		! bisection
-		!print *, "bisection"
-		d = xm
-		e = d
-
-	80 continue
 		! complete step
 		a = b
 		fa = fb
@@ -122,9 +117,7 @@ double precision function fzero(f, xmin, xmax, tol)
 		fb = f(b)
 
 		do_begin = (fb*(fc/abs(fc))) > 0
-		!go to 20
 
-	!90 continue
 	end do
 
 	fzero = b
