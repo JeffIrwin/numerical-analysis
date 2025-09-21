@@ -18,6 +18,7 @@ integer function chapter_5_nr() result(nfail)
 	character(len = *), parameter :: label = "chapter_5_nr"
 	double precision :: x, x2
 	double precision, allocatable :: xn(:), xe(:)
+	integer :: i
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -39,6 +40,7 @@ integer function chapter_5_nr() result(nfail)
 	print *, "xf= ", x
 	print *, "x2= ", x2
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "fzero 1")
+	call test(x, x2, 1.d-200, nfail, "fzero77 1")
 	!stop
 
 	!********
@@ -60,6 +62,7 @@ integer function chapter_5_nr() result(nfail)
 	print *, "xf= ", x
 	print *, "x2= ", x2
 	call test(x, 0.865474033d0, 1.d-7, nfail, "fzero 2")
+	call test(x, x2, 1.d-200, nfail, "fzero77 2")
 	!stop
 
 	!********
@@ -81,8 +84,29 @@ integer function chapter_5_nr() result(nfail)
 	print *, "xf= ", x
 	print *, "x2= ", x2
 	call test(x, PI, 1.d-8, nfail, "fzero 1.2")
+	call test(x, x2, 1.d-200, nfail, "fzero77 1.2")
 
 	!********
+
+	x  = fzero  (log_fn, 0.1d0, 10.d0, 1.d-8)
+	x2 = fzero77(log_fn, 0.1d0, 10.d0, 1.d-8)
+	print *, "xf= ", x
+	print *, "x2= ", x2
+	call test(x, 1.d0, 1.d-8, nfail, "fzero 3")
+	call test(x, x2, 1.d-200, nfail, "fzero77 3")
+
+	!********
+
+	do i = 1, 20
+		x  = fzero  (wilkinson_fn, 0.1d0 + i - 1, 1.5d0 + i - 1, 1.d-9)
+		x2 = fzero77(wilkinson_fn, 0.1d0 + i - 1, 1.5d0 + i - 1, 1.d-9)
+		print *, "xf= ", x
+		call test(x, 0.d0 + i, 1.d-8, nfail, "fzero Wilkinson")
+		call test(x, x2, 1.d-200, nfail, "fzero77 Wilkinson")
+	end do
+
+	!********
+
 	! Multi-dimensional
 
 	xe = [0.8332816, 3.533462e-002, -0.4985493]  ! expected root

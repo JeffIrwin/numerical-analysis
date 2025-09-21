@@ -271,5 +271,14 @@ end function df_nr_ex4
 
 !===============================================================================
 
+double precision function wilkinson_fn(x) result(y)
+	! Wilkinson's polynomial
+	use numa__blarg
+	double precision, intent(in) :: x
+	y = product(x - range_i32(1, 20))
+end function wilkinson_fn
+
+!===============================================================================
+
 end module numa__functions
 
