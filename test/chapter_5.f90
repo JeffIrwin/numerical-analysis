@@ -35,15 +35,9 @@ integer function chapter_5_nr() result(nfail)
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "bisect_root 1.1")
 
 	x = fzero(f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
-	print *, "x = ", x
+	print *, "xf= ", x
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "fzero 1")
 	!stop
-
-	!********
-
-	x = newton_raphson(sin_fn, cos_fn, x0 = 2.0d0)
-	print *, "x = ", x
-	call test(x, PI, 1.d-9, nfail, "newton_raphson 1.1")
 
 	!********
 
@@ -55,12 +49,20 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, 0.865474033d0, 1.d-7, nfail, "bisect_root 2")
 
-	x = fzero(f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
+	x = bisect_root(f_nr_ex2, 0.d0, 2.d0, tol = 1.d-7)
 	print *, "x = ", x
+	call test(x, 0.865474033d0, 1.d-6, nfail, "bisect_root 2.1")
+
+	x = fzero(f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
+	print *, "xf= ", x
 	call test(x, 0.865474033d0, 1.d-7, nfail, "fzero 2")
 	!stop
 
 	!********
+
+	x = newton_raphson(sin_fn, cos_fn, x0 = 2.0d0)
+	print *, "x = ", x
+	call test(x, PI, 1.d-9, nfail, "newton_raphson 1.1")
 
 	x = bisect_root(sin_fn, 2.d0, 4.d0, tol = 1.d-7)
 	print *, "x = ", x
@@ -70,11 +72,9 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, PI, 1.d-8, nfail, "bisect_root 1.2")
 
-	!********
-
-	x = bisect_root(f_nr_ex2, 0.d0, 2.d0, tol = 1.d-7)
-	print *, "x = ", x
-	call test(x, 0.865474033d0, 1.d-6, nfail, "bisect_root 2.1")
+	x = fzero(sin_fn, 2.d0, 4.d0, 1.d-8)
+	print *, "xf= ", x
+	call test(x, PI, 1.d-8, nfail, "fzero 1.2")
 
 	!********
 	! Multi-dimensional
