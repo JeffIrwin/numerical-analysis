@@ -377,8 +377,7 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 	!********
 	character(len = :), allocatable :: msg
 	integer :: maxiters_, iter, io
-	!double precision, parameter :: alpha = 1.d0
-	double precision :: tol_, alpha, fx_norm, fx_norm0
+	double precision :: tol_, alpha
 	double precision, allocatable :: fx(:), dfx_inv(:,:), x0_(:), dx(:), &
 		fx0(:), dfx(:), xdir(:)
 	logical :: converged
@@ -411,7 +410,19 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 
 	x = x0_
 	converged = .false.
-	dfx_inv = inv(df(x))  ! TODO: check iostat
+
+	!dfx_inv = inv(df(x))
+	!dfx_inv = gauss_jordan(df(x))
+	dfx_inv = df(x)
+	!call invert(dfx_inv, io)
+	call gauss_jordan(dfx_inv, iostat = io)  ! TODO: inv wrapper instead of gauss_jordan direct?
+	if (io /= 0) then
+		msg = "gauss_jordan() failed in broyden()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
+
 	fx = f(x)
 	do iter = 1, maxiters_
 
@@ -519,12 +530,15 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 	! The golden section search is a line search that reduces function
 	! evaluations, because the interior points of subintervals are shared from
 	! one iteration to the next
+	!
+	! TODO: add ND version (like line_search()). Then probably delete
+	! line_search()
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	double precision, optional, intent(in) :: xtol
 	!********
 	double precision, parameter :: INVPHI = (sqrt(5.d0) - 1.d0) / 2.d0
-	double precision :: a, b, c, d, fa, fb, fc, fd, fxmin, fxmax
+	double precision :: a, b, c, d, fa, fb, fc, fd, fxmin, fxmax, fopt
 
 	! TODO: panic if xmin >= xmax
 
@@ -544,6 +558,7 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 	do while (d - a > xtol)
 		if (fb <= fc) then
 			xopt = b
+			fopt = fb
 			d = c
 			c = b
 			b =  d - (d-a) * INVPHI
@@ -553,6 +568,7 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 			fb = f(b)
 		else
 			xopt = c
+			fopt = fc
 			a = b
 			b = c
 			c = a + (d-a) * INVPHI
@@ -563,8 +579,8 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 		end if
 	end do
 
-	if (fxmin < fb .and. fxmin < fc) xopt = xmin
-	if (fxmax < fb .and. fxmax < fc) xopt = xmax
+	if (fxmin < fopt) xopt = xmin
+	if (fxmax < fopt) xopt = xmax
 
 end function golden_search_1d
 
