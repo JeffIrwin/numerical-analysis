@@ -443,7 +443,14 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 
 		!if (alpha == 0) then
 		if (norm2(f(x - alpha * xdir)) >= norm2(f(x))) then
-			dfx_inv = inv(df(x))  ! TODO: check iostat
+			dfx_inv = df(x)
+			call gauss_jordan(dfx_inv, iostat = io)  ! TODO: inv wrapper instead of gauss_jordan direct?
+			if (io /= 0) then
+				msg = "gauss_jordan() failed in broyden()"
+				call PANIC(msg, present(iostat))
+				iostat = 3
+				return
+			end if
 			alpha = 1.d0
 			xdir = matmul(dfx_inv, fx)
 		end if
