@@ -20,7 +20,7 @@ module numa__roots
 
 	interface golden_search
 		procedure :: golden_search_1d
-		!procedure :: golden_search_nd
+		procedure :: golden_search_nd
 	end interface
 
 contains
@@ -434,10 +434,10 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 
 		xdir = matmul(dfx_inv, fx)
 
-		alpha = line_search(f, x, xdir, 0.d0, 2.d0)
-		!alpha = line_search(f, x, xdir, 0.d0, 1.d0)
-		!!alpha = line_search(f, x, xdir, -0.1d0, 2.d0)
-		!!alpha = line_search(f, x, xdir, -1.0d0, 3.d0)
+		alpha = golden_search(f, x, xdir, 0.d0, 2.d0, tol_)
+		!alpha = golden_search(f, x, xdir, 0.d0, 1.d0, tol_)
+		!!alpha = golden_search(f, x, xdir, -0.1d0, 2.d0, tol_)
+		!!alpha = golden_search(f, x, xdir, -1.0d0, 3.d0, tol_)
 
 		print *, "alpha = ", alpha
 
@@ -486,60 +486,12 @@ end function broyden
 
 !===============================================================================
 
-double precision function line_search(f, x, dx, amin, amax) result(alpha)
-	! Find amin <= alpha <= amax, such that ||f(x - alpha * dx)|| is minimized
-	procedure(fn_vec_f64_to_vec_f64) :: f
-	double precision, intent(in) :: x(:), dx(:)
-	double precision, intent(in) :: amin, amax
-
-	double precision :: a, b, c, z, fb, fc, fa, fz
-	integer :: i
-
-	a = amin
-	z = amax
-	fa = norm2(f(x - a * dx))
-	fz = norm2(f(x - z * dx))
-	do i = 1, 10
-
-		! TODO: golden section
-
-		! Ternary search with equal-length intervals
-		b = a + 1.d0 * (z - a) / 3.d0
-		c = a + 2.d0 * (z - a) / 3.d0
-
-		!! Ternary search close to midpoint
-		!b = a + 0.49d0 * (z - a)
-		!c = a + 0.51d0 * (z - a)
-
-		fb = norm2(f(x - b * dx))
-		fc = norm2(f(x - c * dx))
-
-		if (fb <= fc) then
-			z = c
-			alpha = b
-		else
-			a = b
-			alpha = c
-		end if
-
-	end do
-
-	if (fa < fb .and. fa < fc) alpha = amin
-	if (fz < fb .and. fz < fc) alpha = amax
-
-end function line_search
-
-!===============================================================================
-
 double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 	! Find xopt in range [xmin, xmax] to minimize f(x)
 	!
 	! The golden section search is a line search that reduces function
 	! evaluations, because the interior points of subintervals are shared from
 	! one iteration to the next
-	!
-	! TODO: add ND version (like line_search()). Then probably delete
-	! line_search()
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	double precision, optional, intent(in) :: xtol
@@ -547,7 +499,8 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 	double precision, parameter :: INVPHI = (sqrt(5.d0) - 1.d0) / 2.d0
 	double precision :: a, b, c, d, fa, fb, fc, fd, fxmin, fxmax, fopt
 
-	! TODO: panic if xmin >= xmax
+	! TODO: panic if xmin >= xmax.  Does it matter?  I think signs might just
+	! self correct
 
 	! a < b < c < d
 	a = xmin
@@ -590,6 +543,66 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 	if (fxmax < fopt) xopt = xmax
 
 end function golden_search_1d
+
+!===============================================================================
+
+double precision function golden_search_nd(f, x, dx, amin, amax, xtol) result(alpha)
+	! Find alpha such that amin <= alpha <= amax and ||f(x - alpha * dx)|| is
+	! minimized for a multidimensional function `f`
+	!
+	! TODO: Move to opt module?
+	procedure(fn_vec_f64_to_vec_f64) :: f
+	double precision, intent(in) :: x(:), dx(:)
+	double precision, intent(in) :: amin, amax
+	double precision, optional, intent(in) :: xtol
+	!********
+	double precision, parameter :: INVPHI = (sqrt(5.d0) - 1.d0) / 2.d0
+	double precision :: a, b, c, d, fa, fb, fc, fd, fxmin, fxmax, fopt, xtol_
+
+	xtol_ = 1.d-10
+	if (present(xtol)) xtol_ = xtol
+
+	! a < b < c < d
+	a = amin
+	d = amax
+	b =  d - (d-a) * INVPHI
+	c = a + (d-a) * INVPHI
+
+	fa = norm2(f(x - a*dx))
+	fb = norm2(f(x - b*dx))
+	fc = norm2(f(x - c*dx))
+	fd = norm2(f(x - d*dx))
+	fxmin = fa
+	fxmax = fd
+
+	do while (d - a > xtol)
+		if (fb <= fc) then
+			alpha = b
+			fopt = fb
+			d = c
+			c = b
+			b =  d - (d-a) * INVPHI
+
+			fd = fc
+			fc = fb
+			fb = norm2(f(x - b*dx))
+		else
+			alpha = c
+			fopt = fc
+			a = b
+			b = c
+			c = a + (d-a) * INVPHI
+
+			fa = fb
+			fb = fc
+			fc = norm2(f(x - c*dx))
+		end if
+	end do
+
+	if (fxmin < fopt) alpha = amin
+	if (fxmax < fopt) alpha = amax
+
+end function golden_search_nd
 
 !===============================================================================
 

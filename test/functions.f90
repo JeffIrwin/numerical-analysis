@@ -280,5 +280,12 @@ end function wilkinson_fn
 
 !===============================================================================
 
+double precision function xm4sq(x) result(y)
+	double precision, intent(in) :: x
+	y = (x - 4) ** 2
+end function xm4sq
+
+!===============================================================================
+
 end module numa__functions
 

@@ -25,7 +25,30 @@ integer function chapter_5_nr() result(nfail)
 	nfail = 0
 
 	!********
-	! 1D
+	! Test 1D minimization using golden_search
+
+	x = golden_search(sin_fn, 0.d0, 2*PI, 1.d-5)
+	print *, "x = ", x
+	call test(x, 3*PI/2, 1.d-5, nfail, "golden_search 1")
+
+	x = golden_search(sin_fn, 1*PI, 3*PI, 1.d-5)
+	print *, "x = ", x
+	call test(x, 3*PI/2, 1.d-5, nfail, "golden_search 2")
+
+	x = golden_search(cos_fn, 0.d0, 2*PI, 1.d-5)
+	print *, "x = ", x
+	call test(x, PI, 1.d-5, nfail, "golden_search 3")
+
+	x = golden_search(cos_fn, PI, 2.99*PI, 1.d-5)
+	print *, "x = ", x
+	call test(x, PI, 1.d-5, nfail, "golden_search 4")
+
+	x = golden_search(xm4sq, 0.d0, 10.d0, 1.d-5)
+	print *, "x = ", x
+	call test(x, 4.d0, 1.d-5, nfail, "golden_search 5")
+
+	!********
+	! 1D root finding
 
 	x = newton_raphson(f_nr_ex1, df_nr_ex1, x0 = 1.d0)
 	print *, "x = ", x
@@ -154,25 +177,6 @@ integer function chapter_5_nr() result(nfail)
 	xn = broyden(f_nr_ex4, df_nr_ex4, x0 = [0.1d0, 0.1d0, 0.1d0])
 	print *, "xn = ", xn
 	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
-
-	!********
-	! Test 1D minimization using golden_search
-
-	x = golden_search(sin_fn, 0.d0, 2*PI, 1.d-5)
-	print *, "x = ", x
-	call test(x, 3*PI/2, 1.d-5, nfail, "golden_search 1")
-
-	x = golden_search(sin_fn, 1*PI, 3*PI, 1.d-5)
-	print *, "x = ", x
-	call test(x, 3*PI/2, 1.d-5, nfail, "golden_search 1")
-
-	x = golden_search(cos_fn, 0.d0, 2*PI, 1.d-5)
-	print *, "x = ", x
-	call test(x, PI, 1.d-5, nfail, "golden_search 2")
-
-	x = golden_search(cos_fn, PI, 2.99*PI, 1.d-5)
-	print *, "x = ", x
-	call test(x, PI, 1.d-5, nfail, "golden_search 2")
 
 	!********
 	print *, ""
