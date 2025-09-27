@@ -416,19 +416,23 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 		end if
 		print *, "iter, norm(fx) = ", iter, norm2(fx)
 
-		! Do a simple discrete line search for optimal alpha.  TODO: better line
-		! search
-		alpha = 1.d0
-		fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
-		do
-			fx_norm0 = fx_norm
-			alpha = 0.5d0 * alpha
-			! TODO: avoid recomputing search dir with extra matmul at every step
-			fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
-			if (fx_norm > fx_norm0) exit
-			if (alpha == 0) exit
-		end do
-		alpha = 2.d0 * alpha
+		!! Do a simple discrete line search for optimal alpha.  TODO: better line
+		!! search
+		!alpha = 1.d0
+		!fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
+		!do
+		!	fx_norm0 = fx_norm
+		!	alpha = 0.5d0 * alpha
+		!	! TODO: avoid recomputing search dir with extra matmul at every step
+		!	fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
+		!	if (fx_norm > fx_norm0) exit
+		!	if (alpha == 0) exit
+		!end do
+		!alpha = 2.d0 * alpha
+
+		alpha = line_search(f, x, matmul(dfx_inv, fx), 0.d0, 2.d0)
+		!alpha = line_search(f, x, matmul(dfx_inv, fx), -0.1d0, 2.d0)
+
 		print *, "alpha = ", alpha
 
 		if (alpha == 0) then
@@ -442,8 +446,6 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 		fx0 = fx
 		fx = f(x)
 		dfx = fx - fx0
-
-		!dfx_inv = dfx_inv + df - matmul(dfx_inv
 
 		dfx_inv = dfx_inv + &
 			outer_product((dx - matmul(dfx_inv, dfx)) / &
@@ -465,6 +467,49 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 	end if
 
 end function broyden
+
+!===============================================================================
+
+double precision function line_search(f, x, dx, amin, amax) result(alpha)
+	! Find amin <= alpha <= amax, such that ||f(x - alpha * dx)|| is minimized
+	procedure(fn_vec_f64_to_vec_f64) :: f
+	double precision, intent(in) :: x(:), dx(:)
+	double precision, intent(in) :: amin, amax
+
+	double precision :: a, b, c, z, fb, fc, fa, fz
+	integer :: i
+
+	a = amin
+	z = amax
+	fa = norm2(f(x - a * dx))
+	fz = norm2(f(x - z * dx))
+	do i = 1, 10
+
+		! Ternary search with equal-length intervals
+		b = a + 1.d0 * (z - a) / 3.d0
+		c = a + 2.d0 * (z - a) / 3.d0
+
+		!! Ternary search close to midpoint
+		!b = a + 0.49d0 * (z - a)
+		!c = a + 0.51d0 * (z - a)
+
+		fb = norm2(f(x - b * dx))
+		fc = norm2(f(x - c * dx))
+
+		if (fb <= fc) then
+			z = c
+			alpha = b
+		else
+			a = b
+			alpha = c
+		end if
+
+	end do
+
+	if (fa < fb .and. fa < fc) alpha = amin
+	if (fz < fb .and. fz < fc) alpha = amax
+
+end function line_search
 
 !===============================================================================
 
