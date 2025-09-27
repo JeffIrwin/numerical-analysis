@@ -140,5 +140,120 @@ end function chapter_5_nr
 
 !===============================================================================
 
+double precision function fzero77(f, ax, bx, tol)
+	! TODO: test more fzero/fzero77 comparisons.  Also output iters as out-arg
+	! and compare both implementations and assert equal
+	procedure(fn_f64_to_f64) :: f
+	double precision ax,bx,tol
+
+      double precision  a,b,c,d,e,eps,fa,fb,fc,tol1,xm,p,q,r,s
+	  integer :: iter
+!  compute eps, the relative machine precision
+      eps = 1.0d0
+   10 eps = eps/2.0d0
+      tol1 = 1.0d0 + eps
+      if (tol1 .gt. 1.0d0) go to 10
+!
+! initialization
+!
+      a = ax
+      b = bx
+      fa = f(a)
+      fb = f(b)
+	  iter = 0
+!
+! begin step
+!
+   20 c = a
+
+      fc = fa
+
+      d = b - a
+      e = d
+
+   30 continue
+		iter = iter + 1
+		print *, "iter 77 = ", iter
+      if (dabs(fc) .ge. dabs(fb)) go to 40
+      a = b
+      b = c
+      c = a
+      fa = fb
+      fb = fc
+      fc = fa
+!
+! convergence test
+!
+   40 tol1 = 2.0d0*eps*dabs(b) + 0.5d0*tol
+      xm = .5*(c - b)
+
+      if (dabs(xm) .le. tol1) go to 90
+      if (fb .eq. 0.0d0) go to 90
+!
+! is bisection necessary
+!
+      if (dabs(e) .lt. tol1) go to 70
+      if (dabs(fa) .le. dabs(fb)) go to 70
+!
+! is quadratic interpolation possible
+!
+      if (a .ne. c) go to 50
+!
+! linear interpolation
+!
+      print *, "linear interpolation 77"
+      s = fb/fa
+      p = 2.0d0*xm*s
+      q = 1.0d0 - s
+      go to 60
+!
+! inverse quadratic interpolation
+!
+   50 continue
+      print *, "quadratic interpolation 77"
+      q = fa/fc
+      r = fb/fc
+      s = fb/fa
+      p = s*(2.0d0*xm*q*(q - r) - (b - a)*(r - 1.0d0))
+      q = (q - 1.0d0)*(r - 1.0d0)*(s - 1.0d0)
+!
+! adjust signs
+!
+   60 if (p .gt. 0.0d0) q = -q
+      p = dabs(p)
+!
+! is interpolation acceptable
+!
+      if ((2.0d0*p) .ge. (3.0d0*xm*q - dabs(tol1*q))) go to 70
+
+      if (p .ge. dabs(0.5d0*e*q)) go to 70
+      e = d
+      d = p/q
+      go to 80
+!
+! bisection
+!
+
+   70 continue
+      print *, "bisection 77"
+      d = xm
+      e = d
+!
+! complete step
+!
+   80 a = b
+      fa = fb
+      if (dabs(d) .gt. tol1) b = b + d
+      if (dabs(d) .le. tol1) b = b + dsign(tol1, xm)
+      fb = f(b)
+      if ((fb*(fc/dabs(fc))) .gt. 0.0d0) go to 20
+      go to 30
+! done
+   90 fzero77 = b
+      return
+end function fzero77
+
+!===============================================================================
+
 end module numa__chapter_5
 
