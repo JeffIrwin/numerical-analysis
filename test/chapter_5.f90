@@ -18,7 +18,7 @@ integer function chapter_5_nr() result(nfail)
 	character(len = *), parameter :: label = "chapter_5_nr"
 	double precision :: x, x2
 	double precision, allocatable :: xn(:), xe(:)
-	integer :: i
+	integer :: i, iters, iters2
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
 
@@ -35,12 +35,13 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "bisect_root 1.1")
 
-	x  = fzero  (f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
-	x2 = fzero77(f_nr_ex1, 0.d0, 1000.d0, 1.d-9)
-	print *, "xf= ", x
-	print *, "x2= ", x2
+	x  = fzero  (f_nr_ex1, 0.d0, 1000.d0, 1.d-9, iters)
+	x2 = fzero77(f_nr_ex1, 0.d0, 1000.d0, 1.d-9, iters2)
+	print *, "xf, iters = ", x, iters
+	print *, "x2 = ", x2
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "fzero 1")
 	call test(x, x2, 1.d-200, nfail, "fzero77 1")
+	call test(iters, iters2, nfail, "fzero iters 1")
 	!stop
 
 	!********
@@ -57,13 +58,13 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, 0.865474033d0, 1.d-6, nfail, "bisect_root 2.1")
 
-	x  = fzero  (f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
-	x2 = fzero77(f_nr_ex2, 0.d0, 1000.d0, 1.d-9)
+	x  = fzero  (f_nr_ex2, 0.d0, 1000.d0, 1.d-9, iters)
+	x2 = fzero77(f_nr_ex2, 0.d0, 1000.d0, 1.d-9, iters2)
 	print *, "xf= ", x
 	print *, "x2= ", x2
 	call test(x, 0.865474033d0, 1.d-7, nfail, "fzero 2")
 	call test(x, x2, 1.d-200, nfail, "fzero77 2")
-	!stop
+	call test(iters, iters2, nfail, "fzero iters 2")
 
 	!********
 
@@ -79,30 +80,34 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, PI, 1.d-8, nfail, "bisect_root 1.2")
 
-	x  = fzero  (sin_fn, 2.d0, 4.d0, 1.d-8)
-	x2 = fzero77(sin_fn, 2.d0, 4.d0, 1.d-8)
+	x  = fzero  (sin_fn, 2.d0, 4.d0, 1.d-8, iters)
+	x2 = fzero77(sin_fn, 2.d0, 4.d0, 1.d-8, iters2)
 	print *, "xf= ", x
 	print *, "x2= ", x2
 	call test(x, PI, 1.d-8, nfail, "fzero 1.2")
 	call test(x, x2, 1.d-200, nfail, "fzero77 1.2")
+	call test(iters, iters2, nfail, "fzero iters 1.2")
 
 	!********
 
-	x  = fzero  (log_fn, 0.1d0, 10.d0, 1.d-8)
-	x2 = fzero77(log_fn, 0.1d0, 10.d0, 1.d-8)
+	x  = fzero  (log_fn, 0.1d0, 10.d0, 1.d-8, iters)
+	x2 = fzero77(log_fn, 0.1d0, 10.d0, 1.d-8, iters2)
 	print *, "xf= ", x
 	print *, "x2= ", x2
 	call test(x, 1.d0, 1.d-8, nfail, "fzero 3")
 	call test(x, x2, 1.d-200, nfail, "fzero77 3")
+	call test(iters, iters2, nfail, "fzero iters 3")
 
 	!********
 
 	do i = 1, 20
-		x  = fzero  (wilkinson_fn, 0.1d0 + i - 1, 1.5d0 + i - 1, 1.d-9)
-		x2 = fzero77(wilkinson_fn, 0.1d0 + i - 1, 1.5d0 + i - 1, 1.d-9)
-		print *, "xf= ", x
+		x  = fzero  (wilkinson_fn, 0.1d0 + i - 1, 1.5d0 + i - 1, 1.d-9, iters)
+		x2 = fzero77(wilkinson_fn, 0.1d0 + i - 1, 1.5d0 + i - 1, 1.d-9, iters2)
+		!print *, "xf, iters = ", x, iters
+		!print *, "x2, iters = ", x2, iters2
 		call test(x, 0.d0 + i, 1.d-8, nfail, "fzero Wilkinson")
 		call test(x, x2, 1.d-200, nfail, "fzero77 Wilkinson")
+		call test(iters, iters2, nfail, "fzero iters Wilkinson")
 	end do
 
 	!********
@@ -140,11 +145,16 @@ end function chapter_5_nr
 
 !===============================================================================
 
-double precision function fzero77(f, ax, bx, tol)
-	! TODO: test more fzero/fzero77 comparisons.  Also output iters as out-arg
-	! and compare both implementations and assert equal
+double precision function fzero77(f, ax, bx, tol, iters)
+	! TODO: test more fzero/fzero77 comparisons
+	!
+	! This is the original Fortran 77 version.  There is an updated version in
+	! the roots module
+	!
+	! Source:  https://github.com/dr-nikolai/FMM/blob/master/fmm/zeroin.f
 	procedure(fn_f64_to_f64) :: f
 	double precision ax,bx,tol
+	integer, optional, intent(out) :: iters
 
       double precision  a,b,c,d,e,eps,fa,fb,fc,tol1,xm,p,q,r,s
 	  integer :: iter
@@ -173,7 +183,7 @@ double precision function fzero77(f, ax, bx, tol)
 
    30 continue
 		iter = iter + 1
-		print *, "iter 77 = ", iter
+		!print *, "iter 77 = ", iter
       if (dabs(fc) .ge. dabs(fb)) go to 40
       a = b
       b = c
@@ -201,7 +211,7 @@ double precision function fzero77(f, ax, bx, tol)
 !
 ! linear interpolation
 !
-      print *, "linear interpolation 77"
+      !print *, "linear interpolation 77"
       s = fb/fa
       p = 2.0d0*xm*s
       q = 1.0d0 - s
@@ -210,7 +220,7 @@ double precision function fzero77(f, ax, bx, tol)
 ! inverse quadratic interpolation
 !
    50 continue
-      print *, "quadratic interpolation 77"
+      !print *, "quadratic interpolation 77"
       q = fa/fc
       r = fb/fc
       s = fb/fa
@@ -235,7 +245,7 @@ double precision function fzero77(f, ax, bx, tol)
 !
 
    70 continue
-      print *, "bisection 77"
+      !print *, "bisection 77"
       d = xm
       e = d
 !
@@ -250,6 +260,7 @@ double precision function fzero77(f, ax, bx, tol)
       go to 30
 ! done
    90 fzero77 = b
+      if (present(iters)) iters = iter
       return
 end function fzero77
 

@@ -22,17 +22,18 @@ contains
 
 !===============================================================================
 
-double precision function fzero(f, xmin, xmax, tol)
+double precision function fzero(f, xmin, xmax, tol, iters)
 	! Source:  https://github.com/dr-nikolai/FMM/blob/master/fmm/zeroin.f
 	procedure(fn_f64_to_f64) :: f
 	double precision :: xmin, xmax, tol
+	integer, optional, intent(out) :: iters
 	! This function subprogram is a slightly  modified  translation  of
 	! the algol procedure zero  given in richard brent, algorithms for
 	! minimization without derivatives, prentice-hall, inc. (1973).
 
 	double precision, parameter :: eps = epsilon(eps)
 	double precision :: a, b, c, d, e, fa, fb, fc, tol1, xm, p, q, r, s
-	integer :: iter
+	integer :: iter_
 	logical :: do_begin, do_bisect
 
 	! initialization
@@ -41,11 +42,11 @@ double precision function fzero(f, xmin, xmax, tol)
 	fa = f(a)
 	fb = f(b)
 	do_begin = .true.
-	iter = 0
+	iter_ = 0
 
 	do
-		iter = iter + 1
-		print *, "iter = ", iter
+		iter_ = iter_ + 1
+		!print *, "iter = ", iter_
 
 		if (do_begin) then
 			! `do_begin` could probably have a better name
@@ -78,7 +79,7 @@ double precision function fzero(f, xmin, xmax, tol)
 			! is quadratic interpolation possible?
 			if (a /= c) then
 				! inverse quadratic interpolation
-				print *, "quadratic interpolation"
+				!print *, "quadratic interpolation"
 				q = fa/fc
 				r = fb/fc
 				s = fb/fa
@@ -86,7 +87,7 @@ double precision function fzero(f, xmin, xmax, tol)
 				q = (q - 1.d0)*(r - 1.d0)*(s - 1.d0)
 			else
 				! linear interpolation
-				print *, "linear interpolation"
+				!print *, "linear interpolation"
 				s = fb/fa
 				p = 2.d0*xm*s
 				q = 1.d0 - s
@@ -106,7 +107,7 @@ double precision function fzero(f, xmin, xmax, tol)
 
 		if (do_bisect) then
 			! bisection
-			print *, "bisect"
+			!print *, "bisect"
 			d = xm
 			e = d
 		end if
@@ -123,6 +124,7 @@ double precision function fzero(f, xmin, xmax, tol)
 	end do
 
 	fzero = b
+	if (present(iters)) iters = iter_
 
 end function fzero
 
