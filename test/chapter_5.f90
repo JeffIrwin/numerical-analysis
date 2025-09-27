@@ -139,6 +139,23 @@ integer function chapter_5_nr() result(nfail)
 	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
 
 	!********
+	! Broyden's method, multi-dimensional
+
+	xe = [0.8332816, 3.533462e-002, -0.4985493]  ! expected root
+
+	xn = broyden(f_nr_ex3, df_nr_ex3, x0 = [1.d0, 1.d0, 1.d0])
+	print *, "xn = ", xn
+	print *, "xe = ", xe
+	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "broyden 1")
+
+	!********
+
+	xe = [1.0989425808889501d0, 0.36761667884567795d0, 0.14493165687848802d0]
+	xn = broyden(f_nr_ex4, df_nr_ex4, x0 = [0.1d0, 0.1d0, 0.1d0], maxiters = 200)
+	print *, "xn = ", xn
+	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
+
+	!********
 	print *, ""
 
 end function chapter_5_nr

@@ -356,5 +356,117 @@ end function newton_raphson_nd
 
 !===============================================================================
 
+function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
+	! Find the root of a scalar function using Broyden's method
+	!
+	! df(i,j) is the derivative of fx(i) wrt x(j) for fx = f(x)
+	procedure(fn_vec_f64_to_vec_f64) :: f
+	procedure(fn_vec_f64_to_mat_f64) :: df
+	double precision, optional, intent(in) :: x0(:)
+	integer, optional, intent(in) :: nx
+	integer, optional, intent(in) :: maxiters
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(out) :: iostat
+
+	double precision, allocatable :: x(:)
+	!********
+	character(len = :), allocatable :: msg
+	integer :: maxiters_, iter, io
+	!double precision, parameter :: alpha = 1.d0
+	double precision :: tol_, alpha, fx_norm, fx_norm0
+	double precision, allocatable :: fx(:), dfx_inv(:,:), x0_(:), dx(:), &
+		fx0(:), dfx(:)
+	logical :: converged
+
+	if (present(iostat)) iostat = 0
+
+	maxiters_ = 15
+	if (present(maxiters)) maxiters_ = maxiters
+
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
+
+	if (.not. present(x0) .and. .not. present(nx)) then
+		! This is a bit of a weird Fortran problem where usually everything can
+		! be allocatable and size agnostic, but we can't know the size of the
+		! problem before we call the fn `f`, and we also can't call the function
+		! to determine its output size without having a properly allocated input
+		! variable
+		msg = "either initial guess `x0` or system size `nx` is required as an argument for broyden()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+
+	if (present(x0)) then
+		x0_ = x0
+	else
+		x0_ = zeros(nx)
+	end if
+
+	x = x0_
+	converged = .false.
+	dfx_inv = inv(df(x))  ! TODO: check iostat
+	fx = f(x)
+	do iter = 1, maxiters_
+
+		if (norm2(fx) < tol_) then
+			converged = .true.
+			exit
+		end if
+		print *, "iter, norm(fx) = ", iter, norm2(fx)
+
+		! Do a simple discrete line search for optimal alpha.  TODO: better line
+		! search
+		alpha = 1.d0
+		fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
+		do
+			fx_norm0 = fx_norm
+			alpha = 0.5d0 * alpha
+			! TODO: avoid recomputing search dir with extra matmul at every step
+			fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
+			if (fx_norm > fx_norm0) exit
+			if (alpha == 0) exit
+		end do
+		alpha = 2.d0 * alpha
+		print *, "alpha = ", alpha
+
+		if (alpha == 0) then
+			dfx_inv = inv(df(x))  ! TODO: check iostat
+			alpha = 1.d0
+		end if
+
+		dx = alpha * matmul(dfx_inv , fx)
+
+		x = x - dx
+		fx0 = fx
+		fx = f(x)
+		dfx = fx - fx0
+
+		!dfx_inv = dfx_inv + df - matmul(dfx_inv
+
+		dfx_inv = dfx_inv + &
+			outer_product((dx - matmul(dfx_inv, dfx)) / &
+			dot_product(dx, matmul(dfx_inv, dfx)), &
+			matmul(dx, dfx_inv))
+
+	end do
+
+	if (.not. converged) then
+		! One last fn eval
+		fx = f(x)
+		converged = norm2(fx) < tol_
+	end if
+	if (.not. converged) then
+		msg = "broyden() did not converge"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+end function broyden
+
+!===============================================================================
+
 end module numa__roots
 
