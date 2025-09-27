@@ -18,6 +18,11 @@ module numa__roots
 		procedure :: newton_raphson_nd
 	end interface
 
+	interface golden_search
+		procedure :: golden_search_1d
+		!procedure :: golden_search_nd
+	end interface
+
 contains
 
 !===============================================================================
@@ -478,6 +483,8 @@ double precision function line_search(f, x, dx, amin, amax) result(alpha)
 	fz = norm2(f(x - z * dx))
 	do i = 1, 10
 
+		! TODO: golden section
+
 		! Ternary search with equal-length intervals
 		b = a + 1.d0 * (z - a) / 3.d0
 		c = a + 2.d0 * (z - a) / 3.d0
@@ -503,6 +510,63 @@ double precision function line_search(f, x, dx, amin, amax) result(alpha)
 	if (fz < fb .and. fz < fc) alpha = amax
 
 end function line_search
+
+!===============================================================================
+
+double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
+	! Find xopt in range [xmin, xmax] to minimize f(x)
+	!
+	! The golden section search is a line search that reduces function
+	! evaluations, because the interior points of subintervals are shared from
+	! one iteration to the next
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	double precision, optional, intent(in) :: xtol
+	!********
+	double precision, parameter :: INVPHI = (sqrt(5.d0) - 1.d0) / 2.d0
+	double precision :: a, b, c, d, fa, fb, fc, fd, fxmin, fxmax
+
+	! TODO: panic if xmin >= xmax
+
+	! a < b < c < d
+	a = xmin
+	d = xmax
+	b =  d - (d-a) * INVPHI
+	c = a + (d-a) * INVPHI
+
+	fa = f(a)
+	fb = f(b)
+	fc = f(c)
+	fd = f(d)
+	fxmin = fa
+	fxmax = fd
+
+	do while (d - a > xtol)
+		if (fb <= fc) then
+			xopt = b
+			d = c
+			c = b
+			b =  d - (d-a) * INVPHI
+
+			fd = fc
+			fc = fb
+			fb = f(b)
+		else
+			xopt = c
+			a = b
+			b = c
+			c = a + (d-a) * INVPHI
+
+			fa = fb
+			fb = fc
+			fc = f(c)
+		end if
+	end do
+
+	if (fxmin < fb .and. fxmin < fc) xopt = xmin
+	if (fxmax < fb .and. fxmax < fc) xopt = xmax
+
+end function golden_search_1d
 
 !===============================================================================
 
