@@ -375,7 +375,7 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 	!double precision, parameter :: alpha = 1.d0
 	double precision :: tol_, alpha, fx_norm, fx_norm0
 	double precision, allocatable :: fx(:), dfx_inv(:,:), x0_(:), dx(:), &
-		fx0(:), dfx(:)
+		fx0(:), dfx(:), xdir(:)
 	logical :: converged
 
 	if (present(iostat)) iostat = 0
@@ -416,37 +416,30 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 		end if
 		print *, "iter, norm(fx) = ", iter, norm2(fx)
 
-		!! Do a simple discrete line search for optimal alpha.  TODO: better line
-		!! search
-		!alpha = 1.d0
-		!fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
-		!do
-		!	fx_norm0 = fx_norm
-		!	alpha = 0.5d0 * alpha
-		!	! TODO: avoid recomputing search dir with extra matmul at every step
-		!	fx_norm = norm2(f(x - alpha * matmul(dfx_inv, fx)))
-		!	if (fx_norm > fx_norm0) exit
-		!	if (alpha == 0) exit
-		!end do
-		!alpha = 2.d0 * alpha
+		xdir = matmul(dfx_inv, fx)
 
-		alpha = line_search(f, x, matmul(dfx_inv, fx), 0.d0, 2.d0)
-		!alpha = line_search(f, x, matmul(dfx_inv, fx), -0.1d0, 2.d0)
+		alpha = line_search(f, x, xdir, 0.d0, 2.d0)
+		!alpha = line_search(f, x, xdir, 0.d0, 1.d0)
+		!!alpha = line_search(f, x, xdir, -0.1d0, 2.d0)
+		!!alpha = line_search(f, x, xdir, -1.0d0, 3.d0)
 
 		print *, "alpha = ", alpha
 
-		if (alpha == 0) then
+		!if (alpha == 0) then
+		if (norm2(f(x - alpha * xdir)) >= norm2(f(x))) then
 			dfx_inv = inv(df(x))  ! TODO: check iostat
 			alpha = 1.d0
+			xdir = matmul(dfx_inv, fx)
 		end if
 
-		dx = alpha * matmul(dfx_inv , fx)
+		dx = alpha * xdir
 
 		x = x - dx
 		fx0 = fx
 		fx = f(x)
 		dfx = fx - fx0
 
+		! TODO: optimize repeated mat ops
 		dfx_inv = dfx_inv + &
 			outer_product((dx - matmul(dfx_inv, dfx)) / &
 			dot_product(dx, matmul(dfx_inv, dfx)), &
