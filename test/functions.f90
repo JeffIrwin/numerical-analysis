@@ -137,6 +137,42 @@ double precision function bessel_3_2p5(tau)
 
 end function bessel_3_2p5
 
+double precision function bessel_3(tau, params)
+	! This is the integrand for bessel_jn(3, 2.5)
+	double precision, intent(in) :: tau, params(:)
+	double precision :: x = 2.5d0
+	integer, parameter :: n = 3
+
+	x = params(1)
+	bessel_3 = &
+		1/PI * cos(n * tau - x * sin(tau))
+
+end function bessel_3
+
+!********
+
+double precision function gamma_int_5(t) result(y)
+	! Integrand from the gamma function definition
+	double precision, intent(in) :: t
+	double precision, parameter :: z = 5.d0
+	y = t ** (z-1) * exp(-t)
+end function gamma_int_5
+
+double precision function gamma_int_6(t) result(y)
+	! Integrand from the gamma function definition
+	double precision, intent(in) :: t
+	double precision, parameter :: z = 6.d0
+	y = t ** (z-1) * exp(-t)
+end function gamma_int_6
+
+double precision function gamma_int(t, params) result(y)
+	! Integrand from the gamma function definition
+	double precision, intent(in) :: t, params(:)
+	double precision :: z
+	z = params(1)
+	y = t ** (z-1) * exp(-t)
+end function gamma_int
+
 !********
 
 double precision function rate_fn(x, beta) result(y)

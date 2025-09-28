@@ -719,7 +719,7 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 	! a < b < c < d
 	a = xmin
 	d = xmax
-	b =  d - (d-a) * INVPHI
+	b = d - (d-a) * INVPHI
 	c = a + (d-a) * INVPHI
 
 	fa = f(a)
@@ -735,7 +735,7 @@ double precision function golden_search_1d(f, xmin, xmax, xtol) result(xopt)
 			fopt = fb
 			d = c
 			c = b
-			b =  d - (d-a) * INVPHI
+			b = d - (d-a) * INVPHI
 
 			fd = fc
 			fc = fb

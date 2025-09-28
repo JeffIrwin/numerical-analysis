@@ -535,6 +535,61 @@ integer function chapter_3_adaptive() result(nfail)
 	call test(area, expect, 1.d-10, nfail, "gk15_adaptive_integrator 24")
 	print *, ""
 
+	area = gk15_integrator_params(bessel_3, [2.5d0], 0.d0, PI, 1.d-10)
+	expect = bessel_jn(3, 2.5d0)
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15 bessel(3, 2.5)")
+	print *, ""
+
+	! Could also add integrators that take int params, e.g. for generalization
+	! beyond bessel_3()
+	area = gk15_integrator_params(bessel_3, [2.8d0], 0.d0, PI, 1.d-10)
+	expect = bessel_jn(3, 2.8d0)
+	print *, "area   = ", area
+	print *, "expect = ", expect
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15 bessel(3, 2.8)")
+	print *, ""
+
+	!********
+
+	area = gk15i_adaptive_integrator(gamma_int_5, 0.d0, 1.d-10)
+	expect = 24.d0  ! gamma(5) == factorial(4)
+	print *, "area = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i gamma 5")
+	print *, ""
+
+	area = gk15i_adaptive_integrator(gamma_int_6, 0.d0, 1.d-10)
+	expect = 120.d0
+	print *, "area = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i gamma 6")
+	print *, ""
+
+	area = gk15i_integrator_params(gamma_int, [5.d0], 0.d0, 1.d-10)
+	expect = 24.d0
+	print *, "area = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i gamma params 5")
+	print *, ""
+
+	area = gk15i_integrator_params(gamma_int, [5.5d0], 0.d0, 1.d-10)
+	expect = gamma(5.5d0)
+	print *, "area = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i gamma params 5.5")
+	print *, ""
+
+	area = gk15i_integrator_params(gamma_int, [6.d0], 0.d0, 1.d-10)
+	expect = 120.d0
+	print *, "area = ", area
+	print *, "diff = ", area - expect
+	call test(area, expect, 1.d-10, nfail, "gk15i gamma params 5")
+	print *, ""
+
 	!********
 
 	! This could always be expanded with more tests.  Quadpack has some

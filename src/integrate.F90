@@ -8,7 +8,7 @@ module numa__integrate
 
 	implicit none
 
-	private :: simpson_adapt_aux, gk15_aux, gk15i_aux
+	private :: simpson_adapt_aux, gk15_aux, gk15i_aux, gk15_auxp, gk15i_auxp
 
 	! Tables of abscissas and weights are taken from Jacob Williams' quadpack,
 	! BSD-3 license:
@@ -546,6 +546,83 @@ end function gk15_aux
 
 !===============================================================================
 
+recursive double precision function gk15_auxp &
+	( &
+		f, params, xmin, xmax, tol, whole, n, &
+		neval, is_eps_underflow, is_max_level &
+	) &
+	result(area)
+
+	! Recursive core.  See gk15_adaptive_integrator() for the user-facing
+	! wrapper
+
+	use numa__utils
+	procedure(fn_f64_params_to_f64) :: f
+	double precision, intent(in) :: params(:)
+	double precision, intent(in) :: xmin, xmax, tol, whole
+	integer, intent(in) :: n
+	integer, intent(inout) :: neval
+	logical, intent(inout) :: is_eps_underflow, is_max_level
+	!********
+
+	double precision :: fx, areag, areak, mid, dx2, diff
+
+	integer :: i
+
+	dx2 = 0.5d0 * (xmax - xmin)
+	mid = 0.5d0 * (xmin + xmax)
+
+	if (tol/2 == tol .or. xmin == mid) then
+		is_eps_underflow = .true.
+		area = whole
+		return
+	end if
+
+	areag = 0.d0
+	areak = 0.d0
+	do i = 1, NG_GK15
+		fx = f(mid + WXK_GK15(2, i) * dx2, params)
+		areag = areag + WXG_GK15(1, i) * fx
+		areak = areak + WXK_GK15(1, i) * fx
+	end do
+	do i = NG_GK15+1, NK_GK15
+		fx = f(mid + WXK_GK15(2, i) * dx2, params)
+		areak = areak + WXK_GK15(1, i) * fx
+	end do
+	neval = neval + NK_GK15
+	areag = areag * dx2
+	areak = areak * dx2
+
+	!print *, "areag = ", areag
+	!print *, "areak = ", areak
+
+	diff = abs(areak - areag)
+	if (n <= 0 .and. diff >= tol) is_max_level = .true.
+	if (diff < tol .or. n <= 0) then
+		area = areak
+		return
+	end if
+
+	! Here, quadpack does some crazy stuff with pushing interval errors onto a
+	! minheap to prioritize which subinterval to evaluate next.  Maybe there's a
+	! good reason for this that I don't understand, or maybe it's a limitation
+	! to do as best as possible with a limitted number of intervals and fn
+	! evals, statically-allocated work arrays, and an avoidance of recursion
+	! (except in quadpack's adaptive Simpson and Lobatto integrators)
+	!
+	! But this method is so simple.  I don't see the need to prioritize
+	! subdivision ordering.  If the diff/error is over tolerance, you're going
+	! to evaluate both halves eventually anyway unless you give up on staying
+	! under tol
+
+	area = &
+		gk15_auxp(f, params, xmin, mid, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level) + &
+		gk15_auxp(f, params, mid, xmax, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level)
+
+end function gk15_auxp
+
+!===============================================================================
+
 double precision function gk15_adaptive_integrator &
 	( &
 		f, xmin, xmax, tol, max_levels, iostat &
@@ -601,6 +678,65 @@ double precision function gk15_adaptive_integrator &
 	end if
 
 end function gk15_adaptive_integrator
+
+!===============================================================================
+
+double precision function gk15_integrator_params &
+	( &
+		f, params, xmin, xmax, tol, max_levels, iostat &
+	) &
+	result(area)
+
+	! Integrate `f` from xmin to xmax using the adaptive Gauss-Kronrod method,
+	! with 7-point Gauss and 15-point Kronrod
+
+	use numa__utils
+	procedure(fn_f64_params_to_f64) :: f
+	double precision, intent(in) :: params(:)
+	double precision, intent(in) :: xmin, xmax, tol
+	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
+	!********
+
+	character(len = :), allocatable :: msg
+	integer :: n, neval
+	logical :: is_eps_underflow, is_max_level
+
+	if (present(iostat)) iostat = 0
+	if (xmax <= xmin) then
+		msg = "xmax is less than xmin in gk15_integrator_params()"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+	if (tol <= 0) then
+		msg = "tolerance is 0 in gk15_integrator_params()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+
+	n = 16
+	if (present(max_levels)) n = max_levels
+
+	neval = 0
+	is_eps_underflow = .false.
+	is_max_level = .false.
+	area = gk15_auxp(f, params, xmin, xmax, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
+
+	!print *, "neval gk15 = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15_integrator_params() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15_integrator_params() reached max recursion level"
+	end if
+
+end function gk15_integrator_params
 
 !===============================================================================
 
@@ -667,6 +803,73 @@ recursive double precision function gk15i_aux &
 		gk15i_aux(f, mid, xmax, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level)
 
 end function gk15i_aux
+
+!===============================================================================
+
+recursive double precision function gk15i_auxp &
+	( &
+		f, params, xmin, xmax, tol, whole, n, &
+		neval, is_eps_underflow, is_max_level &
+	) &
+	result(area)
+
+	! Recursive core.  See gk15i_adaptive_integrator() for the user-facing
+	! wrapper
+
+	use numa__utils
+	procedure(fn_f64_params_to_f64) :: f
+	double precision, intent(in) :: params(:)
+	double precision, intent(in) :: xmin, xmax, tol, whole
+	integer, intent(in) :: n
+	integer, intent(inout) :: neval
+	logical, intent(inout) :: is_eps_underflow, is_max_level
+	!********
+
+	double precision :: x, fx, areag, areak, mid, dx2, diff
+
+	integer :: i
+
+	dx2 = 0.5d0 * (xmax - xmin)
+	mid = 0.5d0 * (xmin + xmax)
+
+	if (tol/2 == tol .or. xmin == mid) then
+		is_eps_underflow = .true.
+		area = whole
+		return
+	end if
+
+	areag = 0.d0
+	areak = 0.d0
+	do i = 1, NG_GK15
+		x = mid + WXK_GK15(2, i) * dx2
+		fx = f(1.d0/x, params) / x ** 2
+		areag = areag + WXG_GK15(1, i) * fx
+		areak = areak + WXK_GK15(1, i) * fx
+	end do
+	do i = NG_GK15+1, NK_GK15
+		x = mid + WXK_GK15(2, i) * dx2
+		fx = f(1.d0/x, params) / x ** 2
+		areak = areak + WXK_GK15(1, i) * fx
+	end do
+	neval = neval + NK_GK15
+	areag = areag * dx2
+	areak = areak * dx2
+
+	!print *, "areag = ", areag
+	!print *, "areak = ", areak
+
+	diff = abs(areak - areag)
+	if (n <= 0 .and. diff >= tol) is_max_level = .true.
+	if (diff < tol .or. n <= 0) then
+		area = areak
+		return
+	end if
+
+	area = &
+		gk15i_auxp(f, params, xmin, mid, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level) + &
+		gk15i_auxp(f, params, mid, xmax, tol/2, areak/2, n-1, neval, is_eps_underflow, is_max_level)
+
+end function gk15i_auxp
 
 !===============================================================================
 
@@ -747,6 +950,73 @@ double precision function gk15i_adaptive_integrator &
 	end if
 
 end function gk15i_adaptive_integrator
+
+!===============================================================================
+
+double precision function gk15i_integrator_params &
+	( &
+		f, params, xmin, tol, max_levels, iostat &
+	) &
+	result(area)
+
+	! Integrate `f` from xmin to infinity with parameters
+	use numa__utils
+	procedure(fn_f64_params_to_f64) :: f
+	double precision, intent(in) :: params(:)
+	double precision, intent(in) :: xmin, tol
+	integer, optional, intent(in) :: max_levels
+	integer, optional, intent(out) :: iostat
+	!********
+
+	character(len = :), allocatable :: msg
+	double precision, parameter :: split_ = 1.d0
+	integer :: n, neval
+	logical :: is_eps_underflow, is_max_level
+
+	if (present(iostat)) iostat = 0
+	if (tol <= 0) then
+		msg = "tolerance is 0 in gk15i_integrator_params()"
+		call PANIC(msg, present(iostat))
+		! iostat starts at 2 here for consistency with other integrators
+		iostat = 2
+		return
+	end if
+
+	n = 16
+	if (present(max_levels)) n = max_levels
+
+	neval = 0
+	is_eps_underflow = .false.
+	is_max_level = .false.
+
+	!print *, "starting gk15i_integrator_params()"
+	!print *, "xmin = ", xmin
+
+	if (xmin <= 0.d0) then
+
+		! Integrate from xmin to 1 and 1 to infinity.  The choice of where to
+		! split the interval is arbitrary, it just can't be 0
+		area = &
+			gk15_auxp (f, params, xmin, split_, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level) + &
+			gk15i_auxp(f, params, 0.d0, 1.d0/split_, tol/2, 0.d0, n, neval, is_eps_underflow, is_max_level)
+
+	else
+		area = gk15i_auxp(f, params, 0.d0, 1.d0/xmin, tol, 0.d0, n, neval, is_eps_underflow, is_max_level)
+	end if
+
+	!print *, "neval gk15i = ", neval
+
+	if (is_eps_underflow) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15i_integrator_params() reached numeric tolerance" &
+			//" or bound underflow"
+	end if
+	if (is_max_level) then
+		write(*,*) YELLOW // "Warning" // COLOR_RESET // &
+			": gk15i_integrator_params() reached max recursion level"
+	end if
+
+end function gk15i_integrator_params
 
 !===============================================================================
 
