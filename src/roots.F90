@@ -239,12 +239,12 @@ double precision function secant_root(f, xmin, xmax, maxiters, tol, iostat) resu
 	f0 = f(x0)
 	f1 = f(x1)
 
-	if (sign_(f0) == sign_(f1)) then
-		msg = "f(xmin) and f(xmax) have the same sign in secant_root()"
-		call PANIC(msg, present(iostat))
-		iostat = 3
-		return
-	end if
+	!if (sign_(f0) == sign_(f1)) then
+	!	msg = "f(xmin) and f(xmax) have the same sign in secant_root()"
+	!	call PANIC(msg, present(iostat))
+	!	iostat = 3
+	!	return
+	!end if
 
 	converged = .false.
 	do iter = 1, maxiters_
@@ -254,7 +254,7 @@ double precision function secant_root(f, xmin, xmax, maxiters, tol, iostat) resu
 			converged = .true.
 			exit
 		end if
-		!print *, "iter, x0, x, x1 = ", iter, x0, x, x1
+		print *, "iter, x0, x, x1 = ", iter, x0, x, x1
 
 		x1 = x0
 		x0 = x
@@ -270,6 +270,83 @@ double precision function secant_root(f, xmin, xmax, maxiters, tol, iostat) resu
 	end if
 
 end function secant_root
+
+!===============================================================================
+
+double precision function false_pos_root(f, xmin, xmax, maxiters, tol, iostat) result(x)
+	! Find the root of a scalar function `f` between `xmin` and `xmax`
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	integer, optional, intent(in) :: maxiters
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(out) :: iostat
+	!********
+	character(len = :), allocatable :: msg
+	integer :: maxiters_, iter, side
+	double precision :: tol_, fx, x0, x1, f0, f1
+	logical :: converged
+
+	if (present(iostat)) iostat = 0
+
+	if (xmin >= xmax) then
+		msg = "xmin must be less than xmax in false_pos_root()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+
+	maxiters_ = 25
+	if (present(maxiters)) maxiters_ = maxiters
+
+	tol_ = 1.d-9
+	if (present(tol)) tol_ = tol
+
+	x0 = xmin
+	x1 = xmax
+	f0 = f(x0)
+	f1 = f(x1)
+	side = 0
+
+	if (sign_(f0) == sign_(f1)) then
+		msg = "f(xmin) and f(xmax) have the same sign in false_pos_root()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
+
+	converged = .false.
+	do iter = 1, maxiters_
+		x = x0 - f0 * (x0 - x1) / (f0 - f1)
+		fx = f(x)
+		if (abs(fx) < tol_) then
+			converged = .true.
+			exit
+		end if
+		print *, "iter, x0, x, x1, f0, f1 = ", iter, x0, x, x1, f0, f1
+
+		! Illinois algorithm:  The factor 1/2 used looks arbitrary, but it
+		! guarantees superlinear convergence
+		if (sign_(f0) == sign_(fx)) then
+			x0 = x
+			f0 = fx
+			if (side == -1) f1 = 0.5d0 * f1
+			side = -1
+		else
+			x1 = x
+			f1 = fx
+			if (side == 1) f0 = 0.5d0 * f0
+			side = 1
+		end if
+	end do
+
+	if (.not. converged) then
+		msg = "false_pos_root() did not converge"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+end function false_pos_root
 
 !===============================================================================
 
