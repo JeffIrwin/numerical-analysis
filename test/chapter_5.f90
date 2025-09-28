@@ -179,14 +179,6 @@ integer function chapter_5_nr() result(nfail)
 	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
 
 	!********
-
-	p = [-4.d0, -2.d0, 3.d0]
-	!print *, "polyder = ", polyder(p)
-
-	xn = maehly_polyroots(p)
-	print *, "xn = ", xn
-
-	!********
 	print *, ""
 
 end function chapter_5_nr
