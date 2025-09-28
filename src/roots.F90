@@ -254,7 +254,7 @@ double precision function secant_root(f, xmin, xmax, maxiters, tol, iostat) resu
 			converged = .true.
 			exit
 		end if
-		print *, "iter, x0, x, x1 = ", iter, x0, x, x1
+		!print *, "iter, x0, x, x1 = ", iter, x0, x, x1
 
 		x1 = x0
 		x0 = x
@@ -322,7 +322,7 @@ double precision function false_pos_root(f, xmin, xmax, maxiters, tol, iostat) r
 			converged = .true.
 			exit
 		end if
-		print *, "iter, x0, x, x1, f0, f1 = ", iter, x0, x, x1, f0, f1
+		!print *, "iter, x0, x, x1, f0, f1 = ", iter, x0, x, x1, f0, f1
 
 		! Illinois algorithm:  The factor 1/2 used looks arbitrary, but it
 		! guarantees superlinear convergence

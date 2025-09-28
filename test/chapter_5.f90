@@ -17,7 +17,7 @@ integer function chapter_5_nr() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_5_nr"
 	double precision :: x, x2
-	double precision, allocatable :: xn(:), xe(:), p(:)
+	double precision, allocatable :: xn(:), xe(:)
 	integer :: i, iters, iters2
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
