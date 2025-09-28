@@ -136,7 +136,7 @@ end function fzero
 !===============================================================================
 
 double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) result(x)
-	! Find the root of a scalar function `f` with between `xmin` and `xmax`
+	! Find the root of a scalar function `f` between `xmin` and `xmax`
 	procedure(fn_f64_to_f64) :: f
 	double precision, intent(in) :: xmin, xmax
 	integer, optional, intent(in) :: maxiters
@@ -203,6 +203,73 @@ double precision function bisect_root(f, xmin, xmax, maxiters, tol, iostat) resu
 	end if
 
 end function bisect_root
+
+!===============================================================================
+
+double precision function secant_root(f, xmin, xmax, maxiters, tol, iostat) result(x)
+	! Find the root of a scalar function `f` between `xmin` and `xmax`
+	procedure(fn_f64_to_f64) :: f
+	double precision, intent(in) :: xmin, xmax
+	integer, optional, intent(in) :: maxiters
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(out) :: iostat
+	!********
+	character(len = :), allocatable :: msg
+	integer :: maxiters_, iter
+	double precision :: tol_, fx, x0, x1, f0, f1
+	logical :: converged
+
+	if (present(iostat)) iostat = 0
+
+	if (xmin >= xmax) then
+		msg = "xmin must be less than xmax in secant_root()"
+		call PANIC(msg, present(iostat))
+		iostat = 2
+		return
+	end if
+
+	maxiters_ = 25
+	if (present(maxiters)) maxiters_ = maxiters
+
+	tol_ = 1.d-9
+	if (present(tol)) tol_ = tol
+
+	x0 = xmin
+	x1 = xmax
+	f0 = f(x0)
+	f1 = f(x1)
+
+	if (sign_(f0) == sign_(f1)) then
+		msg = "f(xmin) and f(xmax) have the same sign in secant_root()"
+		call PANIC(msg, present(iostat))
+		iostat = 3
+		return
+	end if
+
+	converged = .false.
+	do iter = 1, maxiters_
+		x = x0 - f0 * (x0 - x1) / (f0 - f1)
+		fx = f(x)
+		if (abs(fx) < tol_) then
+			converged = .true.
+			exit
+		end if
+		!print *, "iter, x0, x, x1 = ", iter, x0, x, x1
+
+		x1 = x0
+		x0 = x
+		f1 = f0
+		f0 = fx
+	end do
+
+	if (.not. converged) then
+		msg = "secant_root() did not converge"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+end function secant_root
 
 !===============================================================================
 
@@ -500,7 +567,7 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 			converged = .true.
 			exit
 		end if
-		print *, "iter, norm(fx) = ", iter, norm2(fx)
+		!print *, "iter, norm(fx) = ", iter, norm2(fx)
 
 		xdir = matmul(dfx_inv, fx)
 
@@ -509,7 +576,7 @@ function broyden(f, df, x0, nx, maxiters, tol, iostat) result(x)
 		!!alpha = golden_search(f, x, xdir, -0.1d0, 2.d0, tol_)
 		!!alpha = golden_search(f, x, xdir, -1.0d0, 3.d0, tol_)
 
-		print *, "alpha = ", alpha
+		!print *, "alpha = ", alpha
 
 		!if (alpha == 0) then
 		if (norm2(f(x - alpha * xdir)) >= norm2(f(x))) then

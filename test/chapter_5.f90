@@ -58,6 +58,10 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, sqrt(612.d0), 1.d-8, nfail, "bisect_root 1.1")
 
+	x = secant_root(f_nr_ex1, 0.d0, 1000.d0, tol = 1.d-9, maxiters = 50)
+	print *, "x = ", x
+	call test(x, sqrt(612.d0), 1.d-8, nfail, "secant_root 1.1")
+
 	x  = fzero  (f_nr_ex1, 0.d0, 1000.d0, 1.d-9, iters)
 	x2 = fzero77(f_nr_ex1, 0.d0, 1000.d0, 1.d-9, iters2)
 	print *, "xf, iters = ", x, iters
@@ -81,6 +85,11 @@ integer function chapter_5_nr() result(nfail)
 	print *, "x = ", x
 	call test(x, 0.865474033d0, 1.d-6, nfail, "bisect_root 2.1")
 
+	! Secant can fail to converge here for bad bounds, e.g. 1000 ubound
+	x = secant_root(f_nr_ex2, 0.d0, 2.d0, tol = 1.d-9, maxiters = 50)
+	print *, "x = ", x
+	call test(x, 0.865474033d0, 1.d-7, nfail, "secant_root 2")
+
 	x  = fzero  (f_nr_ex2, 0.d0, 1000.d0, 1.d-9, iters)
 	x2 = fzero77(f_nr_ex2, 0.d0, 1000.d0, 1.d-9, iters2)
 	print *, "xf= ", x
@@ -102,6 +111,10 @@ integer function chapter_5_nr() result(nfail)
 	x = bisect_root(sin_fn, 2.d0, 4.d0, maxiters = 35)
 	print *, "x = ", x
 	call test(x, PI, 1.d-8, nfail, "bisect_root 1.2")
+
+	x = secant_root(sin_fn, 2.d0, 4.d0, tol = 1.d-7)
+	print *, "x = ", x
+	call test(x, PI, 1.d-6, nfail, "secant_root 1.1")
 
 	x  = fzero  (sin_fn, 2.d0, 4.d0, 1.d-8, iters)
 	x2 = fzero77(sin_fn, 2.d0, 4.d0, 1.d-8, iters2)
