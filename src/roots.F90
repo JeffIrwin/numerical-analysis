@@ -272,6 +272,76 @@ end function newton_raphson_1d
 
 !===============================================================================
 
+double precision function newton_raphson_poly(p, x0, maxiters, tol, iostat) result(x)
+	! Find one root of a polynomial
+	!
+	! TODO: this tol is a y tol. Maybe take an x tol like fzero, but how can it
+	! be checked? Either difference between x iterations, or estimate
+	! xtol = ytol / (dy/dx) (or conservatively check both).  Same for bisect
+	! (although checking is easier there).  X tol makes more sense because the
+	! root-finding fn returns an X value, not Y
+	use numa__fit
+	double precision, intent(in) :: p(:)
+	double precision, optional, intent(in) :: x0
+	integer, optional, intent(in) :: maxiters
+	double precision, optional, intent(in) :: tol
+	integer, optional, intent(out) :: iostat
+	!********
+	character(len = :), allocatable :: msg
+	integer :: maxiters_, iter
+	double precision :: tol_, fx, dfx, x0_
+	double precision, allocatable :: dp(:)
+	logical :: converged
+
+	if (present(iostat)) iostat = 0
+
+	maxiters_ = 15
+	if (present(maxiters)) maxiters_ = maxiters
+
+	tol_ = 1.d-10
+	if (present(tol)) tol_ = tol
+
+	! TODO: maybe 1 should be default?  Derivative is sometimes 0 at 1 for many
+	! fns.  Same for newton_raphson_nd()
+	x0_ = 0.d0
+	if (present(x0)) x0_ = x0
+
+	dp = polyder(p)
+	x = x0_
+	converged = .false.
+	do iter = 1, maxiters_
+
+		fx = polyval(p, x)
+		if (abs(fx) < tol_) then
+			converged = .true.
+			exit
+		end if
+
+		!! Maybe add verbose option?
+		!print *, "iter, fx = ", iter, fx
+
+		!dfx = df(x)
+		dfx = polyval(dp, x)
+		x = x - fx / dfx
+
+	end do
+
+	if (.not. converged) then
+		! One last fn eval
+		fx = polyval(p, x)
+		converged = abs(fx) < tol_
+	end if
+	if (.not. converged) then
+		msg = "newton_raphson_poly() did not converge"
+		call PANIC(msg, present(iostat))
+		iostat = 1
+		return
+	end if
+
+end function newton_raphson_poly
+
+!===============================================================================
+
 function newton_raphson_nd(f, df, x0, nx, maxiters, tol, iostat) result(x)
 	! Find the root of a scalar function using Newton-Raphson
 	!
@@ -603,6 +673,69 @@ double precision function golden_search_nd(f, x, dx, amin, amax, xtol) result(al
 	if (fxmax < fopt) alpha = amax
 
 end function golden_search_nd
+
+!===============================================================================
+
+function maehly_polyroots(p) result(xi)
+	! Find the real roots of a polynomial given its ascending coefficients `p`,
+	! using the Maehly Newton method.  Page 326
+	use numa__fit
+	double precision, intent(in) :: p(:)
+	double precision, allocatable :: xi(:)
+	!********
+	double precision :: z, z0, zs, s
+	double precision, allocatable :: dp(:)
+	integer :: i, j, m, np
+
+	dp = polyder(p)
+	print *, "dp = ", dp
+
+	np = size(p)
+	allocate(xi(np-1))
+
+	! Either I have a bug or this method is very brittle.  It fails if a bad
+	! starting point is chosen
+	z0 = newton_raphson_poly(p, x0 = 1.5d0)
+	!z0 = newton_raphson_poly(p)
+	!z0 = -0.8685
+	!z0 = 2
+	!z0 = 1.5352
+
+	print *, "z0 = ", z0
+
+	do j = 1, np-1
+		print *, "j = ", j
+		m = 2
+		zs = z0
+		do  ! iteration
+			z = zs
+			s = 0
+			do i = 1, j-1
+				s = s + 1.d0 / (z - xi(i))
+			end do
+			zs = polyval(p, z)
+			zs = z - m * zs / (polyval(dp, z) - zs * s)
+
+			! Text doesn't have an abs here but it breaks without it :(
+			if (abs(zs) < abs(z)) cycle
+
+			if (m == 2) then
+				zs = z
+				m = 1
+				cycle
+			end if
+			xi(j) = z
+			print *, "xi(j) = ", xi(j)
+			exit
+		end do
+	end do
+
+	!xi(1) = z0
+	!xi(2) = xi(1) - &
+	!	polyval(p, xi(1)) / &
+	!	(polyval(dp, xi(1)) - polyval(p, xi(1)) / (xi(1) - xi(1)))
+
+end function maehly_polyroots
 
 !===============================================================================
 

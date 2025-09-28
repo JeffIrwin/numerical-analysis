@@ -9,6 +9,11 @@ module numa__fit
 
 	implicit none
 
+	interface polyval
+		procedure :: polyval_sca
+		procedure :: polyval_vec
+	end interface
+
 contains
 
 !===============================================================================
@@ -135,7 +140,25 @@ end function polyfit
 
 !===============================================================================
 
-function polyval(p, x) result(y)
+function polyder(p) result(dp)
+	! Return the polynomial coefficients `dp` for the derivative of polynomial `p`
+	double precision, intent(in) :: p(:)
+	double precision, allocatable :: dp(:)
+	!********
+	integer :: np
+	np = size(p)
+
+	dp = p(2:) * range_i32(1, np-1)
+	!allocate(dp(np-1))
+	!do i = 1, np-1
+	!	dp(i) = p(i+1) * i
+	!end do
+end function polyder
+
+!===============================================================================
+
+function polyval_vec(p, x) result(y)
+	! Evaluate a polynomial `p` with coefficients given in ascending powers
 	double precision, intent(in) :: p(:), x(:)
 	double precision, allocatable :: y(:)
 	!********
@@ -152,8 +175,16 @@ function polyval(p, x) result(y)
 		xpow = xpow * x
 	end do
 
-end function polyval
+end function polyval_vec
 
+function polyval_sca(p, x) result(y)
+	double precision, intent(in) :: p(:), x
+	double precision, allocatable :: y
+	!********
+	double precision :: y1(1)
+	y1 = polyval_vec(p, [x])
+	y = y1(1)
+end function polyval_sca
 !===============================================================================
 
 function gauss_newton(x, y, f, df, beta0, iters, iostat) result(beta)

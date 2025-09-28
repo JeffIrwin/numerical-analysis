@@ -17,7 +17,7 @@ integer function chapter_5_nr() result(nfail)
 
 	character(len = *), parameter :: label = "chapter_5_nr"
 	double precision :: x, x2
-	double precision, allocatable :: xn(:), xe(:)
+	double precision, allocatable :: xn(:), xe(:), p(:)
 	integer :: i, iters, iters2
 
 	write(*,*) CYAN // "Starting " // label // "()" // COLOR_RESET
@@ -177,6 +177,14 @@ integer function chapter_5_nr() result(nfail)
 	xn = broyden(f_nr_ex4, df_nr_ex4, x0 = [0.1d0, 0.1d0, 0.1d0])
 	print *, "xn = ", xn
 	call test(norm2(xn - xe), 0.d0, 1.d-7, nfail, "newton_raphson 4.1")
+
+	!********
+
+	p = [-4.d0, -2.d0, 3.d0]
+	!print *, "polyder = ", polyder(p)
+
+	xn = maehly_polyroots(p)
+	print *, "xn = ", xn
 
 	!********
 	print *, ""
