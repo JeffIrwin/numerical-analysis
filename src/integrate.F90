@@ -1317,7 +1317,7 @@ double precision function simpson_adaptive_integrator &
 	is_eps_underflow = .false.
 	is_max_level     = .false.
 
-	s = h / 6 * (fa * 4*fm + fb)
+	s = h / 6 * (fa + 4*fm + fb)
 
 	area = simpson_adapt_aux(f, xmin, xmax, tol, s, fa, fb, fm, n, &
 		neval, is_eps_underflow, is_max_level)
