@@ -516,17 +516,6 @@ integer function chapter_3_adaptive() result(nfail)
 	!********
 	print *, "Bessel's integral:"
 
-	! TODO: the fn interface `fn_f64_to_f64` is somewhat limited.  If you wanted
-	! to roll your own Bessel fn calculator, you would need a different fn to
-	! integrate for every real value of x (and int n)
-	!
-	! Maybe there should be another gk15 integrator that takes a "user data"
-	! array of doubles (and ints).  This would need another fn interface, say
-	! fn_f64_to_f64_dble_data, which also takes the data
-	!
-	! Actually I have created exactly this in fn_f64_params_to_f64.  A new
-	! gk15_adaptive_integrator() is still needed
-
 	area = gk15_adaptive_integrator(bessel_3_2p5, 0.d0, PI, 1.d-10)
 	expect = bessel_jn(3, 2.5d0)
 	print *, "area   = ", area
